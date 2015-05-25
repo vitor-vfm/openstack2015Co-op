@@ -1,0 +1,7 @@
+this is the source code repository of the CO-OP 2015
+this year project is OpenStack Juno on Centos 7
+one folder per sub project
+
+configure network on nodes cfgNodeNet
+configure glusterFS on node cfgNodeGlusterFS
+. . .  to be completed
