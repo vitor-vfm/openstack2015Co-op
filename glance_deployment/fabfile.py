@@ -9,101 +9,175 @@ import string
 
 ############################ Config ########################################
 
-# Read the values from a node file into a list
-@hosts('localhost')
-def read_nodes(node):
-    node_info = open(node, 'r')
-    node_string = node_info.read().splitlines()
-    # remove comments (lines that have # in the beginning)
-    # node_string_stripped = [node_element.strip() for node_element in node_string if node_element[0] != '#']
-    node_info.close()
-    #print node_string_stripped
-    return node_string
-
-# Make a dictionary from a config file with the format "KEY=value" on each 
-# line
-@hosts('localhost')
-def read_dict(config_file):
-    config_file_info = open(config_file, 'r')
-    config_file_without_comments = [line for line in config_file_info.readlines() if line[0] != '#']
-    config_file_string = "".join(config_file_without_comments)
-    # config_file_string = config_file_info.read().replace('=','\n').splitlines()
-    config_file_string = config_file_string.replace('=','\n').splitlines()
-    config_file_string_stripped = [config_element.strip() for config_element in config_file_string]
-    config_file_dict = dict()
-    
-    # Make a dictionary from the string from the file with the the first value
-    # on a line being the key to the value after the '=' on the same line
-    for config_file_key_index in range(0,len(config_file_string_stripped)-1,2):
-        config_file_value_index = config_file_key_index + 1
-        config_file_dict[config_file_string_stripped[config_file_key_index]] = config_file_string_stripped[config_file_value_index]
-    
-    config_file_info.close()
-
-    #run("rm -rf %s" % config_file)
-    return config_file_dict
-
-
-# Get nodes and their roles from the config files
-compute_nodes = read_nodes('config_files/compute_nodes')
-controller_nodes = read_nodes('config_files/controller_nodes')
-network_nodes = read_nodes('config_files/network_nodes')
-#env.hosts = compute_nodes + controller_nodes + network_nodes
-env.roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes }
-
-# Get configuration dictionaries from the config files
-compute_tunnels = read_dict('config_files/compute_instance_tunnels_interface_config')
-compute_manage = read_dict('config_files/compute_management_interface_config')
-controller_manage = read_dict('config_files/controller_management_interface_config')
-network_ext = read_dict('config_files/network_node_external_interface_config')
-network_tunnels = read_dict('config_files/network_node_instance_tunnels_interface_config')
-network_manage = read_dict('config_files/network_node_management_interface_config')
-
 glance_config_file = 'glance_config'
-admin_openrc = "../keystone_deployment/config_files/keystone_admin_files"
-demo_openrc = "../keystone_deployment/config_files/keystone_demo_files"
+admin_openrc = "../global_config_files/admin-openrc.sh"
+demo_openrc = "../global_config_files/demo-openrc.sh"
+
+
+glance_api_config_file = "/etc/glance/glance-api.conf"
+
+glance_registry_config_file = "/etc/glance/glance-registry.conf"
 
 ################### General functions ########################################
 
-def get_parameter(section, parameter):
-    crudini_command = "crudini --get {} {} {}".format(glance_config_file, section, parameter)
+def get_parameter(config_file, section, parameter):
+    crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
     return sudo(crudini_command)
+
+def set_parameter(config_file, section, parameter, value):
+    crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
+    sudo(crudini_command)
 
 
 def setup_glance_database(GLANCE_DBPASS):
+    print("GLANCE_DBPASS is: {}".format(GLANCE_DBPASS))
+    mysql_commands = "CREATE DATABASE IF NOT EXISTS glance;"
+    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
+    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
 
-    mysql_commands = "CREATE DATABASE glance;"
-    mysql_commands = mysql_commands + "GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
-    mysql_commands = mysql_commands + "GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
+    
+    print("mysql commands are: " + mysql_commands)
+    sudo('echo "{}" | mysql -u root'.format(mysql_commands))
+    
 
+
+def setup_glance_keystone(GLANCE_PASS):
+    source_command = "source admin-openrc.sh"
+    with prefix(source_command):
+        sudo("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
+        sudo("keystone user-role-add --user glance --tenant service --role admin")
+        sudo("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
+        sudo("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
+    
+def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
+    sudo("yum install -y openstack-glance python-glanceclient")
+    
+    set_parameter(glance_api_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'identity_uri', 'http://controller:35357') 
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_user', 'glance')   
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS)   
+    set_parameter(glance_api_config_file, 'paste_deploy', 'flavor', 'keystone')
+
+    #CHECK IF WE NEED TO:
+    # "Comment out any auth_host, auth_port, and auth_protocol options because the identity_uri option replaces them." -- manual
+    #
+
+    set_parameter(glance_api_config_file, 'glance_store', 'default_store', 'file')
+    set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', '/var/lib/glance/images/')
+    set_parameter(glance_api_config_file, 'DEFAULT', 'notification_driver', 'noop')
+    set_parameter(glance_api_config_file, 'DEFAULT', 'verbose', 'True')
+
+
+
+    set_parameter(glance_registry_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
+
+
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'identity_uri', 'http://controller:35357') 
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_user', 'glance')   
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS)   
+    set_parameter(glance_registry_config_file, 'paste_deploy', 'flavor', 'keystone')
+
+    #CHECK IF WE NEED TO:
+    # "Comment out any auth_host, auth_port, and auth_protocol options because the identity_uri option replaces them." -- manual
+    #
+
+    set_parameter(glance_registry_config_file, 'DEFAULT', 'notification_driver', 'noop')
+    set_parameter(glance_registry_config_file, 'DEFAULT', 'verbose', 'True')
     
 
 
 
-def setup_glance():
-    
-    # make sure we have crudini
-    sudo('yum install -y crudini')
+def populate_database():
+    sudo("su -s /bin/sh -c 'glance-manage db_sync' glance")
 
+def start_glance_services():
+    sudo("systemctl enable openstack-glance-api.service openstack-glance-registry.service")
+    sudo("systemctl start openstack-glance-api.service openstack-glance-registry.service")
+
+
+def upload_files():
     # upload config file for reading via crudini
     put(glance_config_file)
 
-    # setup glance database
-    GLANCE_DBPASS = get_parameter('mysql', 'GLANCE_DBPASS')
-    setup_glance_database(GLANCE_DBPASS)
+    # upload admin-openrc.sh to set variables in host machine
+    put(admin_openrc)
 
+def download_packages():
+    # make sure we have crudini
+    sudo('yum install -y crudini')
+   
+def setup_glance():
+
+    host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{}        controller".format(env.host))) 
+    sudo(host_command)
+
+
+    # fixing bind-address on /etc/my.cnf
+
+    # bindCommand = "sed -i.bak 's/^\(bind-address=\).*/\1 {} /' /etc/my.cnf".format(env.host)
+    bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
+    sudo(bindCommand)
     
+    sudo("systemctl restart mariadb")
+
+
+
+    upload_files()
+    
+    # variable setup
+    GLANCE_DBPASS = get_parameter(glance_config_file, 'mysql', 'GLANCE_DBPASS')
+    GLANCE_PASS = get_parameter(glance_config_file, 'keystone', 'GLANCE_PASS')    
+
+    # setup glance database
+    setup_glance_database(GLANCE_DBPASS)
+    setup_glance_keystone(GLANCE_PASS)
+
+    setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS)
+    populate_database()
+    start_glance_services()
+        
+
+
+
+
+
+
+
+
 
 ################### Deployment ########################################
 
 def deploy():
-    
-    pass
+    setup_glance()
 
 ######################################## TDD #########################################
 
 
-            
+
+def get_image_tdd():
+
+    sudo("mkdir /tmp/images")
+    url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
+#    sudo("wget -P /tmp/images http://cdn.download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img")
+    sudo("wget -P /tmp/images " + url)
+    source_command = "source admin-openrc.sh"
+    with prefix(source_command):
+        output = sudo("glance image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
+        sudo("glance image-list")
+
+    if 'cirros-0.3.3-x86_64' in output:
+        print(green("GOOD"))
+    else:
+        print(red("BAD"))
+        
+    sudo("rm -r /tmp/images")
+
+
+
 def tdd():
     with settings(warn_only=True):
-        pass
+        get_image_tdd()

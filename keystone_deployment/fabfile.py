@@ -136,7 +136,7 @@ def set_keystone_config_file(admin_token,passwd):
             #     for new_line in lines_to_add:
             #         sudo("echo -e '{}' >>{}".format(new_line,conf_file))
 
-@roles('controller')
+#@roles('controller')
 def setupKeystone():
     # remember to set the decorator
     # to ensure that it only runs on the controller
