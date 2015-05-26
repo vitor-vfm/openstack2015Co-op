@@ -1,0 +1,5 @@
+# Management Intercafe for the compute nodes
+DEVICE=enp0s25:0
+IPADDR=10.0.0.31
+NETMASK=255.255.255.0
+#GATEWAY=10.0.0.1

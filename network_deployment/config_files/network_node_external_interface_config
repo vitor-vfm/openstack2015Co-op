@@ -1,0 +1,4 @@
+DEVICE=enp0s25:2
+TYPE=Ethernet
+ONBOOT="yes"
+BOOTPROTO="none"
