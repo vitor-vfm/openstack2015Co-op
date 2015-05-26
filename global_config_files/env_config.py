@@ -37,9 +37,9 @@ def read_dict(config_file):
 
 
 # Get nodes and their roles from the config files
-compute_nodes = read_nodes('config_files/compute_nodes')
-controller_nodes = read_nodes('config_files/controller_nodes')
-network_nodes = read_nodes('config_files/network_nodes')
+compute_nodes = read_nodes('../global_config_files/compute_nodes')
+controller_nodes = read_nodes('../global_config_files/controller_nodes')
+network_nodes = read_nodes('../global_config_files/network_nodes')
 
 hosts = compute_nodes + controller_nodes + network_nodes
 roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes }
