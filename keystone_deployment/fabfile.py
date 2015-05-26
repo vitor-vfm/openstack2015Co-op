@@ -5,6 +5,9 @@ from fabric.context_managers import cd
 from fabric.colors import green, red
 import string
 
+import sys
+sys.path.append('../global_config_files')
+
 import env_config
 
 ################### Configuring Environment ########################################
@@ -57,6 +60,8 @@ keystoneConfigFileContents = readKeyStoneDBConfigFile('keystoneDBSetup.sql')
 # config files for user Usr
 admin_info = env_config.read_dict('config_files/keystone_admin_config') 
 demo_user = env_config.read_dict('config_files/keystone_demo_config')
+
+# crea
 
 # config file for keystone
 keystone_conf = 'config_files/keystone.conf'
