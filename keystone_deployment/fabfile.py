@@ -5,9 +5,11 @@ from fabric.context_managers import cd
 from fabric.colors import green, red
 import string
 
-from network_deploy import *
+import env_config
 
 ################### Configuring Environment ########################################
+
+env.roledefs = env_config.roledefs
 
 @hosts('localhost')
 def readKeyStoneDBConfigFile(fileName):
@@ -52,96 +54,15 @@ def read_config_file_with_sections(file_location):
 #keystone DB file 
 keystoneConfigFileContents = readKeyStoneDBConfigFile('keystoneDBSetup.sql')
  
-# config files for MariaDB
-mariadb_repo = 'config_files/mariadb_repo'
-mariadb_mysqld_specs = 'config_files/mariadb_mysqld_specs'
-
 # config files for user Usr
-admin_info = read_dict('config_files/keystone_admin_config') 
-demo_user = read_dict('config_files/keystone_demo_config')
+admin_info = env_config.read_dict('config_files/keystone_admin_config') 
+demo_user = env_config.read_dict('config_files/keystone_demo_config')
 
 # config file for keystone
 keystone_conf = 'config_files/keystone.conf'
 
 
-################### General functions ########################################
-
-
 ################### Deployment ########################################
-
-# General function to install packages that should be in all or several nodes
-@with_settings(warn_only=True)
-def install_packages():
-    
-    # Install NTP
-    sudo('yum -y install ntp')
-    # Are we using an NTP server?
-    # enable NTP
-    #sudo('systemctl enable ntpd.service')
-    #sudo('systemctl start ntpd.service')
-
-    # Install EPEL (Extra Packages for Entreprise Linux
-    sudo('yum -y install yum-plugin-priorities')
-    sudo('yum -y install epel-release')
-
-    # Install RDO repository for Juno
-    sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
-
-    # Install Crudini
-    sudo("yum -y install crudini")
-
-
-    # Install MariaDB
-    # Only on controller node(s)
-    
-    #if env.host_string in env.roledefs['controller']:
-    if True:
-	    # get packages
-        sudo('yum -y install mariadb mariadb-server MySQL-python')
-
-        # set the config file
-        section_header = '\[mysqld\]'
-
-        with cd('/etc/'):
-            # check if the section is already in the file
-            if run("grep '{}' my.cnf".format(section_header)).return_code == 0:
-                # do a search and replace for all the variables
-                config_file = open(mariadb_mysqld_specs, 'r').readlines(True)
-                # make a backup
-                sudo("cp my.cnf my.cnf.bak")
-
-                for line in config_file:
-                    # delete old line in the file
-                    # remove \n
-                    line = line[:-1]
-                    if ('=' in line):
-                        pattern_to_find = line[:line.index('=')]
-                    else:
-                        pattern_to_find = line
-                    sudo('sed -i "/{}/ d" my.cnf'.format(pattern_to_find))
-                    # append new line with the new value under the header
-                    sudo('''sed -i '/{}/ a\{}' my.cnf'''.format(section_header,line))
-
-            else:
-                # simply add the section
-                config_file = '\n' + section_header + '\n'
-                config_file += open(mariadb_mysqld_specs, 'r').read()
-                sudo('echo -e "{}" >>my.cnf'.format(config_file))
-
-        # enable MariaDB
-        sudo('systemctl enable mariadb.service')
-        sudo('systemctl start mariadb.service')
-        
-
-    # Upgrade to implement changes
-    sudo('yum -y upgrade')
-
-def ask_for_reboot():
-    sudo('wall Everybody please reboot')
-
-@roles('controller')
-def keystone_deploy():
-    pass
 
 def set_keystone_config_file(admin_token,passwd):
     # edits the keystone config file without messing up
@@ -190,19 +111,8 @@ def set_keystone_config_file(admin_token,passwd):
             #     for new_line in lines_to_add:
             #         sudo("echo -e '{}' >>{}".format(new_line,conf_file))
 
-
-
-# def create_keystone():
-#     # Might not need run() parts
-#     run("CREATE DATABASE keystone")
-#     run("GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY '#$keystone$#'")
-#     run("GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY '#$keystone$#'")
-#     #admin_token = run(openssl rand -hex 10)
-#     sudo("yum install openstack-keystone python-keystoneclientt")
-#     sudo("echo 'admin_token={}' >> /etc/keystone/keystone.conf".format(admin_token))
-
-#@roles('controller')
-def setupKeystoneUsingMySql():
+@roles('controller')
+def setupKeystone():
     # remember to set the decorator
     # to ensure that it only runs on the controller
 
@@ -216,9 +126,9 @@ def setupKeystoneUsingMySql():
     sudo(host_command)
 
 
-    # may want to put this else where
     # fixing bind-address on /etc/my.cnf
-#    bindCommand = "sed -i.bak 's/^\(bind-address=\).*/\1 {} /' /etc/my.cnf".format(env.host)
+
+    # bindCommand = "sed -i.bak 's/^\(bind-address=\).*/\1 {} /' /etc/my.cnf".format(env.host)
     bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
     sudo(bindCommand)
     
@@ -231,11 +141,9 @@ def setupKeystoneUsingMySql():
     # we assume that mariadb is up and running!
     sudo('echo "' + fileContents + '" | mysql -u root')
     admin_token = run('openssl rand -hex 10')
-    #admin_token = run('cat adminToken')
     sudo("yum -y install openstack-keystone python-keystoneclient")
     
-    # put the stuff about editing the files here
-    print admin_info
+    # set config files
     set_keystone_config_file(admin_token,admin_info['PASSWD'])
     
     # create generic certificates and keys and restrict access to the associated files
@@ -256,16 +164,6 @@ def setupKeystoneUsingMySql():
             "echo '@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/" + \
             "keystone-tokenflush.log 2>&1' >> /var/spool/cron/keystone")
 
-    # configure prereqs for creating tenants, users, and roles
-
-    # run("export OS_SERVICE_TOKEN={}".format(admin_token))
-    # run("export OS_TENANT_NAME=admin")
-    # run("export OS_USERNAME=admin")
-    # run("export OS_PASSWORD={}".format(admin_info['PASSWD']))
-    # run("export OS_AUTH_URL=http://controller:35357/v2.0")
-    # run("export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0")
-
-
     # need to restart keystone so that it can read in the 
     # new admin_token from the configuration file
     sudo("systemctl restart openstack-keystone.service")
@@ -275,6 +173,7 @@ def setupKeystoneUsingMySql():
             "echo '@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/" + \
             "keystone-tokenflush.log 2>&1' >> /var/spool/cron/keystone")
 
+    # configure prereqs for creating tenants, users, and roles
     exports = "export OS_SERVICE_TOKEN={}; ".format(admin_token)
     exports += "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0"
 
@@ -304,60 +203,27 @@ def setupKeystoneUsingMySql():
                 "--adminurl http://controller:35357/v2.0 --region regionOne")
 
     # verify operation of the Identity service
-    sudo("unset OS_SERVICE_TOKEN OS_SERVICE_ENDPOINT")
 
+    sudo("unset OS_SERVICE_TOKEN OS_SERVICE_ENDPOINT")
     sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(admin_info['PASSWD'])) 
     sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(admin_info['PASSWD']))
     sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(admin_info['PASSWD']))
     sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(admin_info['PASSWD']))
-    r1 = sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(demo_user['PASSWD']))
 
-    # warn_only=True because the last command is supposed to fail
-    # if we don't set warn_only, the script will stop after this command
-    # assuming it all works
-    with settings(warn_only=True):
-        r2 = sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(demo_user['PASSWD']))
-    
-    print('r1 was ' + r1)
-    print('r2 was ' + r2)
-#    sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format('34demo43'))
-#    sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format('34demo43'))
 def deploy():
-    # with settings(warn_only=True):
-    # execute(install_packages, roles=env.roledefs.keys())
-    # execute(network_deploy)
-    # execute(keystone_deploy)
-    execute(setupKeystoneUsingMySql, roles = ['controller'])
-    # execute(ask_for_reboot, roles=env.roledefs.keys())
+    execute(setupKeystone)
 
 ######################################## TDD #########################################
 
 @roles('controller')
-def test_me():
-    sudo("rm run_com")
-    com = "#! /bin/sh -x\n"
-    com += "su -s /bin/sh -c 'keystone-manage db_sync' keystone"
-    sudo('echo "{}" >run_com'.format(com))
-    run('cat run_com')
-    sudo('chmod u+x run_com')
-    sudo('ls -la run_com')
-    with settings(warn_only=True):
-        result = sudo("./run_com")
-    print result
-
-@roles('controller')
 def keystone_tdd():
 
+    # 'OK' message
     okay = '[ ' + green('OK') + ' ]'
+    
     # warn_only=True because the last command is supposed to fail
-    # if we don't set warn_only, the script will stop after this command
-    # assuming it all works
+    # if we don't set warn_only, the script will stop after these commands
     with settings(warn_only=True):
-        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(admin_info['PASSWD'])) 
-        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(admin_info['PASSWD']))
-        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(admin_info['PASSWD']))
-        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(admin_info['PASSWD']))
-        # r1 = sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(demo_user['PASSWD']))
 
         # Check if non-admin user is forbidden to perform admin tasks
         user_list_output = sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(demo_user['PASSWD']))
