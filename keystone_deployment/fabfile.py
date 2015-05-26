@@ -13,6 +13,7 @@ import env_config
 ################### Configuring Environment ########################################
 
 env.roledefs = env_config.roledefs
+print env.roledefs
 
 @hosts('localhost')
 def readKeyStoneDBConfigFile(fileName):
@@ -136,7 +137,7 @@ def set_keystone_config_file(admin_token,passwd):
             #     for new_line in lines_to_add:
             #         sudo("echo -e '{}' >>{}".format(new_line,conf_file))
 
-#@roles('controller')
+@roles('controller')
 def setupKeystone():
     # remember to set the decorator
     # to ensure that it only runs on the controller
@@ -147,8 +148,8 @@ def setupKeystone():
     # this shouldn't be a problem b/c when we implement,
     # the actual hosts will be the controller node and whatnot
 
-    host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{}        controller".format(env.host))) 
-    sudo(host_command)
+    # host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{}        controller".format(env.host))) 
+    # sudo(host_command)
 
 
     # fixing bind-address on /etc/my.cnf
@@ -204,6 +205,11 @@ def setupKeystone():
 
     with prefix(exports):
 
+        sudo("keystone tenant-list")
+        sudo("keystone user-list")
+        sudo("keystone role-list")
+        sudo("keystone service-list")
+        sudo("keystone endpoint-list")
         # create tenants, users, and roles
         sudo("keystone tenant-create --name admin --description 'Admin Tenant'")
         sudo("keystone user-create --name admin --pass {} --email {}".format(admin_info['PASSWD'], admin_info['EMAIL']))
