@@ -4,7 +4,7 @@ from fabric.decorators import with_settings
 from fabric.context_managers import cd
 from fabric.colors import green, red
 import string
-
+import subprocess
 import sys
 sys.path.append('../global_config_files')
 
@@ -61,7 +61,27 @@ keystoneConfigFileContents = readKeyStoneDBConfigFile('keystoneDBSetup.sql')
 admin_info = env_config.read_dict('config_files/keystone_admin_config') 
 demo_user = env_config.read_dict('config_files/keystone_demo_config')
 
-# crea
+
+
+
+
+# create these files for easier access for other components when configuring with keystone
+
+# create admin_openrc.sh file in ../global_config_files/admin_openrc.sh
+adminFile = open('../global_config_files/admin-openrc.sh', 'w')
+admin_openrc_contents = "export OS_TENANT_NAME=admin; export OS_USERNAME=admin; export OS_PASSWORD={}; export OS_AUTH_URL=http://controller:35357/v2.0".format(admin_info['PASSWD'])
+adminFile.write(admin_openrc_contents)
+adminFile.close()
+
+# create demo_openrc.sh file in ../global_config_files/demo_openrc.sh
+demoFile = open('../global_config_files/demo-openrc.sh', 'w')
+demo_openrc_contents = "export OS_TENANT_NAME=demo; export OS_USERNAME=demo; export OS_PASSWORD={}; export OS_AUTH_URL=http://controller:5000/v2.0".format(demo_user['PASSWD'])
+demoFile.write(demo_openrc_contents)
+demoFile.close()
+
+
+
+
 
 # config file for keystone
 keystone_conf = 'config_files/keystone.conf'
