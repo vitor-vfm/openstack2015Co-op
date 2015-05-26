@@ -87,6 +87,10 @@ def install_packages():
     # Install RDO repository for Juno
     sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
 
+    # Install Crudini
+    sudo("yum -y install crudini")
+
+
     # Install MariaDB
     # Only on controller node(s)
     
@@ -207,7 +211,6 @@ def setupKeystoneUsingMySql():
 
     # this shouldn't be a problem b/c when we implement,
     # the actual hosts will be the controller node and whatnot
-    """
 
     host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{}        controller".format(env.host))) 
     sudo(host_command)
@@ -231,9 +234,6 @@ def setupKeystoneUsingMySql():
     #admin_token = run('cat adminToken')
     sudo("yum -y install openstack-keystone python-keystoneclient")
     
-    # we need crudini as it is not a default thing
-    sudo("yum -y install crudini")
-
     # put the stuff about editing the files here
     print admin_info
     set_keystone_config_file(admin_token,admin_info['PASSWD'])
@@ -266,11 +266,6 @@ def setupKeystoneUsingMySql():
     # run("export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0")
 
 
-
-    exports = "export OS_SERVICE_TOKEN={}; ".format(admin_token)
-    exports += "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0"
-
-    
     # need to restart keystone so that it can read in the 
     # new admin_token from the configuration file
     sudo("systemctl restart openstack-keystone.service")
@@ -280,10 +275,11 @@ def setupKeystoneUsingMySql():
             "echo '@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/" + \
             "keystone-tokenflush.log 2>&1' >> /var/spool/cron/keystone")
 
+    exports = "export OS_SERVICE_TOKEN={}; ".format(admin_token)
+    exports += "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0"
 
-    
     with prefix(exports):
-        addition = "--os-auth-url=http://"
+
         # create tenants, users, and roles
         sudo("keystone tenant-create --name admin --description 'Admin Tenant'")
         sudo("keystone user-create --name admin --pass {} --email {}".format(admin_info['PASSWD'], admin_info['EMAIL']))
@@ -293,7 +289,7 @@ def setupKeystoneUsingMySql():
         # note, the following can be repeated to make more tenants and 
         # create a demo tenant for typical operations in environment
         sudo("keystone tenant-create --name demo --description 'Demo Tenant'") 
-#        sudo("keystone user-create --name demo --tenant demo --pass {} --email {}".format(demo_user['PASSWD'], demo_user['EMAIL'])) 
+        # sudo("keystone user-create --name demo --tenant demo --pass {} --email {}".format(demo_user['PASSWD'], demo_user['EMAIL'])) 
         sudo("keystone user-create --name demo --tenant demo --pass {} --email {}".format('34demo43', 'demo@gmail.com')) 
 
         # create one or more unique users with the admin role under the service tenant
@@ -310,7 +306,6 @@ def setupKeystoneUsingMySql():
     # verify operation of the Identity service
     sudo("unset OS_SERVICE_TOKEN OS_SERVICE_ENDPOINT")
 
-    """
     sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(admin_info['PASSWD'])) 
     sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(admin_info['PASSWD']))
     sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(admin_info['PASSWD']))
@@ -329,9 +324,9 @@ def setupKeystoneUsingMySql():
 #    sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format('34demo43'))
 def deploy():
     # with settings(warn_only=True):
-    execute(install_packages, roles=env.roledefs.keys())
-    execute(network_deploy)
-    execute(keystone_deploy)
+    # execute(install_packages, roles=env.roledefs.keys())
+    # execute(network_deploy)
+    # execute(keystone_deploy)
     execute(setupKeystoneUsingMySql, roles = ['controller'])
     # execute(ask_for_reboot, roles=env.roledefs.keys())
 
@@ -350,5 +345,68 @@ def test_me():
         result = sudo("./run_com")
     print result
 
+@roles('controller')
+def keystone_tdd():
+
+    okay = '[ ' + green('OK') + ' ]'
+    # warn_only=True because the last command is supposed to fail
+    # if we don't set warn_only, the script will stop after this command
+    # assuming it all works
+    with settings(warn_only=True):
+        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(admin_info['PASSWD'])) 
+        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(admin_info['PASSWD']))
+        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(admin_info['PASSWD']))
+        # sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(admin_info['PASSWD']))
+        # r1 = sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(demo_user['PASSWD']))
+
+        # Check if non-admin user is forbidden to perform admin tasks
+        user_list_output = sudo("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(demo_user['PASSWD']))
+        if 'You are not authorized to perform the requested action' in user_list_output:
+            print okay
+        else:
+            print red('demo was allowed to run user-list')
+
+        # Check if 'admin' and 'demo' are users
+        user_list_output = sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(admin_info['PASSWD']))
+        if 'admin' in user_list_output:
+            print okay
+        else:
+            print red('admin not a user')
+
+        if 'demo' in user_list_output:
+            print okay
+        else:
+            print red('demo not a user')
+
+        # Check if 'admin', 'service' and 'admin' are tenants
+        tenant_list_output = sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(admin_info['PASSWD']))
+        if 'admin' in tenant_list_output:
+            print okay
+        else:
+            print red('admin not a tenant')
+
+        if 'demo' in tenant_list_output:
+            print okay
+        else:
+            print red('demo not a tenant')
+
+        if 'service' in tenant_list_output:
+            print okay
+        else:
+            print red('service not a tenant')
+
+        # Check if '_member_' and 'admin' are roles
+        role_list_output = sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(admin_info['PASSWD']))
+        if '_member_' in role_list_output:
+            print okay
+        else:
+            print red('_member_ not a role')
+
+        if 'admin' in role_list_output:
+            print okay
+        else:
+            print red('admin not a role')
+
+
 def tdd():
-    execute(network_tdd)
+    execute(keystone_tdd)
