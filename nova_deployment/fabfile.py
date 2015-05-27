@@ -9,7 +9,7 @@ import string
 
 
 
-logging.basicConfig(filename='/var/log/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
+logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
 
 ############################ Config ########################################
 
@@ -69,13 +69,13 @@ def setup_nova_keystone_on_controller(NOVA_PASS):
         sudo_log("keystone user-create --name nova --pass {}".format(NOVA_PASS))
         sudo_log("keystone user-role-add --user nova --tenant service --role admin")
         sudo_log("keystone service-create --name nova --type compute --description 'OpenStack Compute'")
-        sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ compute / {print $2}') publicurl http://controller:8774/v2/%\(tenant_id\)s  --internalurl http://controller:8774/v2/%\(tenant_id\)s --adminurl http://controller:8774/v2/%\(tenant_id\)s --region regionOne")
+        sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ compute / {print $2}') --publicurl http://controller:8774/v2/%\(tenant_id\)s  --internalurl http://controller:8774/v2/%\(tenant_id\)s --adminurl http://controller:8774/v2/%\(tenant_id\)s --region regionOne")
     
 def setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP):
-    installation_command = "yum install openstack-nova-api openstack-nova-cert openstack-nova-conductor openstack-nova-console openstack-nova-novncproxy openstack-nova-scheduler python-novaclient"
+    installation_command = "yum install -y openstack-nova-api openstack-nova-cert openstack-nova-conductor openstack-nova-console openstack-nova-novncproxy openstack-nova-scheduler python-novaclient"
     sudo_log(installation_command)
     
-    set_parameter(etc_nova_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(NOVA_DBPASS))
+    set_parameter(etc_nova_config_file, 'database', 'connection', 'mysql://nova:{}@controller/nova'.format(NOVA_DBPASS))
 
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -106,7 +106,7 @@ def setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, C
 
 
 def populate_database_on_controller():
-    sudo_log("su -s /bin/sh -c 'nova-manage db_sync' nova")
+    sudo_log("su -s /bin/sh -c 'nova-manage db sync' nova")
 
 def start_nova_services_on_controller():
     enable_all = "systemctl enable openstack-nova-api.service openstack-nova-cert.service openstack-nova-consoleauth.service openstack-nova-scheduler.service openstack-nova-conductor.service openstack-nova-novncproxy.service"
@@ -142,8 +142,6 @@ def setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETW
 
     sudo_log('yum install -y openstack-nova-compute sysfsutils')
     
-#    set_parameter(etc_nova_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(NOVA_DBPASS))
-
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_host', 'controller')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
@@ -174,7 +172,8 @@ def setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETW
     hardware_accel_check()
 
 def hardware_accel_check():
-    output = sudo_log("egrep -c '(vmx|svm)' /proc/cpuinfo")    
+    with settings(warn_only=True):
+        output = sudo_log("egrep -c '(vmx|svm)' /proc/cpuinfo")    
 
     if int(output) < 1:
         # we need to do more configuration
@@ -191,7 +190,7 @@ def upload_files_on_compute():
     put(nova_config_file)
 
     # for getting the management interface ip address of the controller
-    put(network_management_interface_file_location)
+    put(compute_management_interface_file_location)
 
     # for getting rabbitmq credentials
     put(global_config_file_location)
@@ -208,10 +207,11 @@ def setup_nova_on_compute():
     NOVA_DBPASS = get_parameter(nova_config_file, 'mysql', 'NOVA_DBPASS')
     NOVA_PASS = get_parameter(nova_config_file, 'keystone', 'NOVA_PASS')    
     RABBIT_PASS = get_parameter(global_config_file_name, 'rabbitmq', 'RABBIT_PASS')
-    NETWORK_MANAGEMENT_IP = get_parameter(network_management_interface_file_name, '', 'IPADDR')
+    NETWORK_MANAGEMENT_IP = get_parameter(compute_management_interface_file_name, "''", 'IPADDR')
 
-    setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)        
-
+#    setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)        
+    #hardware_accel_check()
+    start_services_on_compute()
     
 
 #@roles('controller')   
@@ -237,13 +237,13 @@ def setup_nova_on_controller():
     NOVA_DBPASS = get_parameter(nova_config_file, 'mysql', 'NOVA_DBPASS')
     NOVA_PASS = get_parameter(nova_config_file, 'keystone', 'NOVA_PASS')    
     RABBIT_PASS = get_parameter(global_config_file_name, 'rabbitmq', 'RABBIT_PASS')
-    CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_name, '', 'IPADDR')
+    CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_name, "''", 'IPADDR')
 
     # setup nova database
     setup_nova_database_on_controller(NOVA_DBPASS)
     setup_nova_keystone_on_controller(NOVA_PASS)
 
-    setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP):
+    setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP)
     populate_database_on_controller()
     start_nova_services_on_controller()
         
@@ -260,7 +260,7 @@ def setup_nova_on_controller():
 
 def deploy():
     setup_nova_on_controller()
-    setup_nova_on_compute)
+    setup_nova_on_compute()
 
 ######################################## TDD #########################################
 

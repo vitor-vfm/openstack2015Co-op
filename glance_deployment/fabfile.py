@@ -112,17 +112,17 @@ def download_packages():
    
 def setup_glance():
 
-    host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{}        controller".format(env.host))) 
-    sudo(host_command)
+#    host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{} #       controller".format(env.host))) 
+#    sudo(host_command)
 
 
     # fixing bind-address on /etc/my.cnf
 
     # bindCommand = "sed -i.bak 's/^\(bind-address=\).*/\1 {} /' /etc/my.cnf".format(env.host)
-    bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
-    sudo(bindCommand)
+#    bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
+#    sudo(bindCommand)
     
-    sudo("systemctl restart mariadb")
+#    sudo("systemctl restart mariadb")
 
 
 
@@ -133,12 +133,12 @@ def setup_glance():
     GLANCE_PASS = get_parameter(glance_config_file, 'keystone', 'GLANCE_PASS')    
 
     # setup glance database
-    setup_glance_database(GLANCE_DBPASS)
-    setup_glance_keystone(GLANCE_PASS)
+#    setup_glance_database(GLANCE_DBPASS)
+#    setup_glance_keystone(GLANCE_PASS)
 
-    setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS)
-    populate_database()
-    start_glance_services()
+#    setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS)
+#    populate_database()
+#    start_glance_services()
         
 
 
