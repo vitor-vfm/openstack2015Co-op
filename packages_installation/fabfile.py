@@ -79,6 +79,13 @@ def install_packages():
                 config_file = '\n' + section_header + '\n'
                 config_file += open(mariadb_mysqld_specs, 'r').read()
                 sudo('echo -e "{}" >>my.cnf'.format(config_file))
+            
+            # set bind-address (controller's management interface)
+            controller_NIC = '../network_deployment/config_files/controller_management_interface_config'
+            bind_address = local("crudini --get {} '' IPADDR".format(controller_NIC),capture=True)
+            sudo("sed -i 's/bind-address=*/bind-address={}/' my.cnf".format(bind_address))
+            # sudo('crudini --set my.cnf mysqld bind-address {}'.format(bind_address))
+            sudo('grep bind-address my.cnf')
 
         # enable MariaDB
         sudo('systemctl enable mariadb.service')
@@ -95,3 +102,4 @@ def ask_for_reboot():
 def deploy():
     execute(install_packages)
     execute(ask_for_reboot)
+
