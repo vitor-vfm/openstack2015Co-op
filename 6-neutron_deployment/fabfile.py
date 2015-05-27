@@ -4,27 +4,46 @@ from fabric.decorators import with_settings
 from fabric.context_managers import cd
 from fabric.colors import green, red
 import string
+import logging
+import subprocess
 
 import sys
 sys.path.append('../global_config_files')
 import env_config
 
 
+
+
+
 ############################ Config ########################################
+
+logging.basicConfig(filename='/var/log/juno2015', level=logging.DEBUG,format='%(asctime)s %(message)s')
 
 env.roledefs = env_config.roledefs
 
-# get passwords from their config file
-passwd = env_config.read_dict('config_files/passwd')
 
 # define local config file locations
 database_script_file = 'config_files/database_creation.sql'
 admin_openrc = '../global_config_files/admin-openrc.sh'
+global_config = '../global_config_files/global_config'
 
 # define host config file locations
 neutron_conf = '/etc/neutron/neutron.conf'
 
+# get passwords from their config file
+passwd = env_config.read_dict('config_files/passwd')
+passwd['RABBIT_PASS'] = local('crudini --get {} rabbitmq RABBIT_PASS'.format(global_config),capture=True)
+nova_password_file = '../nova_development/nova_config'
+# FIX THIS ONCE CENTOS IS REINSTALLED
+# passwd['NOVA_PASS'] = local('crudini --get {} keystone NOVA_PASS'.format(nova_password_file),capture=True)
+passwd['NOVA_PASS'] = '34nova_ks43'
+
 ################### General functions ########################################
+
+# does sudo and logs the result
+def sudo_log(command):
+    output = sudo(command)
+    logging.info(output)
 
 
 ################### Deployment ########################################
@@ -71,15 +90,68 @@ def create_neutron_database():
 
 def configure_networking_server_component():
     # configure neutron.conf with crudini
+    # crudini --set config_file section parameter value
 
-    neutron_conf = 
+    neutron_conf = '/etc/neutron/neutron.conf'
+    
+    # make a backup
+    sudo('cp {} {}.back12'.format(neutron_conf,neutron_conf))
+
+    # for testing
+    neutron_conf_old = neutron_conf
+    neutron_conf += '.back12'
+    
+    # configure database access
+    parameter = 'mysql://neutron:{}@controller/neutron'.format(passwd['NEUTRON_DBPASS'])
+    sudo('crudini --set {} database connection {}'.format(neutron_conf,parameter))
+
+    # configure RabbitMQ access
+    sudo('crudini --set {} DEFAULT rpc_backend rabbit'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT rabbit_host controller'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT rabbit_password {}'.format(neutron_conf,passwd['RABBIT_PASS']))
+
+    # configure Identity service access
+
+    sudo('crudini --set {} DEFAULT auth_strategy keystone'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken auth_uri http://controller:5000/v2.0'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken identity_uri http://controller:35357'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken admin_tenant_name service'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken admin_user neutron'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken admin_password {}'.format(neutron_conf,passwd['NEUTRON_PASS']))
+
+    # enable Modular Layer 2 plugin
+
+    # get service tenant id
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        nova_admin_tenant_id = sudo('keystone tenant-list | grep service | cut -d\| -f2')
+
+    if nova_admin_tenant_id:
+        # if tenant service doesn't exist, this variable will be empty
+        sudo('crudini --set {} DEFAULT nova_admin_tenant_id {}'.format(neutron_conf, nova_admin_tenant_id))
+
+
+    sudo('crudini --set {} DEFAULT notify_nova_on_port_status_changes True'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT notify_nova_on_port_data_changes True'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT nova_url http://controller:8774/v2'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT nova_admin_auth_url http://controller:35357/v2.0'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT nova_region_name regionOne'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT nova_admin_username nova'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT nova_admin_password {}'.format(neutron_conf,passwd['NOVA_PASS']))
+
+    # turn on verbose logging
+    sudo('crudini --set {} DEFAULT verbose True'.format(neutron_conf))
+
+    neutron_conf = neutron_conf_old
+
+
 @roles('controller')
 def controller_deploy():
     
-    create_neutron_database()
+    # create_neutron_database()
 
     # install the networking components of openstack
-    sudo('yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which')
+    # sudo('yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which')
 
     configure_networking_server_component()
 

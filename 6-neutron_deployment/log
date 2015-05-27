@@ -1,0 +1,56 @@
+2015-05-27 MESSAGE: Testing deployment of crudini
+2015-05-27 [vadm@129.128.208.138] Executing task 'controller_deploy'
+2015-05-27 [vadm@129.128.208.138] sudo: yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which
+2015-05-27 [vadm@129.128.208.138] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-27 [vadm@129.128.208.138] out: Loading mirror speeds from cached hostfile
+2015-05-27 [vadm@129.128.208.138] out:  * base: mirror.its.sfu.ca
+2015-05-27 [vadm@129.128.208.138] out:  * epel: www.muug.mb.ca
+2015-05-27 [vadm@129.128.208.138] out:  * extras: www.muug.mb.ca
+2015-05-27 [vadm@129.128.208.138] out:  * updates: less.cogeco.net
+2015-05-27 [vadm@129.128.208.138] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-27 [vadm@129.128.208.138] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-27 [vadm@129.128.208.138] out: Package python-neutronclient-2.3.9-1.el7.centos.noarch already installed and latest version
+2015-05-27 [vadm@129.128.208.138] out: Package which-2.20-7.el7.x86_64 already installed and latest version
+2015-05-27 [vadm@129.128.208.138] out: Nothing to do
+2015-05-27 [vadm@129.128.208.138] out: 
+2015-05-27 
+2015-05-27 Disconnecting from vadm@129.128.208.138... done.
+2015-05-27 [vadm@129.128.208.138] Executing task 'controller_deploy'
+2015-05-27 [vadm@129.128.208.138] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 database connection mysql://neutron:34neu43@controller/neutron
+2015-05-27 
+2015-05-27 Done.
+2015-05-27 Disconnecting from vadm@129.128.208.138... done.
+2015-05-27 First command worked fine
+2015-05-27 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-27 [localhost] local: crudini --get ../nova_development/nova_config keystone NOVA_PASS
+2015-05-27 MESSAGE: Crudini stuff finalized. Testing
+2015-05-27 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-27 [vadm@129.128.208.138] Executing task 'controller_deploy'
+2015-05-27 [vadm@129.128.208.138] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 database connection mysql://neutron:34neu43@controller/neutron
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT rpc_backend rabbit
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT rabbit_host controller
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT rabbit_password 34RabbGuest43
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT auth_strategy keystone
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 keystone_authtoken identity_uri http://controller:35357
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 keystone_authtoken admin_tenant_name service
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 keystone_authtoken admin_user neutron
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 keystone_authtoken admin_password 34neu43
+2015-05-27 [vadm@129.128.208.138] sudo: keystone tenant-list | grep service | cut -d\| -f2
+2015-05-27 [vadm@129.128.208.138] out:  77cfc52fea7741e3a2a2e1a2b99f7e6c 
+2015-05-27 [vadm@129.128.208.138] out: 
+2015-05-27 
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT nova_admin_tenant_id 77cfc52fea7741e3a2a2e1a2b99f7e6c
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT notify_nova_on_port_status_changes True
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT notify_nova_on_port_data_changes True
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT nova_url http://controller:8774/v2
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT nova_admin_auth_url http://controller:35357/v2.0
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT nova_region_name regionOne
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT nova_admin_username nova
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT nova_admin_password 34nova_ks43
+2015-05-27 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf.back12 DEFAULT verbose True
+
+Done.
+Disconnecting from vadm@129.128.208.138... done.
