@@ -1,2 +1,5 @@
 *.pyc
 *.bak
+
+# for including any emacs generated files
+*~ 
