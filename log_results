@@ -1,0 +1,9 @@
+#! /bin/bash
+
+# pipe a command to this script and the result 
+# will be appended, with time stamps, to file 'log'
+
+while read log_line; do
+    echo $log_line
+    echo $(date --rfc-3339=seconds) $log_line >>log
+done

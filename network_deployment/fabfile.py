@@ -5,6 +5,7 @@ from fabric.context_managers import cd
 from fabric.colors import green, red
 from fabric.contrib.files import append
 import string
+import logging
 
 import sys
 sys.path.append('../global_config_files')
@@ -91,6 +92,7 @@ def set_hosts():
     # configure the /etc/hosts file to put aliases
     config_file = open(hosts_config, 'r').read()
     sudo("cp /etc/hosts /etc/hosts.back12")
+    sudo("sed -i '/(controller|network|compute1)/ d' /etc/hosts")
     append('/etc/hosts',config_file,use_sudo=True)
 
 @roles('controller')
