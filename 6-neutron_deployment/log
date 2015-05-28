@@ -751,3 +751,291 @@ MESSAGE Typo
 2015-05-28 12:06:45-06:00 Done.
 2015-05-28 12:06:45-06:00 Disconnecting from vadm@129.128.208.138... done.
 2015-05-28 12:07:09-06:00 INFO It was a problem with rabbit
+2015-05-28 12:48:01-06:00
+2015-05-28 12:48:01-06:00 INFO Testing tdd
+2015-05-28 12:48:01-06:00
+2015-05-28 12:48:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 12:48:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 12:48:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 12:48:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 12:48:10-06:00 [vadm@129.128.208.138] Executing task 'controller_tdd'
+2015-05-28 12:48:10-06:00 Checking loaded extensions
+2015-05-28 12:48:10-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep security-group | cut -d| -f3
+2015-05-28 12:48:10-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:10-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:11-06:00
+2015-05-28 12:48:11-06:00 [32malias security-group is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID], as expected[0m
+2015-05-28 12:48:11-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep l3_agent_scheduler | cut -d| -f3
+2015-05-28 12:48:11-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:11-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:12-06:00
+2015-05-28 12:48:12-06:00 [31mProblem with alias l3_agent_scheduler: should be L3 Agent Scheduler, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:12-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep ext-gw-mode | cut -d| -f3
+2015-05-28 12:48:12-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:12-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:12-06:00
+2015-05-28 12:48:12-06:00 [31mProblem with alias ext-gw-mode: should be Neutron L3 Configurable external gateway mode, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:12-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep binding | cut -d| -f3
+2015-05-28 12:48:12-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:12-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:13-06:00
+2015-05-28 12:48:13-06:00 [31mProblem with alias binding: should be Port Binding, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:13-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep provider | cut -d| -f3
+2015-05-28 12:48:13-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:13-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:13-06:00
+2015-05-28 12:48:13-06:00 [31mProblem with alias provider: should be Provider Network, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:13-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep agent | cut -d| -f3
+2015-05-28 12:48:13-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:13-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:14-06:00
+2015-05-28 12:48:14-06:00 [32malias agent is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID], as expected[0m
+2015-05-28 12:48:14-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep quotas | cut -d| -f3
+2015-05-28 12:48:14-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:14-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:15-06:00
+2015-05-28 12:48:15-06:00 [31mProblem with alias quotas: should be Quota management support, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:15-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep dhcp_agent_scheduler | cut -d| -f3
+2015-05-28 12:48:15-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:15-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:15-06:00
+2015-05-28 12:48:15-06:00 [31mProblem with alias dhcp_agent_scheduler: should be DHCP Agent Scheduler, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:15-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep l3-ha | cut -d| -f3
+2015-05-28 12:48:15-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:15-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:16-06:00
+2015-05-28 12:48:16-06:00 [31mProblem with alias l3-ha: should be HA Router extension, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:16-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep multi-provider | cut -d| -f3
+2015-05-28 12:48:16-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:16-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:17-06:00
+2015-05-28 12:48:17-06:00 [31mProblem with alias multi-provider: should be Multi Provider Network, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:17-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep external-net | cut -d| -f3
+2015-05-28 12:48:17-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:17-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:17-06:00
+2015-05-28 12:48:17-06:00 [31mProblem with alias external-net: should be Neutron external network, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:17-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep router | cut -d| -f3
+2015-05-28 12:48:17-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:18-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:18-06:00
+2015-05-28 12:48:18-06:00 [31mProblem with alias router: should be Neutron L3 Router, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:18-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep allowed-address-pairs | cut -d| -f3
+2015-05-28 12:48:18-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:18-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:19-06:00
+2015-05-28 12:48:19-06:00 [31mProblem with alias allowed-address-pairs: should be Allowed Address Pairs, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:19-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep extraroute | cut -d| -f3
+2015-05-28 12:48:19-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:19-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:19-06:00
+2015-05-28 12:48:19-06:00 [31mProblem with alias extraroute: should be Neutron Extra Route, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:19-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep extra_dhcp_opt | cut -d| -f3
+2015-05-28 12:48:19-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:19-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:20-06:00
+2015-05-28 12:48:20-06:00 [31mProblem with alias extra_dhcp_opt: should be Neutron Extra DHCP opts, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:20-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep dvr | cut -d| -f3
+2015-05-28 12:48:20-06:00 [vadm@129.128.208.138] out: You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID]
+2015-05-28 12:48:20-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:48:20-06:00
+2015-05-28 12:48:20-06:00 [31mProblem with alias dvr: should be Distributed Virtual Router, is You must provide a username or user ID via --os-username, env[OS_USERNAME] or --os-user_id, env[OS_USER_ID][0m
+2015-05-28 12:48:20-06:00
+2015-05-28 12:48:20-06:00 Done.
+2015-05-28 12:48:20-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 12:48:42-06:00
+2015-05-28 12:48:42-06:00 INFO Need the exports
+2015-05-28 12:48:42-06:00
+2015-05-28 12:50:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 12:50:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 12:50:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 12:50:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 12:50:13-06:00 [vadm@129.128.208.138] Executing task 'controller_tdd'
+2015-05-28 12:50:13-06:00 Checking loaded extensions
+2015-05-28 12:50:13-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep security-group | cut -d| -f3
+2015-05-28 12:50:13-06:00 [vadm@129.128.208.138] out: security-group
+2015-05-28 12:50:13-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:14-06:00
+2015-05-28 12:50:14-06:00 [32malias security-group is security-group, as expected[0m
+2015-05-28 12:50:14-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep l3_agent_scheduler | cut -d| -f3
+2015-05-28 12:50:14-06:00 [vadm@129.128.208.138] out: L3 Agent Scheduler
+2015-05-28 12:50:14-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:15-06:00
+2015-05-28 12:50:15-06:00 [31mProblem with alias l3_agent_scheduler: should be L3 Agent Scheduler, is L3 Agent Scheduler[0m
+2015-05-28 12:50:15-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep ext-gw-mode | cut -d| -f3
+2015-05-28 12:50:15-06:00 [vadm@129.128.208.138] out: Neutron L3 Configurable external gateway mode
+2015-05-28 12:50:15-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:16-06:00
+2015-05-28 12:50:16-06:00 [31mProblem with alias ext-gw-mode: should be Neutron L3 Configurable external gateway mode, is Neutron L3 Configurable external gateway mode[0m
+2015-05-28 12:50:16-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep binding | cut -d| -f3
+2015-05-28 12:50:16-06:00 [vadm@129.128.208.138] out: Port Binding
+2015-05-28 12:50:16-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:17-06:00
+2015-05-28 12:50:17-06:00 [31mProblem with alias binding: should be Port Binding, is Port Binding[0m
+2015-05-28 12:50:17-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep provider | cut -d| -f3
+2015-05-28 12:50:17-06:00 [vadm@129.128.208.138] out: Provider Network
+2015-05-28 12:50:17-06:00 [vadm@129.128.208.138] out: Multi Provider Network
+2015-05-28 12:50:17-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:18-06:00
+2015-05-28 12:50:18-06:00 [31mProblem with alias provider: should be Provider Network, is Provider Network 
+2015-05-28 12:50:18-06:00 Multi Provider Network[0m
+2015-05-28 12:50:18-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep agent | cut -d| -f3
+2015-05-28 12:50:18-06:00 [vadm@129.128.208.138] out: L3 Agent Scheduler
+2015-05-28 12:50:18-06:00 [vadm@129.128.208.138] out: agent
+2015-05-28 12:50:18-06:00 [vadm@129.128.208.138] out: DHCP Agent Scheduler
+2015-05-28 12:50:18-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:19-06:00
+2015-05-28 12:50:19-06:00 [32malias agent is L3 Agent Scheduler 
+2015-05-28 12:50:19-06:00 agent 
+2015-05-28 12:50:19-06:00 DHCP Agent Scheduler, as expected[0m
+2015-05-28 12:50:19-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep quotas | cut -d| -f3
+2015-05-28 12:50:19-06:00 [vadm@129.128.208.138] out: Quota management support
+2015-05-28 12:50:19-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:20-06:00
+2015-05-28 12:50:20-06:00 [31mProblem with alias quotas: should be Quota management support, is Quota management support[0m
+2015-05-28 12:50:20-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep dhcp_agent_scheduler | cut -d| -f3
+2015-05-28 12:50:20-06:00 [vadm@129.128.208.138] out: DHCP Agent Scheduler
+2015-05-28 12:50:20-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:21-06:00
+2015-05-28 12:50:21-06:00 [31mProblem with alias dhcp_agent_scheduler: should be DHCP Agent Scheduler, is DHCP Agent Scheduler[0m
+2015-05-28 12:50:21-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep l3-ha | cut -d| -f3
+2015-05-28 12:50:21-06:00 [vadm@129.128.208.138] out: HA Router extension
+2015-05-28 12:50:21-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:22-06:00
+2015-05-28 12:50:22-06:00 [31mProblem with alias l3-ha: should be HA Router extension, is HA Router extension[0m
+2015-05-28 12:50:22-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep multi-provider | cut -d| -f3
+2015-05-28 12:50:22-06:00 [vadm@129.128.208.138] out: Multi Provider Network
+2015-05-28 12:50:22-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:23-06:00
+2015-05-28 12:50:23-06:00 [31mProblem with alias multi-provider: should be Multi Provider Network, is Multi Provider Network[0m
+2015-05-28 12:50:23-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep external-net | cut -d| -f3
+2015-05-28 12:50:23-06:00 [vadm@129.128.208.138] out: Neutron external network
+2015-05-28 12:50:23-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:24-06:00
+2015-05-28 12:50:24-06:00 [31mProblem with alias external-net: should be Neutron external network, is Neutron external network[0m
+2015-05-28 12:50:24-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep router | cut -d| -f3
+2015-05-28 12:50:24-06:00 [vadm@129.128.208.138] out: Neutron L3 Router
+2015-05-28 12:50:24-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:25-06:00
+2015-05-28 12:50:25-06:00 [31mProblem with alias router: should be Neutron L3 Router, is Neutron L3 Router[0m
+2015-05-28 12:50:25-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep allowed-address-pairs | cut -d| -f3
+2015-05-28 12:50:25-06:00 [vadm@129.128.208.138] out: Allowed Address Pairs
+2015-05-28 12:50:25-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:25-06:00
+2015-05-28 12:50:25-06:00 [31mProblem with alias allowed-address-pairs: should be Allowed Address Pairs, is Allowed Address Pairs[0m
+2015-05-28 12:50:25-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep extraroute | cut -d| -f3
+2015-05-28 12:50:25-06:00 [vadm@129.128.208.138] out: Neutron Extra Route
+2015-05-28 12:50:25-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:26-06:00
+2015-05-28 12:50:26-06:00 [31mProblem with alias extraroute: should be Neutron Extra Route, is Neutron Extra Route[0m
+2015-05-28 12:50:26-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep extra_dhcp_opt | cut -d| -f3
+2015-05-28 12:50:26-06:00 [vadm@129.128.208.138] out: Neutron Extra DHCP opts
+2015-05-28 12:50:26-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:27-06:00
+2015-05-28 12:50:27-06:00 [31mProblem with alias extra_dhcp_opt: should be Neutron Extra DHCP opts, is Neutron Extra DHCP opts[0m
+2015-05-28 12:50:27-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep dvr | cut -d| -f3
+2015-05-28 12:50:27-06:00 [vadm@129.128.208.138] out: Distributed Virtual Router
+2015-05-28 12:50:27-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:50:27-06:00
+2015-05-28 12:50:27-06:00 [31mProblem with alias dvr: should be Distributed Virtual Router, is Distributed Virtual Router[0m
+2015-05-28 12:50:27-06:00
+2015-05-28 12:50:27-06:00 Done.
+2015-05-28 12:50:27-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 12:51:32-06:00
+2015-05-28 12:51:32-06:00 INFO Typo (alias/name)
+2015-05-28 12:51:32-06:00
+2015-05-28 12:51:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 12:51:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 12:51:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 12:51:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 12:51:36-06:00 [vadm@129.128.208.138] Executing task 'controller_tdd'
+2015-05-28 12:51:36-06:00 Checking loaded extensions
+2015-05-28 12:51:36-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep security-group | cut -d| -f3
+2015-05-28 12:51:36-06:00 [vadm@129.128.208.138] out: security-group
+2015-05-28 12:51:36-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:37-06:00
+2015-05-28 12:51:37-06:00 [32malias security-group is security-group, as expected[0m
+2015-05-28 12:51:37-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep l3_agent_scheduler | cut -d| -f3
+2015-05-28 12:51:37-06:00 [vadm@129.128.208.138] out: L3 Agent Scheduler
+2015-05-28 12:51:37-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:38-06:00
+2015-05-28 12:51:38-06:00 [32malias l3_agent_scheduler is L3 Agent Scheduler, as expected[0m
+2015-05-28 12:51:38-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep ext-gw-mode | cut -d| -f3
+2015-05-28 12:51:38-06:00 [vadm@129.128.208.138] out: Neutron L3 Configurable external gateway mode
+2015-05-28 12:51:38-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:39-06:00
+2015-05-28 12:51:39-06:00 [32malias ext-gw-mode is Neutron L3 Configurable external gateway mode, as expected[0m
+2015-05-28 12:51:39-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep binding | cut -d| -f3
+2015-05-28 12:51:39-06:00 [vadm@129.128.208.138] out: Port Binding
+2015-05-28 12:51:39-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:40-06:00
+2015-05-28 12:51:40-06:00 [32malias binding is Port Binding, as expected[0m
+2015-05-28 12:51:40-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep provider | cut -d| -f3
+2015-05-28 12:51:40-06:00 [vadm@129.128.208.138] out: Provider Network
+2015-05-28 12:51:40-06:00 [vadm@129.128.208.138] out: Multi Provider Network
+2015-05-28 12:51:40-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:41-06:00
+2015-05-28 12:51:41-06:00 [32malias provider is Provider Network 
+2015-05-28 12:51:41-06:00 Multi Provider Network, as expected[0m
+2015-05-28 12:51:41-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep agent | cut -d| -f3
+2015-05-28 12:51:41-06:00 [vadm@129.128.208.138] out: L3 Agent Scheduler
+2015-05-28 12:51:41-06:00 [vadm@129.128.208.138] out: agent
+2015-05-28 12:51:41-06:00 [vadm@129.128.208.138] out: DHCP Agent Scheduler
+2015-05-28 12:51:41-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:42-06:00
+2015-05-28 12:51:42-06:00 [32malias agent is L3 Agent Scheduler 
+2015-05-28 12:51:42-06:00 agent 
+2015-05-28 12:51:42-06:00 DHCP Agent Scheduler, as expected[0m
+2015-05-28 12:51:42-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep quotas | cut -d| -f3
+2015-05-28 12:51:42-06:00 [vadm@129.128.208.138] out: Quota management support
+2015-05-28 12:51:42-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:43-06:00
+2015-05-28 12:51:43-06:00 [32malias quotas is Quota management support, as expected[0m
+2015-05-28 12:51:43-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep dhcp_agent_scheduler | cut -d| -f3
+2015-05-28 12:51:43-06:00 [vadm@129.128.208.138] out: DHCP Agent Scheduler
+2015-05-28 12:51:43-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:44-06:00
+2015-05-28 12:51:44-06:00 [32malias dhcp_agent_scheduler is DHCP Agent Scheduler, as expected[0m
+2015-05-28 12:51:44-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep l3-ha | cut -d| -f3
+2015-05-28 12:51:44-06:00 [vadm@129.128.208.138] out: HA Router extension
+2015-05-28 12:51:44-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:45-06:00
+2015-05-28 12:51:45-06:00 [32malias l3-ha is HA Router extension, as expected[0m
+2015-05-28 12:51:45-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep multi-provider | cut -d| -f3
+2015-05-28 12:51:45-06:00 [vadm@129.128.208.138] out: Multi Provider Network
+2015-05-28 12:51:45-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:46-06:00
+2015-05-28 12:51:46-06:00 [32malias multi-provider is Multi Provider Network, as expected[0m
+2015-05-28 12:51:46-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep external-net | cut -d| -f3
+2015-05-28 12:51:46-06:00 [vadm@129.128.208.138] out: Neutron external network
+2015-05-28 12:51:46-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:47-06:00
+2015-05-28 12:51:47-06:00 [32malias external-net is Neutron external network, as expected[0m
+2015-05-28 12:51:47-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep router | cut -d| -f3
+2015-05-28 12:51:47-06:00 [vadm@129.128.208.138] out: Neutron L3 Router
+2015-05-28 12:51:47-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:48-06:00
+2015-05-28 12:51:48-06:00 [32malias router is Neutron L3 Router, as expected[0m
+2015-05-28 12:51:48-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep allowed-address-pairs | cut -d| -f3
+2015-05-28 12:51:48-06:00 [vadm@129.128.208.138] out: Allowed Address Pairs
+2015-05-28 12:51:48-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:49-06:00
+2015-05-28 12:51:49-06:00 [32malias allowed-address-pairs is Allowed Address Pairs, as expected[0m
+2015-05-28 12:51:49-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep extraroute | cut -d| -f3
+2015-05-28 12:51:49-06:00 [vadm@129.128.208.138] out: Neutron Extra Route
+2015-05-28 12:51:49-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:50-06:00
+2015-05-28 12:51:50-06:00 [32malias extraroute is Neutron Extra Route, as expected[0m
+2015-05-28 12:51:50-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep extra_dhcp_opt | cut -d| -f3
+2015-05-28 12:51:50-06:00 [vadm@129.128.208.138] out: Neutron Extra DHCP opts
+2015-05-28 12:51:50-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:51-06:00
+2015-05-28 12:51:51-06:00 [32malias extra_dhcp_opt is Neutron Extra DHCP opts, as expected[0m
+2015-05-28 12:51:51-06:00 [vadm@129.128.208.138] sudo: neutron ext-list | grep dvr | cut -d| -f3
+2015-05-28 12:51:51-06:00 [vadm@129.128.208.138] out: Distributed Virtual Router
+2015-05-28 12:51:51-06:00 [vadm@129.128.208.138] out:
+2015-05-28 12:51:51-06:00
+2015-05-28 12:51:51-06:00 [32malias dvr is Distributed Virtual Router, as expected[0m
+2015-05-28 12:51:51-06:00
+2015-05-28 12:51:51-06:00 Done.
+2015-05-28 12:51:51-06:00 Disconnecting from vadm@129.128.208.138... done.

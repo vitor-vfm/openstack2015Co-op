@@ -239,13 +239,16 @@ def controller_tdd():
     alias_name_pairs.append(('dvr','Distributed Virtual Router'))
 
     print 'Checking loaded extensions'
-    for pair in alias_name_pairs:
-        alias = pair[0]
-        name = sudo('neutron ext-list | grep {} | cut -d\| -f3'.format(alias))
-        if pair[1] not in alias:
-            print red("Problem with alias {}: should be {}, is {}".format(alias,pair[1],name.strip()))
-        else:
-            print green("alias {} is {}, as expected".format(alias,name.strip()))
+    
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        for pair in alias_name_pairs:
+            alias = pair[0]
+            name = sudo('neutron ext-list | grep {} | cut -d\| -f3'.format(alias))
+            if pair[1] not in name:
+                print red("Problem with alias {}: should be {}, is {}".format(alias,pair[1],name.strip()))
+            else:
+                print green("alias {} is {}, as expected".format(alias,name.strip()))
 
 
 def tdd():
