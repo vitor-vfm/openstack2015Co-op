@@ -19,7 +19,7 @@ logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(
 
 env.roledefs = env_config.roledefs
 
-nova_config_file = 'nova_config'
+nova_config_file = '../global_config_files/global_config'
 
 admin_openrc = "../global_config_files/admin-openrc.sh"
 
@@ -194,7 +194,7 @@ def start_services_on_compute():
 
 def upload_files_on_compute():
     # upload config file for reading via crudini
-    put(nova_config_file)
+    put(nova_config_file,remote_path='.')
 
     # for getting the management interface ip address of the controller
     put(compute_management_interface_file_location)
@@ -208,12 +208,12 @@ def setup_nova_on_compute():
     download_packages()
 
 
-    upload_files_on_compute()
+    #upload_files_on_compute()
     
     # variable setup
-    NOVA_DBPASS = get_parameter(nova_config_file, 'mysql', 'NOVA_DBPASS')
-    NOVA_PASS = get_parameter(nova_config_file, 'keystone', 'NOVA_PASS')    
-    RABBIT_PASS = get_parameter(global_config_file_name, 'rabbitmq', 'RABBIT_PASS')
+    NOVA_DBPASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
+    NOVA_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
+    RABBIT_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
     NETWORK_MANAGEMENT_IP = get_parameter(compute_management_interface_file_name, "''", 'IPADDR')
 
     setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)        
@@ -237,12 +237,12 @@ def setup_nova_on_controller():
     
     download_packages()
 
-    upload_files_on_controller()
+    #upload_files_on_controller()
     
     # variable setup
-    NOVA_DBPASS = get_parameter(nova_config_file, 'mysql', 'NOVA_DBPASS')
-    NOVA_PASS = get_parameter(nova_config_file, 'keystone', 'NOVA_PASS')    
-    RABBIT_PASS = get_parameter(global_config_file_name, 'rabbitmq', 'RABBIT_PASS')
+    NOVA_DBPASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
+    NOVA_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
+    RABBIT_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
     CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_name, "''", 'IPADDR')
 
     # setup nova database
