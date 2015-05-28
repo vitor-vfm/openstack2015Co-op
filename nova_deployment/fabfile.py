@@ -35,6 +35,7 @@ global_config_file_location = '../global_config_files/global_config'
 global_config_file_name = 'global_config'
 
 etc_nova_config_file = "/etc/nova/nova.conf"
+
 def sudo_log(command):
     output = sudo(command)
     logging.info(output)
