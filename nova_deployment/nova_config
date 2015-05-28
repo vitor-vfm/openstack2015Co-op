@@ -1,6 +1,0 @@
-[mysql]
-NOVA_DBPASS = 34nova_db43
-
-[keystone]
-NOVA_PASS = 34nova_ks43
-

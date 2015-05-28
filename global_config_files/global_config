@@ -1,2 +1,10 @@
 [rabbitmq]
 RABBIT_PASS = 34RabbGuest43
+
+[mysql]
+NOVA_DBPASS = 34nova_db43
+NEUTRON_DBPASS=34neu43
+
+[keystone]
+NOVA_PASS = 34nova_ks43
+NEUTRON_PASS=34neu43
