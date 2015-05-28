@@ -1039,3 +1039,1371 @@ MESSAGE Typo
 2015-05-28 12:51:51-06:00
 2015-05-28 12:51:51-06:00 Done.
 2015-05-28 12:51:51-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 14:07:27-06:00 INFO testing network_deploy
+2015-05-28 14:07:55-06:00 fab network_deploy
+2015-05-28 14:08:01-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 14:08:01-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 14:08:01-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 14:08:01-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] out:
+2015-05-28 14:08:01-06:00
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 14:08:01-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 14:08:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test base: www.muug.mb.ca
+2015-05-28 14:08:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test epel: www.muug.mb.ca
+2015-05-28 14:08:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test extras: mirror.its.sfu.ca
+2015-05-28 14:08:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test updates: www.muug.mb.ca
+2015-05-28 14:08:02-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 14:08:02-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 14:08:03-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 14:08:03-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 14:08:03-06:00 [uadm@129.128.208.139] out:
+2015-05-28 14:08:07-06:00
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 14:08:07-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 14:08:07-06:00 [localhost] local: crudini --get {} '' IPADDR
+2015-05-28 14:08:07-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 14:09:08-06:00 fab network_deploy
+2015-05-28 14:09:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 14:09:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 14:09:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 14:09:10-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 14:09:10-06:00 [uadm@129.128.208.139] out:
+2015-05-28 14:09:11-06:00
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test base: www.muug.mb.ca
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test epel: www.muug.mb.ca
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test extras: mirror.its.sfu.ca
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test updates: www.muug.mb.ca
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 14:09:11-06:00 [uadm@129.128.208.139] out:
+2015-05-28 14:09:17-06:00
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 14:09:17-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 14:09:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 14:09:17-06:00
+2015-05-28 14:09:17-06:00 Done.
+2015-05-28 14:09:17-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:09:38-06:00 fab network_deploy
+2015-05-28 15:11:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:11:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:11:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:11:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:11:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:00-06:00
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:00-06:00 [uadm@129.128.208.139] out: base | 3.6 kB 00:00
+2015-05-28 15:11:01-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:01-06:00 [uadm@129.128.208.139] out: epel/x86_64/metalink | 10 kB 00:00
+2015-05-28 15:11:02-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:02-06:00 [uadm@129.128.208.139] out: epel | 4.4 kB 00:00
+2015-05-28 15:11:02-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:02-06:00 [uadm@129.128.208.139] out: erlang-solutions | 951 B 00:00
+2015-05-28 15:11:02-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:02-06:00 [uadm@129.128.208.139] out: extras | 3.4 kB 00:00
+2015-05-28 15:11:03-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:03-06:00 [uadm@129.128.208.139] out: glusterfs-epel | 2.9 kB 00:00
+2015-05-28 15:11:03-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:03-06:00 [uadm@129.128.208.139] out: glusterfs-noarch-epel | 2.9 kB 00:00
+2015-05-28 15:11:04-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:04-06:00 [uadm@129.128.208.139] out: openstack-juno | 2.9 kB 00:00
+2015-05-28 15:11:05-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:05-06:00 [uadm@129.128.208.139] out: rhscl-python27-epel-7-x86_64 | 3.0 kB 00:00
+2015-05-28 15:11:05-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:05-06:00 [uadm@129.128.208.139] out: updates | 3.4 kB 00:00
+2015-05-28 15:11:05-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:05-06:00 [uadm@129.128.208.139] out: virtualbox | 951 B 00:00
+2015-05-28 15:11:06-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:06-06:00 [uadm@129.128.208.139] out: epel/x86_64/primary_db 46% [======= ] 0.0 B/s | 1.6 MB --:-- ETA
+2015-05-28 15:11:06-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:06-06:00 [uadm@129.128.208.139] out: epel/x86_64/primary_db | 3.5 MB 00:00
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out: (1/2): epel/x86_64/updateinfo 0.0 B/s | 173 kB 00:00
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out: (1/2): epel/x86_64/updateinfo | 379 kB 00:00
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out: (2/2): epel/x86_64/pkgtag 492% [================] 1.2 MB/s | 1.8 MB --:-- ETA
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out: (2/2): epel/x86_64/pkgtags | 1.5 MB 00:00
+2015-05-28 15:11:07-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 15:11:08-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test base: www.muug.mb.ca
+2015-05-28 15:11:08-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test epel: www.muug.mb.ca
+2015-05-28 15:11:08-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test extras: mirror.its.sfu.ca
+2015-05-28 15:11:08-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test updates: www.muug.mb.ca
+2015-05-28 15:11:09-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 15:11:09-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 15:11:09-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 15:11:09-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 15:11:09-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:11:16-06:00
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 15:11:16-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT use_namespaces True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT external_network_bridge br-ex
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT router_delete_namespaces True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT verbose True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT use_namespaces True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_delete_namespaces True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT verbose True
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_url http://controller:5000/v2.0
+2015-05-28 15:11:16-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_region regionOne
+2015-05-28 15:11:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_tenant_name service
+2015-05-28 15:11:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_user neutron
+2015-05-28 15:11:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller
+2015-05-28 15:11:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_password 34neu43
+2015-05-28 15:11:17-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 15:11:17-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:12:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:12:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:12:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:12:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:12:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:12:02-06:00
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test base: www.muug.mb.ca
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test epel: www.muug.mb.ca
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test extras: mirror.its.sfu.ca
+2015-05-28 15:12:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE test updates: www.muug.mb.ca
+2015-05-28 15:12:03-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 15:12:03-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 15:12:03-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 15:12:03-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 15:12:03-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:12:10-06:00
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 15:12:10-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT use_namespaces True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT external_network_bridge br-ex
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT router_delete_namespaces True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT verbose True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT use_namespaces True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_delete_namespaces True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT verbose True
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_url http://controller:5000/v2.0
+2015-05-28 15:12:10-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_region regionOne
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_tenant_name service
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_user neutron
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_password 34neu43
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT verbose True
+2015-05-28 15:12:14-06:00 [vadm@129.128.208.138] Executing task 'configure_metadata_proxy_on_controller'
+2015-05-28 15:12:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf service_metadata_proxy True
+2015-05-28 15:12:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 15:12:14-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] out: ln -s '/usr/lib/systemd/system/openvswitch.service' '/etc/systemd/system/multi-user.target.wants/openvswitch.service'
+2015-05-28 15:12:14-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:12:15-06:00 enp0s25:2
+2015-05-28 15:12:15-06:00
+2015-05-28 15:12:15-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:12:15-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 15:12:15-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:12:15-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-port br-ex
+2015-05-28 15:12:15-06:00 [uadm@129.128.208.139] out: ovs-vsctl: 'add-port' command requires at least 2 arguments
+2015-05-28 15:12:15-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:12:15-06:00
+2015-05-28 15:12:15-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:12:15-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 15:22:07-06:00 INFO problem with vSwitch config
+2015-05-28 15:22:33-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:22:33-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:22:33-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:22:33-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:22:33-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:22:33-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:22:33-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:22:33-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:22:33-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 15:22:33-06:00 [uadm@129.128.208.139] out: ovs-vsctl: cannot create a bridge named br-ex because a bridge named br-ex already exists
+2015-05-28 15:22:33-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:22:33-06:00
+2015-05-28 15:22:33-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:26:07-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:26:07-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:26:07-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:26:07-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:26:07-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:26:07-06:00 enp0s25:2
+2015-05-28 15:26:07-06:00
+2015-05-28 15:26:07-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:26:07-06:00 [31m[0m
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] sudo: ls /etc/neutron
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 release
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] out: fwaas_driver.ini metadata_agent.ini plugins rootwrap.conf
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] out: l3_agent.ini neutron.conf policy.json
+2015-05-28 15:26:07-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:26:08-06:00
+2015-05-28 15:26:08-06:00 [uadm@129.128.208.139] sudo: ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
+2015-05-28 15:26:08-06:00 [uadm@129.128.208.139] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-28 15:26:08-06:00 [uadm@129.128.208.139] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g'/usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-28 15:26:08-06:00 [uadm@129.128.208.139] out: sed: -e expression #1, char 58: unknown option to `s'
+2015-05-28 15:26:08-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:26:08-06:00
+2015-05-28 15:26:08-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:27:57-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:27:57-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:27:57-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:27:57-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:27:57-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:27:57-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:27:57-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:27:57-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:27:57-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:27:57-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:27:57-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:27:57-06:00 enp0s25:2
+2015-05-28 15:27:57-06:00
+2015-05-28 15:27:57-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:27:57-06:00 [31m[0m
+2015-05-28 15:27:57-06:00
+2015-05-28 15:27:57-06:00 Done.
+2015-05-28 15:27:57-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:28:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:28:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:28:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:28:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:28:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:28:48-06:00
+2015-05-28 15:28:48-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:28:48-06:00 [31menp0s25:2[0m
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-port br-ex enp0s25:2
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up 'enp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 15:28:48-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:28:48-06:00
+2015-05-28 15:28:48-06:00
+2015-05-28 15:28:48-06:00 Done.
+2015-05-28 15:28:48-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:31:30-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:31:30-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:31:30-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:31:30-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:31:30-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:31:30-06:00
+2015-05-28 15:31:30-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:31:30-06:00 [31menp0s25:2[0m
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-port br-ex --log-file=~/errorfileenp0s25:2
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up '--log-file=~/errorfileenp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 15:31:30-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:31:30-06:00
+2015-05-28 15:31:30-06:00
+2015-05-28 15:31:30-06:00 Done.
+2015-05-28 15:31:30-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:31:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:31:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:31:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:31:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:31:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:31:55-06:00
+2015-05-28 15:31:55-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:31:55-06:00 [31menp0s25:2[0m
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-port br-ex --log-file=~/errorfile enp0s25:2
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Port does not contain a column whose name matches "enp0s25"
+2015-05-28 15:31:55-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:31:55-06:00
+2015-05-28 15:31:55-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:34:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:34:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:34:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:34:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:34:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:34:02-06:00
+2015-05-28 15:34:02-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:34:02-06:00 [31menp0s25:2[0m
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-port br-ex --log-file=/home/uadm/errorfile 'enp0s25:2'
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Port does not contain a column whose name matches "enp0s25"
+2015-05-28 15:34:02-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:34:02-06:00
+2015-05-28 15:34:02-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:34:51-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:34:51-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:34:51-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:34:51-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:34:51-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:34:51-06:00
+2015-05-28 15:34:51-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:34:51-06:00 [31menp0s25:2[0m
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl --log-file=/home/uadm/errorfile add-port br-ex 'enp0s25:2'
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] out: ovs-vsctl: cannot create a port named enp0s25:2 because a port named enp0s25:2 already exists on bridge br-ex
+2015-05-28 15:34:51-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:34:51-06:00
+2015-05-28 15:34:51-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:39:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:39:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:39:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:39:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:39:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 15:39:34-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-port br-ex 'enp0s25:2'
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up 'enp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 15:39:34-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:39:34-06:00
+2015-05-28 15:39:34-06:00
+2015-05-28 15:39:34-06:00 Done.
+2015-05-28 15:39:34-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:41:25-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:41:25-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:41:25-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:41:25-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:41:25-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 15:41:25-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-port br-ex enp0s25:2
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up 'enp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 15:41:25-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:41:25-06:00
+2015-05-28 15:41:25-06:00
+2015-05-28 15:41:25-06:00 Done.
+2015-05-28 15:41:25-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:42:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:42:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:42:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:42:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:42:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:42:06-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:42:06-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:42:06-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:42:06-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:42:06-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:42:06-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:42:06-06:00
+2015-05-28 15:42:06-06:00
+2015-05-28 15:42:06-06:00 Done.
+2015-05-28 15:42:06-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:42:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:42:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:42:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:42:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:42:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 15:42:40-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl --log-file=/home/adm/ovslog add-port br-ex enp0s25:2
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] out: 2015-05-28T21:42:40Z|00002|vlog|WARN|failed to open /home/adm/ovslog for logging: No such file or directory
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up 'enp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 15:42:40-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:42:40-06:00
+2015-05-28 15:42:40-06:00
+2015-05-28 15:42:40-06:00 Done.
+2015-05-28 15:42:40-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:43:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:43:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:43:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:43:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:43:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:43:13-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:43:13-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:43:13-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:43:13-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:43:13-06:00 [uadm@129.128.208.139] out: br-ex
+2015-05-28 15:43:13-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:43:13-06:00
+2015-05-28 15:43:13-06:00
+2015-05-28 15:43:13-06:00 Done.
+2015-05-28 15:43:13-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:43:23-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:43:23-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:43:23-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:43:23-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:43:23-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 15:43:23-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl --log-file=/home/uadm/ovslog add-port br-ex enp0s25:2
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up 'enp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 15:43:23-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:43:23-06:00
+2015-05-28 15:43:23-06:00
+2015-05-28 15:43:23-06:00 Done.
+2015-05-28 15:43:23-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:47:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 15:47:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 15:47:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 15:47:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 15:47:00-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl del-br br-ex
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 15:47:00-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl --log-file=/home/uadm/ovslog add-port br-ex 'enp0s25:2'
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up 'enp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 15:47:00-06:00 [uadm@129.128.208.139] out:
+2015-05-28 15:47:00-06:00
+2015-05-28 15:47:00-06:00
+2015-05-28 15:47:00-06:00 Done.
+2015-05-28 15:47:00-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 15:50:56-06:00 INFO From ovs-vswitchd log:
+2015-05-28 15:51:03-06:00 2015-05-28T21:46:59.852Z|00055|dpif|WARN|system@ovs-system: execute userspace(pid=0,userdata(00000000)) failed (Invalid argument) on packet metadata=0,in_port=0,vlan_tci=0x0000,dl_src=00:00:00:00:00:00,dl_dst=00:00:00:00:00:00,dl_type=0x1234
+2015-05-28 15:51:03-06:00 2015-05-28T21:46:59.852Z|00056|ofproto_dpif|WARN|system@ovs-system: variable-length userdata feature probe failed (Invalid argument)
+2015-05-28 15:51:03-06:00 2015-05-28T21:46:59.852Z|00057|dpif|WARN|system@ovs-system: failed to put[create] (Invalid argument) skb_priority(0),skb_mark(0),in_port(0),eth(src=00:00:00:00:00:00,dst=00:00:00:00:00:00),eth_type(0x8847),mpls(label=0,tc=0,ttl=0,bos=1)
+2015-05-28 15:51:03-06:00 2015-05-28T21:47:00.050Z|00062|dpif|WARN|system@ovs-system: failed to add enp0s25:2 as port: No such device
+2015-05-28 15:51:03-06:00
+2015-05-28 15:52:02-06:00 INFO The interface doesn't show up on ifconfig
+2015-05-28 16:15:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:15:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:15:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:15:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:15:02-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:15:02-06:00 [vadm@129.128.208.138] Executing task 'controller_deploy'
+2015-05-28 16:15:02-06:00 [vadm@129.128.208.138] sudo: echo "CREATE DATABASE IF NOT EXISTS neutron;
+2015-05-28 16:15:02-06:00 GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' IDENTIFIED BY '34neu43';
+2015-05-28 16:15:02-06:00 GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' IDENTIFIED BY '34neu43';
+2015-05-28 16:15:02-06:00 " | mysql -u root
+2015-05-28 16:15:02-06:00 [vadm@129.128.208.138] sudo: keystone user-list | grep neutron
+2015-05-28 16:15:02-06:00 [vadm@129.128.208.138] out: | 3a8ebaedf13a4c30b0f0fed352068808 | neutron | True | |
+2015-05-28 16:15:02-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:15:03-06:00
+2015-05-28 16:15:03-06:00 [vadm@129.128.208.138] sudo: keystone service-list | grep neutron
+2015-05-28 16:15:03-06:00 [vadm@129.128.208.138] out: | c623b80a11db48b58b515dcae5464dab | neutron | network | OpenStack Networking |
+2015-05-28 16:15:03-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:15:04-06:00
+2015-05-28 16:15:04-06:00 [vadm@129.128.208.138] sudo: keystone endpoint-list | grep 9696
+2015-05-28 16:15:04-06:00 [vadm@129.128.208.138] out: | 1dbbe91f33214304ba3c9a8235301577 | regionOne | http://controller:9696 | http://controller:9696 | http://controller:9696 | c623b80a11db48b58b515dcae5464dab |
+2015-05-28 16:15:04-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:15:04-06:00
+2015-05-28 16:15:04-06:00 [vadm@129.128.208.138] sudo: yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which
+2015-05-28 16:15:04-06:00 [vadm@129.128.208.138] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 16:15:04-06:00 [vadm@129.128.208.138] out: Loading mirror speeds from cached hostfile
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test base: less.cogeco.net
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test epel: www.muug.mb.ca
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test extras: centos.mirror.rafal.ca
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test updates: less.cogeco.net
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: Package python-neutronclient-2.3.9-1.el7.centos.noarch already installed and latest version
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: Package which-2.20-7.el7.x86_64 already installed and latest version
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out: Nothing to do
+2015-05-28 16:15:05-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:15:09-06:00
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf database connection mysql://neutron:34neu43@controller/neutron
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] sudo: keystone tenant-list | grep service | cut -d| -f2
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] out: f30b879b6a5b49e1af0aeb4282e3110b
+2015-05-28 16:15:09-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:15:14-06:00
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_admin_tenant_id f30b879b6a5b49e1af0aeb4282e3110b
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT notify_nova_on_port_status_changes True
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT notify_nova_on_port_data_changes True
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_url http://controller:8774/v2
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_admin_auth_url http://controller:35357/v2.0
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_region_name regionOne
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_admin_username nova
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT verbose True
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT network_api_class nova.network.neutronv2.api.API
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT security_group_api neutron
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT linuxnet_interface_driver nova.network.linux_net.LinuxOVSInterfaceDriver
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT firewall_driver nova.virt.firewall.NoopFirewallDriver
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron url http://controller:9696
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron auth_strategy keystone
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron admin_auth_url http://controller:35357/v2.0
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron admin_tenant_name service
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron admin_username neutron
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] sudo: ls /etc/neutron
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 policy.json
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] out: fwaas_driver.ini metadata_agent.ini plugin.ini release
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] out: l3_agent.ini neutron.conf plugins rootwrap.conf
+2015-05-28 16:15:14-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:15:15-06:00
+2015-05-28 16:15:15-06:00 [vadm@129.128.208.138] sudo: su -s /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade juno" neutron
+2015-05-28 16:15:15-06:00 [vadm@129.128.208.138] out: INFO [alembic.migration] Context impl MySQLImpl.
+2015-05-28 16:15:15-06:00 [vadm@129.128.208.138] out: INFO [alembic.migration] Will assume non-transactional DDL.
+2015-05-28 16:15:16-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:15:20-06:00
+2015-05-28 16:15:20-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service openstack-nova-scheduler.service openstack-nova-conductor.service
+2015-05-28 16:15:20-06:00 [vadm@129.128.208.138] sudo: systemctl enable neutron-server.service
+2015-05-28 16:15:20-06:00 [vadm@129.128.208.138] sudo: systemctl start neutron-server.service
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 16:15:20-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:15:22-06:00
+2015-05-28 16:15:22-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 16:15:22-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 16:15:23-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 16:15:23-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 16:15:23-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test base: www.muug.mb.ca
+2015-05-28 16:15:23-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test epel: www.muug.mb.ca
+2015-05-28 16:15:23-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test extras: mirror.its.sfu.ca
+2015-05-28 16:15:23-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test updates: www.muug.mb.ca
+2015-05-28 16:15:24-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:15:25-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:15:25-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:15:25-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 16:15:25-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:15:32-06:00
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 16:15:32-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT external_network_bridge br-ex
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT router_delete_namespaces True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT verbose True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_delete_namespaces True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT verbose True
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_url http://controller:5000/v2.0
+2015-05-28 16:15:32-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_region regionOne
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_tenant_name service
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_user neutron
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_password 34neu43
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT verbose True
+2015-05-28 16:15:37-06:00 [vadm@129.128.208.138] Executing task 'configure_metadata_proxy_on_controller'
+2015-05-28 16:15:37-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf service_metadata_proxy True
+2015-05-28 16:15:37-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:15:37-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: systemctl enable openvswitch.service
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: systemctl start openvswitch.service
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl del-br br-ex
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl list-br
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl add-br br-ex
+2015-05-28 16:15:37-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_external_interface_config '' DEVICE
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: ovs-vsctl --log-file=/home/uadm/ovslog add-port br-ex 'enp0s25:2'
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out: ovs-vsctl: Error detected while setting up 'enp0s25:2'. See ovs-vswitchd log for details.
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:15:37-06:00
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: ls /etc/neutron
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 policy.json
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out: fwaas_driver.ini metadata_agent.ini plugin.ini release
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out: l3_agent.ini neutron.conf plugins rootwrap.conf
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:15:37-06:00
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g'/usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out: sed: -e expression #1, char 58: unknown option to `s'
+2015-05-28 16:15:37-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:15:37-06:00
+2015-05-28 16:15:37-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:15:37-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 16:17:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:17:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:17:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:17:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:17:34-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:17:34-06:00 [vadm@129.128.208.138] Executing task 'controller_deploy'
+2015-05-28 16:17:34-06:00 [vadm@129.128.208.138] sudo: echo "CREATE DATABASE IF NOT EXISTS neutron;
+2015-05-28 16:17:34-06:00 GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' IDENTIFIED BY '34neu43';
+2015-05-28 16:17:34-06:00 GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' IDENTIFIED BY '34neu43';
+2015-05-28 16:17:34-06:00 " | mysql -u root
+2015-05-28 16:17:34-06:00 [vadm@129.128.208.138] sudo: keystone user-list | grep neutron
+2015-05-28 16:17:34-06:00 [vadm@129.128.208.138] out: | 3a8ebaedf13a4c30b0f0fed352068808 | neutron | True | |
+2015-05-28 16:17:34-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:17:35-06:00
+2015-05-28 16:17:35-06:00 [vadm@129.128.208.138] sudo: keystone service-list | grep neutron
+2015-05-28 16:17:35-06:00 [vadm@129.128.208.138] out: | c623b80a11db48b58b515dcae5464dab | neutron | network | OpenStack Networking |
+2015-05-28 16:17:35-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:17:36-06:00
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] sudo: keystone endpoint-list | grep 9696
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: | 1dbbe91f33214304ba3c9a8235301577 | regionOne | http://controller:9696 | http://controller:9696 | http://controller:9696 | c623b80a11db48b58b515dcae5464dab |
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:17:36-06:00
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] sudo: yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: Loading mirror speeds from cached hostfile
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test base: less.cogeco.net
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test epel: www.muug.mb.ca
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test extras: centos.mirror.rafal.ca
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test updates: less.cogeco.net
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: Package python-neutronclient-2.3.9-1.el7.centos.noarch already installed and latest version
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: Package which-2.20-7.el7.x86_64 already installed and latest version
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out: Nothing to do
+2015-05-28 16:17:36-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:17:40-06:00
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf database connection mysql://neutron:34neu43@controller/neutron
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] sudo: keystone tenant-list | grep service | cut -d| -f2
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] out: f30b879b6a5b49e1af0aeb4282e3110b
+2015-05-28 16:17:40-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:17:46-06:00
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_admin_tenant_id f30b879b6a5b49e1af0aeb4282e3110b
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT notify_nova_on_port_status_changes True
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT notify_nova_on_port_data_changes True
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_url http://controller:8774/v2
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_admin_auth_url http://controller:35357/v2.0
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_region_name regionOne
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT nova_admin_username nova
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT verbose True
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT network_api_class nova.network.neutronv2.api.API
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT security_group_api neutron
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT linuxnet_interface_driver nova.network.linux_net.LinuxOVSInterfaceDriver
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf DEFAULT firewall_driver nova.virt.firewall.NoopFirewallDriver
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron url http://controller:9696
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron auth_strategy keystone
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron admin_auth_url http://controller:35357/v2.0
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron admin_tenant_name service
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf neutron admin_username neutron
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] sudo: ls /etc/neutron
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 policy.json
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] out: fwaas_driver.ini metadata_agent.ini plugin.ini release
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] out: l3_agent.ini neutron.conf plugins rootwrap.conf
+2015-05-28 16:17:46-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:17:47-06:00
+2015-05-28 16:17:47-06:00 [vadm@129.128.208.138] sudo: su -s /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade juno" neutron
+2015-05-28 16:17:47-06:00 [vadm@129.128.208.138] out: INFO [alembic.migration] Context impl MySQLImpl.
+2015-05-28 16:17:47-06:00 [vadm@129.128.208.138] out: INFO [alembic.migration] Will assume non-transactional DDL.
+2015-05-28 16:17:47-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:17:51-06:00
+2015-05-28 16:17:51-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service openstack-nova-scheduler.service openstack-nova-conductor.service
+2015-05-28 16:17:51-06:00 [vadm@129.128.208.138] sudo: systemctl enable neutron-server.service
+2015-05-28 16:17:51-06:00 [vadm@129.128.208.138] sudo: systemctl start neutron-server.service
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 16:17:51-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:17:52-06:00
+2015-05-28 16:17:52-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 16:17:52-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 16:17:52-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 16:17:52-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test base: www.muug.mb.ca
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test epel: www.muug.mb.ca
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test extras: mirror.its.sfu.ca
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test updates: www.muug.mb.ca
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 16:17:57-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:18:05-06:00
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 16:18:05-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT external_network_bridge br-ex
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT router_delete_namespaces True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT verbose True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_delete_namespaces True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT verbose True
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_url http://controller:5000/v2.0
+2015-05-28 16:18:05-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_region regionOne
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_tenant_name service
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_user neutron
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_password 34neu43
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT verbose True
+2015-05-28 16:18:08-06:00 [vadm@129.128.208.138] Executing task 'configure_metadata_proxy_on_controller'
+2015-05-28 16:18:08-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf service_metadata_proxy True
+2015-05-28 16:18:08-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:18:08-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] sudo: ls /etc/neutron
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 policy.json
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] out: fwaas_driver.ini metadata_agent.ini plugin.ini release
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] out: l3_agent.ini neutron.conf plugins rootwrap.conf
+2015-05-28 16:18:08-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:18:09-06:00
+2015-05-28 16:18:09-06:00 [uadm@129.128.208.139] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-28 16:18:09-06:00 [uadm@129.128.208.139] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g'/usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-28 16:18:09-06:00 [uadm@129.128.208.139] out: sed: -e expression #1, char 58: unknown option to `s'
+2015-05-28 16:18:09-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:18:09-06:00
+2015-05-28 16:18:09-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:18:09-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 16:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 16:19:56-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:19:57-06:00
+2015-05-28 16:19:57-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 16:19:57-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 16:19:57-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 16:19:57-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test base: www.muug.mb.ca
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test epel: www.muug.mb.ca
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test extras: mirror.its.sfu.ca
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test updates: www.muug.mb.ca
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 16:20:02-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:20:09-06:00
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 16:20:09-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT external_network_bridge br-ex
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT router_delete_namespaces True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT verbose True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_delete_namespaces True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT verbose True
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_url http://controller:5000/v2.0
+2015-05-28 16:20:09-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_region regionOne
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_tenant_name service
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_user neutron
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_password 34neu43
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT verbose True
+2015-05-28 16:20:13-06:00 [vadm@129.128.208.138] Executing task 'configure_metadata_proxy_on_controller'
+2015-05-28 16:20:13-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf service_metadata_proxy True
+2015-05-28 16:20:13-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:20:13-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] sudo: ls /etc/neutron
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 policy.json
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] out: fwaas_driver.ini metadata_agent.ini plugin.ini release
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] out: l3_agent.ini neutron.conf plugins rootwrap.conf
+2015-05-28 16:20:13-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:20:14-06:00
+2015-05-28 16:20:14-06:00 [uadm@129.128.208.139] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-28 16:20:14-06:00 [uadm@129.128.208.139] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-28 16:20:14-06:00 [uadm@129.128.208.139] sudo: systemctl enable neutron-openvswitch-agent.service neutron-l3-agent.serviceneutron-dhcp-agent.service neutron-metadata-agent.serviceneutron-ovs-cleanup.service
+2015-05-28 16:20:14-06:00 [uadm@129.128.208.139] out: Failed to issue method call: No such file or directory
+2015-05-28 16:20:14-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:20:14-06:00
+2015-05-28 16:20:14-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 16:20:14-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:21:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:21:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:21:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:21:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:21:48-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:21:48-06:00
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test base: www.muug.mb.ca
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test epel: www.muug.mb.ca
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test extras: mirror.its.sfu.ca
+2015-05-28 16:21:48-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test updates: www.muug.mb.ca
+2015-05-28 16:21:49-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:21:49-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:21:49-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:21:49-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 16:21:49-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:21:56-06:00
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 16:21:56-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT external_network_bridge br-ex
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT router_delete_namespaces True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT verbose True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_delete_namespaces True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT verbose True
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_url http://controller:5000/v2.0
+2015-05-28 16:21:56-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_region regionOne
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_tenant_name service
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_user neutron
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_password 34neu43
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT verbose True
+2015-05-28 16:22:00-06:00 [vadm@129.128.208.138] Executing task 'configure_metadata_proxy_on_controller'
+2015-05-28 16:22:00-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf service_metadata_proxy True
+2015-05-28 16:22:00-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:22:00-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: ls /etc/neutron
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 policy.json
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: fwaas_driver.ini metadata_agent.ini plugin.ini release
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: l3_agent.ini neutron.conf plugins rootwrap.conf
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:22:00-06:00
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: systemctl enable neutron-openvswitch-agent.service neutron-l3-agent.service neutron-dhcp-agent.service neutron-metadata-agent.service neutron-ovs-cleanup.service
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: ln -s '/usr/lib/systemd/system/neutron-l3-agent.service' '/etc/systemd/system/multi-user.target.wants/neutron-l3-agent.service'
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: ln -s '/usr/lib/systemd/system/neutron-dhcp-agent.service' '/etc/systemd/system/multi-user.target.wants/neutron-dhcp-agent.service'
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: ln -s '/usr/lib/systemd/system/neutron-metadata-agent.service' '/etc/systemd/system/multi-user.target.wants/neutron-metadata-agent.service'
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: ln -s '/usr/lib/systemd/system/neutron-ovs-cleanup.service' '/etc/systemd/system/multi-user.target.wants/neutron-ovs-cleanup.service'
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:22:00-06:00
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] sudo: ystemctl start neutron-openvswitch-agent.service neutron-l3-agent.service neutron-dhcp-agent.service neutron-metadata-agent.service
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out: bash: ystemctl: command not found...
+2015-05-28 16:22:00-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:22:01-06:00
+2015-05-28 16:22:01-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 16:22:01-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:22:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:22:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:22:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:22:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:22:40-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] Executing task 'network_deploy'
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.ip_forward 1
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] sudo: sysctl -p
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] out: net.ipv4.ip_forward = 1
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:22:40-06:00
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] out: Repository erlang-solutions is listed more than once in the configuration
+2015-05-28 16:22:40-06:00 [uadm@129.128.208.139] out: Loading mirror speeds from cached hostfile
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test base: www.muug.mb.ca
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test epel: www.muug.mb.ca
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test extras: mirror.its.sfu.ca
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: config_files fabfile.py fabfile.pyc log log_results man_crudini new_log new_logE ovslog test updates: www.muug.mb.ca
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out: Nothing to do
+2015-05-28 16:22:41-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:22:48-06:00
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_flat flat_networks external
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs bridge_mappings external:br-ex
+2015-05-28 16:22:48-06:00 [localhost] local: crudini --get ../network_deployment/config_files/network_node_instance_tunnels_interface_config '' IPADDR
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.21
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT external_network_bridge br-ex
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT router_delete_namespaces True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/l3_agent.ini DEFAULT verbose True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT use_namespaces True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT dhcp_delete_namespaces True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/dhcp_agent.ini DEFAULT verbose True
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_url http://controller:5000/v2.0
+2015-05-28 16:22:48-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT auth_region regionOne
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_tenant_name service
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_user neutron
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT admin_password 34neu43
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] sudo: crudini --set /etc/neutron/metadata_agent.ini DEFAULT verbose True
+2015-05-28 16:22:52-06:00 [vadm@129.128.208.138] Executing task 'configure_metadata_proxy_on_controller'
+2015-05-28 16:22:52-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf service_metadata_proxy True
+2015-05-28 16:22:52-06:00 [vadm@129.128.208.138] sudo: crudini --set /etc/nova/nova.conf metadata_proxy_shared_secret 34m3t$3c43
+2015-05-28 16:22:52-06:00 [vadm@129.128.208.138] sudo: systemctl restart openstack-nova-api.service
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] sudo: ls /etc/neutron
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 policy.json
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] out: fwaas_driver.ini metadata_agent.ini plugin.ini release
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] out: l3_agent.ini neutron.conf plugins rootwrap.conf
+2015-05-28 16:22:52-06:00 [uadm@129.128.208.139] out:
+2015-05-28 16:22:53-06:00
+2015-05-28 16:22:53-06:00 [uadm@129.128.208.139] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-28 16:22:53-06:00 [uadm@129.128.208.139] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-28 16:22:53-06:00 [uadm@129.128.208.139] sudo: systemctl enable neutron-openvswitch-agent.service neutron-l3-agent.service neutron-dhcp-agent.service neutron-metadata-agent.service neutron-ovs-cleanup.service
+2015-05-28 16:22:53-06:00 [uadm@129.128.208.139] sudo: systemctl start neutron-openvswitch-agent.service neutron-l3-agent.service neutron-dhcp-agent.service neutron-metadata-agent.service
+2015-05-28 16:22:53-06:00
+2015-05-28 16:22:53-06:00 Done.
+2015-05-28 16:22:53-06:00 Disconnecting from uadm@129.128.208.139... done.
+2015-05-28 16:22:53-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:27:03-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:27:03-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:27:03-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:27:03-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:27:03-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:27:03-06:00 [uadm@129.128.208.139] Executing task 'network_tdd'
+2015-05-28 16:27:03-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents'
+2015-05-28 16:28:04-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:28:04-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:28:04-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:28:04-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:28:04-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:28:04-06:00 [uadm@129.128.208.139] Executing task 'network_tdd'
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents'
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:28:04-06:00
+2015-05-28 16:28:04-06:00 [31mProblem with agent Metadata agent[0m
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep Metadata agent
+2015-05-28 16:28:04-06:00 [vadm@129.128.208.138] out: grep: agent: No such file or directory
+2015-05-28 16:28:05-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:28:05-06:00
+2015-05-28 16:28:05-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:28:53-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:28:53-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:28:53-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:28:53-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:28:53-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:28:53-06:00 [uadm@129.128.208.139] Executing task 'network_tdd'
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents'
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:28:53-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:28:54-06:00
+2015-05-28 16:28:54-06:00 [31mProblem with agent Metadata agent[0m
+2015-05-28 16:28:54-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'Metadata agent'
+2015-05-28 16:28:54-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-28 16:28:54-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:28:54-06:00
+2015-05-28 16:28:54-06:00 [31m| ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |[0m
+2015-05-28 16:28:54-06:00 [31mProblem with agent Open vSwitch agent[0m
+2015-05-28 16:28:54-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'Open vSwitch agent'
+2015-05-28 16:28:54-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-28 16:28:55-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:28:55-06:00
+2015-05-28 16:28:55-06:00 [31m| d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |[0m
+2015-05-28 16:28:55-06:00 [31mProblem with agent L3 agent[0m
+2015-05-28 16:28:55-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'L3 agent'
+2015-05-28 16:28:55-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-28 16:28:55-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:28:56-06:00
+2015-05-28 16:28:56-06:00 [31m| ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |[0m
+2015-05-28 16:28:56-06:00 [31mProblem with agent DHCP agent[0m
+2015-05-28 16:28:56-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'DHCP agent'
+2015-05-28 16:28:56-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-28 16:28:56-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:28:57-06:00
+2015-05-28 16:28:57-06:00 [31m| 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |[0m
+2015-05-28 16:28:57-06:00
+2015-05-28 16:28:57-06:00 Done.
+2015-05-28 16:28:57-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:40:46-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:40:46-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:40:46-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:40:46-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:40:46-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:40:46-06:00 [uadm@129.128.208.139] Executing task 'network_tdd'
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents'
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | xxx | True | neutron-dhcp-agent |
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | xxx | True | neutron-metadata-agent |
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | xxx | True | neutron-l3-agent |
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | xxx | True | neutron-openvswitch-agent |
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:40:46-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:40:47-06:00
+2015-05-28 16:40:47-06:00 [31mProblem with agent Metadata agent[0m
+2015-05-28 16:40:47-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'Metadata agent'
+2015-05-28 16:40:47-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | xxx | True | neutron-metadata-agent |
+2015-05-28 16:40:47-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:40:48-06:00
+2015-05-28 16:40:48-06:00 [31m| ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | xxx | True | neutron-metadata-agent |[0m
+2015-05-28 16:40:48-06:00 [31mProblem with agent Open vSwitch agent[0m
+2015-05-28 16:40:48-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'Open vSwitch agent'
+2015-05-28 16:40:48-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | xxx | True | neutron-openvswitch-agent |
+2015-05-28 16:40:48-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:40:49-06:00
+2015-05-28 16:40:49-06:00 [31m| d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | xxx | True | neutron-openvswitch-agent |[0m
+2015-05-28 16:40:49-06:00 [31mProblem with agent L3 agent[0m
+2015-05-28 16:40:49-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'L3 agent'
+2015-05-28 16:40:49-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | xxx | True | neutron-l3-agent |
+2015-05-28 16:40:49-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:40:50-06:00
+2015-05-28 16:40:50-06:00 [31m| ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | xxx | True | neutron-l3-agent |[0m
+2015-05-28 16:40:50-06:00 [31mProblem with agent DHCP agent[0m
+2015-05-28 16:40:50-06:00 [vadm@129.128.208.138] sudo: neutron agent-list | grep 'DHCP agent'
+2015-05-28 16:40:50-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | xxx | True | neutron-dhcp-agent |
+2015-05-28 16:40:50-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:40:50-06:00
+2015-05-28 16:40:50-06:00 [31m| 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | xxx | True | neutron-dhcp-agent |[0m
+2015-05-28 16:40:50-06:00
+2015-05-28 16:40:50-06:00 Done.
+2015-05-28 16:40:50-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-28 16:42:29-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-28 16:42:29-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-28 16:42:29-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-28 16:42:29-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-28 16:42:29-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-28 16:42:29-06:00 [uadm@129.128.208.139] Executing task 'network_tdd'
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents'
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-28 16:42:29-06:00 [vadm@129.128.208.138] out:
+2015-05-28 16:42:29-06:00
+2015-05-28 16:42:29-06:00 [32mNeutron agent Metadata agent OK![0m
+2015-05-28 16:42:29-06:00 [32mNeutron agent Open vSwitch agent OK![0m
+2015-05-28 16:42:29-06:00 [32mNeutron agent L3 agent OK![0m
+2015-05-28 16:42:29-06:00 [32mNeutron agent DHCP agent OK![0m
+2015-05-28 16:42:29-06:00
+2015-05-28 16:42:29-06:00 Done.
+2015-05-28 16:42:29-06:00 Disconnecting from vadm@129.128.208.138... done.
