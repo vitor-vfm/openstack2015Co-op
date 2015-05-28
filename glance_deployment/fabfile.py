@@ -6,8 +6,13 @@ from fabric.colors import green, red
 from fabric.contrib.files import append
 import string
 
+import sys
+sys.path.append('../global_config_files')
+import env_config
 
 ############################ Config ########################################
+
+env.roledefs = env_config.roledefs
 
 glance_config_file = 'glance_config'
 admin_openrc = "../global_config_files/admin-openrc.sh"
@@ -110,6 +115,7 @@ def download_packages():
     # make sure we have crudini
     sudo('yum install -y crudini')
    
+@roles('controller')
 def setup_glance():
 
 #    host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{} #       controller".format(env.host))) 
@@ -133,12 +139,12 @@ def setup_glance():
     GLANCE_PASS = get_parameter(glance_config_file, 'keystone', 'GLANCE_PASS')    
 
     # setup glance database
-#    setup_glance_database(GLANCE_DBPASS)
-#    setup_glance_keystone(GLANCE_PASS)
+    setup_glance_database(GLANCE_DBPASS)
+    setup_glance_keystone(GLANCE_PASS)
 
-#    setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS)
-#    populate_database()
-#    start_glance_services()
+    setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS)
+    populate_database()
+    start_glance_services()
         
 
 
@@ -152,12 +158,13 @@ def setup_glance():
 ################### Deployment ########################################
 
 def deploy():
-    setup_glance()
+    execute(setup_glance)
 
 ######################################## TDD #########################################
 
 
 
+@roles('controller')
 def get_image_tdd():
 
     sudo("mkdir /tmp/images")
@@ -166,13 +173,13 @@ def get_image_tdd():
     sudo("wget -P /tmp/images " + url)
     source_command = "source admin-openrc.sh"
     with prefix(source_command):
-        output = sudo("glance image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
-        sudo("glance image-list")
+        sudo("glance image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
+        output = sudo("glance image-list")
 
     if 'cirros-0.3.3-x86_64' in output:
-        print(green("GOOD"))
+        print(green("Successfully installed cirros image"))
     else:
-        print(red("BAD"))
+        print(red("Couldn't install cirros image"))
         
     sudo("rm -r /tmp/images")
 
@@ -180,4 +187,4 @@ def get_image_tdd():
 
 def tdd():
     with settings(warn_only=True):
-        get_image_tdd()
+        execute(get_image_tdd)

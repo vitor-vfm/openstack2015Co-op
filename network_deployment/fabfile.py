@@ -92,7 +92,9 @@ def set_hosts():
     # configure the /etc/hosts file to put aliases
     config_file = open(hosts_config, 'r').read()
     sudo("cp /etc/hosts /etc/hosts.back12")
-    sudo("sed -i '/(controller|network|compute1)/ d' /etc/hosts")
+    sudo("sed -i '/controller/d' /etc/hosts")
+    sudo("sed -i '/network/d' /etc/hosts")
+    sudo("sed -i '/compute/d' /etc/hosts")
     append('/etc/hosts',config_file,use_sudo=True)
 
 @roles('controller')

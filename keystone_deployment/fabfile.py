@@ -155,8 +155,8 @@ def setupKeystone():
     # fixing bind-address on /etc/my.cnf
 
     # bindCommand = "sed -i.bak 's/^\(bind-address=\).*/\1 {} /' /etc/my.cnf".format(env.host)
-    bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
-    sudo(bindCommand)
+    # bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
+    # sudo(bindCommand)
     
     sudo("systemctl restart mariadb")
 
