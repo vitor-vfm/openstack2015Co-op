@@ -22,11 +22,7 @@ admin_openrc = '../global_config_files/admin-openrc.sh'
 global_config = '../global_config_files/global_config'
 
 # get passwords from their config file
-passwd = dict()
-passwd['TROVE_PASS'] = local('crudini --get {} trove TROVE_PASS'.format(global_config),capture=True)
-passwd['TROVE_DBPASS'] = local('crudini --get {} trove TROVE_DBPASS'.format(global_config),capture=True)
-passwd['RABBIT_PASS'] = local('crudini --get {} rabbitmq RABBIT_PASS'.format(global_config),capture=True)
-print passwd
+passwd = env_config.passwd
 
 ############################ Config ########################################
 
@@ -48,6 +44,82 @@ def set_trove_config_files():
         sudo('crudini --set {} DEFAULT rabbit_password {}'.format(fil,passwd['RABBIT_PASS']))
 
 
+def get_api_and_config():
+    api_filename = "api-paste.ini?h=stable%2Fjuno"
+    sudo("wget http://git.openstack.org/cgit/openstack/trove/plain/etc/trove/api-paste.ini?h=stable/juno")
+    
+    sudo('crudini --set {} filter:authtoken auth_uri http://controller:5000/v2.0'.format(api_filename))
+    sudo('crudini --set {} filter:authtoken {} {}'.format(api_filename, 'identity_uri','http://controller:35357'))
+    sudo('crudini --set {} filter:authtoken {} {}'.format(api_filename, 'admin_user', 'trove'))
+    sudo('crudini --set {} filter:authtoken {} {}'.format(api_filename, 'admin_password', passwd['TROVE_DBPASS']))
+    sudo('crudini --set {} filter:authtoken {} {}'.format(api_filename, 'admin_tenant_name', 'service'))
+    sudo('crudini --set {} filter:authtoken {} {}'.format(api_filename, 'signing_dir', '/var/cache/trove'))
+
+
+    config_files = ['trove.conf','trove-taskmanager.conf','trove-conductor.conf']
+
+    
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'default_datastore', 'mysql'))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'add_addresses', 'True'))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'network_label_regex', '^NETWORK_LABEL$'))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'api_paste_config', ''))
+
+
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[1], 'nova_proxy_admin_user', 'admin'))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[1], 'nova_proxy_admin_pass', passwd['ADMIN_PASS']))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[1], 'nova_proxy_admin_tenant_name', 'service'))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[1], 'taskmanager_manager', 'trove.taskmanager.manager.Manager'))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[1], '', ''))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[1], '', ''))
+
+
+def setup_database():
+    mysql_commands = "CREATE DATABASE IF NOT EXISTS trove;"
+    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON trove.* TO 'trove'@'localhost' IDENTIFIED BY '{}';".format(passwd['TROVE_DBPASS'])
+    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON trove.* TO 'trove'@'%' IDENTIFIED BY '{}';".format(passwd['TROVE_DBPASS'])
+
+    
+    print("mysql commands are: " + mysql_commands)
+    sudo('echo "{}" | mysql -u root'.format(mysql_commands))
+
+def populate_database():
+    sudo("""su -s /bin/sh -c "trove-manage db_sync" trove""")
+
+    # not sure about following command 
+
+#    sudo("""su -s /bin/sh -c "trove-manage datastore_update mysql ''" trove """)
+
+def edit_trove_guestagent():
+
+    fil = "trove-guestagent.conf"
+    sudo('crudini --set {} "" rabbit_host controller'.format(fil))
+    sudo('crudini --set {} "" rabbit_password {}'.format(fil,passwd['RABBIT_PASS']))
+
+    sudo('crudini --set {} "" {} {}'.format(fil, 'nova_proxy_admin_user', 'admin'))
+    sudo('crudini --set {} "" {} {}'.format(fil, 'nova_proxy_admin_pass', passwd['ADMIN_PASS']))
+    sudo('crudini --set {} "" {} {}'.format(fil, 'nova_proxy_admin_tenant_name', 'service'))
+    sudo('crudini --set {} "" {} {}'.format(fil, 'nova_proxy_admin_tenant_name', 'service'))
+    sudo('crudini --set {} "" {} {}'.format(fil, 'trove_auth_url', 'http://controller:35357/v2.0'))   
+    
+    
+def update_datastore():
+    sudo(""" trove-manage --config-file /etc/trove/trove.conf datastore_version_update mysql mysql-5.5 mysql glance_image_ID mysql-server-5.5 1""")
+
+def keystone_register():   
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        sudo("""keystone service-create --name trove --type database  --description "OpenStack Database Service" """)
+        sudo("""keystone endpoint-create \
+        --service-id $(keystone service-list | awk '/ trove / {print $2}') \
+        --publicurl http://controller:8779/v1.0/%\(tenant_id\)s \
+        --internalurl http://controller:8779/v1.0/%\(tenant_id\)s \
+        --adminurl http://controller:8779/v1.0/%\(tenant_id\)s \
+        --region regionOne """)
+
+def start_services():
+    sudo("systemctl enable openstack-trove-api.service openstack-trove-taskmanager.service openstack-trove-conductor.service")
+    sudo("systemctl start openstack-trove-api.service openstack-trove-taskmanager.service  openstack-trove-conductor.service")
+
 @roles('controller')
 def database_deploy():
 
@@ -65,8 +137,29 @@ def database_deploy():
             # add the admin role to the trove user
             sudo('keystone user-role-add --user trove --tenant service --role admin')
 
-    set_trove_config_files()
-
+    with cd("/etc/trove/"):
+#        set_trove_config_files()
+#        get_api_and_config()
+#        setup_database()
+#        populate_database()
+        edit_trove_guestagent()
+        update_datastore()
+        keystone_register()
+        start_services()
 
 def deploy():
+
     execute(database_deploy)
+
+
+def verify_database():
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        output_old = sudo("trove list")
+        sudo("""trove create name 2 --size=2 --databases DBNAME \
+        --users USER:PASSWORD --datastore_version mysql-5.5 \
+        --datastore mysql """)
+        output_new = sudo("trove list")
+
+def tdd():
+    execute(verify_database)
