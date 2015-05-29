@@ -19,8 +19,6 @@ logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(
 
 env.roledefs = env_config.roledefs
 
-nova_config_file = '../global_config_files/global_config'
-
 admin_openrc = "../global_config_files/admin-openrc.sh"
 
 demo_openrc = "../global_config_files/demo-openrc.sh"
@@ -31,10 +29,8 @@ controller_management_interface_file_name = 'controller_management_interface_con
 compute_management_interface_file_location = '../network_deployment/config_files/compute_management_interface_config'
 compute_management_interface_file_name = 'compute_management_interface_config'
 
-global_config_file_location = '../global_config_files/global_config'
-global_config_file_name = 'global_config'
-
 etc_nova_config_file = "/etc/nova/nova.conf"
+
 def sudo_log(command):
     output = sudo(command)
     logging.info(output)
@@ -50,7 +46,8 @@ def run_log(command):
 
 def get_parameter(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
-    return sudo_log(crudini_command)
+    return local(crudini_command, capture=True)
+#    return sudo_log(crudini_command)
 
 def set_parameter(config_file, section, parameter, value):
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
@@ -122,20 +119,6 @@ def start_nova_services_on_controller():
     sudo_log(enable_all)
     sudo_log(start_all)
 
-
-def upload_files_on_controller():
-    # upload config file for reading via crudini
-    put(nova_config_file)
-
-    # upload admin-openrc.sh to set variables in host machine
-    put(admin_openrc)
-
-    # for getting the management interface ip address of the controller
-    put(controller_management_interface_file_location)
-
-    # for getting rabbitmq credentials
-    put(global_config_file_location)
-
 def download_packages():
     # make sure we have crudini
     sudo_log('yum install -y crudini')
@@ -190,30 +173,17 @@ def start_services_on_compute():
     sudo_log("systemctl start libvirtd.service openstack-nova-compute.service")
 
 
-
-def upload_files_on_compute():
-    # upload config file for reading via crudini
-    put(nova_config_file,remote_path='.')
-
-    # for getting the management interface ip address of the controller
-    put(compute_management_interface_file_location)
-
-    # for getting rabbitmq credentials
-    put(global_config_file_location)
-    
-
 @roles('compute')
 def setup_nova_on_compute():
     download_packages()
+    put(admin_openrc)
 
-
-    #upload_files_on_compute()
-    
     # variable setup
-    NOVA_DBPASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
-    NOVA_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
-    RABBIT_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
-    NETWORK_MANAGEMENT_IP = get_parameter(compute_management_interface_file_name, "''", 'IPADDR')
+
+    NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
+    NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
+    RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
+    NETWORK_MANAGEMENT_IP = get_parameter(compute_management_interface_file_location, "''", 'IPADDR')
 
     setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)        
     start_services_on_compute()
@@ -235,14 +205,13 @@ def setup_nova_on_controller():
     #    sudo_log("systemctl restart mariadb")
     
     download_packages()
-
-    #upload_files_on_controller()
+    put(admin_openrc)
     
     # variable setup
-    NOVA_DBPASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
-    NOVA_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
-    RABBIT_PASS = local('crudini --get ' + nova_config_file + ' mysql NOVA_DBPASS',capture=True)
-    CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_name, "''", 'IPADDR')
+    NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
+    NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
+    RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
+    CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_location, "''", 'IPADDR')
 
     # setup nova database
     setup_nova_database_on_controller(NOVA_DBPASS)
@@ -251,7 +220,6 @@ def setup_nova_on_controller():
     setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP)
     populate_database_on_controller()
     start_nova_services_on_controller()
-        
 
 ################### Deployment ########################################
 

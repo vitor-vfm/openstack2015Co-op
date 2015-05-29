@@ -35,11 +35,14 @@ passwd['RABBIT_PASS'] = local('crudini --get {} rabbitmq RABBIT_PASS'.format(glo
 passwd['NOVA_PASS'] = local('crudini --get {} keystone NOVA_PASS'.format(global_config),capture=True)
 passwd['NEUTRON_PASS'] = local('crudini --get {} keystone NEUTRON_PASS'.format(global_config),capture=True)
 passwd['NEUTRON_DBPASS'] = local('crudini --get {} mysql NEUTRON_DBPASS'.format(global_config),capture=True)
+passwd['METADATA_SECRET'] = local('crudini --get {} metadata METADATA_SECRET'.format(global_config),capture=True)
 
 ################### General functions ########################################
 
 
 ################### Deployment ########################################
+
+# CONTROLLER
 
 def create_neutron_database():
 
@@ -203,17 +206,246 @@ def controller_deploy():
     sudo('systemctl start neutron-server.service')
     
 
+# NETWORK
+
+def configure_the_Networking_common_components():
+
+    # make a backup
+    sudo('cp {} {}.back12'.format(neutron_conf,neutron_conf))
+
+    # configure RabbitMQ access
+    sudo('crudini --set {} DEFAULT rpc_backend rabbit'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT rabbit_host controller'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT rabbit_password {}'.format(neutron_conf,passwd['RABBIT_PASS']),quiet=True)
+
+    # configure Identity service access
+
+    sudo('crudini --set {} DEFAULT auth_strategy keystone'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken auth_uri http://controller:5000/v2.0'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken identity_uri http://controller:35357'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken admin_tenant_name service'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken admin_user neutron'.format(neutron_conf))
+    sudo('crudini --set {} keystone_authtoken admin_password {}'.format(neutron_conf,passwd['NEUTRON_PASS']),quiet=True)
+
+    # enable ML2 plugin
+
+    sudo('crudini --set {} DEFAULT core_plugin ml2'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT service_plugins router'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT allow_overlapping_ips True'.format(neutron_conf))
+    sudo('crudini --set {} DEFAULT verbose True'.format(neutron_conf))
+
+def configure_ML2_plug_in_network():
+    
+    ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
+
+    # most of the configuration is the same as the controller
+    configure_ML2_plugin()
+
+    # configure the external flat provider network 
+    sudo('crudini --set ' + ml2_conf_file + ' ml2_type_flat flat_networks external')
+
+    # configure the external flat provider network 
+    sudo('crudini --set ' + ml2_conf_file + ' ovs enable_tunneling True')
+    sudo('crudini --set ' + ml2_conf_file + ' ovs bridge_mappings external:br-ex')
+    local_ip_file_location = '../network_deployment/config_files/network_node_instance_tunnels_interface_config'
+    local_ip = local("crudini --get {} '' IPADDR".format(local_ip_file_location),capture=True)
+    sudo('crudini --set ' + ml2_conf_file + ' ovs local_ip ' + local_ip)
+
+    # enable GRE tunnels 
+    sudo('crudini --set ' + ml2_conf_file + ' agent tunnel_types gre')
+
+def configure_Layer3_agent():
+
+    l3_agent_file = '/etc/neutron/l3_agent.ini'
+
+    sudo("crudini --set {} DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver".format(l3_agent_file))
+    sudo("crudini --set {} DEFAULT use_namespaces True".format(l3_agent_file))
+    sudo("crudini --set {} DEFAULT external_network_bridge br-ex".format(l3_agent_file))
+    sudo("crudini --set {} DEFAULT router_delete_namespaces True".format(l3_agent_file))
+    sudo("crudini --set {} DEFAULT verbose True".format(l3_agent_file))
+
+def configure_DHCP_agent():
+
+    dhcp_agent_file = '/etc/neutron/dhcp_agent.ini' 
+
+    sudo("crudini --set {} DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver".format(dhcp_agent_file))
+    sudo("crudini --set {} DEFAULT dhcp_driver neutron.agent.linux.dhcp.Dnsmasq".format(dhcp_agent_file))
+    sudo("crudini --set {} DEFAULT use_namespaces True".format(dhcp_agent_file))
+    sudo("crudini --set {} DEFAULT dhcp_delete_namespaces True".format(dhcp_agent_file))
+    sudo("crudini --set {} DEFAULT verbose True".format(dhcp_agent_file))
+
+@roles('controller')
+def configure_metadata_proxy_on_controller():
+    # to configure the metadata agent, some changes need to be made
+    # on the controller node
+
+    conf = '/etc/nova/nova.conf'
+
+    sudo("crudini --set {} service_metadata_proxy True".format(conf))
+    sudo("crudini --set {} metadata_proxy_shared_secret {}".format(conf,passwd['METADATA_SECRET']))
+
+    sudo("systemctl restart openstack-nova-api.service")
+
+
+def configure_metadata_agent():
+
+    metadata_agent_file = '/etc/neutron/metadata_agent.ini'
+
+    sudo("crudini --set {} DEFAULT auth_url http://controller:5000/v2.0".format(metadata_agent_file))
+    sudo("crudini --set {} DEFAULT auth_region regionOne".format(metadata_agent_file))
+    sudo("crudini --set {} DEFAULT admin_tenant_name service".format(metadata_agent_file))
+    sudo("crudini --set {} DEFAULT admin_user neutron".format(metadata_agent_file))
+    sudo("crudini --set {} DEFAULT nova_metadata_ip controller".format(metadata_agent_file))
+    sudo("crudini --set {} DEFAULT admin_password {}".format(metadata_agent_file,passwd['NEUTRON_PASS']))
+    sudo("crudini --set {} DEFAULT metadata_proxy_shared_secret {}".format(metadata_agent_file,passwd['METADATA_SECRET']))
+    sudo("crudini --set {} DEFAULT verbose True".format(metadata_agent_file))
+
+    execute(configure_metadata_proxy_on_controller)
+
+def configure_Open_vSwitch_service():
+
+    sudo("systemctl enable openvswitch.service")
+    sudo("systemctl start openvswitch.service")
+
+    # for testing
+    sudo("ovs-vsctl del-br br-ex")
+
+    # add br-ex bridge
+    if 'br-ex' not in sudo("ovs-vsctl list-br"):
+        sudo("ovs-vsctl add-br br-ex")
+
+        interface_config_file = "../network_deployment/config_files/network_node_external_interface_config"
+        interface_name = local("crudini --get {} '' DEVICE".format(interface_config_file),capture=True)
+        sudo("ovs-vsctl --log-file=/home/uadm/ovslog add-port br-ex '{}'".format(interface_name))
+
+    
+
+
 @roles('network')
 def network_deploy():
-    pass
+    # edit sysctl.conf
+    sysctl_conf = '/etc/sysctl.conf'
+
+    sudo("crudini --set  {} '' net.ipv4.ip_forward 1".format(sysctl_conf))
+    sudo("crudini --set  {} '' net.ipv4.conf.all.rp_filter 0".format(sysctl_conf))
+    sudo("crudini --set  {} '' net.ipv4.conf.default.rp_filter 0".format(sysctl_conf))
+
+    sudo("sysctl -p")
+
+    # install networking components
+    sudo("yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch")
+
+    # configuration 
+
+    configure_the_Networking_common_components()
+
+    configure_the_ML2_plug_in()
+
+    configure_Layer3_agent()
+
+    configure_DHCP_agent()
+
+    configure_metadata_agent()
+
+    # configure_Open_vSwitch_service()
+
+    # finalize installation
+
+    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini 
+    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
+    # If this symbolic link does not exist, create it
+    if 'plugin.ini' not in sudo('ls /etc/neutron'):
+        sudo('ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini')
+
+    # Due to a packaging bug, the Open vSwitch agent initialization script explicitly looks for 
+    # the Open vSwitch plug-in configuration file rather than a symbolic link /etc/neutron/plugin.ini pointing to the ML2 
+    # plug-in configuration file. Run the following commands to resolve this issue:
+    sudo("cp /usr/lib/systemd/system/neutron-openvswitch-agent.service " + \
+            "/usr/lib/systemd/system/neutron-openvswitch-agent.service.orig")
+    sudo("sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' " + \
+            "/usr/lib/systemd/system/neutron-openvswitch-agent.service")
+
+    # initialize services
+    sudo("systemctl enable neutron-openvswitch-agent.service neutron-l3-agent.service " +  \
+              "neutron-dhcp-agent.service neutron-metadata-agent.service " + \
+                "neutron-ovs-cleanup.service")
+    sudo("systemctl start neutron-openvswitch-agent.service neutron-l3-agent.service " + \
+              "neutron-dhcp-agent.service neutron-metadata-agent.service")
+
+
+# COMPUTE
+
+def configure_ML2_plug_in_compute():
+    
+    ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
+
+    # most of the configuration is the same as the controller
+    configure_ML2_plugin()
+
+    # configure the external flat provider network 
+    sudo('crudini --set ' + ml2_conf_file + ' ovs enable_tunneling True')
+    local_ip_file_location = '../network_deployment/config_files/compute_instance_tunnels_interface_config'
+    local_ip = local("crudini --get {} '' IPADDR".format(local_ip_file_location),capture=True)
+    sudo('crudini --set ' + ml2_conf_file + ' ovs local_ip ' + local_ip)
+
+    # enable GRE tunnels 
+    sudo('crudini --set ' + ml2_conf_file + ' agent tunnel_types gre')
 
 @roles('compute')
 def compute_deploy():
-    pass
+    # edit sysctl.conf
+    sysctl_conf = '/etc/sysctl.conf'
+
+    sudo("crudini --set  {} '' net.ipv4.conf.all.rp_filter 0".format(sysctl_conf))
+    sudo("crudini --set  {} '' net.ipv4.conf.default.rp_filter 0".format(sysctl_conf))
+
+    sudo("sysctl -p")
+
+    # install networking components
+    sudo("yum -y install openstack-neutron-ml2 openstack-neutron-openvswitch")
+
+    # configuration
+
+    configure_the_Networking_common_components() # same as networking
+
+    configure_ML2_plug_in_compute()
+
+    configure_nova_to_use_neutron()
+
+    # enable Open vSwitch
+    sudo('systemctl enable openvswitch.service')
+    sudo('systemctl start openvswitch.service')
+
+    # finalize installation
+
+    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini 
+    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
+    # If this symbolic link does not exist, create it
+    if 'plugin.ini' not in sudo('ls /etc/neutron'):
+        sudo('ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini')
+
+    # Due to a packaging bug, the Open vSwitch agent initialization script explicitly looks for 
+    # the Open vSwitch plug-in configuration file rather than a symbolic link /etc/neutron/plugin.ini pointing to the ML2 
+    # plug-in configuration file. Run the following commands to resolve this issue:
+    sudo("cp /usr/lib/systemd/system/neutron-openvswitch-agent.service " + \
+            "/usr/lib/systemd/system/neutron-openvswitch-agent.service.orig")
+    sudo("sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' " + \
+            "/usr/lib/systemd/system/neutron-openvswitch-agent.service")
+
+    # restart Nova service
+    # sudo("systemctl restart openstack-nova-compute.service")
+
+    # start Open vSwitch
+    sudo("systemctl enable neutron-openvswitch-agent.service")
+    sudo("systemctl start neutron-openvswitch-agent.service")
+
+
 
 def deploy():
     # with settings(warn_only=True):
     execute(controller_deploy)
+    execute(network_deploy)
+    execute(compute_deploy)
 
 ######################################## TDD #########################################
 
@@ -239,14 +471,88 @@ def controller_tdd():
     alias_name_pairs.append(('dvr','Distributed Virtual Router'))
 
     print 'Checking loaded extensions'
-    for pair in alias_name_pairs:
-        alias = pair[0]
-        name = sudo('neutron ext-list | grep {} | cut -d\| -f3'.format(alias))
-        if pair[1] not in alias:
-            print red("Problem with alias {}: should be {}, is {}".format(alias,pair[1],name.strip()))
-        else:
-            print green("alias {} is {}, as expected".format(alias,name.strip()))
+    
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        for pair in alias_name_pairs:
+            alias = pair[0]
+            name = sudo('neutron ext-list | grep {} | cut -d\| -f3'.format(alias))
+            if pair[1] not in name:
+                print red("Problem with alias {}: should be {}, is {}".format(alias,pair[1],name.strip()))
+            else:
+                print green("alias {} is {}, as expected".format(alias,name.strip()))
 
+@roles('controller')
+def verify_neutron_agents_network():
+    # this test should be done after the network deployment,
+    # even though it's done on the controller node
+
+    # verify successful launch of the neutron agents
+
+    neutron_agents = ['Metadata agent','Open vSwitch agent','L3 agent','DHCP agent']
+
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        # grab the agent list as a list of lines, skipping header
+        agent_list = sudo("neutron agent-list").splitlines()[3:]
+
+        for agent in neutron_agents:
+            agent_line = [line for line in agent_list if agent in line]
+            if not agent_line:
+                print red("Neutron agent {} not found in agent-list".format(agent))
+            else:
+                agent_line = agent_line[0]
+                # change the hostname to 'network' when doing it for real
+                hostname = '524564.ece.ualberta.ca'
+                if hostname not in agent_line or ':-)' not in agent_line:
+                    print red("Problem with agent {}".format(agent))
+                    get_line = "neutron agent-list | grep '{}' ".format(agent)
+                    print red(sudo(get_line))
+                else:
+                    print green("Neutron agent {} OK!".format(agent))
+
+
+@roles('network')
+def network_tdd():
+    execute(verify_neutron_agents_network)
+
+@roles('controller')
+def verify_neutron_agents_compute():
+    # this test should be done after the compute deployment,
+    # even though it's done on the controller node
+
+    # verify successful launch of the compute agents
+
+    # get list of compute nodes from the hosts config file
+    hosts_config = open('../network_deployment/config_files/hosts_config','r').readlines()
+    lines_with_compute = [line for line in hosts_config if 'compute' in line and line[0] != '#']
+    number_of_compute_nodes = len(lines_with_compute)
+    # hostnames will be compute1, compute2, etc.
+    list_of_compute_hostnames = ['compute' + str(i+1) for i in range(number_of_compute_nodes)] 
+
+
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        # grab the agent list as a list of lines, skipping header
+        agent_list = sudo("neutron agent-list").splitlines()[3:]
+
+        for agent in list_of_compute_hostnames:
+            agent = '529569.ece.ualberta.ca' # remove this when it's a real deployment
+            agent_line = [line for line in agent_list if agent in line]
+            if not agent_line:
+                print red("Neutron agent {} not found in agent-list".format(agent))
+            else:
+                agent_line = agent_line[0]
+                if ':-)' not in agent_line:
+                    print red("Problem with agent {}".format(agent))
+                    get_line = "neutron agent-list | grep '{}' ".format(agent)
+                    print red(sudo(get_line))
+                else:
+                    print green("Neutron agent {} OK!".format(agent))
+
+@roles('compute')
+def compute_tdd():
+    execute(verify_neutron_agents_compute)
 
 def tdd():
     with settings(warn_only=True):
