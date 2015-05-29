@@ -55,7 +55,6 @@ def set_parameter(config_file, section, parameter, value):
 
 
 def setup_nova_database_on_controller(NOVA_DBPASS):
-    print("NOVA_DBPASS is: {}".format(NOVA_DBPASS))
     mysql_commands = "CREATE DATABASE IF NOT EXISTS nova;"
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY '{}';".format(NOVA_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY '{}';".format(NOVA_DBPASS)
@@ -208,16 +207,16 @@ def setup_nova_on_controller():
     put(admin_openrc)
     
     # variable setup
-    NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
-    NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
-    RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
+    # NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
+    # NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
+    # RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
     CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_location, "''", 'IPADDR')
 
     # setup nova database
-    setup_nova_database_on_controller(NOVA_DBPASS)
-    setup_nova_keystone_on_controller(NOVA_PASS)
+    setup_nova_database_on_controller(passwd['NOVA_DBPASS'])
+    setup_nova_keystone_on_controller(passwd['NOVA_PASS'])
 
-    setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP)
+    setup_nova_config_files_on_controller(passwd['NOVA_PASS'], passwd['NOVA_DBPASS'], passwd['RABBIT_PASS'], CONTROLLER_MANAGEMENT_IP)
     populate_database_on_controller()
     start_nova_services_on_controller()
 

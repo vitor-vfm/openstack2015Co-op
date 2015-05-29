@@ -18,6 +18,7 @@ logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+passwd = env_config.passwd
 
 etc_horizon_config_file = "/etc/openstack-dashboard/local_settings"
 

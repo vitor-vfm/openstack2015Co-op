@@ -136,15 +136,14 @@ def setup_sahara():
     put(admin_openrc)
     
     # variable setup
-    SAHARA_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'SAHARA_DBPASS')
-    SAHARA_PASS = get_parameter(env_config.global_config_file, 'keystone', 'SAHARA_PASS')    
-    RABBIT_PASS = get_parameter(env_config.global_config_file, 'rabbitmq', 'RABBIT_PASS')
+    # SAHARA_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'SAHARA_DBPASS')
+    # SAHARA_PASS = get_parameter(env_config.global_config_file, 'keystone', 'SAHARA_PASS')    
+    # RABBIT_PASS = get_parameter(env_config.global_config_file, 'rabbitmq', 'RABBIT_PASS')
 
-    print(SAHARA_DBPASS)
-    setup_sahara_database(SAHARA_DBPASS)
-    setup_sahara_keystone(SAHARA_PASS)
+    setup_sahara_database(passwd['SAHARA_DBPASS'])
+    setup_sahara_keystone(passwd['SAHARA_PASS'])
 
-    setup_sahara_config_files(SAHARA_PASS, SAHARA_DBPASS, RABBIT_PASS)
+    setup_sahara_config_files(passwd['SAHARA_PASS'], passwd['SAHARA_DBPASS'], passwd['RABBIT_PASS'])
     populate_database()
     start_sahara_services()
 
