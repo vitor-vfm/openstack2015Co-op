@@ -1,8 +1,6 @@
 from subprocess import check_output
 
-# Variables that can be imported into the env dictionary
-hosts = list()
-roledefs = dict()
+##################### General functions ######################
 
 # Read the values from a node file into a list
 def read_nodes(node):
@@ -36,6 +34,11 @@ def read_dict(config_file):
     #run("rm -rf %s" % config_file)
     return config_file_dict
 
+######################### Global variables ######################
+
+# Variables that can be imported into the env dictionary
+hosts = list()
+roledefs = dict()
 
 # Get nodes and their roles from the config files
 compute_nodes = read_nodes('../global_config_files/compute_nodes')

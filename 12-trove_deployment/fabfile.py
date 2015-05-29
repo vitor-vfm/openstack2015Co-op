@@ -122,6 +122,7 @@ def keystone_register():
 def start_services():
     sudo("systemctl enable openstack-trove-api.service openstack-trove-taskmanager.service openstack-trove-conductor.service")
     sudo("systemctl start openstack-trove-api.service openstack-trove-taskmanager.service  openstack-trove-conductor.service")
+    sudo('systemctl status openstack-trove-api.service')
 
 @roles('controller')
 def database_deploy():
@@ -157,9 +158,15 @@ def deploy():
 
 @roles('controller')
 def verify_database():
+    # ISSUE: The openstack-trove-api.service is active right after deployment,
+    # but somehow shuts down by the time we do the tdd
+
+    sudo('systemctl status openstack-trove-api.service')
     exports = open(env_config.demo_openrc,'r').read()
     with prefix(exports):
-        sudo("trove list")
+        sudo('systemctl status openstack-trove-api.service')
+        # sudo("trove flavor-list")
+        # sudo("trove list")
         # output_old = sudo("trove list")
         # sudo("""trove create name 2 --size=2 --databases DBNAME \
         # --users USER:PASSWORD --datastore_version mysql-5.5 \
