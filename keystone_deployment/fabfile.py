@@ -5,9 +5,9 @@ from fabric.context_managers import cd
 from fabric.colors import green, red
 import string
 import subprocess
+
 import sys
 sys.path.append('../global_config_files')
-
 import env_config
 
 ################### Configuring Environment ########################################
@@ -62,10 +62,6 @@ keystoneConfigFileContents = readKeyStoneDBConfigFile('keystoneDBSetup.sql')
 admin_info = env_config.read_dict('config_files/keystone_admin_config') 
 demo_user = env_config.read_dict('config_files/keystone_demo_config')
 
-
-
-
-
 # create these files for easier access for other components when configuring with keystone
 
 # create admin_openrc.sh file in ../global_config_files/admin_openrc.sh
@@ -80,10 +76,6 @@ demo_openrc_contents = "export OS_TENANT_NAME=demo; export OS_USERNAME=demo; exp
 demoFile.write(demo_openrc_contents)
 demoFile.close()
 
-
-
-
-
 # config file for keystone
 keystone_conf = 'config_files/keystone.conf'
 
@@ -93,6 +85,8 @@ keystone_conf = 'config_files/keystone.conf'
 def set_keystone_config_file(admin_token,password):
     # edits the keystone config file without messing up
     # what's already there
+
+    # This was done before we knew about crudini
 
     conf_file = 'keystone.conf'
     conf_file_contents = read_config_file_with_sections(keystone_conf)
@@ -134,16 +128,6 @@ def setupKeystone():
     # this shouldn't be a problem b/c when we implement,
     # the actual hosts will be the controller node and whatnot
 
-    # host_command = 'sudo -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{}        controller".format(env.host))) 
-    # sudo(host_command)
-
-
-    # fixing bind-address on /etc/my.cnf
-
-    # bindCommand = "sed -i.bak 's/^\(bind-address=\).*/\1 {} /' /etc/my.cnf".format(env.host)
-    # bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
-    # sudo(bindCommand)
-    
     sudo("systemctl restart mariadb")
 
     fileContents = keystoneConfigFileContents
@@ -186,46 +170,41 @@ def setupKeystone():
             "keystone-tokenflush.log 2>&1' >> /var/spool/cron/keystone")
 
     # configure prereqs for creating tenants, users, and roles
-    exports = "export OS_SERVICE_TOKEN={}; ".format(admin_token)
-    exports += "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0"
+    exports = open(env_config.admin_openrc,'r').read()
 
     with prefix(exports):
 
-        sudo("keystone tenant-list")
-        sudo("keystone user-list")
-        sudo("keystone role-list")
-        sudo("keystone service-list")
-        sudo("keystone endpoint-list")
         # create tenants, users, and roles
-        sudo("keystone tenant-create --name admin --description 'Admin Tenant'")
-        sudo("keystone user-create --name admin --pass {} --email {}".format(passwd['ADMIN_PASS'], admin_info['EMAIL']))
-        sudo("keystone role-create --name admin")
-        sudo("keystone user-role-add --user admin --tenant admin --role admin")
+        if 'admin' not in sudo("keystone tenant-list"):
+            sudo("keystone tenant-create --name admin --description 'Admin Tenant'")
+        if 'admin' not in sudo("keystone user-list"):
+            sudo("keystone user-create --name admin --pass {} --email {}".format(passwd['ADMIN_PASS'], admin_info['EMAIL']))
+        if 'admin' not in sudo("keystone role-list"):
+            sudo("keystone role-create --name admin")
+            sudo("keystone user-role-add --user admin --tenant admin --role admin")
         
         # note, the following can be repeated to make more tenants and 
         # create a demo tenant for typical operations in environment
-        sudo("keystone tenant-create --name demo --description 'Demo Tenant'") 
+        if 'demo' not in sudo("keystone tenant-list"):
+            sudo("keystone tenant-create --name demo --description 'Demo Tenant'") 
         # sudo("keystone user-create --name demo --tenant demo --pass {} --email {}".format(demo_user['PASSWD'], demo_user['EMAIL'])) 
-        sudo("keystone user-create --name demo --tenant demo --pass {} --email {}".format('34demo43', 'demo@gmail.com')) 
+        if 'demo' not in sudo("keystone user-list"):
+            sudo("keystone user-create --name demo --tenant demo --pass {} --email {}".format('34demo43', 'demo@gmail.com')) 
 
         # create one or more unique users with the admin role under the service tenant
-        sudo("keystone tenant-create --name service --description 'Service Tenant'")
+        if 'service' not in sudo("keystone tenant-list"):
+            sudo("keystone tenant-create --name service --description 'Service Tenant'")
 
         # create the service entity for the Identity service
-        sudo("keystone service-create --name keystone --type identity " + \
-                "--description 'OpenStack Identity'")
-        sudo("keystone endpoint-create " + \
-                "--service-id $(keystone service-list | awk '/ identity / {print $2}') " + \
-                "--publicurl http://controller:5000/v2.0 --internalurl http://controller:5000/v2.0 " + \
-                "--adminurl http://controller:35357/v2.0 --region regionOne")
+        if 'keystone' not in sudo("keystone service-list"):
+            sudo("keystone service-create --name keystone --type identity " + \
+                    "--description 'OpenStack Identity'")
+        if '5000' not in sudo("keystone endpoint-list"):
+            sudo("keystone endpoint-create " + \
+                    "--service-id $(keystone service-list | awk '/ identity / {print $2}') " + \
+                    "--publicurl http://controller:5000/v2.0 --internalurl http://controller:5000/v2.0 " + \
+                    "--adminurl http://controller:35357/v2.0 --region regionOne")
 
-    # verify operation of the Identity service
-
-    sudo("unset OS_SERVICE_TOKEN OS_SERVICE_ENDPOINT")
-    sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 token-get".format(passwd['ADMIN_PASS'])) 
-    sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(passwd['ADMIN_PASS']))
-    sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['ADMIN_PASS']))
-    sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(passwd['ADMIN_PASS']))
 
 def deploy():
     execute(setupKeystone)
@@ -261,22 +240,13 @@ def keystone_tdd():
         else:
             print red('demo not a user')
 
-        # Check if 'admin', 'service' and 'admin' are tenants
+        # Check if 'admin', 'service' and 'demo' are tenants
         tenant_list_output = sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(passwd['ADMIN_PASS']))
-        if 'admin' in tenant_list_output:
-            print okay
-        else:
-            print red('admin not a tenant')
-
-        if 'demo' in tenant_list_output:
-            print okay
-        else:
-            print red('demo not a tenant')
-
-        if 'service' in tenant_list_output:
-            print okay
-        else:
-            print red('service not a tenant')
+        for name in ['admin','demo','service']:
+            if name in tenant_list_output:
+                print okay
+            else:
+                print red('{} not a tenant'.format(name))
 
         # Check if '_member_' and 'admin' are roles
         role_list_output = sudo("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(passwd['ADMIN_PASS']))
