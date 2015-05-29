@@ -2407,3 +2407,866 @@ MESSAGE Typo
 2015-05-28 16:42:29-06:00
 2015-05-28 16:42:29-06:00 Done.
 2015-05-28 16:42:29-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-29 08:19:37-06:00 INFO Testing compute deploy
+2015-05-29 08:19:50-06:00 fab compute_deploy
+2015-05-29 08:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-29 08:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-29 08:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-29 08:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-29 08:19:56-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] Executing task 'compute_deploy'
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] sudo: sysctl -p
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:19:56-06:00
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] sudo: yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-29 08:19:56-06:00 [dadm@129.128.208.150] out: Loading mirror speeds from cached hostfile
+2015-05-29 08:19:57-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini base: centos.les.net
+2015-05-29 08:19:57-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini epel: www.muug.mb.ca
+2015-05-29 08:19:57-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini extras: mirror.its.sfu.ca
+2015-05-29 08:19:57-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini updates: mirror.its.sfu.ca
+2015-05-29 08:19:57-06:00 [dadm@129.128.208.150] out: Resolving Dependencies
+2015-05-29 08:19:57-06:00 [dadm@129.128.208.150] out: --> Running transaction check
+2015-05-29 08:19:57-06:00 [dadm@129.128.208.150] out: ---> Package openstack-neutron.noarch 0:2014.2.2-1.el7 will be installed
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: python-neutron = 2014.2.2-1.el7 for package: openstack-neutron-2014.2.2-1.el7.noarch
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: openstack-utils for package: openstack-neutron-2014.2.2-1.el7.noarch
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: keepalived for package: openstack-neutron-2014.2.2-1.el7.noarch
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: dnsmasq-utils for package: openstack-neutron-2014.2.2-1.el7.noarch
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: conntrack-tools for package: openstack-neutron-2014.2.2-1.el7.noarch
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: ---> Package openstack-neutron-ml2.noarch 0:2014.2.2-1.el7 will be installed
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: python-ncclient for package: openstack-neutron-ml2-2014.2.2-1.el7.noarch
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: ---> Package openstack-neutron-openvswitch.noarch 0:2014.2.2-1.el7 will be installed
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: openvswitch for package: openstack-neutron-openvswitch-2014.2.2-1.el7.noarch
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Running transaction check
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: ---> Package conntrack-tools.x86_64 0:1.4.2-3.el7 will be installed
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetfilter_cttimeout.so.1(LIBNETFILTER_CTTIMEOUT_1.1)(64bit) for package: conntrack-tools-1.4.2-3.el7.x86_64
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetfilter_cttimeout.so.1(LIBNETFILTER_CTTIMEOUT_1.0)(64bit) for package: conntrack-tools-1.4.2-3.el7.x86_64
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetfilter_cthelper.so.0(LIBNETFILTER_CTHELPER_1.0)(64bit) for package: conntrack-tools-1.4.2-3.el7.x86_64
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetfilter_queue.so.1()(64bit) for package: conntrack-tools-1.4.2-3.el7.x86_64
+2015-05-29 08:19:58-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetfilter_cttimeout.so.1()(64bit) for package: conntrack-tools-1.4.2-3.el7.x86_64
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetfilter_cthelper.so.0()(64bit) for package: conntrack-tools-1.4.2-3.el7.x86_64
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package dnsmasq-utils.x86_64 0:2.66-13.el7_1 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package keepalived.x86_64 0:1.2.13-6.el7 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetsnmpmibs.so.31()(64bit) for package: keepalived-1.2.13-6.el7.x86_64
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libnetsnmpagent.so.31()(64bit) for package: keepalived-1.2.13-6.el7.x86_64
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package openstack-utils.noarch 0:2014.2-1.el7.centos will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package openvswitch.x86_64 0:2.3.1-2.el7 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package python-ncclient.noarch 0:0.4.2-2.el7 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: libxslt-python for package: python-ncclient-0.4.2-2.el7.noarch
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package python-neutron.noarch 0:2014.2.2-1.el7 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: python-jsonrpclib for package: python-neutron-2014.2.2-1.el7.noarch
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: --> Running transaction check
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package libnetfilter_cthelper.x86_64 0:1.0.0-4.el7 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package libnetfilter_cttimeout.x86_64 0:1.0.0-2.el7 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package libnetfilter_queue.x86_64 0:1.0.2-2.el7 will be installed
+2015-05-29 08:19:59-06:00 [dadm@129.128.208.150] out: ---> Package libxslt-python.x86_64 0:1.1.28-5.el7 will be installed
+2015-05-29 08:20:00-06:00 [dadm@129.128.208.150] out: ---> Package net-snmp-agent-libs.x86_64 1:5.7.2-20.el7 will be installed
+2015-05-29 08:20:00-06:00 [dadm@129.128.208.150] out: ---> Package python-jsonrpclib.noarch 0:0.1.3-2.el7 will be installed
+2015-05-29 08:20:04-06:00 [dadm@129.128.208.150] out: --> Finished Dependency Resolution
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Dependencies Resolved
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: ================================================================================
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Package Arch Version Repository Size
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: ================================================================================
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Installing:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: openstack-neutron noarch 2014.2.2-1.el7 openstack-juno 55 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: openstack-neutron-ml2 noarch 2014.2.2-1.el7 openstack-juno 34 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: openstack-neutron-openvswitch noarch 2014.2.2-1.el7 openstack-juno 30 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Installing for dependencies:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: conntrack-tools x86_64 1.4.2-3.el7 epel 166 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: dnsmasq-utils x86_64 2.66-13.el7_1 updates 22 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: keepalived x86_64 1.2.13-6.el7 base 223 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: libnetfilter_cthelper x86_64 1.0.0-4.el7 epel 18 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: libnetfilter_cttimeout x86_64 1.0.0-2.el7 epel 18 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: libnetfilter_queue x86_64 1.0.2-2.el7 epel 23 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: libxslt-python x86_64 1.1.28-5.el7 base 59 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: net-snmp-agent-libs x86_64 1:5.7.2-20.el7 base 698 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: openstack-utils noarch 2014.2-1.el7.centos openstack-juno 21 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: openvswitch x86_64 2.3.1-2.el7 openstack-juno 1.8 M
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: python-jsonrpclib noarch 0.1.3-2.el7 epel 28 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: python-ncclient noarch 0.4.2-2.el7 epel 164 k
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: python-neutron noarch 2014.2.2-1.el7 openstack-juno 2.4 M
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Transaction Summary
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: ================================================================================
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Install 3 Packages (+13 Dependent packages)
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Total download size: 5.8 M
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Installed size: 23 M
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: Downloading packages:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: (2/16): dnsmasq-utils-2.66 0% [ ] 0.0 B/s | 0 B --:-- ETA
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: (1/16): conntrack-tools-1.4.2-3.el7.x86_64.rpm | 166 kB 00:00
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: (2/16): libnetfilter_cthelper-1.0.0-4.el7.x86_64.rpm | 18 kB 00:00
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:07-06:00 [dadm@129.128.208.150] out: (3/16): keepalived-1.2.13-6.el7.x86_64.rpm | 223 kB 00:00
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out: (4/16): libnetfilter_cttimeout-1.0.0-2.el7.x86_64.rpm | 18 kB 00:00
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out: (5/16): dnsmasq-utils-2.66-13.el7_1.x86_64.rpm | 22 kB 00:00
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out: (6/16): libnetfilter_queue-1.0.2-2.el7.x86_64.rpm | 23 kB 00:00
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out: (8/16): net-snmp-agent-lib 7% [= ] 0.0 B/s | 471 kB --:-- ETA
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out: (7/16): libxslt-python-1.1.28-5.el7.x86_64.rpm | 59 kB 00:00
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:08-06:00 [dadm@129.128.208.150] out: (8/16): net-snmp-agent-libs-5.7.2-20.el7.x86_64.rpm | 698 kB 00:00
+2015-05-29 08:20:10-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:10-06:00 [dadm@129.128.208.150] out: (9/16): openstack-neutron- 20% [=== ] 333 kB/s | 1.2 MB 00:14 ETA
+2015-05-29 08:20:10-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:10-06:00 [dadm@129.128.208.150] out: (9/16): openstack-neutron-ml2-2014.2.2-1.el7.noarch.rpm | 34 kB 00:02
+2015-05-29 08:20:10-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:10-06:00 [dadm@129.128.208.150] out: (10/16): openstack-neutron-2014.2.2-1.el7.noarch.rpm | 55 kB 00:02
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out: (12/16): openstack-utils-2 22% [===- ] 261 kB/s | 1.3 MB 00:17 ETA
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out: (11/16): openstack-neutron-openvswitch-2014.2.2-1.el7.noar | 30 kB 00:01
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out: (12/16): openstack-utils-2014.2-1.el7.centos.noarch.rpm | 21 kB 00:01
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out: (13/16): python-jsonrpclib-0.1.3-2.el7.noarch.rpm | 28 kB 00:00
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:11-06:00 [dadm@129.128.208.150] out: (14/16): python-ncclient-0.4.2-2.el7.noarch.rpm | 164 kB 00:00
+2015-05-29 08:20:12-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:12-06:00 [dadm@129.128.208.150] out: (15/16): openvswitch-2.3.1 26% [==== ] 242 kB/s | 1.5 MB 00:17 ETA
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out: (15/16): openvswitch-2.3.1 26% [==== ] 227 kB/s | 1.5 MB 00:19 ETA
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out: (15/16): openvswitch-2.3.1 32% [===== ] 285 kB/s | 1.9 MB 00:13 ETA
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out: (16/16): python-neutron-20 39% [====== ] 348 kB/s | 2.3 MB 00:10 ETA
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:13-06:00 [dadm@129.128.208.150] out: (15/16): openvswitch-2.3.1-2.el7.x86_64.rpm | 1.8 MB 00:02
+2015-05-29 08:20:14-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:14-06:00 [dadm@129.128.208.150] out: (16/16): python-neutron-20 73% [===========- ] 721 kB/s | 4.2 MB 00:02 ETA
+2015-05-29 08:20:14-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:14-06:00 [dadm@129.128.208.150] out: (16/16): python-neutron-20 81% [============= ] 768 kB/s | 4.7 MB 00:01 ETA
+2015-05-29 08:20:14-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:14-06:00 [dadm@129.128.208.150] out: (16/16): python-neutron-20 91% [==============- ] 842 kB/s | 5.3 MB 00:00 ETA
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out: (16/16): python-neutron-20 99% [===============-] 881 kB/s | 5.7 MB 00:00 ETA
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out: (16/16): python-neutron-2014.2.2-1.el7.noarch.rpm | 2.4 MB 00:03
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out: --------------------------------------------------------------------------------
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out: Total 754 kB/s | 5.8 MB 00:07
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out: Running transaction check
+2015-05-29 08:20:15-06:00 [dadm@129.128.208.150] out: Running transaction test
+2015-05-29 08:20:21-06:00 [dadm@129.128.208.150] out: Transaction test succeeded
+2015-05-29 08:20:21-06:00 [dadm@129.128.208.150] out: Running transaction
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [ ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [# ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [## ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [#### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [##### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [###### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [####### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [######## ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [######### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [########## ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [########### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [############ ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [############# ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [############## ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [############### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [################ ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [################# ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [################## ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [################### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [#################### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [##################### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [###################### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [####################### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [######################## ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [######################### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [########################## ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2 [########################### ] 1/16
+2015-05-29 08:20:22-06:00 [dadm@129.128.208.150] out: Installing : 1:net-snmp-agent-libs-5.7.2-20.el7.x86_64 1/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [ ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [# ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [##### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [####### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [########## ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [############# ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [############### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [################ ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [################### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [###################### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [####################### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [######################## ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [######################### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86 [########################### ] 2/16
+2015-05-29 08:20:23-06:00 [dadm@129.128.208.150] out: Installing : keepalived-1.2.13-6.el7.x86_64 2/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [ ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [##### ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [############ ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [############## ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [############### ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [################ ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [################# ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [################## ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [################### ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [########################## ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7 [########################### ] 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : libxslt-python-1.1.28-5.el7.x86_64 3/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [ ] 4/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [# ] 4/16
+2015-05-29 08:20:25-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [## ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [#### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [##### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [###### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [####### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [######## ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [######### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [########## ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [############# ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [############## ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [############### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [################ ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [################# ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [################## ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [################### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [##################### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [###################### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [####################### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [######################## ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [######################### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [########################## ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7 [########################### ] 4/16
+2015-05-29 08:20:26-06:00 [dadm@129.128.208.150] out: Installing : python-ncclient-0.4.2-2.el7.noarch 4/16
+2015-05-29 08:20:27-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:27-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_queue-1.0.2-2. [ ] 5/16
+2015-05-29 08:20:27-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_queue-1.0.2-2. [################ ] 5/16
+2015-05-29 08:20:27-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_queue-1.0.2-2. [########################### ] 5/16
+2015-05-29 08:20:27-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_queue-1.0.2-2.el7.x86_64 5/16
+2015-05-29 08:20:27-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:27-06:00 [dadm@129.128.208.150] out: Installing : dnsmasq-utils-2.66-13.el7_1 [ ] 6/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : dnsmasq-utils-2.66-13.el7_1 [############ ] 6/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : dnsmasq-utils-2.66-13.el7_1 [########################## ] 6/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : dnsmasq-utils-2.66-13.el7_1 [########################### ] 6/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : dnsmasq-utils-2.66-13.el7_1.x86_64 6/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [ ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [# ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [## ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [#### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [##### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [###### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [####### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [######## ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [######### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [########## ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [########### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [############ ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [############# ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [############## ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [############### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [################ ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [################# ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [################## ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [################### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [#################### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [##################### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [###################### ] 7/16
+2015-05-29 08:20:28-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [####################### ] 7/16
+2015-05-29 08:20:29-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [######################## ] 7/16
+2015-05-29 08:20:29-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [######################### ] 7/16
+2015-05-29 08:20:29-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [########################## ] 7/16
+2015-05-29 08:20:29-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86 [########################### ] 7/16
+2015-05-29 08:20:29-06:00 [dadm@129.128.208.150] out: Installing : openvswitch-2.3.1-2.el7.x86_64 7/16
+2015-05-29 08:20:30-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:30-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cthelper-1.0.0 [ ] 8/16
+2015-05-29 08:20:30-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cthelper-1.0.0 [############ ] 8/16
+2015-05-29 08:20:30-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cthelper-1.0.0 [########################## ] 8/16
+2015-05-29 08:20:30-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cthelper-1.0.0 [########################### ] 8/16
+2015-05-29 08:20:30-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cthelper-1.0.0-4.el7.x86_64 8/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el [ ] 9/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el [####### ] 9/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el [########## ] 9/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el [############### ] 9/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el [####################### ] 9/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el [########################## ] 9/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el [########################### ] 9/16
+2015-05-29 08:20:32-06:00 [dadm@129.128.208.150] out: Installing : openstack-utils-2014.2-1.el7.centos.noarch 9/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cttimeout-1.0. [ ] 10/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cttimeout-1.0. [############# ] 10/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cttimeout-1.0. [########################## ] 10/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cttimeout-1.0. [########################### ] 10/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : libnetfilter_cttimeout-1.0.0-2.el7.x86_64 10/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [ ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [# ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [## ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [###### ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [######### ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [############ ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [################ ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [################# ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [################### ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [#################### ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [####################### ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [######################## ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [######################### ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [########################## ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7 [########################### ] 11/16
+2015-05-29 08:20:33-06:00 [dadm@129.128.208.150] out: Installing : conntrack-tools-1.4.2-3.el7.x86_64 11/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [ ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [### ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [#### ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [##### ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [########### ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [############## ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [################# ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [################## ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [################### ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [#################### ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.e [########################### ] 12/16
+2015-05-29 08:20:34-06:00 [dadm@129.128.208.150] out: Installing : python-jsonrpclib-0.1.3-2.el7.noarch 12/16
+2015-05-29 08:20:35-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:35-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [ ] 13/16
+2015-05-29 08:20:35-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [# ] 13/16
+2015-05-29 08:20:35-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [## ] 13/16
+2015-05-29 08:20:35-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [### ] 13/16
+2015-05-29 08:20:35-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [#### ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [##### ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [###### ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [####### ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [######## ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [######### ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [########## ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [########### ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [############ ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [############# ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [############## ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [############### ] 13/16
+2015-05-29 08:20:36-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [################ ] 13/16
+2015-05-29 08:20:37-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [################# ] 13/16
+2015-05-29 08:20:37-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [################## ] 13/16
+2015-05-29 08:20:37-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [################### ] 13/16
+2015-05-29 08:20:37-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [#################### ] 13/16
+2015-05-29 08:20:37-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [##################### ] 13/16
+2015-05-29 08:20:37-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [###################### ] 13/16
+2015-05-29 08:20:38-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [####################### ] 13/16
+2015-05-29 08:20:38-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [######################## ] 13/16
+2015-05-29 08:20:38-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [######################### ] 13/16
+2015-05-29 08:20:38-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [########################## ] 13/16
+2015-05-29 08:20:38-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.e [########################### ] 13/16
+2015-05-29 08:20:38-06:00 [dadm@129.128.208.150] out: Installing : python-neutron-2014.2.2-1.el7.noarch 13/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [ ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [# ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [## ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [########## ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [############ ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [############# ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [############## ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [############### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [################# ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [################### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [#################### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [##################### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [###################### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [######################## ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [######################### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [########################## ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2- [########################### ] 14/16
+2015-05-29 08:20:40-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1.el7.noarch 14/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswit [ ] 15/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswit [########## ] 15/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswit [########### ] 15/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswit [########################## ] 15/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswit [########################### ] 15/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitch-2014.2.2-1.el7.noarch 15/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [ ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [# ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [##### ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [######## ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [######### ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [########## ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [########### ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [############ ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [############# ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [################# ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [######################### ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014. [########################### ] 16/16
+2015-05-29 08:20:42-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2.2-1.el7.noarch 16/16
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out: Verifying : python-neutron-2014.2.2-1.el7.noarch 1/16
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out: Verifying : python-jsonrpclib-0.1.3-2.el7.noarch 2/16
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out: Verifying : libnetfilter_cttimeout-1.0.0-2.el7.x86_64 3/16
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out: Verifying : openstack-utils-2014.2-1.el7.centos.noarch 4/16
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out: Verifying : libnetfilter_cthelper-1.0.0-4.el7.x86_64 5/16
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:43-06:00 [dadm@129.128.208.150] out: Verifying : openvswitch-2.3.1-2.el7.x86_64 6/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : dnsmasq-utils-2.66-13.el7_1.x86_64 7/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : openstack-neutron-openvswitch-2014.2.2-1.el7.noarch 8/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : libnetfilter_queue-1.0.2-2.el7.x86_64 9/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : keepalived-1.2.13-6.el7.x86_64 10/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : openstack-neutron-2014.2.2-1.el7.noarch 11/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : libxslt-python-1.1.28-5.el7.x86_64 12/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : python-ncclient-0.4.2-2.el7.noarch 13/16
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:44-06:00 [dadm@129.128.208.150] out: Verifying : 1:net-snmp-agent-libs-5.7.2-20.el7.x86_64 14/16
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: Verifying : conntrack-tools-1.4.2-3.el7.x86_64 15/16
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: Verifying : openstack-neutron-ml2-2014.2.2-1.el7.noarch 16/16
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: Installed:
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: openstack-neutron.noarch 0:2014.2.2-1.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: openstack-neutron-ml2.noarch 0:2014.2.2-1.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: openstack-neutron-openvswitch.noarch 0:2014.2.2-1.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: Dependency Installed:
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: conntrack-tools.x86_64 0:1.4.2-3.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: dnsmasq-utils.x86_64 0:2.66-13.el7_1
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: keepalived.x86_64 0:1.2.13-6.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: libnetfilter_cthelper.x86_64 0:1.0.0-4.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: libnetfilter_cttimeout.x86_64 0:1.0.0-2.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: libnetfilter_queue.x86_64 0:1.0.2-2.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: libxslt-python.x86_64 0:1.1.28-5.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: net-snmp-agent-libs.x86_64 1:5.7.2-20.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: openstack-utils.noarch 0:2014.2-1.el7.centos
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: openvswitch.x86_64 0:2.3.1-2.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: python-jsonrpclib.noarch 0:0.1.3-2.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: python-ncclient.noarch 0:0.4.2-2.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: python-neutron.noarch 0:2014.2.2-1.el7
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out: Complete!
+2015-05-29 08:20:45-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:53-06:00
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT verbose True
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-29 08:20:53-06:00 [localhost] local: crudini --get ../network_deployment/config_files/compute_instance_tunnels_interface_config '' IPADDR
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.31
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT network_api_class nova.network.neutronv2.api.API
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT security_group_api neutron
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT linuxnet_interface_driver nova.network.linux_net.LinuxOVSInterfaceDriver
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT firewall_driver nova.virt.firewall.NoopFirewallDriver
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron url http://controller:9696
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron auth_strategy keystone
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_auth_url http://controller:35357/v2.0
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_tenant_name service
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_username neutron
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] sudo: ls /etc/neutron
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] out: dhcp_agent.ini lbaas_agent.ini neutron.conf.back12 release
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] out: fwaas_driver.ini metadata_agent.ini plugins rootwrap.conf
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] out: l3_agent.ini neutron.conf policy.json
+2015-05-29 08:20:53-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:55-06:00
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] sudo: ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] sudo: systemctl restart openstack-nova-compute.service
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] sudo: systemctl enable neutron-openvswitch-agent.service
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] out: ln -s '/usr/lib/systemd/system/neutron-openvswitch-agent.service' '/etc/systemd/system/multi-user.target.wants/neutron-openvswitch-agent.service'
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:20:55-06:00
+2015-05-29 08:20:55-06:00 [dadm@129.128.208.150] sudo: systemctl start neutron-openvswitch-agent.service
+2015-05-29 08:20:55-06:00
+2015-05-29 08:20:55-06:00 Done.
+2015-05-29 08:20:55-06:00 Disconnecting from dadm@129.128.208.150... done.
+2015-05-29 08:34:00-06:00 fab compute_tdd
+2015-05-29 08:34:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-29 08:34:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-29 08:34:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-29 08:34:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-29 08:34:06-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-29 08:34:06-06:00 [dadm@129.128.208.150] Executing task 'compute_tdd'
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents_compute'
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:34:06-06:00 [vadm@129.128.208.138] out:
+2015-05-29 08:34:06-06:00
+2015-05-29 08:34:06-06:00 [31mNeutron agent compute1 not found in agent-list[0m
+2015-05-29 08:34:06-06:00
+2015-05-29 08:34:06-06:00 Done.
+2015-05-29 08:34:06-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-29 08:37:21-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-29 08:37:21-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-29 08:37:21-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-29 08:37:21-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-29 08:37:21-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-29 08:37:21-06:00 [dadm@129.128.208.150] Executing task 'compute_tdd'
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents_compute'
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:37:21-06:00 [vadm@129.128.208.138] out:
+2015-05-29 08:37:21-06:00
+2015-05-29 08:37:21-06:00 [31mNeutron agent compute1 not found in agent-list[0m
+2015-05-29 08:37:21-06:00
+2015-05-29 08:37:21-06:00 Done.
+2015-05-29 08:37:21-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-29 08:38:54-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-29 08:38:54-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-29 08:38:54-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-29 08:38:54-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-29 08:38:54-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-29 08:38:54-06:00 [dadm@129.128.208.150] Executing task 'compute_tdd'
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents_compute'
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 08:38:54-06:00 [vadm@129.128.208.138] out:
+2015-05-29 08:38:54-06:00
+2015-05-29 08:38:54-06:00 [31mNeutron agent compute1 not found in agent-list[0m
+2015-05-29 08:38:54-06:00
+2015-05-29 08:38:54-06:00 Done.
+2015-05-29 08:38:54-06:00 Disconnecting from vadm@129.128.208.138... done.
+2015-05-29 08:50:32-06:00 fab compute_deploy
+2015-05-29 08:50:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-29 08:50:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-29 08:50:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-29 08:50:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-29 08:50:36-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] Executing task 'compute_deploy'
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] sudo: sysctl -p
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:36-06:00
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] sudo: yum -y install openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-29 08:50:36-06:00 [dadm@129.128.208.150] out: Loading mirror speeds from cached hostfile
+2015-05-29 08:50:41-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini base: centos.les.net
+2015-05-29 08:50:41-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini epel: www.muug.mb.ca
+2015-05-29 08:50:41-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini extras: mirror.its.sfu.ca
+2015-05-29 08:50:41-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini updates: mirror.its.sfu.ca
+2015-05-29 08:50:42-06:00 [dadm@129.128.208.150] out: Resolving Dependencies
+2015-05-29 08:50:42-06:00 [dadm@129.128.208.150] out: --> Running transaction check
+2015-05-29 08:50:42-06:00 [dadm@129.128.208.150] out: ---> Package openstack-neutron-ml2.noarch 0:2014.2.2-1.el7 will be installed
+2015-05-29 08:50:42-06:00 [dadm@129.128.208.150] out: --> Processing Dependency: openstack-neutron = 2014.2.2-1.el7 for package: openstack-neutron-ml2-2014.2.2-1.el7.noarch
+2015-05-29 08:50:42-06:00 [dadm@129.128.208.150] out: ---> Package openstack-neutron-openvswitch.noarch 0:2014.2.2-1.el7 will be installed
+2015-05-29 08:50:42-06:00 [dadm@129.128.208.150] out: --> Running transaction check
+2015-05-29 08:50:42-06:00 [dadm@129.128.208.150] out: ---> Package openstack-neutron.noarch 0:2014.2.2-1.el7 will be installed
+2015-05-29 08:50:43-06:00 [dadm@129.128.208.150] out: --> Finished Dependency Resolution
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Dependencies Resolved
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: ================================================================================
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Package Arch Version Repository Size
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: ================================================================================
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Installing:
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: openstack-neutron-ml2 noarch 2014.2.2-1.el7 openstack-juno 34 k
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: openstack-neutron-openvswitch noarch 2014.2.2-1.el7 openstack-juno 30 k
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Installing for dependencies:
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: openstack-neutron noarch 2014.2.2-1.el7 openstack-juno 55 k
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Transaction Summary
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: ================================================================================
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Install 2 Packages (+1 Dependent package)
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Total download size: 119 k
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Installed size: 138 k
+2015-05-29 08:50:44-06:00 [dadm@129.128.208.150] out: Downloading packages:
+2015-05-29 08:50:45-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:45-06:00 [dadm@129.128.208.150] out: (2/3): openstack-neutron-m 0% [ ] 0.0 B/s | 0 B --:-- ETA
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: (1/3): openstack-neutron-ml2-2014.2.2-1.el7.noarch.rpm | 34 kB 00:01
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: (2/3): openstack-neutron-2014.2.2-1.el7.noarch.rpm | 55 kB 00:01
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: (3/3): openstack-neutron-o 75% [============ ] 0.0 B/s | 89 kB --:-- ETA
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: (3/3): openstack-neutron-openvswitch-2014.2.2-1.el7.noarch | 30 kB 00:00
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: --------------------------------------------------------------------------------
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: Total 49 kB/s | 119 kB 00:02
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: Running transaction check
+2015-05-29 08:50:46-06:00 [dadm@129.128.208.150] out: Running transaction test
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Transaction test succeeded
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Running transaction
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [ ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [# ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [## ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [### ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [########## ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [############ ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [############# ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [############### ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [################ ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [################# ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [#################### ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [##################### ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [###################### ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [######################### ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [########################## ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [########################### ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1 [############################ ] 1/3
+2015-05-29 08:50:47-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-2014.2.2-1.el7.noarch 1/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitc [ ] 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitc [########## ] 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitc [########### ] 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitc [############ ] 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitc [########################## ] 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitc [########################### ] 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitc [############################ ] 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-openvswitch-2014.2.2-1.el7.noarch 2/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [ ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [## ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [##### ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [######## ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [######### ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [########## ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [########### ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [############ ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [############# ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [############## ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [################# ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [########################## ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2 [############################ ] 3/3
+2015-05-29 08:50:48-06:00 [dadm@129.128.208.150] out: Installing : openstack-neutron-ml2-2014.2.2-1.el7.noarch 3/3
+2015-05-29 08:50:49-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:49-06:00 [dadm@129.128.208.150] out: Verifying : openstack-neutron-2014.2.2-1.el7.noarch 1/3
+2015-05-29 08:50:49-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:49-06:00 [dadm@129.128.208.150] out: Verifying : openstack-neutron-openvswitch-2014.2.2-1.el7.noarch 2/3
+2015-05-29 08:50:49-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:49-06:00 [dadm@129.128.208.150] out: Verifying : openstack-neutron-ml2-2014.2.2-1.el7.noarch 3/3
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out: Installed:
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out: openstack-neutron-ml2.noarch 0:2014.2.2-1.el7
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out: openstack-neutron-openvswitch.noarch 0:2014.2.2-1.el7
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out: Dependency Installed:
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out: openstack-neutron.noarch 0:2014.2.2-1.el7
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out: Complete!
+2015-05-29 08:50:50-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:57-06:00
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT verbose True
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-29 08:50:57-06:00 [localhost] local: crudini --get ../network_deployment/config_files/compute_instance_tunnels_interface_config '' IPADDR
+2015-05-29 08:50:57-06:00 [32m192.168.1.31[0m
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.31
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT network_api_class nova.network.neutronv2.api.API
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT security_group_api neutron
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT linuxnet_interface_driver nova.network.linux_net.LinuxOVSInterfaceDriver
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT firewall_driver nova.virt.firewall.NoopFirewallDriver
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron url http://controller:9696
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron auth_strategy keystone
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_auth_url http://controller:35357/v2.0
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_tenant_name service
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_username neutron
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] sudo: systemctl enable openvswitch.service
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] out: ln -s '/usr/lib/systemd/system/openvswitch.service' '/etc/systemd/system/multi-user.target.wants/openvswitch.service'
+2015-05-29 08:50:57-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:50:58-06:00
+2015-05-29 08:50:58-06:00 [dadm@129.128.208.150] sudo: systemctl start openvswitch.service
+2015-05-29 08:50:58-06:00 [dadm@129.128.208.150] sudo: ls /etc/neutron
+2015-05-29 08:50:58-06:00 [dadm@129.128.208.150] out: dhcp_agent.ini metadata_agent.ini plugin.ini rootwrap.conf
+2015-05-29 08:50:58-06:00 [dadm@129.128.208.150] out: fwaas_driver.ini neutron.conf plugins
+2015-05-29 08:50:58-06:00 [dadm@129.128.208.150] out: l3_agent.ini neutron.conf.back12 policy.json
+2015-05-29 08:50:58-06:00 [dadm@129.128.208.150] out: lbaas_agent.ini neutron.conf.rpmsave release
+2015-05-29 08:50:58-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:52:29-06:00
+2015-05-29 08:52:29-06:00 [dadm@129.128.208.150] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-29 08:52:29-06:00 [dadm@129.128.208.150] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-29 08:52:29-06:00 [dadm@129.128.208.150] sudo: systemctl restart openstack-nova-compute.service
+2015-05-29 08:52:29-06:00 [dadm@129.128.208.150] out: Job for openstack-nova-compute.service failed. See 'systemctl status openstack-nova-compute.service' and 'journalctl -xn' for details.
+2015-05-29 08:52:29-06:00 [dadm@129.128.208.150] out:
+2015-05-29 08:52:29-06:00
+2015-05-29 08:52:29-06:00 Disconnecting from dadm@129.128.208.150... done.
+2015-05-29 09:18:56-06:00 INFO Rabbit claims invalid credentials
+2015-05-29 09:19:05-06:00
+2015-05-29 09:19:05-06:00 =INFO REPORT==== 29-May-2015::09:18:56 ===
+2015-05-29 09:19:05-06:00 accepting AMQP connection <0.8351.0> (192.168.0.31:38641 -> 192.168.0.11:5672)
+2015-05-29 09:19:05-06:00
+2015-05-29 09:19:05-06:00 =ERROR REPORT==== 29-May-2015::09:18:59 ===
+2015-05-29 09:19:05-06:00 closing AMQP connection <0.8351.0> (192.168.0.31:38641 -> 192.168.0.11:5672):
+2015-05-29 09:19:05-06:00 {handshake_error,starting,0,
+2015-05-29 09:19:05-06:00 {amqp_error,access_refused,
+2015-05-29 09:19:05-06:00 "AMQPLAIN login refused: user 'guest' - invalid credentials",
+2015-05-29 09:19:05-06:00 'connection.start_ok'}}
+2015-05-29 09:26:50-06:00 fab compute_deploy
+2015-05-29 09:26:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-29 09:26:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-29 09:26:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-29 09:26:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-29 09:26:55-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] Executing task 'compute_deploy'
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.all.rp_filter 0
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/sysctl.conf '' net.ipv4.conf.default.rp_filter 0
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] sudo: sysctl -p
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] out: net.ipv4.conf.all.rp_filter = 0
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] out: net.ipv4.conf.default.rp_filter = 0
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] out:
+2015-05-29 09:26:55-06:00
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] sudo: yum -y install openstack-neutron-ml2 openstack-neutron-openvswitch
+2015-05-29 09:26:55-06:00 [dadm@129.128.208.150] out: Loaded plugins: fastestmirror, langpacks, priorities
+2015-05-29 09:26:56-06:00 [dadm@129.128.208.150] out: Loading mirror speeds from cached hostfile
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini base: mirror.its.sfu.ca
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini epel: www.muug.mb.ca
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini extras: mirror.its.sfu.ca
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out: config_files fabfile.py fabfile.pyc log log_results man_crudini updates: mirror.its.sfu.ca
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out: Package openstack-neutron-ml2-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out: Package openstack-neutron-openvswitch-2014.2.2-1.el7.noarch already installed and latest version
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out: Nothing to do
+2015-05-29 09:27:01-06:00 [dadm@129.128.208.150] out:
+2015-05-29 09:27:09-06:00
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.back12
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rpc_backend rabbit
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT rabbit_host controller
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken auth_uri http://controller:5000/v2.0
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken identity_uri http://controller:35357
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_tenant_name service
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf keystone_authtoken admin_user neutron
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT allow_overlapping_ips True
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/neutron.conf DEFAULT verbose True
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 type_drivers flat,gre
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 tenant_network_types gre
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2 mechanism_drivers openvswitch
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ml2_type_gre tunnel_id_ranges 1:1000
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_security_group True
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup enable_ipset True
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini securitygroup firewall_driver neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs enable_tunneling True
+2015-05-29 09:27:09-06:00 [localhost] local: crudini --get ../network_deployment/config_files/compute_instance_tunnels_interface_config '' IPADDR
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini ovs local_ip 192.168.1.31
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/neutron/plugins/ml2/ml2_conf.ini agent tunnel_types gre
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT network_api_class nova.network.neutronv2.api.API
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT security_group_api neutron
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT linuxnet_interface_driver nova.network.linux_net.LinuxOVSInterfaceDriver
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf DEFAULT firewall_driver nova.virt.firewall.NoopFirewallDriver
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron url http://controller:9696
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron auth_strategy keystone
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_auth_url http://controller:35357/v2.0
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_tenant_name service
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: crudini --set /etc/nova/nova.conf neutron admin_username neutron
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: systemctl enable openvswitch.service
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: systemctl start openvswitch.service
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] sudo: ls /etc/neutron
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] out: dhcp_agent.ini metadata_agent.ini plugin.ini rootwrap.conf
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] out: fwaas_driver.ini neutron.conf plugins
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] out: l3_agent.ini neutron.conf.back12 policy.json
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] out: lbaas_agent.ini neutron.conf.rpmsave release
+2015-05-29 09:27:09-06:00 [dadm@129.128.208.150] out:
+2015-05-29 09:27:10-06:00
+2015-05-29 09:27:10-06:00 [dadm@129.128.208.150] sudo: cp /usr/lib/systemd/system/neutron-openvswitch-agent.service /usr/lib/systemd/system/neutron-openvswitch-agent.service.orig
+2015-05-29 09:27:10-06:00 [dadm@129.128.208.150] sudo: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /usr/lib/systemd/system/neutron-openvswitch-agent.service
+2015-05-29 09:27:10-06:00 [dadm@129.128.208.150] sudo: systemctl enable neutron-openvswitch-agent.service
+2015-05-29 09:27:10-06:00 [dadm@129.128.208.150] out: ln -s '/usr/lib/systemd/system/neutron-openvswitch-agent.service' '/etc/systemd/system/multi-user.target.wants/neutron-openvswitch-agent.service'
+2015-05-29 09:27:10-06:00 [dadm@129.128.208.150] out:
+2015-05-29 09:27:10-06:00
+2015-05-29 09:27:10-06:00 [dadm@129.128.208.150] sudo: systemctl start neutron-openvswitch-agent.service
+2015-05-29 09:27:10-06:00
+2015-05-29 09:27:10-06:00 Done.
+2015-05-29 09:27:10-06:00 Disconnecting from dadm@129.128.208.150... done.
+2015-05-29 09:31:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config rabbitmq RABBIT_PASS
+2015-05-29 09:31:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NOVA_PASS
+2015-05-29 09:31:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config keystone NEUTRON_PASS
+2015-05-29 09:31:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config mysql NEUTRON_DBPASS
+2015-05-29 09:31:13-06:00 [localhost] local: crudini --get ../global_config_files/global_config metadata METADATA_SECRET
+2015-05-29 09:31:13-06:00 [dadm@129.128.208.150] Executing task 'compute_tdd'
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] Executing task 'verify_neutron_agents_compute'
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] sudo: neutron agent-list
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: | id | agent_type | host | alive | admin_state_up | binary |
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: | 4d334557-f14b-448e-80d9-bed8408e10c4 | DHCP agent | 524564.ece.ualberta.ca | :-) | True | neutron-dhcp-agent |
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: | ba953cae-aa73-480d-82ee-f75ff5940ead | Metadata agent | 524564.ece.ualberta.ca | :-) | True | neutron-metadata-agent |
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: | ce7f2800-5751-449f-8079-6f0db4b958ff | L3 agent | 524564.ece.ualberta.ca | :-) | True | neutron-l3-agent |
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: | d145d236-3606-4509-93e1-86156137130e | Open vSwitch agent | 524564.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: | d822f318-bb57-4bac-8bb3-0cb38a4daf32 | Open vSwitch agent | 529569.ece.ualberta.ca | :-) | True | neutron-openvswitch-agent |
+2015-05-29 09:31:13-06:00 [vadm@129.128.208.138] out: +--------------------------------------+--------------------+------------------------+-------+----------------+---------------------------+
+2015-05-29 09:31:14-06:00 [vadm@129.128.208.138] out:
+2015-05-29 09:31:14-06:00
+2015-05-29 09:31:14-06:00 [32mNeutron agent 529569.ece.ualberta.ca OK![0m
+2015-05-29 09:31:14-06:00
+2015-05-29 09:31:14-06:00 Done.
+2015-05-29 09:31:14-06:00 Disconnecting from vadm@129.128.208.138... done.
