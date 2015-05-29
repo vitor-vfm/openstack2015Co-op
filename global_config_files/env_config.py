@@ -45,6 +45,12 @@ network_nodes = read_nodes('../global_config_files/network_nodes')
 hosts = compute_nodes + controller_nodes + network_nodes
 roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes }
 global_config_file = '../global_config_files/global_config'
+global_config_location =  '../global_config_files/'
+
+# scripts to be sourced
+
+admin_openrc = global_config_location + 'admin-openrc.sh'
+demo_openrc = global_config_location + 'demo-openrc.sh'
 
 # get passwords
 
