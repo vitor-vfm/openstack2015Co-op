@@ -15,6 +15,7 @@ GLANCE_DBPASS = 34glance_db43
 
 [keystone]
 ADMIN_PASS = 34adm43
+DEMO_PASS = 34demo43
 NOVA_PASS = 34nova_ks43
 NEUTRON_PASS = 34neu43
 HEAT_PASS = 34heat_ks43
