@@ -1,5 +1,0 @@
-[mysql]
-GLANCE_DBPASS = 34glance_db43
-
-[keystone]
-GLANCE_PASS = 34glance_ks43

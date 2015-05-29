@@ -19,7 +19,6 @@ logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(
 
 env.roledefs = env_config.roledefs
 
-glance_config_file = 'glance_config'
 admin_openrc = "../global_config_files/admin-openrc.sh"
 demo_openrc = "../global_config_files/demo-openrc.sh"
 
@@ -44,7 +43,8 @@ def run_log(command):
 
 def get_parameter(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
-    return sudo_log(crudini_command)
+    return local(crudini_command, capture=True)
+#    return sudo_log(crudini_command)
 
 def set_parameter(config_file, section, parameter, value):
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
@@ -120,14 +120,6 @@ def start_glance_services():
     sudo_log("systemctl enable openstack-glance-api.service openstack-glance-registry.service")
     sudo_log("systemctl start openstack-glance-api.service openstack-glance-registry.service")
 
-
-def upload_files():
-    # upload config file for reading via crudini
-    put(glance_config_file)
-
-    # upload admin-openrc.sh to set variables in host machine
-    put(admin_openrc)
-
 def download_packages():
     # make sure we have crudini
     sudo_log('yum install -y crudini')
@@ -149,11 +141,17 @@ def setup_glance():
 
 
 
-    upload_files()
+#    upload_files()
+
+
+    download_packages()
+    
+    # upload admin-openrc.sh to set variables in host machine
+    put(admin_openrc)
     
     # variable setup
-    GLANCE_DBPASS = get_parameter(glance_config_file, 'mysql', 'GLANCE_DBPASS')
-    GLANCE_PASS = get_parameter(glance_config_file, 'keystone', 'GLANCE_PASS')    
+    GLANCE_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'GLANCE_DBPASS')
+    GLANCE_PASS = get_parameter(env_config.global_config_file, 'keystone', 'GLANCE_PASS')    
 
     # setup glance database
     setup_glance_database(GLANCE_DBPASS)

@@ -37,7 +37,8 @@ def run_log(command):
 
 def get_parameter(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
-    return sudo_log(crudini_command)
+    return local(crudini_command, capture=True)
+#    return sudo_log(crudini_command)
 
 def set_parameter(config_file, section, parameter, value):
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
