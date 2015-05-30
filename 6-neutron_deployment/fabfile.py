@@ -30,12 +30,7 @@ global_config = '../global_config_files/global_config'
 neutron_conf = '/etc/neutron/neutron.conf'
 
 # get passwords from their config file
-passwd = dict()
-passwd['RABBIT_PASS'] = local('crudini --get {} rabbitmq RABBIT_PASS'.format(global_config),capture=True)
-passwd['NOVA_PASS'] = local('crudini --get {} keystone NOVA_PASS'.format(global_config),capture=True)
-passwd['NEUTRON_PASS'] = local('crudini --get {} keystone NEUTRON_PASS'.format(global_config),capture=True)
-passwd['NEUTRON_DBPASS'] = local('crudini --get {} mysql NEUTRON_DBPASS'.format(global_config),capture=True)
-passwd['METADATA_SECRET'] = local('crudini --get {} metadata METADATA_SECRET'.format(global_config),capture=True)
+passwd = env_config.passwd
 
 ################### General functions ########################################
 

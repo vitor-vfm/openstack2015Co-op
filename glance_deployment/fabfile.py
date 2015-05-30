@@ -18,6 +18,7 @@ logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+passwd = env_config.passwd
 
 admin_openrc = "../global_config_files/admin-openrc.sh"
 demo_openrc = "../global_config_files/demo-openrc.sh"
@@ -52,7 +53,6 @@ def set_parameter(config_file, section, parameter, value):
 
 
 def setup_glance_database(GLANCE_DBPASS):
-    print("GLANCE_DBPASS is: {}".format(GLANCE_DBPASS))
     mysql_commands = "CREATE DATABASE IF NOT EXISTS glance;"
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
@@ -150,14 +150,14 @@ def setup_glance():
     put(admin_openrc)
     
     # variable setup
-    GLANCE_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'GLANCE_DBPASS')
-    GLANCE_PASS = get_parameter(env_config.global_config_file, 'keystone', 'GLANCE_PASS')    
+    # GLANCE_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'GLANCE_DBPASS')
+    # GLANCE_PASS = get_parameter(env_config.global_config_file, 'keystone', 'GLANCE_PASS')    
 
     # setup glance database
-    setup_glance_database(GLANCE_DBPASS)
-    setup_glance_keystone(GLANCE_PASS)
+    setup_glance_database(passwd['GLANCE_DBPASS'])
+    setup_glance_keystone(passwd['GLANCE_PASS'])
 
-    setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS)
+    setup_glance_config_files(passwd['GLANCE_PASS'], passwd['GLANCE_DBPASS'])
     populate_database()
     start_glance_services()
         

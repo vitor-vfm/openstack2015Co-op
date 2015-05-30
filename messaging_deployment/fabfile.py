@@ -115,9 +115,10 @@ def check_log(time):
         for error_num in range(8):
             run('echo {} > time'.format(time[error_num]))
             if run("sudo cat /var/log/messages | egrep '(debug|warning|critical)' | grep -f time"):
-                print(red("Oh... Oh god no..."))
+                # Make it specify which one doesn't work
+                print(red("Error in so far unspecified function"))
             else:
-                print(green("Weeee are the Chaaampions..."))
+                print(green("Success, whatever this is"))
             run('rm time')
 
 @roles('controller')

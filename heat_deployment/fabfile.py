@@ -18,6 +18,7 @@ logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+passwd = env_config.passwd
 
 admin_openrc = "../global_config_files/admin-openrc.sh"
 demo_openrc = "../global_config_files/demo-openrc.sh"
@@ -48,7 +49,6 @@ def set_parameter(config_file, section, parameter, value):
 
 
 def setup_heat_database(HEAT_DBPASS):
-    print("HEAT_DBPASS is: {}".format(HEAT_DBPASS))
     mysql_commands = "CREATE DATABASE IF NOT EXISTS heat;"
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON heat.* TO 'heat'@'localhost' IDENTIFIED BY '{}';".format(HEAT_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON heat.* TO 'heat'@'%' IDENTIFIED BY '{}';".format(HEAT_DBPASS)
@@ -136,15 +136,14 @@ def setup_heat():
     put(admin_openrc)
     
     # variable setup
-    HEAT_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'HEAT_DBPASS')
-    HEAT_PASS = get_parameter(env_config.global_config_file, 'keystone', 'HEAT_PASS')    
-    RABBIT_PASS = get_parameter(env_config.global_config_file, 'rabbitmq', 'RABBIT_PASS')
+    # HEAT_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'HEAT_DBPASS')
+    # HEAT_PASS = get_parameter(env_config.global_config_file, 'keystone', 'HEAT_PASS')    
+    # RABBIT_PASS = get_parameter(env_config.global_config_file, 'rabbitmq', 'RABBIT_PASS')
 
-    print(HEAT_DBPASS)
-    setup_heat_database(HEAT_DBPASS)
-    setup_heat_keystone(HEAT_PASS)
+    setup_heat_database(passwd['HEAT_DBPASS'])
+    setup_heat_keystone(passwd['HEAT_PASS'])
 
-    setup_heat_config_files(HEAT_PASS, HEAT_DBPASS, RABBIT_PASS)
+    setup_heat_config_files(passwd['HEAT_PASS'], passwd['HEAT_DBPASS'], passwd['RABBIT_PASS'])
     populate_database()
     start_heat_services()
 
