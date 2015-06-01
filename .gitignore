@@ -4,3 +4,7 @@
 # for including any emacs generated files
 *~
 *.*~ 
+
+# vim backup files
+*.swp
+*.swo
