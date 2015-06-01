@@ -60,7 +60,7 @@ def setup_sahara_database(SAHARA_DBPASS):
     print("mysql commands are: " + mysql_commands)
     sudo_log('echo "{}" | mysql -u root'.format(mysql_commands))
     
-    sudo_log("sahara-db-manage --config-file /etc/sahara/sahara.conf upgrade head")
+    sudo_log("sahara-db-manage -p --config-file /etc/sahara/sahara.conf upgrade head")
 
 
 def setup_sahara_keystone(SAHARA_PASS):
