@@ -41,6 +41,9 @@ def set_trove_config_files():
         sudo('crudini --set {} DEFAULT sql_connection mysql://trove:{}@controller/trove'.format(fil,passwd['TROVE_DBPASS']))
         sudo('crudini --set {} DEFAULT notifier_queue_hostname controller'.format(fil))
         sudo('crudini --set {} DEFAULT rpc_backend rabbit'.format(fil))
+        #newRPC = "trove.openstack.common.rpc.impl_kombu"
+        #sudo('crudini --set {} DEFAULT rpc_backend {}'.format(fil, newRPC))
+
         sudo('crudini --set {} DEFAULT rabbit_host controller'.format(fil))
         sudo('crudini --set {} DEFAULT rabbit_password {}'.format(fil,passwd['RABBIT_PASS']))
 
@@ -65,7 +68,7 @@ def get_api_and_config():
     sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'default_datastore', 'mysql'))
     sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'add_addresses', 'True'))
     sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'network_label_regex', '^NETWORK_LABEL$'))
-    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'api_paste_config', ''))
+    sudo('crudini --set {} DEFAULT {} {}'.format(config_files[0], 'api_paste_config', '/etc/trove/api-paste.ini'))
 
 
     sudo('crudini --set {} DEFAULT {} {}'.format(config_files[1], 'nova_proxy_admin_user', 'admin'))
@@ -161,12 +164,12 @@ def verify_database():
     # ISSUE: The openstack-trove-api.service is active right after deployment,
     # but somehow shuts down by the time we do the tdd
 
-    sudo('systemctl status openstack-trove-api.service')
+    sudo('systemctl restart openstack-trove-api.service')
     exports = open(env_config.demo_openrc,'r').read()
     with prefix(exports):
-        sudo('systemctl status openstack-trove-api.service')
-        # sudo("trove flavor-list")
-        # sudo("trove list")
+        sudo('systemctl restart openstack-trove-api.service')
+        #sudo("trove flavor-list")
+        sudo("trove list")
         # output_old = sudo("trove list")
         # sudo("""trove create name 2 --size=2 --databases DBNAME \
         # --users USER:PASSWORD --datastore_version mysql-5.5 \
