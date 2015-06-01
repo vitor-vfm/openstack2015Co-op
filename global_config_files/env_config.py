@@ -1,4 +1,4 @@
-from subprocess import check_output
+from subprocess import check_output, call
 
 ##################### General functions ######################
 
@@ -49,6 +49,20 @@ hosts = compute_nodes + controller_nodes + network_nodes
 roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes }
 global_config_file = '../global_config_files/global_config'
 global_config_location =  '../global_config_files/'
+
+#log_location = '/var/log/juno/'
+#if not check_output('sudo if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
+#    # location not created; make it
+#    call('sudo mkdir -p ' + log_location,shell=True)
+#    call('sudo chmod 777 ' + log_location,shell=True)
+
+log_location = '../var/log/juno/'
+if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
+    # location not created yet
+    call('mkdir -p ' + log_location,shell=True)
+    call('chmod 744 ' + log_location,shell=True)
+
+
 
 # scripts to be sourced
 

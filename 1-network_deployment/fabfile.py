@@ -9,22 +9,33 @@ import logging
 
 import sys
 sys.path.append('../global_config_files')
-
-from env_config import roledefs, read_dict
+import env_config
 
 
 ############################ Config ########################################
 
-env.roledefs = roledefs
+env.roledefs = env_config.roledefs
 
 # Get configuration dictionaries from the config files
-compute_tunnels = read_dict('config_files/compute_instance_tunnels_interface_config')
-compute_manage = read_dict('config_files/compute_management_interface_config')
-controller_manage = read_dict('config_files/controller_management_interface_config')
-network_ext = read_dict('config_files/network_node_external_interface_config')
-network_tunnels = read_dict('config_files/network_node_instance_tunnels_interface_config')
-network_manage = read_dict('config_files/network_node_management_interface_config')
+compute_tunnels = env_config.read_dict('config_files/compute_instance_tunnels_interface_config')
+compute_manage = env_config.read_dict('config_files/compute_management_interface_config')
+controller_manage = env_config.read_dict('config_files/controller_management_interface_config')
+network_ext = env_config.read_dict('config_files/network_node_external_interface_config')
+network_tunnels = env_config.read_dict('config_files/network_node_instance_tunnels_interface_config')
+network_manage = env_config.read_dict('config_files/network_node_management_interface_config')
 hosts_config = 'config_files/hosts_config'
+
+# Logging config
+
+log_file = 'basic-network.log'
+logfilename = env_config.log_location + log_file
+
+if log_file not in local('ls ' + env_config.log_location,capture=True):
+    # file doesn't exist yet; create it
+    local('touch ' + logfilename,capture=True)
+    local('chmod 644 ' + logfilename,capture=True)
+
+logging.basicConfig(filename=logfilename,level=logging.DEBUG)
 
 ################### General functions ########################################
 
@@ -55,13 +66,10 @@ def restart_network():
 
     sudo('chkconfig NetworkManager off')
     sudo('service NetworkManager stop')
-    sudo('service network restart')
-    sudo('service NetworkManager start')
-    # sudo('service NetworkManager restart')
-    # sudo('nmcli connection reload')
-    # device_name = compute_manage['DEVICE'][:-2]
-    # sudo('nmcli device disconnect {}'.format(device_name))
-    # sudo('nmcli device connect {}'.format(device_name))
+    if sudo('service network restart').return_code != 0:
+        logging.error('service network failed to restart on ' + env.host_string)
+    if sudo('service NetworkManager start').return_code != 0:
+        logging.error('NetworkManager faile to restart on ' + env.host_string)
 
 # General function to set a virtual NIC
 def set_up_network_interface(specs_dict,role):
@@ -84,9 +92,8 @@ def set_up_network_interface(specs_dict,role):
     with cd('/etc/sysconfig/network-scripts'):
         # create ifcfg file in the directory
         sudo('echo -e "{}" >ifcfg-{}'.format(config_file,device_name))
-    # restart network interface to initiate
-    #sudo('service network restart')
-    #sudo('ifdown {} && ifup {}'.format(device_name,device_name))
+
+    logging.debug('Set up virtual NIC with name {} on host {}'.format(device_name,env.host_string))
 
 def set_hosts():
     # configure the /etc/hosts file to put aliases
@@ -96,6 +103,7 @@ def set_hosts():
     sudo("sed -i '/network/d' /etc/hosts")
     sudo("sed -i '/compute/d' /etc/hosts")
     append('/etc/hosts',config_file,use_sudo=True)
+    logging.debug('Configured /etc/hosts file on host ' + env.host_string)
 
 @roles('controller')
 def controller_network_deploy():
@@ -105,6 +113,7 @@ def controller_network_deploy():
 
     restart_network()
     set_hosts()
+    logging.debug('Deployment done on ' + env.host_string)
 
 @roles('network')
 def network_node_network_deploy():
@@ -122,6 +131,7 @@ def network_node_network_deploy():
 
     restart_network()
     set_hosts()
+    logging.debug('Deployment done on ' + env.host_string)
 
 @roles('compute')
 def compute_network_deploy():
@@ -135,6 +145,7 @@ def compute_network_deploy():
 
     restart_network()
     set_hosts()
+    logging.debug('Deployment done on ' + env.host_string)
 
 def deploy():
     with settings(warn_only=True):
