@@ -26,6 +26,8 @@ etc_config_file = "/etc/my.conf"
 etc_sahara_config_file = "/etc/sahara/sahara.conf"
 #sahara_test_file = "test_file/test-stack.yml"
 
+passwd = env_config.passwd
+
 def sudo_log(command):
     output = sudo(command)
     logging.info(output)
@@ -170,10 +172,10 @@ def setup_sahara():
     # end of foreign
 
     # My test version of foreign
-    setup_sahara_database('SAHARA_DBPASS')
-    setup_sahara_keystone('SAHARA_PASS')
+    setup_sahara_database(passwd['SAHARA_DBPASS'])
+    setup_sahara_keystone(passwd['SAHARA_PASS'])
 
-    setup_sahara_config_files('SAHARA_PASS', 'SAHARA_DBPASS', 'RABBIT_PASS')
+    setup_sahara_config_files(passwd['SAHARA_PASS'], passwd['SAHARA_DBPASS'], passwd['RABBIT_PASS'])
     populate_database()
     # End of my test
  

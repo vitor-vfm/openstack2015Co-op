@@ -1,6 +1,3 @@
-[rabbitmq]
-RABBIT_PASS = 34RabbGuest43
-
 [metadata]
 METADATA_SECRET = 34m3t$3c43
 
