@@ -107,13 +107,13 @@ def set_hosts(log_dict):
     append('/etc/hosts',config_file,use_sudo=True)
     logging.debug('Configured /etc/hosts file',extra=log_dict)
 
-def configureNTP(log_dict):
+def configureNTP(log_dict={}):
 
     confFile = '/etc/ntp.conf'
     newLine = 'server controller iburst'
 
     # check if file has been configured already
-    if sudo("grep '{}' {}".format(newLine,confFile)).return_code == 0:
+    if sudo("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
         message = 'NTP conf file has already been set. Nothing done'
         print message
         logging.debug(message,extra=log_dict)
@@ -127,11 +127,90 @@ def configureNTP(log_dict):
 
     # add one server key to reference the controller node
     sudo("echo '{}' >>{}".format(newLine,confFile))
-    sudo("cat {} | grep -v '#'".format(confFile))
 
     # enable and start ntp service
     sudo("systemctl enable ntpd.service")
     sudo("systemctl start ntpd.service")
+
+def configureNTP_on_controller(log_dict={}):
+
+
+    NTP_SERIVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
+
+    confFile = '/etc/ntp.conf'
+
+    # check if file has been configured already
+    if sudo("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
+        message = 'NTP conf file has already been set. Nothing done'
+        print message
+        logging.debug(message,extra=log_dict)
+        return
+
+    # make a backup
+    sudo('cp {} {}.back12'.format(confFile,confFile))
+
+    # comment out all server keys
+    sudo("sed -i '/server/ s/^/#/' " + confFile)
+
+    # add one server key to reference the controller node
+
+    for NTP_SERVER in NTP_SERVERS:
+        sudo("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
+
+    # enable and start ntp service
+    sudo("systemctl enable ntpd.service")
+    sudo("systemctl start ntpd.service")
+
+def controller_ntp_tdd_part1():
+
+    # this repeats, we need to make it proper
+    NTP_SERIVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
+
+    for NTP_SERVER in NTP_SERVERS:
+        if NTP_SERVER in sudo("ntpq -c peers"):
+            print(green("Found ntp server in column 'remote'"))
+            return
+    
+    print(red("Didnt find ntp server in column 'remote'"))
+    print("Try waiting for sync")
+
+
+def controller_ntp_tdd_part2():
+
+
+    if "sys_peer" in sudo("ntpq -c assoc"):
+        print(green("Found sys_peer"))
+        return
+    
+    print(red("Didnt find sys_peer"))
+    print("Try waiting for sync")
+
+def controller_ntp_tdd():
+    controller_ntp_tdd_part1()
+    controller_ntp_tdd_part2()
+
+
+def other_nodes_ntp_tdd_part1():
+    if "controller" in sudo("ntpq -c peers"):
+        print(green("Found controller in column 'remote'"))
+        return
+    
+    print(red("Didnt find controller in column 'remote'"))
+    print("Try waiting for sync")
+
+
+def other_nodes_ntp_tdd_part2():
+    if "sys_peer" in sudo("ntpq -c assoc"):
+        print(green("Found sys_peer"))
+        return
+    
+    print(red("Didnt find sys_peer"))
+    print("Try waiting for sync")
+
+def other_nodes_ntp_tdd():
+    other_nodes_ntp_tdd_part1()
+    other_nodes_ntp_tdd_part2()
+        
 
 @roles('controller')
 def controller_network_deploy():
@@ -196,28 +275,6 @@ def deploy():
         execute(network_node_network_deploy)
         execute(compute_network_deploy)
 
-#################### Fix me ########################
-
-@roles('network','compute')
-def fixme(log_dict={}):
-
-    confFile = '/etc/ntp.conf'
-
-    # make a backup
-    print('cp {} {}.back12'.format(confFile,confFile))
-    sudo('cp {} {}.back12'.format(confFile,confFile))
-
-    # comment out all server keys
-    sudo("sed -i '/server/ s/^/#/' " + confFile)
-
-    # add one server key to reference the controller node
-    newLine = 'server controller iburst'
-    sudo("echo '{}' >>{}".format(newLine,confFile))
-    sudo("cat {} | grep -v '#'".format(confFile))
-
-    # enable and start ntp service
-    sudo("systemctl enable ntpd.service")
-    sudo("systemctl start ntpd.service")
 ######################################## TDD #########################################
 
 # pings an ip address and see if it works
