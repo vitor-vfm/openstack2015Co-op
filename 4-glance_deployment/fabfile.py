@@ -12,9 +12,6 @@ sys.path.append('../global_config_files')
 import env_config
 
 
-logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-
-
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -31,13 +28,44 @@ glance_registry_config_file = "/etc/glance/glance-registry.conf"
 
 def sudo_log(command):
     output = sudo(command)
-    logging.info(output)
+    if output.return_code != 0:
+        logging.error("Problem on command '{}'".format(command),extra=log_dict)
+    else:
+        for line in output.splitlines():
+            # don't log lines that have passwords
+            if 'pass' not in line.lower():
+                # skip empty lines
+                if line != '' or line !='\n':
+                    logging.debug(line,extra=log_dict)
     return output
 
 def run_log(command):
     output = run(command)
-    logging.info(output)
+    if output.return_code != 0:
+        logging.error("Problem on command '{}'".format(command),extra=log_dict)
+    else:
+        for line in output.splitlines():
+            # don't log lines that have passwords
+            if 'pass' not in line.lower():
+                # skip empty lines
+                if line != '' or line !='\n':
+                    logging.debug(line,extra=log_dict)
     return output
+
+# logging setup
+
+log_file = 'glance_deployment.log'
+logfilename = env_config.log_location + log_file
+
+if log_file not in local('ls ' + env_config.log_location,capture=True):
+    # file doesn't exist yet; create it
+    local('touch ' + logfilename,capture=True)
+    local('chmod 644 ' + logfilename,capture=True)
+
+logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=env_config.log_format)
+# set paramiko logging to only output warnings
+logging.getLogger("paramiko").setLevel(logging.WARNING)
+
 
 
 ################### General functions ########################################
@@ -66,10 +94,21 @@ def setup_glance_database(GLANCE_DBPASS):
 def setup_glance_keystone(GLANCE_PASS):
     source_command = "source admin-openrc.sh"
     with prefix(source_command):
-        sudo_log("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
-        sudo_log("keystone user-role-add --user glance --tenant service --role admin")
-        sudo_log("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
-        sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
+        if 'glance' in sudo("keystone user-list"):
+            sudo_log("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
+            sudo_log("keystone user-role-add --user glance --tenant service --role admin")
+        else:
+            logging.debug('User glance already in user list',extra=log_dict)
+
+        if 'glance' in sudo("keystone service-list"):
+            sudo_log("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
+        else:
+            logging.debug('Service glance already in service list',extra=log_dict)
+
+        if '9292' in sudo("keystone endpoint-list"):
+            sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
+        else:
+            logging.debug('Endpoint 9292 already in endpoint list',extra=log_dict)
     
 def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
     sudo_log("yum install -y openstack-glance python-glanceclient")
@@ -127,22 +166,9 @@ def download_packages():
 @roles('controller')
 def setup_glance():
 
-#    host_command = 'sudo_log -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{} #       controller".format(env.host))) 
-#    sudo_log(host_command)
-
-
-    # fixing bind-address on /etc/my.cnf
-
-    # bindCommand = "sed -i.bak 's/^\(bind-address=\).*/\1 {} /' /etc/my.cnf".format(env.host)
-#    bindCommand = "sed -i '/bind-address/s/=.*/={}/' /etc/my.cnf".format(env.host)
-#    sudo_log(bindCommand)
-    
-#    sudo_log("systemctl restart mariadb")
-
-
-
-#    upload_files()
-
+    # info for logging
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
     download_packages()
     
@@ -161,15 +187,6 @@ def setup_glance():
     populate_database()
     start_glance_services()
         
-
-
-
-
-
-
-
-
-
 ################### Deployment ########################################
 
 def deploy():

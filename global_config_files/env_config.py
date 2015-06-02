@@ -58,7 +58,7 @@ global_config_location =  '../global_config_files/'
 #    call('sudo mkdir -p ' + log_location,shell=True)
 #    call('sudo chmod 777 ' + log_location,shell=True)
 
-log_format = '%(asctime)-15s:%(levelname)s:%(funcName)s():%(host_string)s:%(role)s:\t%(message)s'
+log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:%(role)s:\t%(message)s'
 # log_format = '%(asctime)-15s  %(message)s'
 log_location = '../var/log/juno/'
 if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
@@ -82,5 +82,3 @@ global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_
 pairs = [line.split(' = ') for line in global_config_file_lines]
 # make passwd dictionary
 passwd = {pair[0].upper():pair[1] for pair in pairs}
-
-print passwd
