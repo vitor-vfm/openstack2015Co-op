@@ -19,6 +19,8 @@ NEUTRON_PASS = 34neu43
 HEAT_PASS = 34heat_ks43
 GLANCE_PASS = 34glance_ks43
 SAHARA_PASS = 34sahara_ks43
+SWIFT_PASS = 34$w1f43
+
 
 [trove]
 TROVE_PASS = 34Tr0v343
