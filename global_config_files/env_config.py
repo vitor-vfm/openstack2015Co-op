@@ -1,3 +1,4 @@
+import logging 
 from subprocess import check_output, call
 
 ##################### General functions ######################
@@ -58,13 +59,25 @@ global_config_location =  '../global_config_files/'
 #    call('sudo mkdir -p ' + log_location,shell=True)
 #    call('sudo chmod 777 ' + log_location,shell=True)
 
-log_format = '%(asctime)-15s:%(levelname)s:%(funcName)s():%(host_string)s:%(role)s:\t%(message)s'
+log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:%(role)s:\t%(message)s'
 # log_format = '%(asctime)-15s  %(message)s'
 log_location = '../var/log/juno/'
 if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
     # location not created yet
     call('mkdir -p ' + log_location,shell=True)
     call('chmod 744 ' + log_location,shell=True)
+
+def setupLoggingInFabfile(log_file):
+    logfilename = log_location + log_file
+
+    if log_file not in check_output('ls ' + log_location,shell=True):
+        # file doesn't exist yet; create it
+        call('touch ' + logfilename,shell=True)
+        call('chmod 644 ' + logfilename,shell=True)
+
+    logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=log_format)
+    # set paramiko logging to only output warnings
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 
 
@@ -82,5 +95,3 @@ global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_
 pairs = [line.split(' = ') for line in global_config_file_lines]
 # make passwd dictionary
 passwd = {pair[0].upper():pair[1] for pair in pairs}
-
-print passwd
