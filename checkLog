@@ -1,0 +1,153 @@
+#! /usr/bin/python
+
+usage = \
+'\n  A script to parse and display logs\n' + \
+'\n' + \
+'   Usage:\n' + \
+'       checkLog.py [log] [options]\n' + \
+'\n' + \
+'       log = the program whose log you want to see;\n' + \
+'             can be "all" to display all the logs \n' + \
+'\n' + \
+'       options:\n' + \
+'\n' + \
+'           -t [n] = take only the last n lines\n' + \
+'           -d [date] = take only lines from the specified date;\n' + \
+'           -to = take only lines from today\n' + \
+'           -l [level] = take only lines with the given level (INFO, WARN, etc.);\n' + \
+'                        not case sensitive\n' + \
+'           -w = take only lines with level WARN, CRITICAL or ERROR\n' + \
+'           -h = display this message\n'
+
+
+import sys
+import ConfigParser
+from subprocess import check_output
+
+
+############### Config #####################
+
+
+confFile = 'checkLogFiles/logFileLocations.cfg'
+
+# logs directories
+deploymentLogsDirectory = 'var/log/juno/'
+openstackComponentsLogsDirectory = '/var/log/'
+
+def readConfFile(section,fileLocation):
+    config = ConfigParser.ConfigParser()
+    config.read(fileLocation)
+    nameValuePairs = config.items(section)
+    if nameValuePairs:
+        return {name:value for (name,value) in nameValuePairs}
+    else:
+        return None
+
+
+
+# dictionaries that map parameters to files
+componentsLogs = readConfFile('components',confFile)
+
+deploymentLogs = readConfFile('deployment',confFile)
+
+# add directories to the front of the values
+if componentsLogs:
+    componentsLogs = { k : openstackComponentsLogsDirectory + componentsLogs[k] for k in componentsLogs.keys() }
+
+if deploymentLogs:
+    deploymentLogs = { k : deploymentLogsDirectory + deploymentLogs[k] for k in deploymentLogs.keys() }
+
+############# Log display #####################
+
+def showLog(log,date="",past="",tail="",level=""):
+    # prints a log to the screen, according to specifications
+    log_lines = open(log,'r').readlines()
+
+    if date:
+        # filter according to the date
+        if date == 'today':
+            date = check_output('date -Idate',shell=True).strip()
+        log_lines = [line for line in log_lines if date in line]
+
+    if tail:
+        # grab only the last X lines
+        try:
+            nLines = int(tail)
+        except:
+            raise ValueError("Invalid parameter for tail (-t)")
+
+        log_lines = log_lines[-nLines:]
+
+    if level:
+        # filter lines according to specified error
+        if level == 'warnings':
+            levelsList = ['WARN','CRITICAL','ERROR']
+
+            new_log_lines = list()
+            for line in log_lines:
+                for lev in levelsList:
+                    if lev in line.upper():
+                        new_log_lines.append(line)
+                        continue
+            log_lines = new_log_lines
+        else:
+            log_lines = [line for line in log_lines if level.upper() in line.upper()]
+
+    # if past:
+        # filter to only the past X hours or minutes
+        # currentTime = check_output("date +'%H %M %S'",shell=True).split()
+        # if past.lower()[-1] == 'm':
+        #     # user wants logs from the past X minutes
+        #     minutesAgo = int(past[:-1])
+            
+        #     initalTime[3] = '00'
+        #     initalTime[2] = currentTime[2]
+        #     currentTime[0] -= minutes // 60
+        # log_lines = [line for line in log_lines if date in line]
+
+    # concatenate lines and return them
+    return "".join(log_lines)
+
+def main(args):
+
+    if '-h' in args:
+        print usage
+        return
+
+    log = args[0].lower()
+    if deploymentLogs and (log in deploymentLogs):
+        log_file = deploymentLogs[log]
+    elif componentsLogs and (log in componentsLogs):
+        log_file = componentsLogs[log]
+    elif log != 'all':
+        raise ValueError('Not a valid log parameter : ' + log)
+
+    date = past = tail = level = ""
+    if '-d' in args:
+        date = args[ args.index('-d') + 1 ]
+    if '-to' in args:
+        date = 'today'
+    if '-p' in args:
+        past = args[ args.index('-p') + 1 ]
+    if '-t' in args:
+        tail = args[ args.index('-t') + 1 ]
+    if '-l' in args:
+        level = args[ args.index('-l') + 1 ]
+    if '-w' in args:
+        level = 'warnings'
+
+    if log == 'all':
+        allLogs = [l for l in deploymentLogs.values() ] + \
+                [l for l in componentsLogs.values() ]
+        for l in allLogs:
+            print showLog(l,date,past,tail,level)
+    else:
+        print showLog(log_file,date,past,tail,level)
+
+
+
+
+
+if __name__=="__main__":
+    main(sys.argv[1:])
+
