@@ -67,6 +67,14 @@ def showLog(log,date="",past="",tail="",level=""):
         # filter according to the date
         if date == 'today':
             date = check_output('date -Idate',shell=True).strip()
+            # # find first line with the date
+            # for i, line in enumerate(log_lines):
+            #     if date in line:
+            #         firstIndex = i
+            #         break
+            # log_lines = log_lines[i:]
+        # else:
+            # log_lines = [line for line in log_lines if date in line]
         log_lines = [line for line in log_lines if date in line]
 
     if tail:
@@ -94,16 +102,16 @@ def showLog(log,date="",past="",tail="",level=""):
             log_lines = [line for line in log_lines if level.upper() in line.upper()]
 
     # if past:
-        # filter to only the past X hours or minutes
-        # currentTime = check_output("date +'%H %M %S'",shell=True).split()
-        # if past.lower()[-1] == 'm':
-        #     # user wants logs from the past X minutes
-        #     minutesAgo = int(past[:-1])
+    #     # filter to only the past X hours or minutes
+    #     currentTime = check_output("date +'%H %M %S'",shell=True).split()
+    #     if past.lower()[-1] == 'm':
+    #         # user wants logs from the past X minutes
+    #         minutesAgo = int(past[:-1])
             
-        #     initalTime[3] = '00'
-        #     initalTime[2] = currentTime[2]
-        #     currentTime[0] -= minutes // 60
-        # log_lines = [line for line in log_lines if date in line]
+    #         initalTime[3] = '00'
+    #         initalTime[2] = currentTime[2]
+    #         currentTime[0] -= minutes // 60
+    #     log_lines = [line for line in log_lines if date in line]
 
     # concatenate lines and return them
     return "".join(log_lines)
