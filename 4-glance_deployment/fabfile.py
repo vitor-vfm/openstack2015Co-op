@@ -188,6 +188,11 @@ def deploy():
 @roles('controller')
 def get_image_tdd():
 
+    # dictionary for logging format
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
+
     sudo_log("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
 #    sudo_log("wget -P /tmp/images http://cdn.download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img")

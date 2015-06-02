@@ -285,6 +285,11 @@ def deploy():
 
 @roles('controller')
 def verify():
+
+    # dictionary for logging format
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
     source_command = "source admin-openrc.sh"
     with prefix(source_command):
         sudo_log("nova service-list")

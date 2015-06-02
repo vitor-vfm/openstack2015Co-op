@@ -477,6 +477,11 @@ def deploy():
 
 @roles('controller')
 def controller_tdd():
+
+    # dictionary for logging format
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
     # Check loaded extensions to verify launch of neutron
     alias_name_pairs = list()
     alias_name_pairs.append(('security-group','security-group'))
@@ -510,6 +515,11 @@ def controller_tdd():
 
 @roles('controller')
 def verify_neutron_agents_network():
+
+    # dictionary for logging format
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
     # this test should be done after the network deployment,
     # even though it's done on the controller node
 
@@ -544,6 +554,11 @@ def network_tdd():
 
 @roles('controller')
 def verify_neutron_agents_compute():
+
+    # dictionary for logging format
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
     # this test should be done after the compute deployment,
     # even though it's done on the controller node
 

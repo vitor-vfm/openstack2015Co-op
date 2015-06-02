@@ -12,9 +12,6 @@ sys.path.append('../global_config_files')
 import env_config
 
 
-logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-
-
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -23,16 +20,14 @@ passwd = env_config.passwd
 etc_horizon_config_file = "/etc/openstack-dashboard/local_settings"
 
 
-def sudo_log(command):
-    output = sudo(command)
-    logging.info(output)
-    return output
+# Logging
+log_file = 'horizon_deployment.log'
+env_config.setupLoggingInFabfile(log_file)
 
-def run_log(command):
-    output = run(command)
-    logging.info(output)
-    return output
-
+# Do a fabric run on the string 'command' and log results
+run_log = lambda command : env_config.fabricLog(command,run,log_dict)
+# Do a fabric run on the string 'command' and log results
+sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
 
@@ -100,6 +95,10 @@ def setup_horizon():
 
 @roles('controller')
 def deploy():
+    # dictionary for logging format
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
     setup_horizon()
 
 ######################################## TDD #########################################
@@ -116,6 +115,10 @@ def reach_dashboard():
         
 @roles('controller')
 def tdd():
+    # dictionary for logging format
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
     with settings(warn_only=True):
         reach_dashboard()
         pass
