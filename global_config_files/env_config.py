@@ -1,4 +1,6 @@
-from subprocess import check_output
+import logging 
+from subprocess import check_output, call
+from fabric.api import run, sudo
 
 ##################### General functions ######################
 
@@ -34,6 +36,35 @@ def read_dict(config_file):
     #run("rm -rf %s" % config_file)
     return config_file_dict
 
+# Do a fabric command on the string 'command' and log results
+def fabricLog(command,func,log_dict):
+    output = func(command)
+    if output.return_code != 0:
+        logging.error("Problem on command '{}'".format(command),extra=log_dict)
+    else:
+        for line in output.splitlines():
+            # don't log lines that have passwords
+            if 'pass' not in line.lower():
+                # skip empty lines
+                if line != '' or line !='\n':
+                    logging.debug(line,extra=log_dict)
+    return output
+
+
+def setupLoggingInFabfile(log_file):
+    logfilename = log_location + log_file
+
+    if log_file not in check_output('ls ' + log_location,shell=True):
+        # file doesn't exist yet; create it
+        call('touch ' + logfilename,shell=True)
+        call('chmod 644 ' + logfilename,shell=True)
+
+    logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=log_format)
+    # set paramiko logging to only output warnings
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+
+
 ######################### Global variables ######################
 
 # Variables that can be imported into the env dictionary
@@ -50,6 +81,23 @@ roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':n
 global_config_file = '../global_config_files/global_config'
 global_config_location =  '../global_config_files/'
 
+# LOGGING
+
+#log_location = '/var/log/juno/'
+#if not check_output('sudo if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
+#    # location not created; make it
+#    call('sudo mkdir -p ' + log_location,shell=True)
+#    call('sudo chmod 777 ' + log_location,shell=True)
+
+log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:%(role)s:\t%(message)s'
+# log_format = '%(asctime)-15s  %(message)s'
+log_location = '../var/log/juno/'
+if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
+    # location not created yet
+    call('mkdir -p ' + log_location,shell=True)
+    call('chmod 744 ' + log_location,shell=True)
+
+
 # scripts to be sourced
 
 admin_openrc = global_config_location + 'admin-openrc.sh'
@@ -62,8 +110,6 @@ global_config_file_lines = check_output("crudini --get --list --format=lines " +
 global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_lines]
 # break between parameter and value
 pairs = [line.split(' = ') for line in global_config_file_lines]
-# remove parameters that aren't passwords
-pairs = [pair for pair in pairs if 'PASS' in pair[0] or 'pass' in pair[0]]
 # make passwd dictionary
 passwd = {pair[0].upper():pair[1] for pair in pairs}
 

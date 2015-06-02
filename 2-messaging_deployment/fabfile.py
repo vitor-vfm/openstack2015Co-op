@@ -5,6 +5,8 @@ from fabric.context_managers import cd
 from fabric.colors import green, red
 from fabric.contrib.files import append
 import string
+import paramiko
+import logging
 import sys
 sys.path.append('../global_config_files')
 import env_config
@@ -23,6 +25,15 @@ env.roledefs = env_config.roledefs
 messaging_config_file = 'messaging_config'
 
 
+# Logging config
+
+log_file = 'rabbit_deployment.log'
+env_config.setupLoggingInFabfile(log_file)
+
+# Do a fabric run on the string 'command' and log results
+run_log = lambda command : env_config.fabricLog(command,run,log_dict)
+# Do a fabric run on the string 'command' and log results
+sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
 
@@ -31,38 +42,56 @@ def get_value(config_file, section, parameter):
     return local(crudini_command, capture=True)
 
 def set_value(config_file, section, parameter, value):
-    sudo("crudini --set {} {} {} {}".format(config_file, section, parameter, value))
+    sudo_log("crudini --set {} {} {} {}".format(config_file, section, parameter, value))
+    logging.debug('Setting parameter () on section {} of config file {}'.format(parameter,section,config_file))
 
 ############################# MESSAGING #####################################
 
 @roles('controller')
 def installRabbitMQ():
-    sudo('yum install rabbitmq-server')
+
+    # logging info
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+
+    sudo_log('yum install rabbitmq-server')
     #execute(if_error)
-    sudo('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
+    if sudo_log('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf').return_code != 0:
+        logging.error('Failed to create rabbitmq-env.conf on host ' + env.host_string)
     #execute(if_error)
-    sudo('systemctl enable rabbitmq-server.service')
-    sudo('systemctl start rabbitmq-server.service')
-    sudo('systemctl restart rabbitmq-server.service')
-    sudo('firewall-cmd --permanent --add-port=5672/tcp')
-    sudo('firewall-cmd --reload')
-    sudo('rabbitmqctl change_password guest {}'.format(
-        get_value('messaging_config', '""', 'PASSWORD')), quiet=True)
+    if sudo_log('systemctl enable rabbitmq-server.service').return_code != 0:
+        logging.error('Failed to enable rabbitmq-server.service',extra=log_dict)
+    if sudo_log('systemctl start rabbitmq-server.service').return_code != 0:
+        logging.error('Failed to start rabbitmq-server.service',extra=log_dict)
+    if sudo_log('systemctl restart rabbitmq-server.service').return_code != 0:
+        logging.error('Failed to restart rabbitmq-server.service',extra=log_dict)
+    if sudo_log('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
+        logging.error('Failed to add port 5672 to firewall',extra=log_dict)
+    sudo_log('firewall-cmd --reload')
+    sudo_log('rabbitmqctl change_password guest {}'.format(\
+        get_value('messaging_config', '""', 'PASSWORD')))
     # Assuming we're using RabbitMQ version 3.3.0 or later, do the next 2 lines
-#    sudo('if [ ! -f /etc/rabbitmq/rabbitmq.config ]; then' + '\n' 
+#    sudo_log('if [ ! -f /etc/rabbitmq/rabbitmq.config ]; then' + '\n' 
  #           'echo "[{rabbit, [{loopback_users, []}]}]." >> /etc/rabbitmq/rabbitmq.config' + '\n'
   #          'else' + '\n'
    #         'if ! grep -qe "^[{rabbit, [{loopback_users, []}]}]. A$" "/etc/rabbitmq/rabbitmq.config"; then' + '\n'
     #        'echo "[{rabbit, [{loopback_users, []}]}]." >> /etc/rabbitmq/rabbitmq.config' + '\n'
      #       'fi' + '\n'
       #      'fi')
-    #sudo('systemctl restart rabbitmq-server.service')
+    #sudo_log('systemctl restart rabbitmq-server.service')
+    logging.debug('Installed RabbitMQ',extra=log_dict)
 
 
     
 ################### Deployment ########################################
 
 def deploy():
+
+    # logging info
+    global log_dict
+    log_dict = {'host_string':'', 'role':''}
+    logging.debug('Deploying',extra=log_dict)
+
     execute(installRabbitMQ)
 
 
@@ -74,7 +103,7 @@ def deploy():
 #        print(green("GOOD"))
  #   else:
   #      print(red("BAD")) 
-   #sudo("rm -r /tmp/images")
+   #sudo_log("rm -r /tmp/images")
 
 
 
@@ -82,48 +111,55 @@ def deploy():
 #    with settings(warn_only=True):
         # Following command lists errors. Find out how to get it to find 
         # specific errors or a certain number of them based on time.
-        #sudo cat messages | egrep '(error|warning)'
+        #sudo_log cat messages | egrep '(error|warning)'
  #       time = installRabbitMQtdd()
   #      check_log(time)
         
 @roles('controller')
 def installRabbitMQtdd():
-    time = [0]*8
-    sudo('yum install rabbitmq-server')
-    time[0] = run('date +"%b %d %R"')
-    sudo('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
-    time[1] = run('date +"%b %d %R"')
 
-    sudo('systemctl enable rabbitmq-server.service')
-    time[2] = run('date +"%b %d %R"')
-    sudo('systemctl start rabbitmq-server.service')
-    time[3] = run('date +"%b %d %R"')
-    sudo('systemctl restart rabbitmq-server.service')
-    time[4] = run('date +"%b %d %R"')
-    sudo('firewall-cmd --permanent --add-port=5672/tcp')
-    time[5] = run('date +"%b %d %R"')
-    sudo('firewall-cmd --reload')
-    time[6] = run('date +"%b %d %R"')
-    sudo('rabbitmqctl change_password guest {}'.format(
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+    time = [0]*8
+    if sudo_log('yum install rabbitmq-server').return_code != 0:
+        logging.error('Failed to install rabbitmq-server')
+    else:
+        logging.debug('Successfully installed rabbitmq-server')
+
+    time[0] = run_log('date +"%b %d %R"')
+    sudo_log('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
+    time[1] = run_log('date +"%b %d %R"')
+
+    sudo_log('systemctl enable rabbitmq-server.service')
+    time[2] = run_log('date +"%b %d %R"')
+    sudo_log('systemctl start rabbitmq-server.service')
+    time[3] = run_log('date +"%b %d %R"')
+    sudo_log('systemctl restart rabbitmq-server.service')
+    time[4] = run_log('date +"%b %d %R"')
+    sudo_log('firewall-cmd --permanent --add-port=5672/tcp')
+    time[5] = run_log('date +"%b %d %R"')
+    sudo_log('firewall-cmd --reload')
+    time[6] = run_log('date +"%b %d %R"')
+    sudo_log('rabbitmqctl change_password guest {}'.format(
         get_value('messaging_config', '""', 'PASSWORD')), quiet=True)
-    time[7] = run('date +"%b %d %R"')
+    time[7] = run_log('date +"%b %d %R"')
     return time
 
 @roles('compute', 'controller', 'network')
 def check_log(time):
     with settings(quiet=True):
         for error_num in range(8):
-            print(time[error_num]) 
-            run('echo {} > time'.format(time[error_num]))
-            if run("sudo cat /var/log/messages | egrep '(debug|warning|critical)' | grep -f time"):
+            run_log('echo {} > time'.format(time[error_num]))
+            if run_log("sudo cat /var/log/messages | egrep '(debug|warning|critical)' | grep -f time"):
                 # Make it specify which one doesn't work
                 print(red("Error in so far unspecified function"))
             else:
                 print(green("Success, whatever this is"))
-            run('rm time')
+            run_log('rm time')
 
 @roles('controller')
 def tdd():
+    log_dict = {'host_string':'', 'role':''}
+    logging.debug('Running TDD function',extra=log_dict)
     with settings(warn_only=True):
         time = installRabbitMQtdd()
         execute(check_log,time)
