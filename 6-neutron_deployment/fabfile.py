@@ -133,7 +133,7 @@ def configure_networking_server_component():
     # turn on verbose logging
     sudo('crudini --set {} DEFAULT verbose True'.format(neutron_conf))
 
-def configure_ML2_plugin():
+def configure_ML2_plugin_general():
     # The ML2 plug-in uses the Open vSwitch (OVS) mechanism (agent) to build the virtual 
     # networking framework for instances. However, the controller node does not need the OVS 
     # components because it does not handle instance network traffic.
@@ -178,7 +178,7 @@ def controller_deploy():
 
     configure_networking_server_component()
 
-    configure_ML2_plugin()
+    configure_ML2_plugin_general()
 
     configure_nova_to_use_neutron()
 
@@ -234,7 +234,7 @@ def configure_ML2_plug_in_network():
     ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
 
     # most of the configuration is the same as the controller
-    configure_ML2_plugin()
+    configure_ML2_plugin_general()
 
     # configure the external flat provider network 
     sudo('crudini --set ' + ml2_conf_file + ' ml2_type_flat flat_networks external')
@@ -334,7 +334,7 @@ def network_deploy():
 
     configure_the_Networking_common_components()
 
-    configure_the_ML2_plug_in()
+    configure_ML2_plug_in_network()
 
     configure_Layer3_agent()
 
@@ -375,7 +375,7 @@ def configure_ML2_plug_in_compute():
     ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
 
     # most of the configuration is the same as the controller
-    configure_ML2_plugin()
+    configure_ML2_plugin_general()
 
     # configure the external flat provider network 
     sudo('crudini --set ' + ml2_conf_file + ' ovs enable_tunneling True')
