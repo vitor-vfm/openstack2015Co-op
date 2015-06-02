@@ -126,8 +126,8 @@ def configureNTP(log_dict={}):
 def configureNTP_on_controller(log_dict={}):
 
 
-    NTP_SERIVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
-
+    NTP_SERVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
+    NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
     confFile = '/etc/ntp.conf'
 
     # check if file has been configured already
@@ -155,12 +155,19 @@ def configureNTP_on_controller(log_dict={}):
 def controller_ntp_tdd_part1():
 
     # this repeats, we need to make it proper
-    NTP_SERIVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
+    NTP_SERVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
+    NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
 
     for NTP_SERVER in NTP_SERVERS:
         if NTP_SERVER in sudo("ntpq -c peers"):
             print(green("Found ntp server in column 'remote'"))
             return
+
+    for NTP_SERVER_HOSTNAME in NTP_SERVERS_HOSTNAME:
+        if NTP_SERVER_HOSTNAME in sudo("ntpq -c peers"):
+            print(green("Found ntp server hostname in column 'remote'"))
+            return
+
     
     print(red("Didnt find ntp server in column 'remote'"))
     print("Try waiting for sync")
