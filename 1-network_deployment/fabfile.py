@@ -28,16 +28,7 @@ hosts_config = 'config_files/hosts_config'
 # Logging config
 
 log_file = 'basic-network.log'
-logfilename = env_config.log_location + log_file
-
-if log_file not in local('ls ' + env_config.log_location,capture=True):
-    # file doesn't exist yet; create it
-    local('touch ' + logfilename,capture=True)
-    local('chmod 644 ' + logfilename,capture=True)
-
-logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=env_config.log_format)
-# set paramiko logging to only output warnings
-logging.getLogger("paramiko").setLevel(logging.WARNING)
+env_config.setupLoggingInFabfile(log_file)
 
 ################### General functions ########################################
 

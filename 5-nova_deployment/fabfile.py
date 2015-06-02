@@ -13,8 +13,6 @@ import env_config
 
 
 
-logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
-
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -35,13 +33,45 @@ passwd = env_config.passwd
 
 def sudo_log(command):
     output = sudo(command)
-    logging.info(output)
+    if output.return_code != 0:
+        logging.error("Problem on command '{}'".format(command),extra=log_dict)
+    else:
+        for line in output.splitlines():
+            # don't log lines that have passwords
+            if 'pass' not in line.lower():
+                # skip empty lines
+                if line != '' or line !='\n':
+                    logging.debug(line,extra=log_dict)
     return output
 
 def run_log(command):
     output = run(command)
-    logging.info(output)
+    if output.return_code != 0:
+        logging.error("Problem on command '{}'".format(command),extra=log_dict)
+    else:
+        for line in output.splitlines():
+            # don't log lines that have passwords
+            if 'pass' not in line.lower():
+                # skip empty lines
+                if line != '' or line !='\n':
+                    logging.debug(line,extra=log_dict)
     return output
+
+# logging setup
+
+log_file = 'nova_deployment.log'
+env_config.setupLoggingInFabfile(log_file)
+# logfilename = env_config.log_location + log_file
+
+# if log_file not in local('ls ' + env_config.log_location,capture=True):
+#     # file doesn't exist yet; create it
+#     local('touch ' + logfilename,capture=True)
+#     local('chmod 644 ' + logfilename,capture=True)
+
+# logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=env_config.log_format)
+# # set paramiko logging to only output warnings
+# logging.getLogger("paramiko").setLevel(logging.WARNING)
+
 
     
 ################### General functions ########################################
@@ -70,10 +100,22 @@ def setup_nova_database_on_controller(NOVA_DBPASS):
 def setup_nova_keystone_on_controller(NOVA_PASS):
     source_command = "source admin-openrc.sh"
     with prefix(source_command):
-        sudo_log("keystone user-create --name nova --pass {}".format(NOVA_PASS))
-        sudo_log("keystone user-role-add --user nova --tenant service --role admin")
-        sudo_log("keystone service-create --name nova --type compute --description 'OpenStack Compute'")
-        sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ compute / {print $2}') --publicurl http://controller:8774/v2/%\(tenant_id\)s  --internalurl http://controller:8774/v2/%\(tenant_id\)s --adminurl http://controller:8774/v2/%\(tenant_id\)s --region regionOne")
+
+        if 'nova' not in sudo("keystone user-list"):
+            sudo_log("keystone user-create --name nova --pass {}".format(NOVA_PASS))
+            sudo_log("keystone user-role-add --user nova --tenant service --role admin")
+        else:
+            logging.debug('User nova already in user list',extra=log_dict)
+
+        if 'nova' not in sudo("keystone service-list"):
+            sudo_log("keystone service-create --name nova --type compute --description 'OpenStack Compute'")
+        else:
+            logging.debug('Service nova already in service list',extra=log_dict)
+
+        if '8774' not in sudo("keystone endpoint-list"):
+            sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ compute / {print $2}') --publicurl http://controller:8774/v2/%\(tenant_id\)s  --internalurl http://controller:8774/v2/%\(tenant_id\)s --adminurl http://controller:8774/v2/%\(tenant_id\)s --region regionOne")
+        else:
+            logging.debug('Endpoint 8774 already in endpoint list',extra=log_dict)
     
 def setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP):
     installation_command = "yum install -y openstack-nova-api openstack-nova-cert openstack-nova-conductor openstack-nova-console openstack-nova-novncproxy openstack-nova-scheduler python-novaclient"
@@ -176,23 +218,32 @@ def start_services_on_compute():
 
 @roles('compute')
 def setup_nova_on_compute():
+
+    # dictionary for logging formatting
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'compute'}
+
     download_packages()
     put(admin_openrc)
 
     # variable setup
 
-    NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
-    NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
-    RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
+    # NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
+    # NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
+    # RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
     NETWORK_MANAGEMENT_IP = get_parameter(compute_management_interface_file_location, "''", 'IPADDR')
 
-    setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)        
+    setup_nova_config_files_on_compute(passwd['NOVA_PASS'], passwd['NOVA_DBPASS'], passwd['RABBIT_PASS'], NETWORK_MANAGEMENT_IP)        
     start_services_on_compute()
     
 
 @roles('controller')   
 def setup_nova_on_controller():
     
+    # dictionary for logging formatting
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
     host_command = 'sudo_log -- sh -c "{}"'.format("echo '{}' >> /etc/hosts".format("{}        controller".format(env.host))) 
     #    sudo_log(host_command)
     

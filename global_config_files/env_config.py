@@ -1,3 +1,4 @@
+import logging 
 from subprocess import check_output, call
 
 ##################### General functions ######################
@@ -65,6 +66,18 @@ if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),she
     # location not created yet
     call('mkdir -p ' + log_location,shell=True)
     call('chmod 744 ' + log_location,shell=True)
+
+def setupLoggingInFabfile(log_file):
+    logfilename = log_location + log_file
+
+    if log_file not in check_output('ls ' + log_location,shell=True):
+        # file doesn't exist yet; create it
+        call('touch ' + logfilename,shell=True)
+        call('chmod 644 ' + logfilename,shell=True)
+
+    logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=log_format)
+    # set paramiko logging to only output warnings
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 
 
