@@ -30,6 +30,11 @@ hosts_config = 'config_files/hosts_config'
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
 
+# Do a fabric run on the string 'command' and log results
+run_log = lambda command : env_config.fabricLog(command,run,log_dict)
+# Do a fabric run on the string 'command' and log results
+sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
+
 ################### General functions ########################################
 
 def generate_ip(ip_address,nodes_in_role,node):
@@ -53,7 +58,7 @@ def generate_ip(ip_address,nodes_in_role,node):
 ################### Deployment ########################################
 
 # General function to restart network
-def restart_network(log_dict):
+def restart_network():
     # restarting network to implement changes 
     # turn off NetworkManager and use regular network application to restart
 
@@ -65,7 +70,7 @@ def restart_network(log_dict):
         logging.error('NetworkManager faile to restart',extra=log_dict)
 
 # General function to set a virtual NIC
-def set_up_network_interface(specs_dict,role,log_dict):
+def set_up_network_interface(specs_dict,role):
 
     if 'IPADDR' in specs_dict:
 	# change the IP in the dict for the correct one
@@ -88,7 +93,7 @@ def set_up_network_interface(specs_dict,role,log_dict):
 
     logging.debug('Set up virtual NIC with name {}'.format(device_name),extra=log_dict)
 
-def set_hosts(log_dict):
+def set_hosts():
     # configure the /etc/hosts file to put aliases
     config_file = open(hosts_config, 'r').read()
     sudo("cp /etc/hosts /etc/hosts.back12")
@@ -98,7 +103,7 @@ def set_hosts(log_dict):
     append('/etc/hosts',config_file,use_sudo=True)
     logging.debug('Configured /etc/hosts file',extra=log_dict)
 
-def configureNTP(log_dict={}):
+def configureNTP():
 
     confFile = '/etc/ntp.conf'
     newLine = 'server controller iburst'
@@ -123,7 +128,7 @@ def configureNTP(log_dict={}):
     sudo("systemctl enable ntpd.service")
     sudo("systemctl start ntpd.service")
 
-def configureNTP_on_controller(log_dict={}):
+def configureNTP_on_controller():
 
 
     NTP_SERVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
@@ -151,6 +156,75 @@ def configureNTP_on_controller(log_dict={}):
     # enable and start ntp service
     sudo("systemctl enable ntpd.service")
     sudo("systemctl start ntpd.service")
+
+
+@roles('controller')
+def controller_network_deploy():
+    # create log dictionary (to set up the log formatting)
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
+    # set up management interface
+    management_specs = controller_manage
+    set_up_network_interface(management_specs,'controller')
+
+    restart_network()
+    set_hosts()
+    logging.debug('Deployment done on host',extra=log_dict)
+
+@roles('network')
+def network_node_network_deploy():
+    # create log dictionary (to set up the log formatting)
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
+    # set up management interface
+    management_specs = network_manage
+    set_up_network_interface(management_specs,'network')
+
+    # set up instance tunnels interface
+    instance_tunnels_specs = network_tunnels
+    set_up_network_interface(instance_tunnels_specs,'network')
+
+    # set up external interface
+    external_specs = network_ext
+    set_up_network_interface(external_specs,'network')
+
+    restart_network()
+    set_hosts()
+    configureNTP()
+    logging.debug('Deployment done on host',extra=log_dict)
+
+@roles('compute')
+def compute_network_deploy():
+    # create log dictionary (to set up the log formatting)
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
+    # set up management interface
+    management_specs = compute_manage
+    set_up_network_interface(management_specs,'compute')
+
+    # set up instance tunnels interface
+    instance_tunnels_specs = compute_tunnels
+    set_up_network_interface(instance_tunnels_specs,'compute')
+
+    restart_network()
+    set_hosts()
+    configureNTP()
+    logging.debug('Deployment done on host',extra=log_dict)
+
+def deploy():
+    # create log dictionary (to set up the log formatting)
+    log_dict = {'host_string':'','role':''}
+    logging.debug('Starting deployment',extra=log_dict)
+
+    with settings(warn_only=True):
+        execute(controller_network_deploy)
+        execute(network_node_network_deploy)
+        execute(compute_network_deploy)
+
+######################################## TDD #########################################
 
 def controller_ntp_tdd_part1():
 
@@ -183,6 +257,7 @@ def controller_ntp_tdd_part2():
     print(red("Didnt find sys_peer"))
     print("Try waiting for sync")
 
+@roles('controller')
 def controller_ntp_tdd():
     controller_ntp_tdd_part1()
     controller_ntp_tdd_part2()
@@ -205,80 +280,15 @@ def other_nodes_ntp_tdd_part2():
     print(red("Didnt find sys_peer"))
     print("Try waiting for sync")
 
+@roles('network','compute')
 def other_nodes_ntp_tdd():
     other_nodes_ntp_tdd_part1()
     other_nodes_ntp_tdd_part2()
         
-
-@roles('controller')
-def controller_network_deploy():
-    # create log dictionary (to set up the log formatting)
-    log_dict = {'host_string':env.host_string,'role':'controller'}
-
-    # set up management interface
-    management_specs = controller_manage
-    set_up_network_interface(management_specs,'controller',log_dict)
-
-    restart_network(log_dict)
-    set_hosts(log_dict)
-    logging.debug('Deployment done on host',extra=log_dict)
-
-@roles('network')
-def network_node_network_deploy():
-    # create log dictionary (to set up the log formatting)
-    log_dict = {'host_string':env.host_string,'role':'controller'}
-
-    # set up management interface
-    management_specs = network_manage
-    set_up_network_interface(management_specs,'network',log_dict)
-
-    # set up instance tunnels interface
-    instance_tunnels_specs = network_tunnels
-    set_up_network_interface(instance_tunnels_specs,'network',log_dict)
-
-    # set up external interface
-    external_specs = network_ext
-    set_up_network_interface(external_specs,'network',log_dict)
-
-    restart_network(log_dict)
-    set_hosts(log_dict)
-    configureNTP(log_dict)
-    logging.debug('Deployment done on host',extra=log_dict)
-
-@roles('compute')
-def compute_network_deploy():
-    # create log dictionary (to set up the log formatting)
-    log_dict = {'host_string':env.host_string,'role':'controller'}
-
-    # set up management interface
-    management_specs = compute_manage
-    set_up_network_interface(management_specs,'compute',log_dict)
-
-    # set up instance tunnels interface
-    instance_tunnels_specs = compute_tunnels
-    set_up_network_interface(instance_tunnels_specs,'compute',log_dict)
-
-    restart_network(log_dict)
-    set_hosts(log_dict)
-    configureNTP(log_dict)
-    logging.debug('Deployment done on host',extra=log_dict)
-
-def deploy():
-    # create log dictionary (to set up the log formatting)
-    log_dict = {'host_string':'','role':''}
-    logging.debug('Starting deployment',extra=log_dict)
-
-    with settings(warn_only=True):
-        execute(controller_network_deploy)
-        execute(network_node_network_deploy)
-        execute(compute_network_deploy)
-
-######################################## TDD #########################################
-
 # pings an ip address and see if it works
 def ping_ip(ip_address, host, role='', type_interface=''):
     ping_command = 'ping -q -c 1 ' + ip_address
-    result = run(ping_command)
+    result = run_log(ping_command)
     if result.return_code != 0:
         print(red('Problem from {} to {}({})\'s {} interface'.format(env.host_string, host, role, type_interface)))
     else:
@@ -286,6 +296,10 @@ def ping_ip(ip_address, host, role='', type_interface=''):
 
 @roles('controller')
 def network_tdd_controller():
+    # create log dictionary (to set up the log formatting)
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
     # ping a website
     ping_ip('www.google.ca','google.ca')
 
@@ -300,6 +314,10 @@ def network_tdd_controller():
 
 @roles('network')
 def network_tdd_network():
+    # create log dictionary (to set up the log formatting)
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'network'}
+
     # needs to ping management interface(s) on controller node(s)
     # and instance tunnels interface(s) on compute node(s)
 
@@ -320,6 +338,10 @@ def network_tdd_network():
 
 @roles('compute')
 def network_tdd_compute():
+    # create log dictionary (to set up the log formatting)
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'compute'}
+
     # check for connection to internet
     ping_ip('google.ca', 'google.ca')
 
@@ -347,3 +369,5 @@ def tdd():
 	execute(network_tdd_controller)
 	execute(network_tdd_network)
 	execute(network_tdd_compute)
+        execute(controller_ntp_tdd)
+        execute(other_nodes_ntp_tdd)
