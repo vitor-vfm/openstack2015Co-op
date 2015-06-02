@@ -23,13 +23,15 @@ admin_openrc = "../global_config_files/admin-openrc.sh"
 
 demo_openrc = "../global_config_files/demo-openrc.sh"
 
-controller_management_interface_file_location = '../network_deployment/config_files/controller_management_interface_config'
+controller_management_interface_file_location = '../1-network_deployment/config_files/controller_management_interface_config'
 controller_management_interface_file_name = 'controller_management_interface_config'
 
-compute_management_interface_file_location = '../network_deployment/config_files/compute_management_interface_config'
+compute_management_interface_file_location = '../1-network_deployment/config_files/compute_management_interface_config'
 compute_management_interface_file_name = 'compute_management_interface_config'
 
 etc_nova_config_file = "/etc/nova/nova.conf"
+
+passwd = env_config.passwd
 
 def sudo_log(command):
     output = sudo(command)
