@@ -98,7 +98,7 @@ def setup_horizon():
 
 ################### Deployment ########################################
 
-#@roles('controller')
+@roles('controller')
 def deploy():
     setup_horizon()
 
@@ -114,7 +114,7 @@ def reach_dashboard():
     else:
         print(green("CANT connect to dashboard"))
         
-#@roles('controller')
+@roles('controller')
 def tdd():
     with settings(warn_only=True):
         reach_dashboard()

@@ -80,8 +80,7 @@ global_config_file_lines = check_output("crudini --get --list --format=lines " +
 global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_lines]
 # break between parameter and value
 pairs = [line.split(' = ') for line in global_config_file_lines]
-# remove parameters that aren't passwords
-pairs = [pair for pair in pairs if 'PASS' in pair[0] or 'pass' in pair[0]]
 # make passwd dictionary
 passwd = {pair[0].upper():pair[1] for pair in pairs}
 
+print passwd
