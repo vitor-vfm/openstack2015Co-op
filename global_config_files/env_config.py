@@ -1,5 +1,6 @@
 import logging 
 from subprocess import check_output, call
+from fabric.api import run, sudo
 
 ##################### General functions ######################
 
@@ -35,6 +36,35 @@ def read_dict(config_file):
     #run("rm -rf %s" % config_file)
     return config_file_dict
 
+# Do a fabric command on the string 'command' and log results
+def fabricLog(command,func,log_dict):
+    output = func(command)
+    if output.return_code != 0:
+        logging.error("Problem on command '{}'".format(command),extra=log_dict)
+    else:
+        for line in output.splitlines():
+            # don't log lines that have passwords
+            if 'pass' not in line.lower():
+                # skip empty lines
+                if line != '' or line !='\n':
+                    logging.debug(line,extra=log_dict)
+    return output
+
+
+def setupLoggingInFabfile(log_file):
+    logfilename = log_location + log_file
+
+    if log_file not in check_output('ls ' + log_location,shell=True):
+        # file doesn't exist yet; create it
+        call('touch ' + logfilename,shell=True)
+        call('chmod 644 ' + logfilename,shell=True)
+
+    logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=log_format)
+    # set paramiko logging to only output warnings
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+
+
 ######################### Global variables ######################
 
 # Variables that can be imported into the env dictionary
@@ -67,19 +97,6 @@ if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),she
     call('mkdir -p ' + log_location,shell=True)
     call('chmod 744 ' + log_location,shell=True)
 
-def setupLoggingInFabfile(log_file):
-    logfilename = log_location + log_file
-
-    if log_file not in check_output('ls ' + log_location,shell=True):
-        # file doesn't exist yet; create it
-        call('touch ' + logfilename,shell=True)
-        call('chmod 644 ' + logfilename,shell=True)
-
-    logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=log_format)
-    # set paramiko logging to only output warnings
-    logging.getLogger("paramiko").setLevel(logging.WARNING)
-
-
 
 # scripts to be sourced
 
@@ -95,3 +112,4 @@ global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_
 pairs = [line.split(' = ') for line in global_config_file_lines]
 # make passwd dictionary
 passwd = {pair[0].upper():pair[1] for pair in pairs}
+
