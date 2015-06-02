@@ -5,3 +5,18 @@ one folder per sub project
 configure network on nodes cfgNodeNet
 configure glusterFS on node cfgNodeGlusterFS
 . . .  to be completed
+
+Deploy in the following order:
+1. network
+2. messaging
+3. keystone
+4. glance
+5. nova
+6. neutron
+7. horizon
+8. cinder
+9. swift
+10. heat
+11. ceilometer
+12. trove 
+13. sahara

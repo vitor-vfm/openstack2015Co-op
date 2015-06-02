@@ -113,6 +113,7 @@ def installRabbitMQtdd():
 def check_log(time):
     with settings(quiet=True):
         for error_num in range(8):
+            print(time[error_num]) 
             run('echo {} > time'.format(time[error_num]))
             if run("sudo cat /var/log/messages | egrep '(debug|warning|critical)' | grep -f time"):
                 # Make it specify which one doesn't work
