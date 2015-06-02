@@ -5,6 +5,8 @@ from fabric.context_managers import cd
 from fabric.colors import green, red
 from fabric.contrib.files import append
 import string
+import paramiko
+import logging
 import sys
 sys.path.append('../global_config_files')
 import env_config
@@ -23,6 +25,19 @@ env.roledefs = env_config.roledefs
 messaging_config_file = 'messaging_config'
 
 
+# Logging config
+
+log_file = 'rabbit_deployment.log'
+logfilename = env_config.log_location + log_file
+
+if log_file not in local('ls ' + env_config.log_location,capture=True):
+    # file doesn't exist yet; create it
+    local('touch ' + logfilename,capture=True)
+    local('chmod 644 ' + logfilename,capture=True)
+
+logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=env_config.log_format)
+# set paramiko logging to only output warnings
+logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 ################### General functions ########################################
 
@@ -32,19 +47,27 @@ def get_value(config_file, section, parameter):
 
 def set_value(config_file, section, parameter, value):
     sudo("crudini --set {} {} {} {}".format(config_file, section, parameter, value))
+    logging.debug('Setting parameter () on section {} of config file {}'.format(parameter,section,config_file))
 
 ############################# MESSAGING #####################################
 
 @roles('controller')
 def installRabbitMQ():
-    sudo('yum install rabbitmq-server')
+
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
+    logging.debug(sudo('yum install rabbitmq-server'),extra=log_dict)
     #execute(if_error)
-    sudo('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
+    if sudo('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf').return_code != 0:
+        logging.error('Failed to create rabbitmq-env.conf on host ' + env.host_string)
     #execute(if_error)
-    sudo('systemctl enable rabbitmq-server.service')
-    sudo('systemctl start rabbitmq-server.service')
-    sudo('systemctl restart rabbitmq-server.service')
-    sudo('firewall-cmd --permanent --add-port=5672/tcp')
+    if sudo('systemctl enable rabbitmq-server.service').return_code != 0:
+        logging.error('Failed to enable rabbitmq-server.service',extra=log_dict)
+    if sudo('systemctl start rabbitmq-server.service').return_code != 0:
+        logging.error('Failed to start rabbitmq-server.service',extra=log_dict)
+    if sudo('systemctl restart rabbitmq-server.service').return_code != 0:
+        logging.error('Failed to restart rabbitmq-server.service',extra=log_dict)
+    if sudo('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
+        logging.error('Failed to add port 5672 to firewall',extra=log_dict)
     sudo('firewall-cmd --reload')
     sudo('rabbitmqctl change_password guest {}'.format(
         get_value('messaging_config', '""', 'PASSWORD')), quiet=True)
@@ -57,12 +80,15 @@ def installRabbitMQ():
      #       'fi' + '\n'
       #      'fi')
     #sudo('systemctl restart rabbitmq-server.service')
+    logging.debug('Installed RabbitMQ',extra=log_dict)
 
 
     
 ################### Deployment ########################################
 
 def deploy():
+    log_dict = {'host_string':'', 'role':''}
+    logging.debug('Deploying',extra=log_dict)
     execute(installRabbitMQ)
 
 
@@ -88,8 +114,14 @@ def deploy():
         
 @roles('controller')
 def installRabbitMQtdd():
+
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
     time = [0]*8
-    sudo('yum install rabbitmq-server')
+    if sudo('yum install rabbitmq-server').return_code != 0:
+        logging.error('Failed to install rabbitmq-server')
+    else:
+        logging.debug('Successfully installed rabbitmq-server')
+
     time[0] = run('date +"%b %d %R"')
     sudo('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
     time[1] = run('date +"%b %d %R"')
@@ -123,6 +155,8 @@ def check_log(time):
 
 @roles('controller')
 def tdd():
+    log_dict = {'host_string':'', 'role':''}
+    logging.debug('Running TDD function',extra=log_dict)
     with settings(warn_only=True):
         time = installRabbitMQtdd()
         execute(check_log,time)

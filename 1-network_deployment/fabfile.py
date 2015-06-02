@@ -36,6 +36,8 @@ if log_file not in local('ls ' + env_config.log_location,capture=True):
     local('chmod 644 ' + logfilename,capture=True)
 
 logging.basicConfig(filename=logfilename,level=logging.DEBUG)
+# set paramiko logging to only output warnings
+logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 ################### General functions ########################################
 

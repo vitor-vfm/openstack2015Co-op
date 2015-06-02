@@ -50,12 +50,16 @@ roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':n
 global_config_file = '../global_config_files/global_config'
 global_config_location =  '../global_config_files/'
 
+# LOGGING
+
 #log_location = '/var/log/juno/'
 #if not check_output('sudo if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
 #    # location not created; make it
 #    call('sudo mkdir -p ' + log_location,shell=True)
 #    call('sudo chmod 777 ' + log_location,shell=True)
 
+log_format = '%(asctime)-15s:%(levelname)s:%(funcName)s():%(host_string)s:%(role)s:\t%(message)s'
+# log_format = '%(asctime)-15s  %(message)s'
 log_location = '../var/log/juno/'
 if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
     # location not created yet
