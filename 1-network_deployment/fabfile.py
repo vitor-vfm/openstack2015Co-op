@@ -35,7 +35,7 @@ if log_file not in local('ls ' + env_config.log_location,capture=True):
     local('touch ' + logfilename,capture=True)
     local('chmod 644 ' + logfilename,capture=True)
 
-logging.basicConfig(filename=logfilename,level=logging.DEBUG)
+logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=env_config.log_format)
 # set paramiko logging to only output warnings
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
@@ -62,19 +62,19 @@ def generate_ip(ip_address,nodes_in_role,node):
 ################### Deployment ########################################
 
 # General function to restart network
-def restart_network():
+def restart_network(log_dict):
     # restarting network to implement changes 
     # turn off NetworkManager and use regular network application to restart
 
     sudo('chkconfig NetworkManager off')
     sudo('service NetworkManager stop')
     if sudo('service network restart').return_code != 0:
-        logging.error('service network failed to restart on ' + env.host_string)
+        logging.error('service network failed to restart',extra=log_dict)
     if sudo('service NetworkManager start').return_code != 0:
-        logging.error('NetworkManager faile to restart on ' + env.host_string)
+        logging.error('NetworkManager faile to restart',extra=log_dict)
 
 # General function to set a virtual NIC
-def set_up_network_interface(specs_dict,role):
+def set_up_network_interface(specs_dict,role,log_dict):
 
     if 'IPADDR' in specs_dict:
 	# change the IP in the dict for the correct one
@@ -95,9 +95,9 @@ def set_up_network_interface(specs_dict,role):
         # create ifcfg file in the directory
         sudo('echo -e "{}" >ifcfg-{}'.format(config_file,device_name))
 
-    logging.debug('Set up virtual NIC with name {} on host {}'.format(device_name,env.host_string))
+    logging.debug('Set up virtual NIC with name {}'.format(device_name),extra=log_dict)
 
-def set_hosts():
+def set_hosts(log_dict):
     # configure the /etc/hosts file to put aliases
     config_file = open(hosts_config, 'r').read()
     sudo("cp /etc/hosts /etc/hosts.back12")
@@ -105,56 +105,119 @@ def set_hosts():
     sudo("sed -i '/network/d' /etc/hosts")
     sudo("sed -i '/compute/d' /etc/hosts")
     append('/etc/hosts',config_file,use_sudo=True)
-    logging.debug('Configured /etc/hosts file on host ' + env.host_string)
+    logging.debug('Configured /etc/hosts file',extra=log_dict)
+
+def configureNTP(log_dict):
+
+    confFile = '/etc/ntp.conf'
+    newLine = 'server controller iburst'
+
+    # check if file has been configured already
+    if sudo("grep '{}' {}".format(newLine,confFile)).return_code == 0:
+        message = 'NTP conf file has already been set. Nothing done'
+        print message
+        logging.debug(message,extra=log_dict)
+        return
+
+    # make a backup
+    sudo('cp {} {}.back12'.format(confFile,confFile))
+
+    # comment out all server keys
+    sudo("sed -i '/server/ s/^/#/' " + confFile)
+
+    # add one server key to reference the controller node
+    sudo("echo '{}' >>{}".format(newLine,confFile))
+    sudo("cat {} | grep -v '#'".format(confFile))
+
+    # enable and start ntp service
+    sudo("systemctl enable ntpd.service")
+    sudo("systemctl start ntpd.service")
 
 @roles('controller')
 def controller_network_deploy():
+    # create log dictionary (to set up the log formatting)
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
     # set up management interface
     management_specs = controller_manage
-    set_up_network_interface(management_specs,'controller')
+    set_up_network_interface(management_specs,'controller',log_dict)
 
-    restart_network()
-    set_hosts()
-    logging.debug('Deployment done on ' + env.host_string)
+    restart_network(log_dict)
+    set_hosts(log_dict)
+    logging.debug('Deployment done on host',extra=log_dict)
 
 @roles('network')
 def network_node_network_deploy():
+    # create log dictionary (to set up the log formatting)
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
     # set up management interface
     management_specs = network_manage
-    set_up_network_interface(management_specs,'network')
+    set_up_network_interface(management_specs,'network',log_dict)
 
     # set up instance tunnels interface
     instance_tunnels_specs = network_tunnels
-    set_up_network_interface(instance_tunnels_specs,'network')
+    set_up_network_interface(instance_tunnels_specs,'network',log_dict)
 
     # set up external interface
     external_specs = network_ext
-    set_up_network_interface(external_specs,'network')
+    set_up_network_interface(external_specs,'network',log_dict)
 
-    restart_network()
-    set_hosts()
-    logging.debug('Deployment done on ' + env.host_string)
+    restart_network(log_dict)
+    set_hosts(log_dict)
+    configureNTP(log_dict)
+    logging.debug('Deployment done on host',extra=log_dict)
 
 @roles('compute')
 def compute_network_deploy():
+    # create log dictionary (to set up the log formatting)
+    log_dict = {'host_string':env.host_string,'role':'controller'}
+
     # set up management interface
     management_specs = compute_manage
-    set_up_network_interface(management_specs,'compute')
+    set_up_network_interface(management_specs,'compute',log_dict)
 
     # set up instance tunnels interface
     instance_tunnels_specs = compute_tunnels
-    set_up_network_interface(instance_tunnels_specs,'compute')
+    set_up_network_interface(instance_tunnels_specs,'compute',log_dict)
 
-    restart_network()
-    set_hosts()
-    logging.debug('Deployment done on ' + env.host_string)
+    restart_network(log_dict)
+    set_hosts(log_dict)
+    configureNTP(log_dict)
+    logging.debug('Deployment done on host',extra=log_dict)
 
 def deploy():
+    # create log dictionary (to set up the log formatting)
+    log_dict = {'host_string':'','role':''}
+    logging.debug('Starting deployment',extra=log_dict)
+
     with settings(warn_only=True):
         execute(controller_network_deploy)
         execute(network_node_network_deploy)
         execute(compute_network_deploy)
 
+#################### Fix me ########################
+
+@roles('network','compute')
+def fixme(log_dict={}):
+
+    confFile = '/etc/ntp.conf'
+
+    # make a backup
+    print('cp {} {}.back12'.format(confFile,confFile))
+    sudo('cp {} {}.back12'.format(confFile,confFile))
+
+    # comment out all server keys
+    sudo("sed -i '/server/ s/^/#/' " + confFile)
+
+    # add one server key to reference the controller node
+    newLine = 'server controller iburst'
+    sudo("echo '{}' >>{}".format(newLine,confFile))
+    sudo("cat {} | grep -v '#'".format(confFile))
+
+    # enable and start ntp service
+    sudo("systemctl enable ntpd.service")
+    sudo("systemctl start ntpd.service")
 ######################################## TDD #########################################
 
 # pings an ip address and see if it works
