@@ -83,18 +83,18 @@ def setup_glance_database(GLANCE_DBPASS):
 def setup_glance_keystone(GLANCE_PASS):
     source_command = "source admin-openrc.sh"
     with prefix(source_command):
-        if 'glance' in sudo("keystone user-list"):
+        if 'glance' not in sudo("keystone user-list"):
             sudo_log("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
             sudo_log("keystone user-role-add --user glance --tenant service --role admin")
         else:
             logging.debug('User glance already in user list',extra=log_dict)
 
-        if 'glance' in sudo("keystone service-list"):
+        if 'glance' not in sudo("keystone service-list"):
             sudo_log("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
         else:
             logging.debug('Service glance already in service list',extra=log_dict)
 
-        if '9292' in sudo("keystone endpoint-list"):
+        if '9292' not in sudo("keystone endpoint-list"):
             sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
         else:
             logging.debug('Endpoint 9292 already in endpoint list',extra=log_dict)

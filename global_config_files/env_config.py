@@ -75,9 +75,11 @@ roledefs = dict()
 compute_nodes = read_nodes('../global_config_files/compute_nodes')
 controller_nodes = read_nodes('../global_config_files/controller_nodes')
 network_nodes = read_nodes('../global_config_files/network_nodes')
+storage_nodes = read_nodes('../global_config_files/storage_nodes')
 
 hosts = compute_nodes + controller_nodes + network_nodes
-roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes }
+roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes, 'storage':storage_nodes }
+
 global_config_file = '../global_config_files/global_config'
 global_config_location =  '../global_config_files/'
 
