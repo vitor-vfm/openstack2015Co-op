@@ -44,6 +44,9 @@ def install_packages():
     sudo("yum -y install crudini")
 
 
+    sudo("crudini --set /etc/selinux/config '' SELINUX disabled")
+
+
     # Install MariaDB
     # Only on controller node(s)
     
