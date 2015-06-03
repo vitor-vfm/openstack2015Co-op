@@ -37,12 +37,16 @@ def setup_gluster():
 
 @roles('controller', 'compute', 'network')
 def probe():
-    # peer probe the ip addresses of all the nodes
-    for node in env_config.hosts:
-        if node != env.host_string:
-            node_ip = node.split('@', 1)[-1]
-            sudo('gluster peer probe {}'.format(node_ip))
-
+    with settings(warn_only=True):
+        # peer probe the ip addresses of all the nodes
+        for node in env_config.hosts:
+            if node != env.host_string:
+                node_ip = node.split('@', 1)[-1]
+                if sudo('gluster peer probe {}'.format(node_ip)).return_code:
+                    print(red('{} cannot probe {}'.format(env.user, node.split('@', 1)[0])))
+                else:
+                    print(green('{} can probe {}'.format(env.user, node.split('@', 1)[0])))
+                
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
