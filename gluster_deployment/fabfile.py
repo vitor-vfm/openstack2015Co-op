@@ -14,16 +14,16 @@ import env_config
 
 env.roledefs = env_config.roledefs
 PARTITION = '/dev/sda3'
-print(env.roledefs)
+
 
 ############################# GENERAL FUNCTIONS ############################
 
 @roles('controller', 'compute', 'network')
-def setupGluster():
+def setup_gluster():
     sudo('wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     sudo('yum -y install glusterfs glusterfs-fuse glusterfs-server')
     sudo('systemctl start glusterd')
-    sudo('mkfs.ext4 {}'.format(PARTITION))
+    #sudo('mkfs.ext4 {}'.format(PARTITION))
     sudo('mkdir -p /data/gluster/brick')
     sudo('mount {} /data/gluster'.format(PARTITION))
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
@@ -31,13 +31,24 @@ def setupGluster():
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 2049        -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 24007       -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 38465:38469 -j ACCEPT')
-sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
+    sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
+    sudo('service glusterd restart')
+    sudo('iptables -F')
+
+@roles('controller', 'compute', 'network')
+def probe():
+    # peer probe the ip addresses of all the nodes
+    for node in env_config.hosts:
+        if node != env.host_string:
+            node_ip = node.split('@', 1)[-1]
+            sudo('gluster peer probe {}'.format(node_ip))
+
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
-@roles('compute', 'controller', 'network')
-def destroyGluster():
-    sudo('gluster volume delete vo10')    
+@roles('controller', 'compute', 'network')
+def destroy_gluster():
+    #sudo('gluster volume delete vo10')    
     sudo('umount /data/gluster')
     sudo('rm -rf /var/lib/glusterd')
     sudo('rm -rf /data/gluster')
@@ -47,8 +58,8 @@ def destroyGluster():
 ################### Deployment #############################################
 
 def deploy():
-    execute(installRabbitMQ)
-
+    execute(setup_gluster)
+    execute(probe)
 
 
 ######################################## TDD ###############################
