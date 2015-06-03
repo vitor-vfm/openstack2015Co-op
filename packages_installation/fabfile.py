@@ -86,7 +86,12 @@ def install_packages():
             # set bind-address (controller's management interface)
             controller_NIC = '../1-network_deployment/config_files/controller_management_interface_config'
             bind_address = local("crudini --get {} '' IPADDR".format(controller_NIC),capture=True)
-            sudo("sed -i '/bind-address/ s/=.*/={}/' my.cnf".format(bind_address))
+            if sudo('grep bind-address my.cnf').return_code != 0:
+                # simply add the new line
+                new_line = "bind-address = " + bind_address
+                sudo("""sed -i "/{}/a {}" my.cnf""".format(section_header,new_line))
+            else:
+                sudo("sed -i '/bind-address/ s/=.*/={}/' my.cnf".format(bind_address))
             # sudo('crudini --set my.cnf mysqld bind-address {}'.format(bind_address))
             sudo('grep bind-address my.cnf')
 
