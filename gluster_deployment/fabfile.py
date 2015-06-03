@@ -14,7 +14,7 @@ import env_config
 
 env.roledefs = env_config.roledefs
 PARTITION = '/dev/sda3'
-
+VOLUME = 'vol0'
 
 ############################# GENERAL FUNCTIONS ############################
 
@@ -46,13 +46,29 @@ def probe():
                     print(red('{} cannot probe {}'.format(env.user, node.split('@', 1)[0])))
                 else:
                     print(green('{} can probe {}'.format(env.user, node.split('@', 1)[0])))
-                
+    
+@roles('controller', 'compue', 'network')
+def prevolume():
+    sudo('setfattr -x trusted.glusterfs.volume-id /data/gluster/brick')
+    sudo('service glusterd restart')
+
+@roles('compute')
+def create_volume():
+    num_nodes = len(env_config.hosts)
+    # Make a string of the ip addresses followed by required string to feed 
+    # into following command
+    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/brick' for node in env_config.hosts])
+    sudo('gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
+    #sudo('gluster volume start {}'.format(VOLUME))
+
+@roles('compute')
+def destroy_vol():
+    sudo('gluster volume delete {}'.format(VOLUME))
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
 @roles('controller', 'compute', 'network')
 def destroy_gluster():
-    #sudo('gluster volume delete vo10')    
     sudo('umount /data/gluster')
     sudo('rm -rf /var/lib/glusterd')
     sudo('rm -rf /data/gluster')
@@ -65,6 +81,9 @@ def deploy():
     execute(setup_gluster)
     execute(probe)
 
+def undeploy():
+    execute(destroy_vol)
+    execute(destroy_gluster)
 
 ######################################## TDD ###############################
 
