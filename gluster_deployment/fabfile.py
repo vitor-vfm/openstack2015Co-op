@@ -14,7 +14,7 @@ import env_config
 
 env.roledefs = env_config.roledefs
 PARTITION = '/dev/sda3'
-
+print(env.roledefs)
 
 ############################# GENERAL FUNCTIONS ############################
 
@@ -31,16 +31,17 @@ def setupGluster():
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 2049        -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 24007       -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 38465:38469 -j ACCEPT')
-    sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
+sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
 @roles('compute', 'controller', 'network')
 def destroyGluster():
-    sudo('gluster volume delete vo10')
+    sudo('gluster volume delete vo10')    
     sudo('umount /data/gluster')
     sudo('rm -rf /var/lib/glusterd')
     sudo('rm -rf /data/gluster')
+
 
     
 ################### Deployment #############################################
