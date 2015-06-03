@@ -68,7 +68,7 @@ def installPackagesController():
 def configureControllerNode():
 
     confFile = '/etc/swift/proxy-server.conf'
-    baseConfFile = open(env_config.global_config_location + 'swift.proxy-server.conf').read()
+    baseConfFile = open(local_config + 'proxy-server.conf').read()
 
     # create base conf file
     sudo_log("echo '{}' >{}".format(baseConfFile,confFile))
@@ -206,23 +206,21 @@ def createRing(typeRing,port,IP,deviceName,deviceWeight):
     port = str(port)
 
     with cd('/etc/swift/'):
-        # Create the base *.builder file
-        sudo_log("swift-ring-builder {}.builder create 10 3 1".format(typeRing))
+        # verify if ring is already there
+        ringContents = sudo_log("swift-ring-builder {}.builder".format(typeRing)).splitlines()
+        linesWithTheSpecs =  [l for l in ringContents if (IP in l and deviceName in l)]
 
-        # Add node to the ring
-        sudo_log("swift-ring-builder {}.builder add r1z1-{}:{}/{} {}".format(typeRing,IP,port,deviceName,deviceWeight))
+        if not linesWithTheSpecs:
+            # ring is not created yet
 
+            # Create the base *.builder file
+            sudo_log("swift-ring-builder {}.builder create 10 3 1".format(typeRing))
 
-        # verify contents
-        ringContents = sudo_log("swift-ring-builder {}.builder".format(typeRing))
+            # Add node to the ring
+            sudo_log("swift-ring-builder {}.builder add r1z1-{}:{}/{} {}".format(typeRing,IP,port,deviceName,deviceWeight))
 
-        varsToCheck = [IP,deviceName,deviceWeight]
-        for v in varsToCheck:
-            if v not in ringContents:
-                logging.error(v + " not in ring contents")
-
-        # rebalance ring
-        sudo_log("swift-ring-builder {}.builder rebalance")
+            # rebalance ring
+            sudo_log("swift-ring-builder {}.builder rebalance")
 
 def createInitialRings():
 
@@ -287,6 +285,10 @@ def startOnController():
 
 @roles('storage')
 def storageDeploy():
+
+    # set up logging format dictionary
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
     installPackagesOnStorageNode()
 
