@@ -71,7 +71,7 @@ def configureControllerNode():
     baseConfFile = open(env_config.global_config_location + 'swift.proxy-server.conf').read()
 
     # create base conf file
-    sudo_log("echo '{}' >>{}".format(baseConfFile,confFile))
+    sudo_log("echo '{}' >{}".format(baseConfFile,confFile))
 
     # set parameters
     sudo_log("crudini --set {} DEFAULT bind_port 8080".format(confFile))
@@ -200,8 +200,89 @@ def configureStorageNode():
     sudo_log("mkdir -p /var/cache/swift")
     sudo_log(" chown -R swift:swift /var/cache/swift")
 
+def createRing(typeRing,port,IP,deviceName,deviceWeight):
+    # ASSUMES A SINGLE DEVICE ON STORAGE NODE
+
+    port = str(port)
+
+    with cd('/etc/swift/'):
+        # Create the base *.builder file
+        sudo_log("swift-ring-builder {}.builder create 10 3 1".format(typeRing))
+
+        # Add node to the ring
+        sudo_log("swift-ring-builder {}.builder add r1z1-{}:{}/{} {}".format(typeRing,IP,port,deviceName,deviceWeight))
 
 
+        # verify contents
+        ringContents = sudo_log("swift-ring-builder {}.builder".format(typeRing))
+
+        varsToCheck = [IP,deviceName,deviceWeight]
+        for v in varsToCheck:
+            if v not in ringContents:
+                logging.error(v + " not in ring contents")
+
+        # rebalance ring
+        sudo_log("swift-ring-builder {}.builder rebalance")
+
+def createInitialRings():
+
+    managementIP = local("crudini --get {} '' IPADDR".format(management_interface),capture=True)
+    deviceName = local("crudini --get {} '' DEVICE".format(management_interface),capture=True)
+    deviceWeight = '100'
+
+    # create account ring
+    createRing('account',6002,managementIP,deviceName,deviceWeight)
+
+    # create container ring
+    createRing('container',6001,managementIP,deviceName,deviceWeight)
+
+    # create object ring
+    createRing('object',6000,managementIP,deviceName,deviceWeight)
+
+
+def finalizeInstallation():
+
+    baseFile = local_config + 'swift.conf'
+    confFile = '/etc/swift/swift.conf'
+
+    # put base config file on node
+    putResult = put(baseFile,confFile)
+    logging.debug(putResult,extra=log_dict)
+
+    # In the [swift-hash] section, configure the hash path prefix and suffix for your environment
+    hashPathPrefix = local("crudini --get {} '' HASH_PATH_PREFIX".format(swift_hash_values))
+    hashPathSuffix = local("crudini --get {} '' HASH_PATH_SUFFIX".format(swift_hash_values))
+    sudo_log("crudini --set {} swift-hash swift_hash_path_prefix {}".format(confFile,hashPathPrefix))
+    sudo_log("crudini --set {} swift-hash swift_hash_path_suffix {}".format(confFile,hashPathSuffix))
+
+    # In the [storage-policy:0] section, configure the default storage policy
+    sudo_log("crudini --set {} storage-policy:0 name Policy-0".format(confFile))
+    sudo_log("crudini --set {} storage-policy:0 default yes".format(confFile))
+
+    # ensure proper ownership of the configuration directory 
+    sudo_log("chown -R swift:swift /etc/swift")
+
+    startOnController()
+
+    # start the Object Storage services and configure them to start when the system boots
+    sudo_log("systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service \
+              openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+    sudo_log("systemctl start openstack-swift-account.service openstack-swift-account-auditor.service \
+            openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+    sudo_log("systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service \
+            openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+    sudo_log("systemctl start openstack-swift-container.service openstack-swift-container-auditor.service \
+            openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+    sudo_log("systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service \
+            openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+    sudo_log("systemctl start openstack-swift-object.service openstack-swift-object-auditor.service \
+            openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+
+@roles('controller')
+def startOnController():
+    # start the Object Storage proxy service on the controller node
+    sudo_log("systemctl enable openstack-swift-proxy.service memcached.service")
+    sudo_log("systemctl start openstack-swift-proxy.service memcached.service")
 
 
 @roles('storage')
@@ -211,7 +292,11 @@ def storageDeploy():
 
     configureStorageNode()
 
+    createInitialRings()
 
+    finalizeInstallation()
+
+# GENERAL DEPLOYMENT
 
 def deploy():
     execute(controllerDeploy)
