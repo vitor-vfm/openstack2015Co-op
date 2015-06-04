@@ -258,7 +258,6 @@ def controller_network_deploy():
     specs = read_dict_local('controller tunnels')
     set_up_network_interface(specs,env_config.getRole())
 
-
     restart_network()
     set_hosts()
     configureNTP()
