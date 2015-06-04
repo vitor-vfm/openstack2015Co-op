@@ -32,7 +32,7 @@ env_config.setupLoggingInFabfile(log_file)
 
 # Do a fabric run on the string 'command' and log results
 run_log = lambda command : env_config.fabricLog(command,run,log_dict)
-# Do a fabric run on the string 'command' and log results
+# Do a fabric sudo on the string 'command' and log results
 sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
@@ -55,19 +55,42 @@ def generate_ip(ip_address,nodes_in_role,node):
 	ip_address = "".join(octets)
 	return ip_address
 
+
 ################### Deployment ########################################
 
+def set_up_NIC_using_nmcli(specs_dict):
+    # Set up a new interface by using NetworkManager's 
+    # command line interface
+
+    ifname = specs_dict['DEVICE']
+    ip = specs_dict['IPADDR']
+    # ifname = sudo_log("crudini --get {} '' DEVICE".format(conf_file))
+    # ip = sudo_log("crudini --get {} '' IPADDR".format(conf_file))
+
+    command = "nmcli connection add type ethernet"
+    command += " con-name " + ifname # connection name is the same as interface name
+    command += " ifname " + ifname
+    command += " ip4 " + ip
+
+    sudo_log(command)
+
+
 # General function to restart network
-def restart_network():
+def restart_network(role):
     # restarting network to implement changes 
     # turn off NetworkManager and use regular network application to restart
 
-    sudo('chkconfig NetworkManager off')
-    sudo('service NetworkManager stop')
-    if sudo('service network restart').return_code != 0:
-        logging.error('service network failed to restart',extra=log_dict)
-    if sudo('service NetworkManager start').return_code != 0:
-        logging.error('NetworkManager faile to restart',extra=log_dict)
+    role = env_config.getRole()
+    if role == '':
+    # if role == 'network':
+    #     sudo_log("ifdown eth0 && ifup eth0")
+    # elif role == 'controller':
+        sudo_log('chkconfig NetworkManager off')
+        sudo_log('service NetworkManager stop')
+        sudo_log('service network restart')
+        sudo_log('service NetworkManager start')
+    # elif role == 'compute':
+        # sudo_log("systemctl restart network")
 
 # General function to set a virtual NIC
 def set_up_network_interface(specs_dict,role):
@@ -89,17 +112,17 @@ def set_up_network_interface(specs_dict,role):
     # change to network-scripts directory
     with cd('/etc/sysconfig/network-scripts'):
         # create ifcfg file in the directory
-        sudo('echo -e "{}" >ifcfg-{}'.format(config_file,device_name))
+        sudo_log('echo -e "{}" >ifcfg-{}'.format(config_file,device_name))
 
     logging.debug('Set up virtual NIC with name {}'.format(device_name),extra=log_dict)
 
 def set_hosts():
     # configure the /etc/hosts file to put aliases
     config_file = open(hosts_config, 'r').read()
-    sudo("cp /etc/hosts /etc/hosts.back12")
-    sudo("sed -i '/controller/d' /etc/hosts")
-    sudo("sed -i '/network/d' /etc/hosts")
-    sudo("sed -i '/compute/d' /etc/hosts")
+    sudo_log("cp /etc/hosts /etc/hosts.back12")
+    sudo_log("sed -i '/controller/d' /etc/hosts")
+    sudo_log("sed -i '/network/d' /etc/hosts")
+    sudo_log("sed -i '/compute/d' /etc/hosts")
     append('/etc/hosts',config_file,use_sudo=True)
     logging.debug('Configured /etc/hosts file',extra=log_dict)
 
@@ -109,24 +132,24 @@ def configureNTP():
     newLine = 'server controller iburst'
 
     # check if file has been configured already
-    if sudo("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
+    if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) != 0:
         message = 'NTP conf file has already been set. Nothing done'
         print message
         logging.debug(message,extra=log_dict)
         return
 
     # make a backup
-    sudo('cp {} {}.back12'.format(confFile,confFile))
+    sudo_log('cp {} {}.back12'.format(confFile,confFile))
 
     # comment out all server keys
-    sudo("sed -i '/server/ s/^/#/' " + confFile)
+    sudo_log("sed -i '/server/ s/^/#/' " + confFile)
 
     # add one server key to reference the controller node
-    sudo("echo '{}' >>{}".format(newLine,confFile))
+    sudo_log("echo '{}' >>{}".format(newLine,confFile))
 
     # enable and start ntp service
-    sudo("systemctl enable ntpd.service")
-    sudo("systemctl start ntpd.service")
+    sudo_log("systemctl enable ntpd.service")
+    sudo_log("systemctl start ntpd.service")
 
 def configureNTP_on_controller():
 
@@ -136,26 +159,26 @@ def configureNTP_on_controller():
     confFile = '/etc/ntp.conf'
 
     # check if file has been configured already
-    if sudo("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
+    if sudo_log("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
         message = 'NTP conf file has already been set. Nothing done'
         print message
         logging.debug(message,extra=log_dict)
         return
 
     # make a backup
-    sudo('cp {} {}.back12'.format(confFile,confFile))
+    sudo_log('cp {} {}.back12'.format(confFile,confFile))
 
     # comment out all server keys
-    sudo("sed -i '/server/ s/^/#/' " + confFile)
+    sudo_log("sed -i '/server/ s/^/#/' " + confFile)
 
     # add one server key to reference the controller node
 
     for NTP_SERVER in NTP_SERVERS:
-        sudo("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
+        sudo_log("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
 
     # enable and start ntp service
-    sudo("systemctl enable ntpd.service")
-    sudo("systemctl start ntpd.service")
+    sudo_log("systemctl enable ntpd.service")
+    sudo_log("systemctl start ntpd.service")
 
 
 @roles('controller')
@@ -166,9 +189,10 @@ def controller_network_deploy():
 
     # set up management interface
     management_specs = controller_manage
-    set_up_network_interface(management_specs,'controller')
+    # set_up_network_interface(management_specs,'controller')
+    set_up_NIC_using_nmcli(management_specs)
 
-    restart_network()
+    restart_network('controller')
     set_hosts()
     logging.debug('Deployment done on host',extra=log_dict)
 
@@ -176,21 +200,24 @@ def controller_network_deploy():
 def network_node_network_deploy():
     # create log dictionary (to set up the log formatting)
     global log_dict
-    log_dict = {'host_string':env.host_string,'role':'controller'}
+    log_dict = {'host_string':env.host_string,'role':'network'}
 
     # set up management interface
     management_specs = network_manage
-    set_up_network_interface(management_specs,'network')
+    # set_up_network_interface(management_specs,'network')
+    set_up_NIC_using_nmcli(management_specs)
 
     # set up instance tunnels interface
     instance_tunnels_specs = network_tunnels
-    set_up_network_interface(instance_tunnels_specs,'network')
+    # set_up_network_interface(instance_tunnels_specs,'network')
+    set_up_NIC_using_nmcli(management_specs)
 
     # set up external interface
     external_specs = network_ext
-    set_up_network_interface(external_specs,'network')
+    # set_up_network_interface(external_specs,'network')
+    set_up_NIC_using_nmcli(management_specs)
 
-    restart_network()
+    restart_network('')
     set_hosts()
     configureNTP()
     logging.debug('Deployment done on host',extra=log_dict)
@@ -199,17 +226,19 @@ def network_node_network_deploy():
 def compute_network_deploy():
     # create log dictionary (to set up the log formatting)
     global log_dict
-    log_dict = {'host_string':env.host_string,'role':'controller'}
+    log_dict = {'host_string':env.host_string,'role':'compute'}
 
     # set up management interface
     management_specs = compute_manage
-    set_up_network_interface(management_specs,'compute')
+    # set_up_network_interface(management_specs,'compute')
+    set_up_NIC_using_nmcli(management_specs)
 
     # set up instance tunnels interface
     instance_tunnels_specs = compute_tunnels
-    set_up_network_interface(instance_tunnels_specs,'compute')
+    # set_up_network_interface(instance_tunnels_specs,'compute')
+    set_up_NIC_using_nmcli(management_specs)
 
-    restart_network()
+    restart_network('')
     set_hosts()
     configureNTP()
     logging.debug('Deployment done on host',extra=log_dict)
@@ -233,12 +262,12 @@ def controller_ntp_tdd_part1():
     NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
 
     for NTP_SERVER in NTP_SERVERS:
-        if NTP_SERVER in sudo("ntpq -c peers"):
+        if NTP_SERVER in sudo_log("ntpq -c peers"):
             print(green("Found ntp server in column 'remote'"))
             return
 
     for NTP_SERVER_HOSTNAME in NTP_SERVERS_HOSTNAME:
-        if NTP_SERVER_HOSTNAME in sudo("ntpq -c peers"):
+        if NTP_SERVER_HOSTNAME in sudo_log("ntpq -c peers"):
             print(green("Found ntp server hostname in column 'remote'"))
             return
 
@@ -250,7 +279,7 @@ def controller_ntp_tdd_part1():
 def controller_ntp_tdd_part2():
 
 
-    if "sys_peer" in sudo("ntpq -c assoc"):
+    if "sys_peer" in sudo_log("ntpq -c assoc"):
         print(green("Found sys_peer"))
         return
     
@@ -264,7 +293,7 @@ def controller_ntp_tdd():
 
 
 def other_nodes_ntp_tdd_part1():
-    if "controller" in sudo("ntpq -c peers"):
+    if "controller" in sudo_log("ntpq -c peers"):
         print(green("Found controller in column 'remote'"))
         return
     
@@ -273,7 +302,7 @@ def other_nodes_ntp_tdd_part1():
 
 
 def other_nodes_ntp_tdd_part2():
-    if "sys_peer" in sudo("ntpq -c assoc"):
+    if "sys_peer" in sudo_log("ntpq -c assoc"):
         print(green("Found sys_peer"))
         return
     
