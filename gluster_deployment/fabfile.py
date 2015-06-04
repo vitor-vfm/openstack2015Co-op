@@ -64,7 +64,7 @@ def create_volume():
     # into following command
     node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/brick' for node in env_config.hosts])
     sudo('gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
-    prevolume_start()
+    #prevolume_start()
     sudo('gluster volume start {} force'.format(VOLUME))
 
 @roles('controller', 'compute', 'network')
@@ -139,9 +139,16 @@ def check_log(time):
                 print(green("Success, whatever this is"))
             run('rm time')
 
-@roles('controller')
+@roles('controller', 'compute', 'network')
+def check_for_file():
+    if sudo('ls /mnt/gluster/'):
+        print(green('Gluster is set up on {}'.format(env.user)))
+    else:
+        print(red('No matter what was said before, Gluster isn\'t correctly set up on any'))
+
+@roles('compute')
 def tdd():
     with settings(warn_only=True):
-        time = installRabbitMQtdd()
-        execute(check_log,time)
-
+        sudo('touch /mnt/gluster/test')
+        execute(check_for_file)
+        sudo('rm /mnt/gluster/test')
