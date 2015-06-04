@@ -67,10 +67,11 @@ def create_volume():
     prevolume_start()
     sudo('gluster volume start {} force'.format(VOLUME))
 
-@roles('compute')
-def destroy_vol():
-    sudo('gluster volume stop {}'.format(VOLUME)) 
-    sudo('gluster volume delete {}'.format(VOLUME))
+@roles('controller', 'compute', 'network')
+def mounter():
+    sudo('mkdir /mnt/gluster')
+    sudo('mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, VOLUME))
+
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
@@ -80,6 +81,16 @@ def destroy_gluster():
     sudo('rm -rf /var/lib/glusterd')
     sudo('rm -rf /data/gluster')
 
+@roles('compute')
+def destroy_vol():
+    sudo('yes | gluster volume stop {}'.format(VOLUME)) 
+    sudo('yes | gluster volume delete {}'.format(VOLUME))
+
+@roles('controller', 'compute', 'network')
+def destroy_mount():
+    sudo('umount /mnt/gluster') 
+    sudo('rm -rf /mnt/gluster')
+
 
     
 ################### Deployment #############################################
@@ -88,8 +99,10 @@ def deploy():
     execute(setup_gluster)
     execute(probe)
     execute(create_volume)
+    execute(mounter)
 
 def undeploy():
+    execute(destroy_mount)
     execute(destroy_vol)
     execute(destroy_gluster)
 
