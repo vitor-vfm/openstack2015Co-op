@@ -1,6 +1,6 @@
 import logging 
 from subprocess import check_output, call
-from fabric.api import run, sudo
+from fabric.api import run, sudo, env
 
 ##################### General functions ######################
 
@@ -63,6 +63,12 @@ def setupLoggingInFabfile(log_file):
     # set paramiko logging to only output warnings
     logging.getLogger("paramiko").setLevel(logging.WARNING)
 
+def getRole():
+    for role in env.roledefs.keys():
+        if env.host_string in env.roledefs[role]:
+            return role
+    # if none was found
+    raise ValueError("Host " + env.hoststring + " not in roledefs")
 
 
 ######################### Global variables ######################
