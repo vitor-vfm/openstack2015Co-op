@@ -20,18 +20,23 @@ VOLUME = 'vol0'
 
 @roles('controller', 'compute', 'network')
 def setup_gluster():
+    # Get and install gluster
     sudo('wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     sudo('yum -y install glusterfs glusterfs-fuse glusterfs-server')
     sudo('systemctl start glusterd')
+    # Make the file system (probably include this in partition function)
     #sudo('mkfs.ext4 {}'.format(PARTITION))
+    # Mount the brick on the established partition
     sudo('mkdir -p /data/gluster/brick')
     sudo('mount {} /data/gluster'.format(PARTITION))
+    # Setup the ports
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 2049        -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 24007       -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 38465:38469 -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
+    # Ensure the nodes can probe each other
     sudo('service glusterd restart')
     sudo('iptables -F')
 
@@ -47,8 +52,8 @@ def probe():
                 else:
                     print(green('{} can probe {}'.format(env.user, node.split('@', 1)[0])))
     
-@roles('controller', 'compue', 'network')
-def prevolume():
+@roles('controller', 'compute', 'network')
+def prevolume_start():
     sudo('setfattr -x trusted.glusterfs.volume-id /data/gluster/brick')
     sudo('service glusterd restart')
 
@@ -59,10 +64,12 @@ def create_volume():
     # into following command
     node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/brick' for node in env_config.hosts])
     sudo('gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
-    #sudo('gluster volume start {}'.format(VOLUME))
+    prevolume_start()
+    sudo('gluster volume start {} force'.format(VOLUME))
 
 @roles('compute')
 def destroy_vol():
+    sudo('gluster volume stop {}'.format(VOLUME)) 
     sudo('gluster volume delete {}'.format(VOLUME))
 
 # This function exists for testing. Should be able to use this then deploy to
@@ -80,6 +87,7 @@ def destroy_gluster():
 def deploy():
     execute(setup_gluster)
     execute(probe)
+    execute(create_volume)
 
 def undeploy():
     execute(destroy_vol)
