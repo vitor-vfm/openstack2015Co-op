@@ -128,15 +128,6 @@ def set_keystone_config_file(admin_token,password):
 
 @roles('controller')
 def setupKeystone():
-    # remember to set the decorator
-    # to ensure that it only runs on the controller
-
-    # we are seting controller to point to the 
-    # ip that we sshed into through the hosts file
-
-    # this shouldn't be a problem b/c when we implement,
-    # the actual hosts will be the controller node and whatnot
-
     # info for logging
     global log_dict
     log_dict = {'host_string':env.host_string, 'role':'controller'}
@@ -145,13 +136,20 @@ def setupKeystone():
     logging.debug('Setting up keystone on host',extra=log_dict)
 
     if sudo_log("systemctl restart mariadb").return_code != 0:
-        logging.error('Failed to restart maridb',extra=log_dict)
+        logging.error('Failed to restart mariadb',extra=log_dict)
+        # we need mariadb working in order to proceed
+        sys.exit("Failed to restart mariadb")
+    else:
+	logging.debug("Succesfully restarted mariadb")
 
     fileContents = keystoneConfigFileContents
     fileContents = fileContents.replace('NEW_PASS',passwd['ADMIN_PASS'])
     
-    # we assume that mariadb is up and running!
-    sudo_log('echo "' + fileContents + '" | mysql -u root')
+    if sudo_log('echo "' + fileContents + '" | mysql -u root').return_code != 0:
+	logging.error("Failed to setup to mariadb")
+    else:
+	logging.debug("Setup mariadb")  
+  
     admin_token = run('openssl rand -hex 10')
     sudo_log("yum -y install openstack-keystone python-keystoneclient")
     
@@ -189,11 +187,6 @@ def setupKeystone():
     # new admin_token from the configuration file
     if sudo_log("systemctl restart openstack-keystone.service").return_code != 0:
         logging.error('Failed to restart openstack-keystone.service',extra=log_dict)
-
-    # configure a periodic task that purges expired tokens hourly
-    sudo_log("(crontab -l -u keystone 2>&1 | grep -q token_flush) || " + \
-            "echo '@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/" + \
-            "keystone-tokenflush.log 2>&1' >> /var/spool/cron/keystone")
 
     # configure prereqs for creating tenants, users, and roles
     exports = 'export OS_SERVICE_TOKEN={}; export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0'\
