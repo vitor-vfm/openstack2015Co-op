@@ -98,7 +98,6 @@ global_config_location =  '../global_config_files/'
 #    call('sudo chmod 777 ' + log_location,shell=True)
 
 log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:%(role)s:\t%(message)s'
-# log_format = '%(asctime)-15s  %(message)s'
 log_location = '../var/log/juno/'
 if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
     # location not created yet
@@ -120,4 +119,24 @@ global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_
 pairs = [line.split(' = ') for line in global_config_file_lines]
 # make passwd dictionary
 passwd = {pair[0].upper():pair[1] for pair in pairs}
+
+####################### useful functions #################################
+
+
+def db_exists(db):
+
+    # 'OK' message
+    okay = '[ ' + green('OK') + ' ]'
+    
+    command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{}';".format(db)
+    if db in sudo("""echo "{}" | mysql -u root""".format(command)):
+        return True
+    else:
+	return False
+    
+def table_count(db):
+    command = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{}';".format(db) 
+    output = sudo("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
+    return int(output)
+
 
