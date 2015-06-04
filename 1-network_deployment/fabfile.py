@@ -158,6 +158,10 @@ def configureNTP_on_controller():
     NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
     confFile = '/etc/ntp.conf'
 
+
+    logging.debug("Making sure we have ntp")
+    sudo('yum -y install ntp')
+
     # check if file has been configured already
     if sudo_log("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
         message = 'NTP conf file has already been set. Nothing done'
@@ -247,6 +251,8 @@ def deploy():
     # create log dictionary (to set up the log formatting)
     log_dict = {'host_string':'','role':''}
     logging.debug('Starting deployment',extra=log_dict)
+   
+    local("Ensure that you've run packages installation fabfile first")
 
     with settings(warn_only=True):
         execute(controller_network_deploy)
