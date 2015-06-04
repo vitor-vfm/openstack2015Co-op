@@ -43,6 +43,9 @@ def install_packages():
     # Install Crudini
     sudo("yum -y install crudini")
 
+    # Install wget
+    sudo("yum -y install wget")
+
 
     sudo("crudini --set /etc/selinux/config '' SELINUX disabled")
 
