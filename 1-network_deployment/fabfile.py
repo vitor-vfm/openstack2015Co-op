@@ -82,16 +82,15 @@ def set_up_NIC_using_nmcli(specs_dict):
 
 
 # General function to restart network
-def restart_network(role):
+def restart_network():
     # restarting network to implement changes 
     # turn off NetworkManager and use regular network application to restart
 
-    role = env_config.getRole()
-    if role == '':
-        sudo_log('chkconfig NetworkManager off')
-        sudo_log('service NetworkManager stop')
-        sudo_log('service network restart')
-        sudo_log('service NetworkManager start')
+    sudo_log('chkconfig NetworkManager off')
+    sudo_log('service NetworkManager stop')
+    sudo_log('service network restart')
+    sudo_log('service NetworkManager start')
+    # role = env_config.getRole()
     # if role == 'network':
     #     sudo_log("ifdown eth0 && ifup eth0")
     # elif role == 'controller':
@@ -214,7 +213,7 @@ def controller_network_deploy():
     # set_up_network_interface(management_specs,'controller')
     set_up_NIC_using_nmcli(management_specs)
 
-    restart_network('controller')
+    restart_network()
     set_hosts()
     configureNTP()
     configureNTP_on_controller()
@@ -241,7 +240,7 @@ def network_node_network_deploy():
     # set_up_network_interface(external_specs,'network')
     set_up_NIC_using_nmcli(management_specs)
 
-    restart_network('')
+    restart_network()
     set_hosts()
     configureNTP()
     logging.debug('Deployment done on host',extra=log_dict)
@@ -262,7 +261,7 @@ def compute_network_deploy():
     # set_up_network_interface(instance_tunnels_specs,'compute')
     set_up_NIC_using_nmcli(management_specs)
 
-    restart_network('')
+    restart_network()
     set_hosts()
     configureNTP()
     logging.debug('Deployment done on host',extra=log_dict)
