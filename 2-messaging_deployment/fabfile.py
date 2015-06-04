@@ -54,7 +54,7 @@ def installRabbitMQ():
     global log_dict
     log_dict = {'host_string':env.host_string, 'role':'controller'}
 
-    sudo_log('yum install rabbitmq-server')
+    sudo_log('yum -y install rabbitmq-server')
     #execute(if_error)
     if sudo_log('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf').return_code != 0:
         logging.error('Failed to create rabbitmq-env.conf on host ' + env.host_string)
@@ -118,12 +118,15 @@ def deploy():
 @roles('controller')
 def installRabbitMQtdd():
 
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
+    # info for logging
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':env_config.getRole()}
+
     time = [0]*8
     if sudo_log('yum install rabbitmq-server').return_code != 0:
-        logging.error('Failed to install rabbitmq-server')
+        logging.error('Failed to install rabbitmq-server',extra=log_dict)
     else:
-        logging.debug('Successfully installed rabbitmq-server')
+        logging.debug('Successfully installed rabbitmq-server',extra=log_dict)
 
     time[0] = run_log('date +"%b %d %R"')
     sudo_log('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
@@ -140,12 +143,17 @@ def installRabbitMQtdd():
     sudo_log('firewall-cmd --reload')
     time[6] = run_log('date +"%b %d %R"')
     sudo_log('rabbitmqctl change_password guest {}'.format(
-        get_value('messaging_config', '""', 'PASSWORD')), quiet=True)
+        get_value('messaging_config', '""', 'PASSWORD')))
     time[7] = run_log('date +"%b %d %R"')
     return time
 
 @roles('compute', 'controller', 'network')
 def check_log(time):
+
+    # info for logging
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':env_config.getRole()}
+
     with settings(quiet=True):
         for error_num in range(8):
             run_log('echo {} > time'.format(time[error_num]))

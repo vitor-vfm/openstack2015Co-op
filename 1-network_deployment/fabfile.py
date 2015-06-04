@@ -2,7 +2,7 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
-from fabric.colors import green, red
+from fabric.colors import green, red, blue
 from fabric.contrib.files import append
 import string
 import logging
@@ -29,6 +29,7 @@ hosts_config = 'config_files/hosts_config'
 
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
+log_dict = {'host_string':'','role':''}
 
 # Do a fabric run on the string 'command' and log results
 run_log = lambda command : env_config.fabricLog(command,run,log_dict)
@@ -36,6 +37,11 @@ run_log = lambda command : env_config.fabricLog(command,run,log_dict)
 sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
+
+@roles('network','controller','compute')
+def reinstallntp():
+    sudo("rm /etc/ntp.conf")
+    sudo("yum -y reinstall ntp")
 
 def generate_ip(ip_address,nodes_in_role,node):
 	# generate an IP address based on a base ip, a node, and a role list
@@ -82,13 +88,17 @@ def restart_network(role):
 
     role = env_config.getRole()
     if role == '':
-    # if role == 'network':
-    #     sudo_log("ifdown eth0 && ifup eth0")
-    # elif role == 'controller':
         sudo_log('chkconfig NetworkManager off')
         sudo_log('service NetworkManager stop')
         sudo_log('service network restart')
         sudo_log('service NetworkManager start')
+    # if role == 'network':
+    #     sudo_log("ifdown eth0 && ifup eth0")
+    # elif role == 'controller':
+        # sudo_log('chkconfig NetworkManager off')
+        # sudo_log('service NetworkManager stop')
+        # sudo_log('service network restart')
+        # sudo_log('service NetworkManager start')
     # elif role == 'compute':
         # sudo_log("systemctl restart network")
 
@@ -132,20 +142,22 @@ def configureNTP():
     newLine = 'server controller iburst'
 
     # check if file has been configured already
-    if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) != 0:
+    confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
+    # if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) == 0:
+    if newLine not in confFileStr:
+
+        # make a backup
+        sudo_log('cp {} {}.back12'.format(confFile,confFile))
+
+        # comment out all server keys
+        sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
+
+        # add one server key to reference the controller node
+        sudo_log("echo '{}' >>{}".format(newLine,confFile))
+    else:
         message = 'NTP conf file has already been set. Nothing done'
         print message
         logging.debug(message,extra=log_dict)
-        return
-
-    # make a backup
-    sudo_log('cp {} {}.back12'.format(confFile,confFile))
-
-    # comment out all server keys
-    sudo_log("sed -i '/server/ s/^/#/' " + confFile)
-
-    # add one server key to reference the controller node
-    sudo_log("echo '{}' >>{}".format(newLine,confFile))
 
     # enable and start ntp service
     sudo_log("systemctl enable ntpd.service")
@@ -159,11 +171,13 @@ def configureNTP_on_controller():
     confFile = '/etc/ntp.conf'
 
 
-    logging.debug("Making sure we have ntp")
-    sudo('yum -y install ntp')
+    logging.debug("Making sure we have ntp",extra=log_dict)
+    sudo_log('yum -y install ntp')
 
     # check if file has been configured already
-    if sudo_log("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
+    confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
+    ipToCheck = NTP_SERVERS[0]
+    if ipToCheck in confFileStr:
         message = 'NTP conf file has already been set. Nothing done'
         print message
         logging.debug(message,extra=log_dict)
@@ -173,13 +187,17 @@ def configureNTP_on_controller():
     sudo_log('cp {} {}.back12'.format(confFile,confFile))
 
     # comment out all server keys
-    sudo_log("sed -i '/server/ s/^/#/' " + confFile)
+    sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
 
     # add one server key to reference the controller node
+
+    linesToAdd = ["restrict -4 default kod notrap nomodify","restrict -6 default kod notrap nomodify"]
+    append(confFile,linesToAdd,use_sudo=True)
 
     for NTP_SERVER in NTP_SERVERS:
         sudo_log("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
 
+    sudo("cat " + confFile)
     # enable and start ntp service
     sudo_log("systemctl enable ntpd.service")
     sudo_log("systemctl start ntpd.service")
@@ -198,6 +216,8 @@ def controller_network_deploy():
 
     restart_network('controller')
     set_hosts()
+    configureNTP()
+    configureNTP_on_controller()
     logging.debug('Deployment done on host',extra=log_dict)
 
 @roles('network')
@@ -252,7 +272,7 @@ def deploy():
     log_dict = {'host_string':'','role':''}
     logging.debug('Starting deployment',extra=log_dict)
    
-    local("Ensure that you've run packages installation fabfile first")
+    print blue('Ensure that you\'ve run packages installation fabfile first')
 
     with settings(warn_only=True):
         execute(controller_network_deploy)
