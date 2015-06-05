@@ -2,10 +2,11 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
-from fabric.colors import green, red
+from fabric.colors import green, red, blue
 from fabric.contrib.files import append
 import string
 import logging
+import ConfigParser
 
 import sys
 sys.path.append('../global_config_files')
@@ -15,20 +16,35 @@ import env_config
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+print env.roledefs
 
 # Get configuration dictionaries from the config files
-compute_tunnels = env_config.read_dict('config_files/compute_instance_tunnels_interface_config')
-compute_manage = env_config.read_dict('config_files/compute_management_interface_config')
-controller_manage = env_config.read_dict('config_files/controller_management_interface_config')
-network_ext = env_config.read_dict('config_files/network_node_external_interface_config')
-network_tunnels = env_config.read_dict('config_files/network_node_instance_tunnels_interface_config')
-network_manage = env_config.read_dict('config_files/network_node_management_interface_config')
-hosts_config = 'config_files/hosts_config'
+# compute_tunnels = env_config.read_dict('config_files/compute_instance_tunnels_interface_config')
+# compute_manage = env_config.read_dict('config_files/compute_management_interface_config')
+# controller_manage = env_config.read_dict('config_files/controller_management_interface_config')
+# network_ext = env_config.read_dict('config_files/network_node_external_interface_config')
+# network_tunnels = env_config.read_dict('config_files/network_node_instance_tunnels_interface_config')
+# network_manage = env_config.read_dict('config_files/network_node_management_interface_config')
+# hosts_config = 'config_files/hosts_config'
+
+
+
+# determine config file from local host
+
+hostname = local("echo $HOSTNAME",capture=True)
+if 'ipmi5' in hostname:
+    main_config = 'config_files/production_config.cfg'
+else:
+    main_config = 'config_files/development_config.cfg'
+
+
+
 
 # Logging config
 
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
+log_dict = {'host_string':'','role':''}
 
 # Do a fabric run on the string 'command' and log results
 run_log = lambda command : env_config.fabricLog(command,run,log_dict)
@@ -36,6 +52,27 @@ run_log = lambda command : env_config.fabricLog(command,run,log_dict)
 sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
+
+@roles('network','controller','compute')
+def reinstallntp():
+    sudo("rm /etc/ntp.conf")
+    sudo("yum -y reinstall ntp")
+
+def read_dict_local(section):
+    # parse main config file and return all the 
+    # variables in the given section in a dictionary
+
+    # save config file in a ConfigParser object
+    parser = ConfigParser.ConfigParser()
+    parser.read(main_config)
+
+    # read variables and their values into a list of tuples
+    name_value_pairs = parser.items(section)
+
+    # return those pairs in a dictionary
+    # ConfigParser puts all the letters in lowercase,
+    # so we need to change them back to upper
+    return {name.upper():value for name,value in name_value_pairs}
 
 def generate_ip(ip_address,nodes_in_role,node):
 	# generate an IP address based on a base ip, a node, and a role list
@@ -76,21 +113,16 @@ def set_up_NIC_using_nmcli(specs_dict):
 
 
 # General function to restart network
-def restart_network(role):
+def restart_network():
     # restarting network to implement changes 
     # turn off NetworkManager and use regular network application to restart
 
-    role = env_config.getRole()
-    if role == '':
-    # if role == 'network':
-    #     sudo_log("ifdown eth0 && ifup eth0")
-    # elif role == 'controller':
-        sudo_log('chkconfig NetworkManager off')
-        sudo_log('service NetworkManager stop')
-        sudo_log('service network restart')
-        sudo_log('service NetworkManager start')
-    # elif role == 'compute':
-        # sudo_log("systemctl restart network")
+    # sudo_log('chkconfig NetworkManager off')
+    # sudo_log('service NetworkManager stop')
+    sudo_log('service network restart')
+    # sudo_log('service NetworkManager start')
+
+    # sudo_log("systemctl restart NetworkManager")
 
 # General function to set a virtual NIC
 def set_up_network_interface(specs_dict,role):
@@ -118,13 +150,26 @@ def set_up_network_interface(specs_dict,role):
 
 def set_hosts():
     # configure the /etc/hosts file to put aliases
-    config_file = open(hosts_config, 'r').read()
+    aliases = read_dict_local('hosts')
+
+    # make backup
     sudo_log("cp /etc/hosts /etc/hosts.back12")
+
+    # delete previous aliases
     sudo_log("sed -i '/controller/d' /etc/hosts")
     sudo_log("sed -i '/network/d' /etc/hosts")
     sudo_log("sed -i '/compute/d' /etc/hosts")
-    append('/etc/hosts',config_file,use_sudo=True)
-    logging.debug('Configured /etc/hosts file',extra=log_dict)
+
+    # add new aliases
+    lines_to_add = [ip + "\t" + aliases[ip] for ip in aliases.keys()]
+    for line in lines_to_add:
+        sudo_log("echo '{}' >>/etc/hosts".format(line))
+    # delete empty lines
+    sudo_log("sed -i '/^$/ d' /etc/hosts")
+
+    # show file to check
+    print blue("/etc/hosts : ")
+    sudo("cat /etc/hosts")
 
 def configureNTP():
 
@@ -132,20 +177,22 @@ def configureNTP():
     newLine = 'server controller iburst'
 
     # check if file has been configured already
-    if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) != 0:
+    confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
+    # if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) == 0:
+    if newLine not in confFileStr:
+
+        # make a backup
+        sudo_log('cp {} {}.back12'.format(confFile,confFile))
+
+        # comment out all server keys
+        sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
+
+        # add one server key to reference the controller node
+        sudo_log("echo '{}' >>{}".format(newLine,confFile))
+    else:
         message = 'NTP conf file has already been set. Nothing done'
         print message
         logging.debug(message,extra=log_dict)
-        return
-
-    # make a backup
-    sudo_log('cp {} {}.back12'.format(confFile,confFile))
-
-    # comment out all server keys
-    sudo_log("sed -i '/server/ s/^/#/' " + confFile)
-
-    # add one server key to reference the controller node
-    sudo_log("echo '{}' >>{}".format(newLine,confFile))
 
     # enable and start ntp service
     sudo_log("systemctl enable ntpd.service")
@@ -159,11 +206,13 @@ def configureNTP_on_controller():
     confFile = '/etc/ntp.conf'
 
 
-    logging.debug("Making sure we have ntp")
-    sudo('yum -y install ntp')
+    logging.debug("Making sure we have ntp",extra=log_dict)
+    sudo_log('yum -y install ntp')
 
     # check if file has been configured already
-    if sudo_log("grep '{}' {}".format(newLine,confFile), warn_only=True).return_code == 0:
+    confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
+    ipToCheck = NTP_SERVERS[0]
+    if ipToCheck in confFileStr:
         message = 'NTP conf file has already been set. Nothing done'
         print message
         logging.debug(message,extra=log_dict)
@@ -173,13 +222,17 @@ def configureNTP_on_controller():
     sudo_log('cp {} {}.back12'.format(confFile,confFile))
 
     # comment out all server keys
-    sudo_log("sed -i '/server/ s/^/#/' " + confFile)
+    sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
 
     # add one server key to reference the controller node
+
+    linesToAdd = ["restrict -4 default kod notrap nomodify","restrict -6 default kod notrap nomodify"]
+    append(confFile,linesToAdd,use_sudo=True)
 
     for NTP_SERVER in NTP_SERVERS:
         sudo_log("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
 
+    sudo("cat " + confFile)
     # enable and start ntp service
     sudo_log("systemctl enable ntpd.service")
     sudo_log("systemctl start ntpd.service")
@@ -192,12 +245,23 @@ def controller_network_deploy():
     log_dict = {'host_string':env.host_string,'role':'controller'}
 
     # set up management interface
-    management_specs = controller_manage
-    # set_up_network_interface(management_specs,'controller')
-    set_up_NIC_using_nmcli(management_specs)
 
-    restart_network('controller')
+    # management_specs = controller_manage
+    # set_up_network_interface(management_specs,'controller')
+    # set_up_NIC_using_nmcli(management_specs)
+
+    specs = read_dict_local('controller management')
+    set_up_network_interface(specs,env_config.getRole())
+
+    # set up tunnels interface
+
+    specs = read_dict_local('controller tunnels')
+    set_up_network_interface(specs,env_config.getRole())
+
+    restart_network()
     set_hosts()
+    configureNTP()
+    configureNTP_on_controller()
     logging.debug('Deployment done on host',extra=log_dict)
 
 @roles('network')
@@ -207,21 +271,36 @@ def network_node_network_deploy():
     log_dict = {'host_string':env.host_string,'role':'network'}
 
     # set up management interface
-    management_specs = network_manage
-    # set_up_network_interface(management_specs,'network')
-    set_up_NIC_using_nmcli(management_specs)
+    # management_specs = network_manage
+    # print management_specs
+    # # set_up_network_interface(management_specs,'network')
+    # set_up_NIC_using_nmcli(management_specs)
 
-    # set up instance tunnels interface
-    instance_tunnels_specs = network_tunnels
-    # set_up_network_interface(instance_tunnels_specs,'network')
-    set_up_NIC_using_nmcli(management_specs)
+    specs = read_dict_local('network management')
+    set_up_network_interface(specs,env_config.getRole())
+
+
+    # # set up instance tunnels interface
+    # instance_tunnels_specs = network_tunnels
+    # # set_up_network_interface(instance_tunnels_specs,'network')
+    # set_up_NIC_using_nmcli(management_specs)
+    # print management_specs
+
+    specs = read_dict_local('network tunnels')
+    set_up_network_interface(specs,env_config.getRole())
+
 
     # set up external interface
-    external_specs = network_ext
-    # set_up_network_interface(external_specs,'network')
-    set_up_NIC_using_nmcli(management_specs)
+    # external_specs = network_ext
+    # # set_up_network_interface(external_specs,'network')
+    # set_up_NIC_using_nmcli(management_specs)
+    # print management_specs
 
-    restart_network('')
+    specs = read_dict_local('network external')
+    set_up_network_interface(specs,env_config.getRole())
+
+
+    restart_network()
     set_hosts()
     configureNTP()
     logging.debug('Deployment done on host',extra=log_dict)
@@ -233,16 +312,25 @@ def compute_network_deploy():
     log_dict = {'host_string':env.host_string,'role':'compute'}
 
     # set up management interface
-    management_specs = compute_manage
-    # set_up_network_interface(management_specs,'compute')
-    set_up_NIC_using_nmcli(management_specs)
+    # management_specs = compute_manage
+    # print management_specs
+    # # set_up_network_interface(management_specs,'compute')
+    # set_up_NIC_using_nmcli(management_specs)
+
+    specs = read_dict_local('compute management')
+    set_up_network_interface(specs,env_config.getRole())
+
 
     # set up instance tunnels interface
-    instance_tunnels_specs = compute_tunnels
-    # set_up_network_interface(instance_tunnels_specs,'compute')
-    set_up_NIC_using_nmcli(management_specs)
+    # instance_tunnels_specs = compute_tunnels
+    # # set_up_network_interface(instance_tunnels_specs,'compute')
+    # set_up_NIC_using_nmcli(management_specs)
+    # print management_specs
 
-    restart_network('')
+    specs = read_dict_local('compute tunnels')
+    set_up_network_interface(specs,env_config.getRole())
+
+    restart_network()
     set_hosts()
     configureNTP()
     logging.debug('Deployment done on host',extra=log_dict)
@@ -252,7 +340,7 @@ def deploy():
     log_dict = {'host_string':'','role':''}
     logging.debug('Starting deployment',extra=log_dict)
    
-    local("Ensure that you've run packages installation fabfile first")
+    print blue('Ensure that you\'ve run packages installation fabfile first')
 
     with settings(warn_only=True):
         execute(controller_network_deploy)
@@ -340,7 +428,7 @@ def network_tdd_controller():
 
     # ping management interface on network nodes
     nodes_in_role = env.roledefs['network']
-    base_ip = network_manage['IPADDR']
+    base_ip = read_dict_local('network management')['IPADDR']
     # generate a list of tuples (IP,node) for each network node
     management_network_interfaces = [( generate_ip(base_ip,nodes_in_role,node) ,node) for node in nodes_in_role]
     # ping the management interfaces
@@ -360,13 +448,13 @@ def network_tdd_network():
     ping_ip('google.ca', 'google.ca')
 
     # management interfaces on controller
-    specs_dict = controller_manage
+    specs_dict = read_dict_local('controller management')
     ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['controller'], node), node) for node in env.roledefs['controller']]
     for ip, host in ip_list:
         ping_ip(ip, host, 'controller', 'management')
 
     # instance tunnel interfaces on compute
-    specs_dict = compute_tunnels
+    specs_dict = read_dict_local('compute tunnels')
     ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['compute'], node), node) for node in env.roledefs['compute']]
     for ip, host in ip_list:
         ping_ip(ip, host, 'compute', 'instance tunnel')
@@ -382,7 +470,7 @@ def network_tdd_compute():
 
     # ping management interface on controller nodes
     nodes_in_role = env.roledefs['controller']
-    base_ip = controller_manage['IPADDR']
+    base_ip = read_dict_local('controller management')['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
     management_controller_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
     # ping the management interfaces
@@ -391,7 +479,7 @@ def network_tdd_compute():
 
     # ping instance tunnel interface on network nodes
     nodes_in_role = env.roledefs['network']
-    base_ip = network_tunnels['IPADDR']
+    base_ip = read_dict_local('network tunnels')['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
     network_tunnels_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
     # ping the management interfaces

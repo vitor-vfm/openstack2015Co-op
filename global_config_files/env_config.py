@@ -1,8 +1,47 @@
 import logging 
 from subprocess import check_output, call
 from fabric.api import run, sudo, env
+from fabric.colors import red, green
 
 ##################### General functions ######################
+
+def database_check(db):
+
+    # 'OK' message
+    okay = '[ ' + green('OK') + ' ]'
+        
+    def db_exists(db):
+        command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{}';".format(db)
+        if db in sudo("""echo "{}" | mysql -u root""".format(command)):
+            return True
+        else:
+            return False
+        
+    def table_count(db):
+        command = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{}';".format(db) 
+        output = sudo("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
+        return int(output)
+
+    if db_exists(db):
+        message = "DB " + db + " exists"
+        print green(message)
+        print okay
+        logging.debug(message,extra=log_dict)
+    else:
+        message = "DB " + db + " does not exist"
+        print red(message)
+        logging.debug(message,extra=log_dict)
+
+    nbr = table_count(db)
+    if nbr > 0:
+        message = "table for " + db + " has " + str(nbr) + " entries"
+        print green(message)
+        print okay
+        logging.debug(message,extra=log_dict)
+    else:
+        message = "table for " + db + " is empty. Nbr of entries : " + str(nbr)
+        print red(message)
+        logging.debug(message,extra=log_dict)
 
 # Read the values from a node file into a list
 def read_nodes(node):
@@ -97,13 +136,14 @@ global_config_location =  '../global_config_files/'
 #    call('sudo mkdir -p ' + log_location,shell=True)
 #    call('sudo chmod 777 ' + log_location,shell=True)
 
+
 log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:%(role)s:\t%(message)s'
-# log_format = '%(asctime)-15s  %(message)s'
 log_location = '../var/log/juno/'
 if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
     # location not created yet
     call('mkdir -p ' + log_location,shell=True)
     call('chmod 744 ' + log_location,shell=True)
+log_dict = {'host_string':'','role':''} # default value for log_dict
 
 
 # scripts to be sourced
@@ -120,24 +160,3 @@ global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_
 pairs = [line.split(' = ') for line in global_config_file_lines]
 # make passwd dictionary
 passwd = {pair[0].upper():pair[1] for pair in pairs}
-
-####################### useful functions #################################
-
-
-def db_exists(db):
-
-    # 'OK' message
-    okay = '[ ' + green('OK') + ' ]'
-    
-    command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{}';".format(db)
-    if db in sudo("""echo "{}" | mysql -u root""".format(command)):
-        return True
-    else:
-	return False
-    
-def table_count(db):
-    command = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{}';".format(db) 
-    output = sudo("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
-    return int(output)
-
-

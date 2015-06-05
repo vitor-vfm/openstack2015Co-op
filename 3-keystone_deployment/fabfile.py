@@ -239,6 +239,11 @@ def deploy():
 @roles('controller')
 def keystone_tdd():
 
+    # info for logging
+    global log_dict
+    log_dict = {'host_string':env.host_string, 'role':env_config.getRole()}
+
+
     # 'OK' message
     okay = '[ ' + green('OK') + ' ]'
     
