@@ -195,3 +195,7 @@ demo_openrc = global_config_location + 'demo-openrc.sh'
 # get passwords from config file
 passwdFile = global_config_location + 'passwd.cfg'
 passwd = parseConfig(passwdFile,'passwords')
+
+# ntp
+# get a list of ntp servers, from config file
+ntpServers = parseConfig(mainCfg,'ntp')['servers'].split(',')
