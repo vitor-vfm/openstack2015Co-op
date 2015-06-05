@@ -14,9 +14,9 @@ usage = \
 '           -t [n] = take only the last n lines\n' + \
 '           -d [date] = take only lines from the specified date;\n' + \
 '           -to = take only lines from today\n' + \
-'           -l [level] = take only lines with the given level (INFO, WARN, etc.);\n' + \
-'                        not case sensitive\n' + \
 '           -w = take only lines with level WARN, CRITICAL or ERROR\n' + \
+'           -g [expression] = take only lines with the expression;\n' + \
+'                             not case sensitive\n' + \
 '           -h = display this message\n'
 
 
@@ -34,32 +34,23 @@ confFile = 'checkLogFiles/logFileLocations.cfg'
 deploymentLogsDirectory = 'var/log/juno/'
 openstackComponentsLogsDirectory = '/var/log/'
 
-def readConfFile(section,fileLocation):
+def readConfFile(section,fileLocation,directory):
     config = ConfigParser.ConfigParser()
     config.read(fileLocation)
     nameValuePairs = config.items(section)
     if nameValuePairs:
-        return {name:value for (name,value) in nameValuePairs}
+        return {name:directory + value for (name,value) in nameValuePairs}
     else:
-        return None
-
-
+        raise ValueError('Config file seems to be empty')
 
 # dictionaries that map parameters to files
-componentsLogs = readConfFile('components',confFile)
+componentsLogs = readConfFile('components',confFile,openstackComponentsLogsDirectory)
 
-deploymentLogs = readConfFile('deployment',confFile)
-
-# add directories to the front of the values
-if componentsLogs:
-    componentsLogs = { k : openstackComponentsLogsDirectory + componentsLogs[k] for k in componentsLogs.keys() }
-
-if deploymentLogs:
-    deploymentLogs = { k : deploymentLogsDirectory + deploymentLogs[k] for k in deploymentLogs.keys() }
+deploymentLogs = readConfFile('deployment',confFile,deploymentLogsDirectory)
 
 ############# Log display #####################
 
-def showLog(log,date="",past="",tail="",level=""):
+def showLog(log,date="",past="",tail="",warn="",grep=""):
     # prints a log to the screen, according to specifications
     log_lines = open(log,'r').readlines()
 
@@ -67,14 +58,6 @@ def showLog(log,date="",past="",tail="",level=""):
         # filter according to the date
         if date == 'today':
             date = check_output('date -Idate',shell=True).strip()
-            # # find first line with the date
-            # for i, line in enumerate(log_lines):
-            #     if date in line:
-            #         firstIndex = i
-            #         break
-            # log_lines = log_lines[i:]
-        # else:
-            # log_lines = [line for line in log_lines if date in line]
         log_lines = [line for line in log_lines if date in line]
 
     if tail:
@@ -86,20 +69,16 @@ def showLog(log,date="",past="",tail="",level=""):
 
         log_lines = log_lines[-nLines:]
 
-    if level:
+    if warn:
         # filter lines according to specified error
-        if level == 'warnings':
-            levelsList = ['WARN','CRITICAL','ERROR']
+        log_lines = [line for line in log_lines \
+                if 'warn' in line.lower() \
+                or 'critical' in line.lower() \
+                or 'error' in line.lower() ]
 
-            new_log_lines = list()
-            for line in log_lines:
-                for lev in levelsList:
-                    if lev in line.upper():
-                        new_log_lines.append(line)
-                        continue
-            log_lines = new_log_lines
-        else:
-            log_lines = [line for line in log_lines if level.upper() in line.upper()]
+    if grep:
+        # take only lines that have the expression
+        log_lines = [line for line in log_lines if grep.lower() in line.lower()]
 
     # if past:
     #     # filter to only the past X hours or minutes
@@ -130,7 +109,7 @@ def main(args):
     elif log != 'all':
         raise ValueError('Not a valid log parameter : ' + log)
 
-    date = past = tail = level = ""
+    date = past = tail = level = grep = ""
     if '-d' in args:
         date = args[ args.index('-d') + 1 ]
     if '-to' in args:
@@ -139,18 +118,18 @@ def main(args):
         past = args[ args.index('-p') + 1 ]
     if '-t' in args:
         tail = args[ args.index('-t') + 1 ]
-    if '-l' in args:
-        level = args[ args.index('-l') + 1 ]
     if '-w' in args:
-        level = 'warnings'
+        warn = True
+    if '-g' in args:
+        grep = args[ args.index('-g') + 1 ]
 
     if log == 'all':
         allLogs = [l for l in deploymentLogs.values() ] + \
                 [l for l in componentsLogs.values() ]
         for l in allLogs:
-            print showLog(l,date,past,tail,level)
+            print showLog(l,date,past,tail,level,grep)
     else:
-        print showLog(log_file,date,past,tail,level)
+        print showLog(log_file,date,past,tail,level,grep)
 
 
 
