@@ -1,3 +1,4 @@
+import ConfigParser
 import logging 
 from subprocess import check_output, call
 from fabric.api import run, sudo, env
@@ -5,6 +6,39 @@ from fabric.colors import red, green
 
 ##################### General functions ######################
 
+# # Read the values from a node file into a list
+# def read_nodes(node):
+#     node_info = open(node, 'r')
+#     node_string = node_info.read().splitlines()
+#     # remove comments (lines that have # in the beginning)
+#     # node_string_stripped = [node_element.strip() for node_element in node_string if node_element[0] != '#']
+#     node_info.close()
+#     #print node_string_stripped
+#     return node_string
+
+# # Make a dictionary from a config file with the format "KEY=value" on each 
+# # line
+# def read_dict(config_file):
+#     config_file_info = open(config_file, 'r')
+#     config_file_without_comments = [line for line in config_file_info.readlines() if line[0] != '#']
+#     config_file_string = "".join(config_file_without_comments)
+#     # config_file_string = config_file_info.read().replace('=','\n').splitlines()
+#     config_file_string = config_file_string.replace('=','\n').splitlines()
+#     config_file_string_stripped = [config_element.strip() for config_element in config_file_string]
+#     config_file_dict = dict()
+    
+#     # Make a dictionary from the string from the file with the the first value
+#     # on a line being the key to the value after the '=' on the same line
+#     for config_file_key_index in range(0,len(config_file_string_stripped)-1,2):
+#         config_file_value_index = config_file_key_index + 1
+#         config_file_dict[config_file_string_stripped[config_file_key_index]] = config_file_string_stripped[config_file_value_index]
+    
+#     config_file_info.close()
+
+#     #run("rm -rf %s" % config_file)
+#     return config_file_dict
+
+# General database check that will be used in several TDDs
 def database_check(db):
 
     # 'OK' message
@@ -43,37 +77,6 @@ def database_check(db):
         print red(message)
         logging.debug(message,extra=log_dict)
 
-# Read the values from a node file into a list
-def read_nodes(node):
-    node_info = open(node, 'r')
-    node_string = node_info.read().splitlines()
-    # remove comments (lines that have # in the beginning)
-    # node_string_stripped = [node_element.strip() for node_element in node_string if node_element[0] != '#']
-    node_info.close()
-    #print node_string_stripped
-    return node_string
-
-# Make a dictionary from a config file with the format "KEY=value" on each 
-# line
-def read_dict(config_file):
-    config_file_info = open(config_file, 'r')
-    config_file_without_comments = [line for line in config_file_info.readlines() if line[0] != '#']
-    config_file_string = "".join(config_file_without_comments)
-    # config_file_string = config_file_info.read().replace('=','\n').splitlines()
-    config_file_string = config_file_string.replace('=','\n').splitlines()
-    config_file_string_stripped = [config_element.strip() for config_element in config_file_string]
-    config_file_dict = dict()
-    
-    # Make a dictionary from the string from the file with the the first value
-    # on a line being the key to the value after the '=' on the same line
-    for config_file_key_index in range(0,len(config_file_string_stripped)-1,2):
-        config_file_value_index = config_file_key_index + 1
-        config_file_dict[config_file_string_stripped[config_file_key_index]] = config_file_string_stripped[config_file_value_index]
-    
-    config_file_info.close()
-
-    #run("rm -rf %s" % config_file)
-    return config_file_dict
 
 # Do a fabric command on the string 'command' and log results
 def fabricLog(command,func,log_dict):
@@ -109,24 +112,62 @@ def getRole():
     # if none was found
     raise ValueError("Host " + env.hoststring + " not in roledefs")
 
+# parse main config file and return all the 
+# variables in the given section in a dictionary
+def parseConfig(cfg,section):
+    print cfg
+
+    # save config file in a ConfigParser object
+    parser = ConfigParser.ConfigParser()
+
+    # preserve case
+    parser.optionxform = str
+
+    # load cfg file
+    parser.read(cfg)
+
+    # read variables and their values into a list of tuples
+    nameValuePairs = parser.items(section)
+
+    # return those pairs in a dictionary
+    return {name:value for name,value in nameValuePairs}
+
+# parse main config file and get
+# roledefs dictionary
+def getRoledefsDict(cfg):
+
+    # get a dictionary mapping a role to a 
+    # CSV string with all the nodes in that role
+    nodesInRole = parseConfig(cfg,'roledefs')
+
+    # split CSV strings into lists and return the dict
+    return {role: (nodesInRole[role].split(',')) for role in nodesInRole}
 
 ######################### Global variables ######################
 
+global_config_location =  '../global_config_files/'
+
+# determine config file from local host
+
+hostname = check_output("echo $HOSTNAME",shell=True)
+if 'ipmi5' in hostname:
+    mainCfg = global_config_location + 'production_global_config.cfg'
+else:
+    mainCfg = global_config_location + 'development_global_config.cfg'
+
 # Variables that can be imported into the env dictionary
-hosts = list()
-roledefs = dict()
+
+roledefs = getRoledefsDict(mainCfg)
+hosts = roledefs.values()
 
 # Get nodes and their roles from the config files
-compute_nodes = read_nodes('../global_config_files/compute_nodes')
-controller_nodes = read_nodes('../global_config_files/controller_nodes')
-network_nodes = read_nodes('../global_config_files/network_nodes')
-storage_nodes = read_nodes('../global_config_files/storage_nodes')
+# compute_nodes = read_nodes('../global_config_files/compute_nodes')
+# controller_nodes = read_nodes('../global_config_files/controller_nodes')
+# network_nodes = read_nodes('../global_config_files/network_nodes')
+# storage_nodes = read_nodes('../global_config_files/storage_nodes')
 
-hosts = compute_nodes + controller_nodes + network_nodes
-roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes, 'storage':storage_nodes }
-
-global_config_file = '../global_config_files/global_config'
-global_config_location =  '../global_config_files/'
+# hosts = compute_nodes + controller_nodes + network_nodes
+# roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes, 'storage':storage_nodes }
 
 # LOGGING
 
@@ -151,12 +192,6 @@ log_dict = {'host_string':'','role':''} # default value for log_dict
 admin_openrc = global_config_location + 'admin-openrc.sh'
 demo_openrc = global_config_location + 'demo-openrc.sh'
 
-# get passwords
-
-global_config_file_lines = check_output("crudini --get --list --format=lines " + global_config_file,shell=True).splitlines()
-# drop header
-global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_lines]
-# break between parameter and value
-pairs = [line.split(' = ') for line in global_config_file_lines]
-# make passwd dictionary
-passwd = {pair[0].upper():pair[1] for pair in pairs}
+# get passwords from config file
+passwdFile = global_config_location + 'passwd.cfg'
+passwd = parseConfig(passwdFile,'passwords')
