@@ -4,6 +4,7 @@ from fabric.decorators import with_settings
 from fabric.context_managers import cd
 from fabric.colors import green, red, blue
 from fabric.contrib.files import append, sed
+from fabric.state import output
 import string
 import logging
 import ConfigParser
@@ -16,6 +17,10 @@ import env_config
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+
+mode = 'normal'
+if output['debug']:
+    mode = 'debug'
 
 # Get configuration dictionaries from the config files
 # compute_tunnels = env_config.read_dict('config_files/compute_instance_tunnels_interface_config')
@@ -147,35 +152,45 @@ def set_hosts():
     aliases = read_dict_local('hosts')
 
     # make backup
-    sudo_log("cp /etc/hosts /etc/hosts.back12")
+    run_log("cp /etc/hosts /etc/hosts.back12")
+
+
+    if mode == 'normal':
+        confFile = '/etc/hosts'
+    elif mode == 'debug':
+        confFile = '~/hosts.debug'
+        sudo("cp /etc/hosts " + confFile)
+        print blue("Debugging set_hosts")
 
     # delete previous aliases
-    sudo_log("sed -i '/controller/d' /etc/hosts")
-    sudo_log("sed -i '/network/d' /etc/hosts")
-    sudo_log("sed -i '/compute/d' /etc/hosts")
+    run_log("sed -i '/controller/d' {}".format(confFile))
+    run_log("sed -i '/network/d' {}".format(confFile))
+    run_log("sed -i '/compute/d' {}".format(confFile))
 
     # add new aliases
     lines_to_add = [ip + "\t" + aliases[ip] for ip in aliases.keys()]
     for line in lines_to_add:
-        sudo_log("echo '{}' >>/etc/hosts".format(line))
+        run_log("echo '{}' >>{}".format(line,confFile))
     # delete empty lines
-    sudo_log("sed -i '/^$/ d' /etc/hosts")
+    run_log("sed -i '/^$/ d' {}".format(confFile))
 
-    # show file to check
-    print blue("/etc/hosts : ")
-    sudo("cat /etc/hosts")
+    if mode == 'debug':
+        # show file to check
+        print blue("Final result for {} : ".format(confFile))
+        sudo("cat " + confFile)
+        # delete test file
+        sudo("rm " + confFile)
 
 def configChrony():
 
-    chrony_conf = '\n'
+    chrony_conf = ''
     if env_config.getRole() == 'controller':
         # reference the ntp servers
         for server in env_config.ntpServers:
-            chrony_conf += "server {} iburst".format(server)
+            chrony_conf += "server {} iburst\n".format(server)
     else:
         # reference the controller node
-        chrony_conf += "server controller iburst"
-    chrony_conf += '\n'
+        chrony_conf += "server controller iburst\n"
 
     with settings(warn_only=True):
         run_log("echo '%s' > /etc/chrony.conf" % chrony_conf)
