@@ -140,7 +140,7 @@ def setupKeystone():
         # we need mariadb working in order to proceed
         sys.exit("Failed to restart mariadb")
     else:
-	logging.debug("Succesfully restarted mariadb")
+	logging.debug("Succesfully restarted mariadb", extra=log_dict)
 
     fileContents = keystoneConfigFileContents
     fileContents = fileContents.replace('NEW_PASS',passwd['ADMIN_PASS'])
@@ -148,7 +148,7 @@ def setupKeystone():
     if sudo_log('echo "' + fileContents + '" | mysql -u root').return_code != 0:
 	logging.error("Failed to setup to mariadb")
     else:
-	logging.debug("Setup mariadb")  
+	logging.debug("Setup mariadb", extra=log_dict)  
   
     admin_token = run('openssl rand -hex 10')
     sudo_log("yum -y install openstack-keystone python-keystoneclient")
@@ -235,6 +235,7 @@ def deploy():
 
 ######################################## TDD #########################################
 
+
 @roles('controller')
 def keystone_tdd():
 
@@ -245,12 +246,6 @@ def keystone_tdd():
     # if we don't set warn_only, the script will stop after these commands
     with settings(warn_only=True):
 
-        # Check if non-admin user is forbidden to perform admin tasks
-        user_list_output = sudo_log("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['DEMO_PASS']))
-        if 'You are not authorized to perform the requested action' in user_list_output:
-            print okay
-        else:
-            print red('demo was allowed to run user-list')
 
         # Check if 'admin' and 'demo' are users
         user_list_output = sudo_log("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['ADMIN_PASS']))
@@ -284,9 +279,15 @@ def keystone_tdd():
         else:
             print red('admin not a role')
 
+        # Check if non-admin user is forbidden to perform admin tasks
+        user_list_output = sudo_log("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['DEMO_PASS']))
+        if 'You are not authorized to perform the requested action' in user_list_output:
+            print okay
+        else:
+            print red('demo was allowed to run user-list')
 
 def tdd():
+    global log_dict
     log_dict = {'host_string':'','role':''} 
     logging.debug('Starting TDD function',extra=log_dict)
-    execute(keystone_tdd)
     logging.debug('Done',extra=log_dict)
