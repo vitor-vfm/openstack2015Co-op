@@ -4,7 +4,175 @@ from subprocess import check_output, call
 from fabric.api import run, sudo, env
 from fabric.colors import red, green
 
+
+
 ##################### General functions ######################
+
+
+"""
+
+keystone check function
+
+
+requires: 
+- as argument: name of component being tdd'd
+- requires the admin-openrc.sh file to be sourced
+as it will be doing lots of keystone stuff... understandably
+
+
+checks for:
+- existence of user
+- enable status of user
+- existence of service
+- existence of endpoint
+- checks to make sure admin url, internal url and public url
+of the endpoint match the ones given in the manual
+
+
+Tested on:
+- glance
+- keystone
+- nova
+- neutron
+
+TODO:
+- quiet and verbose modes
+
+
+"""
+
+def keystone_check(name):
+
+    # 'OK' message
+    okay = '[ ' + green('OK') + ' ]'
+
+    def quiet_sudo(command):
+        return sudo(command, quiet=True)
+#        return sudo(command)
+
+
+    def tenant_check():
+        tenants = ['admin', 'demo', 'service']
+
+        for tenant in tenants:
+            if tenant in quiet_sudo("keystone tenant-list | awk '// {print $4}'"):
+                print(green(tenant +" tenant exists"))
+                print okay
+
+                if "True" == quiet_sudo("keystone tenant-list | awk '/" + tenant + "/ {print $6}'"):
+                    print(green(tenant + " tenant enabled"))
+                    print okay
+                else:
+                    print(red(tenant +" tenant NOT enabled"))
+
+            else:
+                print(red(name +" tenant does NOT exists"))
+
+    def user_check():
+        users = ['admin', 'demo']
+
+        for user in users:
+            if user in quiet_sudo("keystone user-list | awk '// {print $4}'"):
+                print(green(user +" user exists"))
+                print okay
+
+                if "True" == quiet_sudo("keystone user-list | awk '/" + user + "/ {print $6}'"):
+                    print(green(user + " user enabled"))
+                    print okay
+                else:
+                    print(red(user +" user NOT enabled"))
+
+            else:
+                print(red(name +" user does NOT exists"))
+
+
+        
+
+    def user_exists(name):
+        if name in quiet_sudo("keystone user-list | awk '// {print $4}'"):
+            print(green(name +" user exists"))
+            print okay
+        else:
+            print(red(name +" user does NOT exists"))
+
+    def user_enabled(name):
+        if "True" == quiet_sudo("keystone user-list | awk '/" + name + "/ {print $6}'"):
+            print(green(name +" user enabled"))
+            print okay
+        else:
+            print(red(name +" user NOT enabled"))
+
+    def service_exists(name):
+        if name in quiet_sudo("keystone service-list | awk '// {print$4}'"):
+            output = quiet_sudo("keystone service-list | awk '/" + name + "/ {print$4}'")
+            print(green(name +" service exists. Type: " + output))
+            print okay
+        else:
+            print(name +" service does NOT exist")
+    
+    def endpoint_check(name):
+        ref_d = {
+            # urls taken from manual
+            # FORMAT = component_name : [admin url, internal url, public url]
+            'keystone': ['http://controller:35357/v2.0','http://controller:5000/v2.0','http://controller:5000/v2.0'],
+            'glance': ['http://controller:9292','http://controller:9292','http://controller:9292'],
+            'nova': ['http://controller:8774/v2/%(tenant_id)s','http://controller:8774/v2/%(tenant_id)s','http://controller:8774/v2/%(tenant_id)s'],
+            'neutron': ['http://controller:9696','http://controller:9696','http://controller:9696'],
+            'cinder': ['http://controller:8776/v1/%(tenant_id)s','http://controller:8776/v1/%(tenant_id)s','http://controller:8776/v1/%(tenant_id)s'],
+            'cinderv2': ['http://controller:8776/v2/%(tenant_id)s','http://controller:8776/v2/%(tenant_id)s','http://controller:8776/v2/%(tenant_id)s'],
+            'swift': ['http://controller:8080/','http://controller:8080/v1/AUTH_%(tenant_id)s','http://controller:8080/v1/AUTH_%(tenant_id)s'],
+            'horizon': ['','',''],
+            'heat': ['http://controller:8004/v1/%(tenant_id)s','http://controller:8004/v1/%(tenant_id)s','http://controller:8004/v1/%(tenant_id)s'],
+            'trove': ['http://controller:8779/v1.0/%\(tenant_id\)s','http://controller:8779/v1.0/%\(tenant_id\)s','http://controller:8779/v1.0/%\(tenant_id\)s'],
+            'sahara': ['http://controller:8386/v1.1/%\(tenant_id\)s','http://controller:8386/v1.1/%\(tenant_id\)s','http://controller:8386/v1.1/%\(tenant_id\)s'],
+            'ceilometer': ['http://controller:8777','http://controller:8777','http://controller:8777']
+        }
+
+        #service_type = quiet_sudo("keystone service-list | awk '/ " + name + "/ {print $6}'")
+        if name not in quiet_sudo("keystone service-list"):
+            print("Service not found in service list. Service does not exist, so endpoint can't exist. Exiting function")
+            return
+            
+
+        service_id = quiet_sudo("keystone service-list | awk '/ "+ name + " / {print $2}'")
+
+        if service_id not in quiet_sudo("keystone endpoint-list"):
+            print("Service id not found in endpoint list. Endpoint does not exist. Exiting function")
+            return
+
+        urls = ref_d[name]
+
+        admin_url_found = quiet_sudo("keystone endpoint-list | awk '/" + service_id + "/ {print$10}'")
+        internal_url_found = quiet_sudo("keystone endpoint-list | awk '/" + service_id + "/ {print$8}'")
+        public_url_found = quiet_sudo("keystone endpoint-list | awk '/" + service_id + "/ {print$6}'")
+
+        proper_admin_url = urls[0]
+        proper_internal_url = urls[1]
+        proper_public_url = urls[2]
+            
+        if ( admin_url_found == proper_admin_url and 
+             internal_url_found == proper_internal_url and
+             public_url_found == proper_public_url):
+            print(green("All urls are found to be matching"))
+            print okay
+        else:
+            print(name +" endpoint urls do not match our records")
+        
+
+    # call all functions 
+
+    user_check()
+    tenant_check()
+    service_exists(name)
+    endpoint_check(name)
+    
+    if name != 'keystone':
+        user_exists(name)
+        user_enabled(name)
+
+            
+
+
 
 # # Read the values from a node file into a list
 # def read_nodes(node):
