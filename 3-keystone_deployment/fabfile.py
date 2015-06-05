@@ -15,6 +15,7 @@ import env_config
 
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
+mainCfg = env_config.mainCfg
 
 @hosts('localhost')
 def readKeyStoneDBConfigFile(fileName):
@@ -60,8 +61,10 @@ def read_config_file_with_sections(file_location):
 keystoneConfigFileContents = readKeyStoneDBConfigFile('keystoneDBSetup.sql')
  
 # config files for user Usr
-admin_info = env_config.read_dict('config_files/keystone_admin_config') 
-demo_user = env_config.read_dict('config_files/keystone_demo_config')
+# admin_info = env_config.read_dict('config_files/keystone_admin_config') 
+# demo_user = env_config.read_dict('config_files/keystone_demo_config')
+admin_email = env_config.parseConfig(mainCfg,'keystone')['ADMIN_EMAIL']
+demo_email = env_config.parseConfig(mainCfg,'keystone')['DEMO_EMAIL']
 
 # create these files for easier access for other components when configuring with keystone
 
@@ -199,7 +202,7 @@ def setupKeystone():
             sudo_log("keystone tenant-create --name admin --description 'Admin Tenant'")
         if 'admin' not in sudo_log("keystone user-list"):
             sudo_log("keystone user-create --name admin --pass {} --email {}"\
-                    .format(passwd['ADMIN_PASS'], admin_info['EMAIL']))
+                    .format(passwd['ADMIN_PASS'], admin_email))
         if 'admin' not in sudo_log("keystone role-list"):
             sudo_log("keystone role-create --name admin")
             sudo_log("keystone user-role-add --user admin --tenant admin --role admin")
@@ -296,3 +299,4 @@ def tdd():
     log_dict = {'host_string':'','role':''} 
     logging.debug('Starting TDD function',extra=log_dict)
     logging.debug('Done',extra=log_dict)
+    execute(env_config.keystone_check, 'keystone', roles='controller')

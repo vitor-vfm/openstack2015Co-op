@@ -13,7 +13,7 @@ import env_config
 
 
 
-logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
+# logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
 
 ############################ Config ########################################
 
@@ -33,18 +33,34 @@ etc_cinder_config_file = "/etc/cinder/cinder.conf"
 
 passwd = env_config.passwd
 
-def sudo_log(command):
-    output = sudo(command)
-    logging.info(output)
-    return output
 
-def run_log(command):
-    output = run(command)
-    logging.info(output)
-    return output
+# Logging config
 
+log_file = 'cinder_deployment.log'
+env_config.setupLoggingInFabfile(log_file)
+log_dict = {'host_string':'','role':''}
+
+# Do a fabric run on the string 'command' and log results
+run_log = lambda command : env_config.fabricLog(command,run,log_dict)
+# Do a fabric sudo on the string 'command' and log results
+sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
     
 ################### General functions ########################################
+
+def set_up_NIC_using_nmcli(ifname,ip):
+    # Set up a new interface by using NetworkManager's 
+    # command line interface
+
+    # ifname = sudo_log("crudini --get {} '' DEVICE".format(conf_file))
+    # ip = sudo_log("crudini --get {} '' IPADDR".format(conf_file))
+
+    command = "nmcli connection add type ethernet"
+    command += " con-name " + ifname # connection name is the same as interface name
+    command += " ifname " + ifname
+    command += " ip4 " + ip
+
+    sudo_log(command)
+
 
 def get_parameter(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
@@ -191,21 +207,24 @@ def start_services_on_storage():
     sudo_log(start_services)
     sudo_log(restart_services)
 
-#@roles('storage')
+@roles('storage')
 def setup_cinder_on_storage():
     put(admin_openrc)
 
 
     # create management interface
-    DEVICE = "eth0:0"
-    NETMASK = "255.255.255.0"
-    IPADDR = "192.168.0.41"
-    file_content = "DEVICE={} \n NETMASK={} \n IPADDR={} \n".format(DEVICE, NETMASK, IPADDR)
-    with cd('/etc/sysconfig/network-scripts'):
-        # create ifcfg file in the directory
-        sudo('echo -e "{}" >ifcfg-{}'.format(file_content, DEVICE))
+    # DEVICE = "eth0:0"
+    # NETMASK = "255.255.255.0"
+    # IPADDR = "192.168.0.41"
+    # file_content = "DEVICE={} \n NETMASK={} \n IPADDR={} \n".format(DEVICE, NETMASK, IPADDR)
+    # with cd('/etc/sysconfig/network-scripts'):
+    #     # create ifcfg file in the directory
+    #     sudo('echo -e "{}" >ifcfg-{}'.format(file_content, DEVICE))
 
-    sudo("ifdown {}; ifup {}".format(DEVICE,DEVICE))
+    # sudo("ifdown {}; ifup {}".format(DEVICE,DEVICE))
+    set_up_NIC_using_nmcli('eth1','192.168.0.41')
+
+    sudo_log("systemctl restart NetworkManager")
 
     # set hostname
     sudo("hostnamectl set-hostname block1")
@@ -218,17 +237,14 @@ def setup_cinder_on_storage():
 
     # creat volume
     
-#    device_name = "vdb"
+    device_name = "vdb"
 
-#    sudo("pvcreate /dev/"+device_name)
-
-#    sudo("vgcreate cinder-volumes /dev/"+device_name)
+    if device_name in sudo_log("ls /dev/"):
+        sudo("pvcreate /dev/"+device_name)
+        sudo("vgcreate cinder-volumes /dev/"+device_name)
 
 
     config_file = "/etc/lvm/lvm.conf"
-    
-
-
     # variable setup
 
     CINDER_DBPASS = get_parameter(env_config.global_config_file,'mysql','CINDER_DBPASS')
@@ -250,6 +266,8 @@ def deploy():
 ######################################## TDD #########################################
 
 
+def verify():
+    pass
 def tdd():
     with settings(warn_only=True):
         # to be done on the controller node

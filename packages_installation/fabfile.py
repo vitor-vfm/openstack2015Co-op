@@ -26,12 +26,11 @@ mariadb_mysqld_specs = 'config_files/mariadb_mysqld_specs'
 @with_settings(warn_only=True)
 def install_packages():
     
-    # Install NTP
-    sudo('yum -y install ntp')
-    # Are we using an NTP server?
-    # enable NTP
-    #sudo('systemctl enable ntpd.service')
-    #sudo('systemctl start ntpd.service')
+    # Install Chrony
+    sudo('yum -y install chrony')
+    # enable Chrony
+    sudo('systemctl enable chronyd.service')
+    sudo('systemctl start chronyd.service')
 
     # Install EPEL (Extra Packages for Entreprise Linux
     sudo('yum -y install yum-plugin-priorities')
@@ -109,8 +108,7 @@ def install_packages():
 def ask_for_reboot():
     sudo('wall Everybody please reboot')
 
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def deploy():
     execute(install_packages)
-    execute(ask_for_reboot)
 
