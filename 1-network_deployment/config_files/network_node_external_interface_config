@@ -1,5 +1,0 @@
-DEVICE=enp0s25:2
-TYPE=Ethernet
-ONBOOT="yes"
-BOOTPROTO="none"
-IPADDR=192.168.3.21

@@ -186,7 +186,7 @@ def deploy():
 
 
 @roles('controller')
-def get_image_tdd():
+def glance_tdd():
 
     # dictionary for logging format
     global log_dict
@@ -209,8 +209,8 @@ def get_image_tdd():
         
     sudo_log("rm -r /tmp/images")
 
-
+    env_config.database_check('glance')
 
 def tdd():
     with settings(warn_only=True):
-        execute(get_image_tdd)
+        execute(glance_tdd)
