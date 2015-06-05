@@ -18,6 +18,27 @@ VOLUME = 'vol0'
 
 ############################# GENERAL FUNCTIONS ############################
 
+def get_parameter(config_file, section, parameter):
+    crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
+    return local(crudini_command, capture=True)
+
+def shrinkHome():
+    run('umount /home')
+    run('lvresize -L -{} /dev/mapper/centos-home'.format(get_parameter(global_config, '', 'size_reduction_of_home')))
+    run('mkfs -t xfs -f /dev/centos/home')
+    run('mount /home')
+
+@roles('controllernode','networknode','computenode')
+def prepGlusterFS():
+    run('lvs')
+    run('lvcreate -i 3 -I 8 500G centos')
+    run('lvrename /dev/centos/lvol0 strFile')
+    run('lvcreate -i 3 -I 8 500G centos')
+    run('lvrename /dev/centos/lvol0 strObj')
+    run('lvcreate -i 3 -I 8 500G centos')
+    run('lvrename /dev/centos/lvol0 strBlk')
+    run('lvs')
+
 @roles('controller', 'compute', 'network')
 def setup_gluster():
     # Get and install gluster
@@ -149,6 +170,6 @@ def check_for_file():
 @roles('compute')
 def tdd():
     with settings(warn_only=True):
-        sudo('touch /mnt/gluster/test')
+        sudo('touch /mnt/gluster/testfile')
         execute(check_for_file)
-        sudo('rm /mnt/gluster/test')
+        sudo('rm /mnt/gluster/testfile')

@@ -242,7 +242,8 @@ def configureNTP_on_controller():
 def controller_network_deploy():
     # create log dictionary (to set up the log formatting)
     global log_dict
-    log_dict = {'host_string':env.host_string,'role':'controller'}
+    log_dict = {'host_string':env.host_string,'role':env_config.getRole()}
+    print log_dict
 
     # set up management interface
 

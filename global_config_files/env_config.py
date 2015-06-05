@@ -1,60 +1,212 @@
+import ConfigParser
 import logging 
 from subprocess import check_output, call
 from fabric.api import run, sudo, env
 from fabric.colors import red, green
 
+
+
 ##################### General functions ######################
 
 
-def keystone_check():
+"""
 
-    def tenant_exists(name):
-        if name in sudo("keystone tenant-list | awk '// {print $4}'"):
-            print(green(name +" tenant exists"))
+keystone check function
+
+
+requires: 
+- as argument: name of component being tdd'd
+- requires the admin-openrc.sh file to be sourced
+as it will be doing lots of keystone stuff... understandably
+
+
+checks for:
+- existence of user
+- enable status of user
+- existence of service
+- existence of endpoint
+- checks to make sure admin url, internal url and public url
+of the endpoint match the ones given in the manual
+
+
+Tested on:
+- glance
+- keystone
+- nova
+- neutron
+
+TODO:
+- quiet and verbose modes
+
+
+"""
+
+def keystone_check(name):
+
+    # 'OK' message
+    okay = '[ ' + green('OK') + ' ]'
+
+    def quiet_sudo(command):
+        return sudo(command, quiet=True)
+#        return sudo(command)
+
+
+    def tenant_check():
+        tenants = ['admin', 'demo', 'service']
+
+        for tenant in tenants:
+            if tenant in quiet_sudo("keystone tenant-list | awk '// {print $4}'"):
+                print(green(tenant +" tenant exists"))
+                print okay
+
+                if "True" == quiet_sudo("keystone tenant-list | awk '/" + tenant + "/ {print $6}'"):
+                    print(green(tenant + " tenant enabled"))
+                    print okay
+                else:
+                    print(red(tenant +" tenant NOT enabled"))
+
+            else:
+                print(red(name +" tenant does NOT exists"))
+
+    def user_check():
+        users = ['admin', 'demo']
+
+        for user in users:
+            if user in quiet_sudo("keystone user-list | awk '// {print $4}'"):
+                print(green(user +" user exists"))
+                print okay
+
+                if "True" == quiet_sudo("keystone user-list | awk '/" + user + "/ {print $6}'"):
+                    print(green(user + " user enabled"))
+                    print okay
+                else:
+                    print(red(user +" user NOT enabled"))
+
+            else:
+                print(red(name +" user does NOT exists"))
+
+
+        
+
+    def user_exists(name):
+        if name in quiet_sudo("keystone user-list | awk '// {print $4}'"):
+            print(green(name +" user exists"))
             print okay
         else:
-            print(red(name +" tenant does NOT exists"))
+            print(red(name +" user does NOT exists"))
 
-    def tenant_enabled(name):
-        if name in sudo("keystone tenant-list | awk '/" + name + "/ {print $6}'"):
-            print(green(name +" tenant enabled"))
+    def user_enabled(name):
+        if "True" == quiet_sudo("keystone user-list | awk '/" + name + "/ {print $6}'"):
+            print(green(name +" user enabled"))
             print okay
         else:
-            print(red(name +" tenant NOT enabled"))
+            print(red(name +" user NOT enabled"))
 
     def service_exists(name):
-        if name in sudo("keystone service-list | awk '// {print$4}'"):
-            output = sudo("keystone service-list | awk '/" + name + "/ {print$4}'"):
+        if name in quiet_sudo("keystone service-list | awk '// {print$4}'"):
+            output = quiet_sudo("keystone service-list | awk '/" + name + "/ {print$4}'")
             print(green(name +" service exists. Type: " + output))
             print okay
         else:
             print(name +" service does NOT exist")
+    
+    def endpoint_check(name):
+        ref_d = {
+            # urls taken from manual
+            # FORMAT = component_name : [admin url, internal url, public url]
+            'keystone': ['http://controller:35357/v2.0','http://controller:5000/v2.0','http://controller:5000/v2.0'],
+            'glance': ['http://controller:9292','http://controller:9292','http://controller:9292'],
+            'nova': ['http://controller:8774/v2/%(tenant_id)s','http://controller:8774/v2/%(tenant_id)s','http://controller:8774/v2/%(tenant_id)s'],
+            'neutron': ['http://controller:9696','http://controller:9696','http://controller:9696'],
+            'cinder': ['http://controller:8776/v1/%(tenant_id)s','http://controller:8776/v1/%(tenant_id)s','http://controller:8776/v1/%(tenant_id)s'],
+            'cinderv2': ['http://controller:8776/v2/%(tenant_id)s','http://controller:8776/v2/%(tenant_id)s','http://controller:8776/v2/%(tenant_id)s'],
+            'swift': ['http://controller:8080/','http://controller:8080/v1/AUTH_%(tenant_id)s','http://controller:8080/v1/AUTH_%(tenant_id)s'],
+            'horizon': ['','',''],
+            'heat': ['http://controller:8004/v1/%(tenant_id)s','http://controller:8004/v1/%(tenant_id)s','http://controller:8004/v1/%(tenant_id)s'],
+            'trove': ['http://controller:8779/v1.0/%\(tenant_id\)s','http://controller:8779/v1.0/%\(tenant_id\)s','http://controller:8779/v1.0/%\(tenant_id\)s'],
+            'sahara': ['http://controller:8386/v1.1/%\(tenant_id\)s','http://controller:8386/v1.1/%\(tenant_id\)s','http://controller:8386/v1.1/%\(tenant_id\)s'],
+            'ceilometer': ['http://controller:8777','http://controller:8777','http://controller:8777']
+        }
 
+        #service_type = quiet_sudo("keystone service-list | awk '/ " + name + "/ {print $6}'")
+        if name not in quiet_sudo("keystone service-list"):
+            print("Service not found in service list. Service does not exist, so endpoint can't exist. Exiting function")
+            return
+            
+
+        service_id = quiet_sudo("keystone service-list | awk '/ "+ name + " / {print $2}'")
+
+        if service_id not in quiet_sudo("keystone endpoint-list"):
+            print("Service id not found in endpoint list. Endpoint does not exist. Exiting function")
+            return
+
+        urls = ref_d[name]
+
+        admin_url_found = quiet_sudo("keystone endpoint-list | awk '/" + service_id + "/ {print$10}'")
+        internal_url_found = quiet_sudo("keystone endpoint-list | awk '/" + service_id + "/ {print$8}'")
+        public_url_found = quiet_sudo("keystone endpoint-list | awk '/" + service_id + "/ {print$6}'")
+
+        proper_admin_url = urls[0]
+        proper_internal_url = urls[1]
+        proper_public_url = urls[2]
+            
+        if ( admin_url_found == proper_admin_url and 
+             internal_url_found == proper_internal_url and
+             public_url_found == proper_public_url):
+            print(green("All urls are found to be matching"))
+            print okay
+        else:
+            print(name +" endpoint urls do not match our records")
+        
+
+    # call all functions 
+
+    user_check()
+    tenant_check()
+    service_exists(name)
+    endpoint_check(name)
+    
+    if name != 'keystone':
+        user_exists(name)
+        user_enabled(name)
 
             
 
-    def mysql_it(sql_command):
-        mysql_command = "mysql -B --disable-column-names -u root"
-        return sudo("""echo "{}" | {}""".format(sql_command, mysql_command))
+
+
+# # Read the values from a node file into a list
+# def read_nodes(node):
+#     node_info = open(node, 'r')
+#     node_string = node_info.read().splitlines()
+#     # remove comments (lines that have # in the beginning)
+#     # node_string_stripped = [node_element.strip() for node_element in node_string if node_element[0] != '#']
+#     node_info.close()
+#     #print node_string_stripped
+#     return node_string
+
+# # Make a dictionary from a config file with the format "KEY=value" on each 
+# # line
+# def read_dict(config_file):
+#     config_file_info = open(config_file, 'r')
+#     config_file_without_comments = [line for line in config_file_info.readlines() if line[0] != '#']
+#     config_file_string = "".join(config_file_without_comments)
+#     # config_file_string = config_file_info.read().replace('=','\n').splitlines()
+#     config_file_string = config_file_string.replace('=','\n').splitlines()
+#     config_file_string_stripped = [config_element.strip() for config_element in config_file_string]
+#     config_file_dict = dict()
     
-    command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'keystone';"
-    if "keystone" not in mysql_it(command):
-        print(red("keystone database does not exist"))
-        print(red("exiting function"))
-        return
-        
-    def tenant_check(name):
-        # checks for existence and whether or not it is enabled
-        
+#     # Make a dictionary from the string from the file with the the first value
+#     # on a line being the key to the value after the '=' on the same line
+#     for config_file_key_index in range(0,len(config_file_string_stripped)-1,2):
+#         config_file_value_index = config_file_key_index + 1
+#         config_file_dict[config_file_string_stripped[config_file_key_index]] = config_file_string_stripped[config_file_value_index]
+    
+#     config_file_info.close()
 
+#     #run("rm -rf %s" % config_file)
+#     return config_file_dict
 
-
-
-
-
-
-
-
+# General database check that will be used in several TDDs
 def database_check(db):
 
     # 'OK' message
@@ -93,37 +245,6 @@ def database_check(db):
         print red(message)
         logging.debug(message,extra=log_dict)
 
-# Read the values from a node file into a list
-def read_nodes(node):
-    node_info = open(node, 'r')
-    node_string = node_info.read().splitlines()
-    # remove comments (lines that have # in the beginning)
-    # node_string_stripped = [node_element.strip() for node_element in node_string if node_element[0] != '#']
-    node_info.close()
-    #print node_string_stripped
-    return node_string
-
-# Make a dictionary from a config file with the format "KEY=value" on each 
-# line
-def read_dict(config_file):
-    config_file_info = open(config_file, 'r')
-    config_file_without_comments = [line for line in config_file_info.readlines() if line[0] != '#']
-    config_file_string = "".join(config_file_without_comments)
-    # config_file_string = config_file_info.read().replace('=','\n').splitlines()
-    config_file_string = config_file_string.replace('=','\n').splitlines()
-    config_file_string_stripped = [config_element.strip() for config_element in config_file_string]
-    config_file_dict = dict()
-    
-    # Make a dictionary from the string from the file with the the first value
-    # on a line being the key to the value after the '=' on the same line
-    for config_file_key_index in range(0,len(config_file_string_stripped)-1,2):
-        config_file_value_index = config_file_key_index + 1
-        config_file_dict[config_file_string_stripped[config_file_key_index]] = config_file_string_stripped[config_file_value_index]
-    
-    config_file_info.close()
-
-    #run("rm -rf %s" % config_file)
-    return config_file_dict
 
 # Do a fabric command on the string 'command' and log results
 def fabricLog(command,func,log_dict):
@@ -159,24 +280,62 @@ def getRole():
     # if none was found
     raise ValueError("Host " + env.hoststring + " not in roledefs")
 
+# parse main config file and return all the 
+# variables in the given section in a dictionary
+def parseConfig(cfg,section):
+    print cfg
+
+    # save config file in a ConfigParser object
+    parser = ConfigParser.ConfigParser()
+
+    # preserve case
+    parser.optionxform = str
+
+    # load cfg file
+    parser.read(cfg)
+
+    # read variables and their values into a list of tuples
+    nameValuePairs = parser.items(section)
+
+    # return those pairs in a dictionary
+    return {name:value for name,value in nameValuePairs}
+
+# parse main config file and get
+# roledefs dictionary
+def getRoledefsDict(cfg):
+
+    # get a dictionary mapping a role to a 
+    # CSV string with all the nodes in that role
+    nodesInRole = parseConfig(cfg,'roledefs')
+
+    # split CSV strings into lists and return the dict
+    return {role: (nodesInRole[role].split(',')) for role in nodesInRole}
 
 ######################### Global variables ######################
 
+global_config_location =  '../global_config_files/'
+
+# determine config file from local host
+
+hostname = check_output("echo $HOSTNAME",shell=True)
+if 'ipmi5' in hostname:
+    mainCfg = global_config_location + 'production_global_config.cfg'
+else:
+    mainCfg = global_config_location + 'development_global_config.cfg'
+
 # Variables that can be imported into the env dictionary
-hosts = list()
-roledefs = dict()
+
+roledefs = getRoledefsDict(mainCfg)
+hosts = roledefs.values()
 
 # Get nodes and their roles from the config files
-compute_nodes = read_nodes('../global_config_files/compute_nodes')
-controller_nodes = read_nodes('../global_config_files/controller_nodes')
-network_nodes = read_nodes('../global_config_files/network_nodes')
-storage_nodes = read_nodes('../global_config_files/storage_nodes')
+# compute_nodes = read_nodes('../global_config_files/compute_nodes')
+# controller_nodes = read_nodes('../global_config_files/controller_nodes')
+# network_nodes = read_nodes('../global_config_files/network_nodes')
+# storage_nodes = read_nodes('../global_config_files/storage_nodes')
 
-hosts = compute_nodes + controller_nodes + network_nodes
-roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes, 'storage':storage_nodes }
-
-global_config_file = '../global_config_files/global_config'
-global_config_location =  '../global_config_files/'
+# hosts = compute_nodes + controller_nodes + network_nodes
+# roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes, 'storage':storage_nodes }
 
 # LOGGING
 
@@ -201,12 +360,6 @@ log_dict = {'host_string':'','role':''} # default value for log_dict
 admin_openrc = global_config_location + 'admin-openrc.sh'
 demo_openrc = global_config_location + 'demo-openrc.sh'
 
-# get passwords
-
-global_config_file_lines = check_output("crudini --get --list --format=lines " + global_config_file,shell=True).splitlines()
-# drop header
-global_config_file_lines = [line.split(' ] ')[1] for line in global_config_file_lines]
-# break between parameter and value
-pairs = [line.split(' = ') for line in global_config_file_lines]
-# make passwd dictionary
-passwd = {pair[0].upper():pair[1] for pair in pairs}
+# get passwords from config file
+passwdFile = global_config_location + 'passwd.cfg'
+passwd = parseConfig(passwdFile,'passwords')
