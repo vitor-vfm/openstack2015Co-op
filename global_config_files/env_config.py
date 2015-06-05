@@ -5,6 +5,56 @@ from fabric.colors import red, green
 
 ##################### General functions ######################
 
+
+def keystone_check():
+
+    def tenant_exists(name):
+        if name in sudo("keystone tenant-list | awk '// {print $4}'"):
+            print(green(name +" tenant exists"))
+            print okay
+        else:
+            print(red(name +" tenant does NOT exists"))
+
+    def tenant_enabled(name):
+        if name in sudo("keystone tenant-list | awk '/" + name + "/ {print $6}'"):
+            print(green(name +" tenant enabled"))
+            print okay
+        else:
+            print(red(name +" tenant NOT enabled"))
+
+    def service_exists(name):
+        if name in sudo("keystone service-list | awk '// {print$4}'"):
+            output = sudo("keystone service-list | awk '/" + name + "/ {print$4}'"):
+            print(green(name +" service exists. Type: " + output))
+            print okay
+        else:
+            print(name +" service does NOT exist")
+
+
+            
+
+    def mysql_it(sql_command):
+        mysql_command = "mysql -B --disable-column-names -u root"
+        return sudo("""echo "{}" | {}""".format(sql_command, mysql_command))
+    
+    command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'keystone';"
+    if "keystone" not in mysql_it(command):
+        print(red("keystone database does not exist"))
+        print(red("exiting function"))
+        return
+        
+    def tenant_check(name):
+        # checks for existence and whether or not it is enabled
+        
+
+
+
+
+
+
+
+
+
 def database_check(db):
 
     # 'OK' message
