@@ -3,7 +3,7 @@ from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
 from fabric.colors import green, red, blue
-from fabric.contrib.files import append
+from fabric.contrib.files import append, sed
 import string
 import logging
 import ConfigParser
@@ -16,7 +16,6 @@ import env_config
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
-print env.roledefs
 
 # Get configuration dictionaries from the config files
 # compute_tunnels = env_config.read_dict('config_files/compute_instance_tunnels_interface_config')
@@ -52,11 +51,6 @@ run_log = lambda command : env_config.fabricLog(command,run,log_dict)
 sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
-
-@roles('network','controller','compute')
-def reinstallntp():
-    sudo("rm /etc/ntp.conf")
-    sudo("yum -y reinstall ntp")
 
 def read_dict_local(section):
     # parse main config file and return all the 
@@ -171,6 +165,28 @@ def set_hosts():
     print blue("/etc/hosts : ")
     sudo("cat /etc/hosts")
 
+def configChrony():
+
+    chrony_conf = '\n'
+    if env_config.getRole() == 'controller':
+        # reference the ntp servers
+        for server in env_config.ntpServers:
+            chrony_conf += "server {} iburst".format(server)
+    else:
+        # reference the controller node
+        chrony_conf += "server controller iburst"
+    chrony_conf += '\n'
+
+    with settings(warn_only=True):
+        run_log("echo '%s' > /etc/chrony.conf" % chrony_conf)
+
+        run_log('systemctl restart chronyd.service')
+        result=run_log('systemctl is-enabled chronyd.service')
+        if result.failed :
+            print "Chrony config failed"
+        else:
+            print "Chrony config OK"
+
 def configureNTP():
 
     confFile = '/etc/ntp.conf'
@@ -243,26 +259,16 @@ def controller_network_deploy():
     # create log dictionary (to set up the log formatting)
     global log_dict
     log_dict = {'host_string':env.host_string,'role':env_config.getRole()}
-    print log_dict
-
-    # set up management interface
-
-    # management_specs = controller_manage
-    # set_up_network_interface(management_specs,'controller')
-    # set_up_NIC_using_nmcli(management_specs)
 
     specs = read_dict_local('controller management')
     set_up_network_interface(specs,env_config.getRole())
-
-    # set up tunnels interface
 
     specs = read_dict_local('controller tunnels')
     set_up_network_interface(specs,env_config.getRole())
 
     restart_network()
     set_hosts()
-    configureNTP()
-    configureNTP_on_controller()
+    configChrony()
     logging.debug('Deployment done on host',extra=log_dict)
 
 @roles('network')
@@ -271,31 +277,11 @@ def network_node_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':'network'}
 
-    # set up management interface
-    # management_specs = network_manage
-    # print management_specs
-    # # set_up_network_interface(management_specs,'network')
-    # set_up_NIC_using_nmcli(management_specs)
-
     specs = read_dict_local('network management')
     set_up_network_interface(specs,env_config.getRole())
 
-
-    # # set up instance tunnels interface
-    # instance_tunnels_specs = network_tunnels
-    # # set_up_network_interface(instance_tunnels_specs,'network')
-    # set_up_NIC_using_nmcli(management_specs)
-    # print management_specs
-
     specs = read_dict_local('network tunnels')
     set_up_network_interface(specs,env_config.getRole())
-
-
-    # set up external interface
-    # external_specs = network_ext
-    # # set_up_network_interface(external_specs,'network')
-    # set_up_NIC_using_nmcli(management_specs)
-    # print management_specs
 
     specs = read_dict_local('network external')
     set_up_network_interface(specs,env_config.getRole())
@@ -303,7 +289,7 @@ def network_node_network_deploy():
 
     restart_network()
     set_hosts()
-    configureNTP()
+    configChrony()
     logging.debug('Deployment done on host',extra=log_dict)
 
 @roles('compute')
@@ -312,28 +298,25 @@ def compute_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':'compute'}
 
-    # set up management interface
-    # management_specs = compute_manage
-    # print management_specs
-    # # set_up_network_interface(management_specs,'compute')
-    # set_up_NIC_using_nmcli(management_specs)
-
     specs = read_dict_local('compute management')
     set_up_network_interface(specs,env_config.getRole())
-
-
-    # set up instance tunnels interface
-    # instance_tunnels_specs = compute_tunnels
-    # # set_up_network_interface(instance_tunnels_specs,'compute')
-    # set_up_NIC_using_nmcli(management_specs)
-    # print management_specs
 
     specs = read_dict_local('compute tunnels')
     set_up_network_interface(specs,env_config.getRole())
 
     restart_network()
     set_hosts()
-    configureNTP()
+    configChrony()
+    logging.debug('Deployment done on host',extra=log_dict)
+
+@roles('storage')
+def storage_network_deploy():
+    # create log dictionary (to set up the log formatting)
+    global log_dict
+    log_dict = {'host_string':env.host_string,'role':'compute'}
+
+    configChrony()
+    
     logging.debug('Deployment done on host',extra=log_dict)
 
 def deploy():
@@ -349,6 +332,34 @@ def deploy():
         execute(compute_network_deploy)
 
 ######################################## TDD #########################################
+
+@roles('controller')
+def chronyTDDController():
+    # check if ntp servers are in the sources
+    sourcesTable = sudo_log('chronyc sources')
+    for server in env_config.ntpServers:
+        if server in sourcesTable:
+            print green("server {} is a source for chrony".format(server))
+        else:
+            print red("server {} is not a source for chrony".format(server))
+
+@roles([r for r in env.roledefs.keys() if r != 'controller'])
+def chronyTDDOtherNodes():
+    # check if controller is in the sources
+    sourcesTable = sudo_log('chronyc sources')
+    if 'controller' in sourcesTable:
+        print green("controller is a source for chrony")
+    else:
+        print red("controlles is not a source for chrony")
+
+
+
+
+def chronyTDD():
+    execute(chronyTDDController)
+    execute(chronyTDDOtherNodes)
+
+    
 
 def controller_ntp_tdd_part1():
 
@@ -493,5 +504,4 @@ def tdd():
 	execute(network_tdd_controller)
 	execute(network_tdd_network)
 	execute(network_tdd_compute)
-        execute(controller_ntp_tdd)
-        execute(other_nodes_ntp_tdd)
+	execute(chronyTDD)
