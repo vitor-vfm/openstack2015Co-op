@@ -369,7 +369,6 @@ else:
               networkManagement['IPADDR'] : 'network'}
 
     # add the compute nodes to hosts config
-    computeIPs = dict()
     baseIP = computeManagement['IPADDR']
     for i, computeNode in enumerate(roledefs['compute']):
         # increment base ip
@@ -379,5 +378,16 @@ else:
         IP = IP[:-1] # remove last dot
 
         hosts[IP] = 'compute' + str(i+1)
+
+    # neutron
+
+    # this script creates a database to be used by Neutron
+    # 'NEUTRON_DBPASS' should be replaced by a suitable password
+    databaseScript = "CREATE DATABASE IF NOT EXISTS neutron; " + \
+            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' " + \
+            "IDENTIFIED BY 'NEUTRON_DBPASS'; " +\
+            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' " +\
+            "IDENTIFIED BY 'NEUTRON_DBPASS';"
+
 
 
