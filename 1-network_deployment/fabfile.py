@@ -22,17 +22,6 @@ mode = 'normal'
 if output['debug']:
     mode = 'debug'
 
-# Get configuration dictionaries from the config files
-# compute_tunnels = env_config.read_dict('config_files/compute_instance_tunnels_interface_config')
-# compute_manage = env_config.read_dict('config_files/compute_management_interface_config')
-# controller_manage = env_config.read_dict('config_files/controller_management_interface_config')
-# network_ext = env_config.read_dict('config_files/network_node_external_interface_config')
-# network_tunnels = env_config.read_dict('config_files/network_node_instance_tunnels_interface_config')
-# network_manage = env_config.read_dict('config_files/network_node_management_interface_config')
-# hosts_config = 'config_files/hosts_config'
-
-
-
 # determine config file from local host
 
 hostname = local("echo $HOSTNAME",capture=True)
@@ -56,6 +45,10 @@ run_log = lambda command : env_config.fabricLog(command,run,log_dict)
 sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
+
+def debug_str(command):
+    # runs a command and returns its output in blue
+    return blue(sudo(command,quiet=True))
 
 def read_dict_local(section):
     # parse main config file and return all the 
@@ -140,13 +133,29 @@ def set_up_network_interface(specs_dict,role):
     # save file into directory
 
     device_name = specs_dict['DEVICE']
+    config_file_name = 'ifcfg-' + device_name
+
+    if mode == 'debug':
+        config_file_name += '.test'
+        print blue('Setting up debug file (.test)')
+
     # change to network-scripts directory
     with cd('/etc/sysconfig/network-scripts'):
         # create ifcfg file in the directory
-        sudo_log('echo -e "{}" >ifcfg-{}'.format(config_file,device_name))
+        sudo_log('echo -e "{}" >{}'.format(config_file,config_file_name))
 
-    logging.debug('Set up virtual NIC with name {}'.format(device_name),extra=log_dict)
+        if mode == 'debug':
+            print blue('This is the test config file: ')
+            print ''
+            print debug_str('cat ' + config_file_name)
+            print ''
+            print blue('These are the ifcfg files in the directory: ')
+            print debug_str('ls | grep ifcfg')
+            print 'Deleting test file'
+            print debug_str('rm ' + config_file_name)
 
+
+    logging.debug('Set up virtual NIC with conf file {}'.format(config_file_name),extra=log_dict)
 def set_hosts():
     # configure the /etc/hosts file to put aliases
     aliases = read_dict_local('hosts')
@@ -192,8 +201,19 @@ def configChrony():
         # reference the controller node
         chrony_conf += "server controller iburst\n"
 
+    confFile = '/etc/chrony.conf'
+    # make a backup
+    sudo_log('cp {} {}.back12'.format(confFile,confFile))
+
+    if mode == 'debug':
+        confFile += '.back12'
+
     with settings(warn_only=True):
-        run_log("echo '%s' > /etc/chrony.conf" % chrony_conf)
+        run_log("echo '{}' > {}".format(chrony_conf,confFile))
+
+        if mode == 'debug':
+            print blue('This is what the conf file will look like: ')
+            print blue(sudo('cat ' + confFile,quiet=True))
 
         run_log('systemctl restart chronyd.service')
         result=run_log('systemctl is-enabled chronyd.service')
@@ -202,72 +222,81 @@ def configChrony():
         else:
             print "Chrony config OK"
 
-def configureNTP():
+# def configureNTP():
 
-    confFile = '/etc/ntp.conf'
-    newLine = 'server controller iburst'
+#     confFile = '/etc/ntp.conf'
+#     newLine = 'server controller iburst'
 
-    # check if file has been configured already
-    confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
-    # if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) == 0:
-    if newLine not in confFileStr:
+#     # check if file has been configured already
+#     confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
+#     # if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) == 0:
+#     if newLine not in confFileStr:
 
-        # make a backup
-        sudo_log('cp {} {}.back12'.format(confFile,confFile))
+#         # make a backup
+#         sudo_log('cp {} {}.back12'.format(confFile,confFile))
 
-        # comment out all server keys
-        sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
+#         # comment out all server keys
+#         sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
 
-        # add one server key to reference the controller node
-        sudo_log("echo '{}' >>{}".format(newLine,confFile))
-    else:
-        message = 'NTP conf file has already been set. Nothing done'
-        print message
-        logging.debug(message,extra=log_dict)
+#         # add one server key to reference the controller node
+#         sudo_log("echo '{}' >>{}".format(newLine,confFile))
+#     else:
+#         message = 'NTP conf file has already been set. Nothing done'
+#         print message
+#         logging.debug(message,extra=log_dict)
 
-    # enable and start ntp service
-    sudo_log("systemctl enable ntpd.service")
-    sudo_log("systemctl start ntpd.service")
+#     # enable and start ntp service
+#     sudo_log("systemctl enable ntpd.service")
+#     sudo_log("systemctl start ntpd.service")
 
-def configureNTP_on_controller():
-
-
-    NTP_SERVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
-    NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
-    confFile = '/etc/ntp.conf'
+# def configureNTP_on_controller():
 
 
-    logging.debug("Making sure we have ntp",extra=log_dict)
-    sudo_log('yum -y install ntp')
+#     NTP_SERVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
+#     NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
+#     confFile = '/etc/ntp.conf'
 
-    # check if file has been configured already
-    confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
-    ipToCheck = NTP_SERVERS[0]
-    if ipToCheck in confFileStr:
-        message = 'NTP conf file has already been set. Nothing done'
-        print message
-        logging.debug(message,extra=log_dict)
-        return
 
-    # make a backup
-    sudo_log('cp {} {}.back12'.format(confFile,confFile))
+#     logging.debug("Making sure we have ntp",extra=log_dict)
+#     sudo_log('yum -y install ntp')
 
-    # comment out all server keys
-    sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
+#     # check if file has been configured already
+#     confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
+#     ipToCheck = NTP_SERVERS[0]
+#     if ipToCheck in confFileStr:
+#         message = 'NTP conf file has already been set. Nothing done'
+#         print message
+#         logging.debug(message,extra=log_dict)
+#         return
 
-    # add one server key to reference the controller node
+#     # make a backup
+#     sudo_log('cp {} {}.back12'.format(confFile,confFile))
 
-    linesToAdd = ["restrict -4 default kod notrap nomodify","restrict -6 default kod notrap nomodify"]
-    append(confFile,linesToAdd,use_sudo=True)
+#     # comment out all server keys
+#     sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
 
-    for NTP_SERVER in NTP_SERVERS:
-        sudo_log("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
+#     # add one server key to reference the controller node
 
-    sudo("cat " + confFile)
-    # enable and start ntp service
-    sudo_log("systemctl enable ntpd.service")
-    sudo_log("systemctl start ntpd.service")
+#     linesToAdd = ["restrict -4 default kod notrap nomodify","restrict -6 default kod notrap nomodify"]
+#     append(confFile,linesToAdd,use_sudo=True)
 
+#     for NTP_SERVER in NTP_SERVERS:
+#         sudo_log("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
+
+#     sudo("cat " + confFile)
+#     # enable and start ntp service
+#     sudo_log("systemctl enable ntpd.service")
+#     sudo_log("systemctl start ntpd.service")
+
+def deployInterface(interface):
+    if mode == 'debug':
+        print ''
+        print blue('Deploying Interface {} now'.format(interface))
+        print ''
+
+    specs = interface
+    specs = read_dict_local(interface)
+    set_up_network_interface(specs,env_config.getRole())
 
 @roles('controller')
 def controller_network_deploy():
@@ -275,11 +304,9 @@ def controller_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':env_config.getRole()}
 
-    specs = read_dict_local('controller management')
-    set_up_network_interface(specs,env_config.getRole())
+    deployInterface('controller management')
 
-    specs = read_dict_local('controller tunnels')
-    set_up_network_interface(specs,env_config.getRole())
+    deployInterface('controller tunnels')
 
     restart_network()
     set_hosts()
@@ -292,14 +319,11 @@ def network_node_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':'network'}
 
-    specs = read_dict_local('network management')
-    set_up_network_interface(specs,env_config.getRole())
+    deployInterface('network management')
 
-    specs = read_dict_local('network tunnels')
-    set_up_network_interface(specs,env_config.getRole())
+    deployInterface('network tunnels')
 
-    specs = read_dict_local('network external')
-    set_up_network_interface(specs,env_config.getRole())
+    deployInterface('network external')
 
 
     restart_network()
@@ -313,11 +337,9 @@ def compute_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':'compute'}
 
-    specs = read_dict_local('compute management')
-    set_up_network_interface(specs,env_config.getRole())
+    deployInterface('compute management')
 
-    specs = read_dict_local('compute tunnels')
-    set_up_network_interface(specs,env_config.getRole())
+    deployInterface('compute tunnels')
 
     restart_network()
     set_hosts()
