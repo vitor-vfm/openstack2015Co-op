@@ -1,5 +1,12 @@
 #! /usr/bin/python
 
+import sys
+import ConfigParser
+from subprocess import check_output
+
+
+############### Config #####################
+
 usage = \
 '\n  A script to parse and display logs\n' + \
 '\n' + \
@@ -20,37 +27,56 @@ usage = \
 '           -h = display this message\n'
 
 
-import sys
-import ConfigParser
-from subprocess import check_output
-
-
-############### Config #####################
-
-
-confFile = 'checkLogFiles/logFileLocations.cfg'
-
 # logs directories
 deploymentLogsDirectory = 'var/log/juno/'
 openstackComponentsLogsDirectory = '/var/log/'
 
-def readConfFile(section,fileLocation,directory):
-    config = ConfigParser.ConfigParser()
-    config.read(fileLocation)
-    nameValuePairs = config.items(section)
-    if nameValuePairs:
-        return {name:directory + value for (name,value) in nameValuePairs}
-    else:
-        raise ValueError('Config file seems to be empty')
-
 # dictionaries that map parameters to files
-componentsLogs = readConfFile('components',confFile,openstackComponentsLogsDirectory)
+componentsLogs = { 'glance' : 'glance/api.log',
+                   'glance-api' : 'glance/api.log',
+                   'glance-registry' : 'glance/registry.log',
+                   'heat' : 'heat/heat-manage.log',
+                   'heat-api-cfn' : 'heat/heat-api-cfn.log',
+                   'heat-api' : 'heat/heat-api.log',
+                   'heat-engine' : 'heat/heat-engine.log',
+                   'heat-manage' : 'heat/heat-manage.log',
+                   'keystone' : 'keystone/keystone.log',
+                   'keystone-tokenflush' : 'keystone/keystone-tokenflush.log',
+                   'mariadb' : 'mariadb/server.log',
+                   'neutron' : 'neutron/server.log',
+                   'nova' : 'nova/nova-api.log',
+                   'nova-api' : 'nova/nova-api.log',
+                   'nova-cert' : 'nova/nova-cert.log',
+                   'nova-conductor' : 'nova/nova-conductor.log',
+                   'nova-consoleauth' : 'nova/nova-consoleauth.log',
+                   'nova-manage' : 'nova/nova-manage.log',
+                   'nova-novncproxy' : 'nova/nova-novncproxy.log',
+                   'nova-scheduler' : 'nova/nova-scheduler.log',
+                   'rabbit' : 'rabbitmq/rabbit@localhost.log',
+                   'rabbitmq' : 'rabbitmq/rabbit@localhost.log',
+                   'rabbitmq-localhost-sasl' : 'rabbitmq/rabbit@localhost-sasl.log'}
 
-deploymentLogs = readConfFile('deployment',confFile,deploymentLogsDirectory)
+deploymentLogs = { 'basic-network' : 'basic-network.log',
+                   'glance_deployment' : 'glance_deployment.log',
+                   'horizon_deployment' : 'horizon_deployment.log',
+                   'heat_deployment' : 'heat_deployment.log',
+                   'keystone_deployment' : 'keystone_deployment.log',
+                   'neutron_deployment' : 'neutron_deployment.log',
+                   'nova_deployment' : 'nova_deployment.log',
+                   'rabbit_deployment' : 'rabbit_deployment.log',
+                   'swift_deployment' : 'swift_deployment.log'}
+
+# add directories and concatenate
+logFiles = dict()
+for program in componentsLogs:
+    logFiles[program] = openstackComponentsLogsDirectory + componentsLogs[program]
+for program in deploymentLogs:
+    logFiles[program] = deploymentLogsDirectory + deploymentLogs[program]
+
 
 ############# Log display #####################
 
-def showLog(log,date="",past="",tail="",warn="",grep=""):
+def showLog(log,date="",past="",tail="",warn=False,grep=""):
     # prints a log to the screen, according to specifications
     log_lines = open(log,'r').readlines()
 
@@ -95,6 +121,9 @@ def showLog(log,date="",past="",tail="",warn="",grep=""):
     # concatenate lines and return them
     return "".join(log_lines)
 
+
+######################## Main ###########################
+
 def main(args):
 
     if '-h' in args:
@@ -102,12 +131,20 @@ def main(args):
         return
 
     log = args[0].lower()
-    if deploymentLogs and (log in deploymentLogs):
-        log_file = deploymentLogs[log]
-    elif componentsLogs and (log in componentsLogs):
-        log_file = componentsLogs[log]
-    elif log != 'all':
-        raise ValueError('Not a valid log parameter : ' + log)
+    if log != 'all':
+        if log in logFiles:
+            logFile = logFiles[log]
+        else:
+            logMatches = [item for item in logFiles.keys() if log in item]
+            if len(logMatches) == 0:
+                raise ValueError('Not a valid parameter for log: ' + log)
+            elif len(logMatches) == 1:
+                logFile = logFiles[logMatches[0]]
+            else:
+                print 'Did you mean'
+                for match in logMatches:
+                    print match,
+                return
 
     date = past = tail = level = grep = ""
     if '-d' in args:
@@ -127,9 +164,9 @@ def main(args):
         allLogs = [l for l in deploymentLogs.values() ] + \
                 [l for l in componentsLogs.values() ]
         for l in allLogs:
-            print showLog(l,date,past,tail,level,grep)
+            print showLog(l,date,past,tail,warn,grep)
     else:
-        print showLog(log_file,date,past,tail,level,grep)
+        print showLog(logFile,date,past,tail,warn,grep)
 
 
 
