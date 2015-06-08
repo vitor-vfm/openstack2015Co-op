@@ -37,9 +37,9 @@ log_file = 'rabbit_deployment.log'
 env_config.setupLoggingInFabfile(log_file)
 
 # Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
+run_log = lambda command : env_config.fabricLog(command,run)
 # Do a fabric run on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
+sudo_log = lambda command : env_config.fabricLog(command,sudo)
 
 ################### General functions ########################################
 
@@ -74,7 +74,13 @@ def installRabbitMQ():
     if sudo_log('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
         logging.error('Failed to add port 5672 to firewall',extra=log_dict)
     sudo_log('firewall-cmd --reload')
+
+@roles('controller')
+def change_password():
     sudo_log('rabbitmqctl change_password guest {}'.format(passwd['RABBIT_PASS']))
+    if sudo_log('systemctl restart rabbitmq-server.service').return_code != 0:
+        logging.error('Failed to restart rabbitmq-server.service',extra=log_dict)
+
     # Assuming we're using RabbitMQ version 3.3.0 or later, do the next 2 lines
 #    sudo_log('if [ ! -f /etc/rabbitmq/rabbitmq.config ]; then' + '\n' 
  #           'echo "[{rabbit, [{loopback_users, []}]}]." >> /etc/rabbitmq/rabbitmq.config' + '\n'
@@ -98,7 +104,7 @@ def deploy():
     logging.debug('Deploying',extra=log_dict)
 
     execute(installRabbitMQ)
-
+    execute(change_password)
 
 
 ######################################## TDD #########################################

@@ -1,0 +1,614 @@
+2015-06-08 13:09:25,421:ERROR:root@controllerVM:controller:	Problem on command 'ping -q -c 1 www.google.ca'
+2015-06-08 13:09:48,655:ERROR:root@controllerVM:controller:	Problem on command 'ping -q -c 1 192.168.1.21'
+2015-06-08 13:09:59,791:ERROR:root@networkVM:network:	Problem on command 'ping -q -c 1 google.ca'
+2015-06-08 13:10:23,023:ERROR:root@networkVM:network:	Problem on command 'ping -q -c 1 192.168.1.11'
+2015-06-08 13:10:33,174:ERROR:root@networkVM:network:	Problem on command 'ping -q -c 1 192.168.2.41'
+2015-06-08 13:10:44,198:ERROR:root@computeVM:compute:	Problem on command 'ping -q -c 1 google.ca'
+2015-06-08 13:11:07,596:ERROR:root@computeVM:compute:	Problem on command 'ping -q -c 1 192.168.1.11'
+2015-06-08 13:11:31,193:ERROR:root@computeVM:compute:	Problem on command 'ping -q -c 1 192.168.2.21'
+2015-06-08 13:11:45,014:ERROR:root@computeVM:compute:	Problem on command 'chronyc sources'
+2015-06-08 13:11:46,125:ERROR:root@computeVM:compute:	Problem on command 'chronyc sources'
+2015-06-08 13:11:46,247:ERROR:root@computeVM:compute:	Problem on command 'chronyc sources'
+2015-06-08 13:11:46,417:ERROR:root@computeVM:compute:	Problem on command 'chronyc sources'
+2015-06-08 13:33:10,677:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 13:33:10,677:DEBUG:root@controllerVM:controller:	
+2015-06-08 13:33:10,677:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 13:33:10,677:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 13:33:10,677:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 25.123/25.123/25.123/0.000 ms
+2015-06-08 13:33:20,828:ERROR:root@controllerVM:controller:	Problem on command 'ping -q -c 1 192.168.1.21'
+2015-06-08 13:33:31,908:ERROR:root@networkVM:network:	Problem on command 'ping -q -c 1 google.ca'
+2015-06-08 13:33:42,059:ERROR:root@networkVM:network:	Problem on command 'ping -q -c 1 192.168.1.11'
+2015-06-08 13:33:52,195:ERROR:root@networkVM:network:	Problem on command 'ping -q -c 1 192.168.2.41'
+2015-06-08 13:34:03,234:ERROR:root@computeVM:compute:	Problem on command 'ping -q -c 1 google.ca'
+2015-06-08 13:34:26,631:ERROR:root@computeVM:compute:	Problem on command 'ping -q -c 1 192.168.1.11'
+2015-06-08 13:37:35,304:DEBUG:::	Starting deployment
+2015-06-08 14:04:06,258:DEBUG:::	Starting deployment
+2015-06-08 14:04:06,710:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:04:06,846:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:04:11,253:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:04:12,965:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:04:12,966:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:05:45,095:DEBUG:::	Starting deployment
+2015-06-08 14:05:45,489:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:05:45,627:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:05:47,499:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:05:49,019:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:05:49,019:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:06:40,212:DEBUG:::	Starting deployment
+2015-06-08 14:06:40,592:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:06:40,728:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:06:42,530:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:06:44,114:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:06:44,114:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:06:44,438:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:06:44,575:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:06:44,743:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:06:51,287:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:06:52,915:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:06:52,915:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:07:30,482:DEBUG:::	Starting deployment
+2015-06-08 14:07:30,900:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:07:31,036:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:07:32,805:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:07:34,593:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:07:34,593:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:07:34,858:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:07:34,994:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:07:35,131:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:07:41,671:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:07:43,355:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:07:43,355:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:07:43,737:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:07:43,906:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:07:49,280:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:07:51,060:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:07:51,060:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:08:05,600:DEBUG:::	Starting deployment
+2015-06-08 14:08:05,996:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:08:06,133:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:08:07,966:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:08:09,500:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:08:09,500:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:08:09,799:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:08:09,967:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:08:10,103:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:08:16,646:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:08:18,214:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:08:18,215:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:08:18,653:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:08:18,790:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:08:24,258:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:08:25,904:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:08:25,904:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:16:19,953:DEBUG:::	Starting deployment
+2015-06-08 14:16:20,314:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:16:20,450:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:16:22,252:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:16:23,821:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:16:23,821:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:16:24,110:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:16:24,246:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:16:24,381:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:16:30,928:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:16:32,452:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:16:32,453:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:16:32,845:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:16:33,015:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:16:38,554:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:16:40,349:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:16:40,350:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:16:51,469:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 14:16:51,469:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:16:51,469:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 14:16:51,469:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:51,469:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 58.100/58.100/58.100/0.000 ms
+2015-06-08 14:16:51,590:DEBUG:root@controllerVM:controller:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 14:16:51,590:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:16:51,590:DEBUG:root@controllerVM:controller:	--- 192.168.1.21 ping statistics ---
+2015-06-08 14:16:51,590:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:51,590:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 0.261/0.261/0.261/0.000 ms
+2015-06-08 14:16:52,153:DEBUG:root@networkVM:network:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:16:52,153:DEBUG:root@networkVM:network:	
+2015-06-08 14:16:52,153:DEBUG:root@networkVM:network:	--- google.ca ping statistics ---
+2015-06-08 14:16:52,153:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:52,153:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 42.009/42.009/42.009/0.000 ms
+2015-06-08 14:16:52,274:DEBUG:root@networkVM:network:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:16:52,274:DEBUG:root@networkVM:network:	
+2015-06-08 14:16:52,274:DEBUG:root@networkVM:network:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:16:52,274:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:52,274:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.257/0.257/0.257/0.000 ms
+2015-06-08 14:16:52,411:DEBUG:root@networkVM:network:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 14:16:52,411:DEBUG:root@networkVM:network:	
+2015-06-08 14:16:52,411:DEBUG:root@networkVM:network:	--- 192.168.2.41 ping statistics ---
+2015-06-08 14:16:52,411:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:52,411:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.929/0.929/0.929/0.000 ms
+2015-06-08 14:16:52,851:DEBUG:root@computeVM:compute:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:16:52,851:DEBUG:root@computeVM:compute:	
+2015-06-08 14:16:52,851:DEBUG:root@computeVM:compute:	--- google.ca ping statistics ---
+2015-06-08 14:16:52,851:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:52,851:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 19.282/19.282/19.282/0.000 ms
+2015-06-08 14:16:53,021:DEBUG:root@computeVM:compute:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:16:53,021:DEBUG:root@computeVM:compute:	
+2015-06-08 14:16:53,021:DEBUG:root@computeVM:compute:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:16:53,021:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:53,021:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.309/0.309/0.309/0.000 ms
+2015-06-08 14:16:53,158:DEBUG:root@computeVM:compute:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 14:16:53,158:DEBUG:root@computeVM:compute:	
+2015-06-08 14:16:53,159:DEBUG:root@computeVM:compute:	--- 192.168.2.21 ping statistics ---
+2015-06-08 14:16:53,159:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:16:53,159:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.274/0.274/0.274/0.000 ms
+2015-06-08 14:16:53,296:DEBUG:root@computeVM:compute:	210 Number of sources = 3
+2015-06-08 14:16:53,297:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:16:53,297:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:16:53,297:DEBUG:root@computeVM:compute:	^+ time1.srv.ualberta.ca         1   6    17    23    +94us[ +430us] +/-  508us
+2015-06-08 14:16:53,297:DEBUG:root@computeVM:compute:	^* time2.srv.ualberta.ca         1   6    17    23    -32us[ +305us] +/-  420us
+2015-06-08 14:16:53,297:DEBUG:root@computeVM:compute:	^- time3.srv.ualberta.ca         2   6    17    22   -740us[ -740us] +/-  604us
+2015-06-08 14:16:54,063:DEBUG:root@computeVM:compute:	210 Number of sources = 4
+2015-06-08 14:16:54,063:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:16:54,063:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:16:54,063:DEBUG:root@computeVM:compute:	^- ntp1.torix.ca                 1   7   337   227   +114us[ +171us] +/-  523ms
+2015-06-08 14:16:54,063:DEBUG:root@computeVM:compute:	^- ntp2.tranzeo.com              2   7   317   222   +247us[ +305us] +/-  570ms
+2015-06-08 14:16:54,063:DEBUG:root@computeVM:compute:	^+ time.netspectrum.ca           3   8    75    29   -126us[  -30us] +/-   79ms
+2015-06-08 14:16:54,063:DEBUG:root@computeVM:compute:	^* S0106c04a00f34a5d.vc.shaw     2   7    75    29   +319us[ +415us] +/-   67ms
+2015-06-08 14:16:54,234:DEBUG:root@computeVM:compute:	210 Number of sources = 1
+2015-06-08 14:16:54,234:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:16:54,234:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:16:54,234:DEBUG:root@computeVM:compute:	^? controller                    0   6     0   10y     +0ns[   +0ns] +/-    0ns
+2015-06-08 14:16:54,372:DEBUG:root@computeVM:compute:	210 Number of sources = 1
+2015-06-08 14:16:54,372:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:16:54,372:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:16:54,372:DEBUG:root@computeVM:compute:	^? controller                    0   6     0   10y     +0ns[   +0ns] +/-    0ns
+2015-06-08 14:17:58,647:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 14:17:58,647:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:17:58,647:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 14:17:58,647:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:17:58,647:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 26.508/26.508/26.508/0.000 ms
+2015-06-08 14:17:58,817:DEBUG:root@controllerVM:controller:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 14:17:58,817:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:17:58,817:DEBUG:root@controllerVM:controller:	--- 192.168.1.21 ping statistics ---
+2015-06-08 14:17:58,817:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:17:58,817:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 0.314/0.314/0.314/0.000 ms
+2015-06-08 14:17:59,091:DEBUG:root@networkVM:network:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:17:59,091:DEBUG:root@networkVM:network:	
+2015-06-08 14:17:59,091:DEBUG:root@networkVM:network:	--- google.ca ping statistics ---
+2015-06-08 14:17:59,091:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:17:59,091:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 18.018/18.018/18.018/0.000 ms
+2015-06-08 14:17:59,265:DEBUG:root@networkVM:network:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:17:59,265:DEBUG:root@networkVM:network:	
+2015-06-08 14:17:59,265:DEBUG:root@networkVM:network:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:17:59,265:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:17:59,265:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.259/0.259/0.259/0.000 ms
+2015-06-08 14:17:59,402:DEBUG:root@networkVM:network:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 14:17:59,402:DEBUG:root@networkVM:network:	
+2015-06-08 14:17:59,402:DEBUG:root@networkVM:network:	--- 192.168.2.41 ping statistics ---
+2015-06-08 14:17:59,402:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:17:59,402:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.261/0.261/0.261/0.000 ms
+2015-06-08 14:17:59,803:DEBUG:root@computeVM:compute:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:17:59,804:DEBUG:root@computeVM:compute:	
+2015-06-08 14:17:59,804:DEBUG:root@computeVM:compute:	--- google.ca ping statistics ---
+2015-06-08 14:17:59,804:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:17:59,804:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 17.881/17.881/17.881/0.000 ms
+2015-06-08 14:17:59,973:DEBUG:root@computeVM:compute:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:17:59,973:DEBUG:root@computeVM:compute:	
+2015-06-08 14:17:59,973:DEBUG:root@computeVM:compute:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:17:59,973:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:17:59,973:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.288/0.288/0.288/0.000 ms
+2015-06-08 14:18:00,121:DEBUG:root@computeVM:compute:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 14:18:00,121:DEBUG:root@computeVM:compute:	
+2015-06-08 14:18:00,122:DEBUG:root@computeVM:compute:	--- 192.168.2.21 ping statistics ---
+2015-06-08 14:18:00,122:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:18:00,122:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.336/0.336/0.336/0.000 ms
+2015-06-08 14:18:00,260:DEBUG:root@computeVM:compute:	210 Number of sources = 3
+2015-06-08 14:18:00,261:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:18:00,261:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:18:00,261:DEBUG:root@computeVM:compute:	^* time1.srv.ualberta.ca         1   6    37    26  -3491ns[ -337us] +/-  494us
+2015-06-08 14:18:00,261:DEBUG:root@computeVM:compute:	^- time2.srv.ualberta.ca         1   6    37    25    +24us[  +24us] +/-  565us
+2015-06-08 14:18:00,261:DEBUG:root@computeVM:compute:	^- time3.srv.ualberta.ca         2   6    37    25   -760us[ -760us] +/-  602us
+2015-06-08 14:18:00,677:DEBUG:root@computeVM:compute:	210 Number of sources = 4
+2015-06-08 14:18:00,678:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:18:00,678:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:18:00,678:DEBUG:root@computeVM:compute:	^- ntp1.torix.ca                 1   7   337   294   +114us[ +171us] +/-  523ms
+2015-06-08 14:18:00,678:DEBUG:root@computeVM:compute:	^- ntp2.tranzeo.com              2   8    75    32   +300us[ +300us] +/-  574ms
+2015-06-08 14:18:00,678:DEBUG:root@computeVM:compute:	^+ time.netspectrum.ca           3   8    75    96   -126us[  -30us] +/-   79ms
+2015-06-08 14:18:00,678:DEBUG:root@computeVM:compute:	^* S0106c04a00f34a5d.vc.shaw     2   7    75    95   +319us[ +415us] +/-   67ms
+2015-06-08 14:18:00,849:DEBUG:root@computeVM:compute:	210 Number of sources = 1
+2015-06-08 14:18:00,849:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:18:00,849:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:18:00,849:DEBUG:root@computeVM:compute:	^? controller                    0   7     0   10y     +0ns[   +0ns] +/-    0ns
+2015-06-08 14:18:00,966:DEBUG:root@computeVM:compute:	210 Number of sources = 1
+2015-06-08 14:18:00,966:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:18:00,966:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:18:00,966:DEBUG:root@computeVM:compute:	^? controller                    0   7     0   10y     +0ns[   +0ns] +/-    0ns
+2015-06-08 14:18:03,582:DEBUG:::	Starting deployment
+2015-06-08 14:18:03,972:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:18:04,107:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:18:05,948:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:18:07,507:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:18:07,508:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:18:07,790:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:18:07,958:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:18:08,094:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:18:14,646:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:18:16,294:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:18:16,295:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:18:16,697:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:18:16,866:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:18:22,341:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:18:24,231:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:18:24,231:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:20:02,107:DEBUG:::	Starting deployment
+2015-06-08 14:20:02,529:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:20:02,666:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:20:04,505:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:20:06,179:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:20:06,179:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:20:06,459:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:20:06,638:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:20:06,806:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:20:13,414:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:20:15,085:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:20:15,085:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:20:15,496:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:20:15,665:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:20:21,273:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:20:23,025:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:20:23,026:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:20:57,957:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 14:20:57,957:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:20:57,958:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 14:20:57,958:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:57,958:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 26.486/26.486/26.486/0.000 ms
+2015-06-08 14:20:58,095:DEBUG:root@controllerVM:controller:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 14:20:58,095:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:20:58,095:DEBUG:root@controllerVM:controller:	--- 192.168.1.21 ping statistics ---
+2015-06-08 14:20:58,095:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:58,095:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 0.548/0.548/0.548/0.000 ms
+2015-06-08 14:20:58,361:DEBUG:root@networkVM:network:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:20:58,361:DEBUG:root@networkVM:network:	
+2015-06-08 14:20:58,361:DEBUG:root@networkVM:network:	--- google.ca ping statistics ---
+2015-06-08 14:20:58,361:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:58,362:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 17.898/17.898/17.898/0.000 ms
+2015-06-08 14:20:58,497:DEBUG:root@networkVM:network:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:20:58,498:DEBUG:root@networkVM:network:	
+2015-06-08 14:20:58,498:DEBUG:root@networkVM:network:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:20:58,498:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:58,498:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.249/0.249/0.249/0.000 ms
+2015-06-08 14:20:58,618:DEBUG:root@networkVM:network:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 14:20:58,618:DEBUG:root@networkVM:network:	
+2015-06-08 14:20:58,618:DEBUG:root@networkVM:network:	--- 192.168.2.41 ping statistics ---
+2015-06-08 14:20:58,618:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:58,618:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 1.007/1.007/1.007/0.000 ms
+2015-06-08 14:20:58,998:DEBUG:root@computeVM:compute:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:20:58,998:DEBUG:root@computeVM:compute:	
+2015-06-08 14:20:58,998:DEBUG:root@computeVM:compute:	--- google.ca ping statistics ---
+2015-06-08 14:20:58,998:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:58,998:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 18.056/18.056/18.056/0.000 ms
+2015-06-08 14:20:59,171:DEBUG:root@computeVM:compute:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:20:59,171:DEBUG:root@computeVM:compute:	
+2015-06-08 14:20:59,171:DEBUG:root@computeVM:compute:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:20:59,171:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:59,171:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.251/0.251/0.251/0.000 ms
+2015-06-08 14:20:59,308:DEBUG:root@computeVM:compute:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 14:20:59,308:DEBUG:root@computeVM:compute:	
+2015-06-08 14:20:59,309:DEBUG:root@computeVM:compute:	--- 192.168.2.21 ping statistics ---
+2015-06-08 14:20:59,309:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:20:59,309:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.365/0.365/0.365/0.000 ms
+2015-06-08 14:20:59,426:DEBUG:root@computeVM:compute:	210 Number of sources = 3
+2015-06-08 14:20:59,426:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:20:59,426:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:20:59,426:DEBUG:root@computeVM:compute:	^* time1.srv.ualberta.ca         1   6    17    47    -25us[ +470us] +/-  544us
+2015-06-08 14:20:59,426:DEBUG:root@computeVM:compute:	^- time2.srv.ualberta.ca         1   6    17    46  +5000ns[+5000ns] +/-  519us
+2015-06-08 14:20:59,427:DEBUG:root@computeVM:compute:	^- time3.srv.ualberta.ca         2   6    17    46   -733us[ -733us] +/-  670us
+2015-06-08 14:24:21,039:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 14:24:21,039:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:24:21,040:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 14:24:21,040:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:21,040:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 34.534/34.534/34.534/0.000 ms
+2015-06-08 14:24:21,177:DEBUG:root@controllerVM:controller:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 14:24:21,177:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:24:21,177:DEBUG:root@controllerVM:controller:	--- 192.168.1.21 ping statistics ---
+2015-06-08 14:24:21,177:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:21,177:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 0.298/0.298/0.298/0.000 ms
+2015-06-08 14:24:21,518:DEBUG:root@networkVM:network:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:24:21,518:DEBUG:root@networkVM:network:	
+2015-06-08 14:24:21,518:DEBUG:root@networkVM:network:	--- google.ca ping statistics ---
+2015-06-08 14:24:21,519:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:21,519:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 17.755/17.755/17.755/0.000 ms
+2015-06-08 14:24:21,639:DEBUG:root@networkVM:network:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:24:21,639:DEBUG:root@networkVM:network:	
+2015-06-08 14:24:21,639:DEBUG:root@networkVM:network:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:24:21,639:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:21,639:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.331/0.331/0.331/0.000 ms
+2015-06-08 14:24:21,761:DEBUG:root@networkVM:network:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 14:24:21,761:DEBUG:root@networkVM:network:	
+2015-06-08 14:24:21,762:DEBUG:root@networkVM:network:	--- 192.168.2.41 ping statistics ---
+2015-06-08 14:24:21,762:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:21,762:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.322/0.322/0.322/0.000 ms
+2015-06-08 14:24:22,160:DEBUG:root@computeVM:compute:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:24:22,160:DEBUG:root@computeVM:compute:	
+2015-06-08 14:24:22,160:DEBUG:root@computeVM:compute:	--- google.ca ping statistics ---
+2015-06-08 14:24:22,160:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:22,160:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 18.279/18.279/18.279/0.000 ms
+2015-06-08 14:24:22,334:DEBUG:root@computeVM:compute:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:24:22,334:DEBUG:root@computeVM:compute:	
+2015-06-08 14:24:22,334:DEBUG:root@computeVM:compute:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:24:22,334:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:22,334:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.638/0.638/0.638/0.000 ms
+2015-06-08 14:24:22,471:DEBUG:root@computeVM:compute:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 14:24:22,471:DEBUG:root@computeVM:compute:	
+2015-06-08 14:24:22,471:DEBUG:root@computeVM:compute:	--- 192.168.2.21 ping statistics ---
+2015-06-08 14:24:22,471:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:24:22,471:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.581/0.581/0.581/0.000 ms
+2015-06-08 14:24:22,642:DEBUG:root@computeVM:compute:	210 Number of sources = 3
+2015-06-08 14:24:22,642:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:24:22,642:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:24:22,642:DEBUG:root@computeVM:compute:	^* time1.srv.ualberta.ca         1   6   177    56   +226us[  +60us] +/-  507us
+2015-06-08 14:24:22,642:DEBUG:root@computeVM:compute:	^+ time2.srv.ualberta.ca         1   6   177    55   +247us[ +247us] +/-  486us
+2015-06-08 14:24:22,642:DEBUG:root@computeVM:compute:	^+ time3.srv.ualberta.ca         2   6   177    55   -646us[ -646us] +/-  588us
+2015-06-08 14:29:33,322:DEBUG:::	Starting deployment
+2015-06-08 14:29:33,703:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:29:33,855:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:29:35,689:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:29:37,272:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:29:37,273:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:29:37,524:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:29:37,660:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:29:37,796:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:29:44,471:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:29:46,180:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:29:46,180:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:29:46,572:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:29:46,724:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:29:52,232:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:29:53,930:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:29:53,930:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:31:57,364:DEBUG:::	Starting deployment
+2015-06-08 14:31:57,783:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:31:57,920:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:31:59,722:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:32:01,290:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:32:01,290:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:32:01,575:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:32:01,743:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:32:01,879:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:32:08,487:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:32:10,217:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:32:10,217:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:32:10,633:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:32:10,802:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:32:16,374:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:32:18,129:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:32:18,129:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:32:22,235:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 14:32:22,235:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:32:22,235:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 14:32:22,235:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:22,235:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 25.550/25.550/25.550/0.000 ms
+2015-06-08 14:32:22,374:DEBUG:root@controllerVM:controller:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 14:32:22,374:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:32:22,374:DEBUG:root@controllerVM:controller:	--- 192.168.1.21 ping statistics ---
+2015-06-08 14:32:22,374:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:22,374:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 0.327/0.327/0.327/0.000 ms
+2015-06-08 14:32:22,744:DEBUG:root@networkVM:network:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:32:22,744:DEBUG:root@networkVM:network:	
+2015-06-08 14:32:22,744:DEBUG:root@networkVM:network:	--- google.ca ping statistics ---
+2015-06-08 14:32:22,744:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:22,744:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 17.980/17.980/17.980/0.000 ms
+2015-06-08 14:32:22,852:DEBUG:root@networkVM:network:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:32:22,853:DEBUG:root@networkVM:network:	
+2015-06-08 14:32:22,853:DEBUG:root@networkVM:network:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:32:22,853:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:22,853:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.373/0.373/0.373/0.000 ms
+2015-06-08 14:32:22,990:DEBUG:root@networkVM:network:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 14:32:22,990:DEBUG:root@networkVM:network:	
+2015-06-08 14:32:22,990:DEBUG:root@networkVM:network:	--- 192.168.2.41 ping statistics ---
+2015-06-08 14:32:22,990:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:22,990:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.484/0.484/0.484/0.000 ms
+2015-06-08 14:32:23,389:DEBUG:root@computeVM:compute:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:32:23,389:DEBUG:root@computeVM:compute:	
+2015-06-08 14:32:23,389:DEBUG:root@computeVM:compute:	--- google.ca ping statistics ---
+2015-06-08 14:32:23,389:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:23,390:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 17.988/17.988/17.988/0.000 ms
+2015-06-08 14:32:23,559:DEBUG:root@computeVM:compute:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:32:23,559:DEBUG:root@computeVM:compute:	
+2015-06-08 14:32:23,559:DEBUG:root@computeVM:compute:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:32:23,559:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:23,559:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.279/0.279/0.279/0.000 ms
+2015-06-08 14:32:23,696:DEBUG:root@computeVM:compute:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 14:32:23,696:DEBUG:root@computeVM:compute:	
+2015-06-08 14:32:23,696:DEBUG:root@computeVM:compute:	--- 192.168.2.21 ping statistics ---
+2015-06-08 14:32:23,696:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:32:23,696:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.390/0.390/0.390/0.000 ms
+2015-06-08 14:32:23,818:DEBUG:root@computeVM:compute:	210 Number of sources = 3
+2015-06-08 14:32:23,819:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:32:23,819:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:32:23,819:DEBUG:root@computeVM:compute:	^* time1.srv.ualberta.ca         1   6    17    16   +101us[ +583us] +/-  581us
+2015-06-08 14:32:23,819:DEBUG:root@computeVM:compute:	^- time2.srv.ualberta.ca         1   6    17    16    +55us[  +55us] +/-  499us
+2015-06-08 14:32:23,819:DEBUG:root@computeVM:compute:	^- time3.srv.ualberta.ca         2   6    17    15   -744us[ -744us] +/-  616us
+2015-06-08 14:41:04,598:DEBUG:::	Starting deployment
+2015-06-08 14:41:04,952:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:41:05,083:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:41:06,818:ERROR:root@controllerVM:controller:	Problem on command 'service network restart'
+2015-06-08 14:41:08,340:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:41:08,340:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:41:08,649:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:41:08,807:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:41:08,990:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:41:15,330:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:41:17,029:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:41:17,029:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:41:17,311:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:41:17,479:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:41:22,552:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:41:24,182:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:41:24,182:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:41:26,596:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 14:41:26,596:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:41:26,596:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 14:41:26,596:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:26,596:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 25.218/25.218/25.218/0.000 ms
+2015-06-08 14:41:26,733:DEBUG:root@controllerVM:controller:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 14:41:26,733:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:41:26,733:DEBUG:root@controllerVM:controller:	--- 192.168.1.21 ping statistics ---
+2015-06-08 14:41:26,733:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:26,733:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 0.292/0.292/0.292/0.000 ms
+2015-06-08 14:41:27,042:DEBUG:root@networkVM:network:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:41:27,042:DEBUG:root@networkVM:network:	
+2015-06-08 14:41:27,042:DEBUG:root@networkVM:network:	--- google.ca ping statistics ---
+2015-06-08 14:41:27,042:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:27,042:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 17.967/17.967/17.967/0.000 ms
+2015-06-08 14:41:27,179:DEBUG:root@networkVM:network:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:41:27,179:DEBUG:root@networkVM:network:	
+2015-06-08 14:41:27,179:DEBUG:root@networkVM:network:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:41:27,179:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:27,179:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.265/0.265/0.265/0.000 ms
+2015-06-08 14:41:27,316:DEBUG:root@networkVM:network:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 14:41:27,316:DEBUG:root@networkVM:network:	
+2015-06-08 14:41:27,316:DEBUG:root@networkVM:network:	--- 192.168.2.41 ping statistics ---
+2015-06-08 14:41:27,316:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:27,316:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.829/0.829/0.829/0.000 ms
+2015-06-08 14:41:27,608:DEBUG:root@computeVM:compute:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:41:27,608:DEBUG:root@computeVM:compute:	
+2015-06-08 14:41:27,608:DEBUG:root@computeVM:compute:	--- google.ca ping statistics ---
+2015-06-08 14:41:27,608:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:27,608:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 17.888/17.888/17.888/0.000 ms
+2015-06-08 14:41:27,778:DEBUG:root@computeVM:compute:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:41:27,778:DEBUG:root@computeVM:compute:	
+2015-06-08 14:41:27,778:DEBUG:root@computeVM:compute:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:41:27,778:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:27,778:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.259/0.259/0.259/0.000 ms
+2015-06-08 14:41:27,914:DEBUG:root@computeVM:compute:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 14:41:27,915:DEBUG:root@computeVM:compute:	
+2015-06-08 14:41:27,915:DEBUG:root@computeVM:compute:	--- 192.168.2.21 ping statistics ---
+2015-06-08 14:41:27,915:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:41:27,915:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.253/0.253/0.253/0.000 ms
+2015-06-08 14:41:28,052:DEBUG:root@computeVM:compute:	210 Number of sources = 3
+2015-06-08 14:41:28,053:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:41:28,053:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:41:28,053:DEBUG:root@computeVM:compute:	^+ time1.srv.ualberta.ca         1   6    17    13    +58us[ +643us] +/-  703us
+2015-06-08 14:41:28,053:DEBUG:root@computeVM:compute:	^* time2.srv.ualberta.ca         1   6    17    13    +98us[ +683us] +/-  783us
+2015-06-08 14:41:28,053:DEBUG:root@computeVM:compute:	^- time3.srv.ualberta.ca         2   6    17    13   -892us[ -892us] +/-  967us
+2015-06-08 14:59:27,349:DEBUG:::	Starting deployment
+2015-06-08 14:59:27,758:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:59:27,905:DEBUG:root@controllerVM:controller:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:59:32,943:DEBUG:root@controllerVM:controller:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:59:34,665:DEBUG:root@controllerVM:controller:	enabled
+2015-06-08 14:59:34,665:DEBUG:root@controllerVM:controller:	Deployment done on host
+2015-06-08 14:59:34,951:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:59:35,131:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:59:35,320:DEBUG:root@networkVM:network:	Set up virtual NIC with conf file ifcfg-eth3
+2015-06-08 14:59:41,632:DEBUG:root@networkVM:network:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:59:43,252:DEBUG:root@networkVM:network:	enabled
+2015-06-08 14:59:43,253:DEBUG:root@networkVM:network:	Deployment done on host
+2015-06-08 14:59:43,535:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth1
+2015-06-08 14:59:43,703:DEBUG:root@computeVM:compute:	Set up virtual NIC with conf file ifcfg-eth2
+2015-06-08 14:59:48,776:DEBUG:root@computeVM:compute:	Restarting network (via systemctl):  [60G[[0;32m  OK  [0;39m]
+2015-06-08 14:59:50,567:DEBUG:root@computeVM:compute:	enabled
+2015-06-08 14:59:50,567:DEBUG:root@computeVM:compute:	Deployment done on host
+2015-06-08 14:59:54,002:DEBUG:root@controllerVM:controller:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 14:59:54,002:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:59:54,003:DEBUG:root@controllerVM:controller:	--- www.google.ca ping statistics ---
+2015-06-08 14:59:54,003:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:54,003:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 25.344/25.344/25.344/0.000 ms
+2015-06-08 14:59:54,140:DEBUG:root@controllerVM:controller:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 14:59:54,140:DEBUG:root@controllerVM:controller:	
+2015-06-08 14:59:54,140:DEBUG:root@controllerVM:controller:	--- 192.168.1.21 ping statistics ---
+2015-06-08 14:59:54,140:DEBUG:root@controllerVM:controller:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:54,140:DEBUG:root@controllerVM:controller:	rtt min/avg/max/mdev = 0.275/0.275/0.275/0.000 ms
+2015-06-08 14:59:54,433:DEBUG:root@networkVM:network:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:59:54,434:DEBUG:root@networkVM:network:	
+2015-06-08 14:59:54,434:DEBUG:root@networkVM:network:	--- google.ca ping statistics ---
+2015-06-08 14:59:54,434:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:54,434:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 18.103/18.103/18.103/0.000 ms
+2015-06-08 14:59:54,571:DEBUG:root@networkVM:network:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:59:54,571:DEBUG:root@networkVM:network:	
+2015-06-08 14:59:54,571:DEBUG:root@networkVM:network:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:59:54,571:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:54,571:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.637/0.637/0.637/0.000 ms
+2015-06-08 14:59:54,692:DEBUG:root@networkVM:network:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 14:59:54,692:DEBUG:root@networkVM:network:	
+2015-06-08 14:59:54,692:DEBUG:root@networkVM:network:	--- 192.168.2.41 ping statistics ---
+2015-06-08 14:59:54,692:DEBUG:root@networkVM:network:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:54,692:DEBUG:root@networkVM:network:	rtt min/avg/max/mdev = 0.617/0.617/0.617/0.000 ms
+2015-06-08 14:59:54,972:DEBUG:root@computeVM:compute:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 14:59:54,972:DEBUG:root@computeVM:compute:	
+2015-06-08 14:59:54,972:DEBUG:root@computeVM:compute:	--- google.ca ping statistics ---
+2015-06-08 14:59:54,972:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:54,972:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 17.985/17.985/17.985/0.000 ms
+2015-06-08 14:59:55,141:DEBUG:root@computeVM:compute:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 14:59:55,141:DEBUG:root@computeVM:compute:	
+2015-06-08 14:59:55,141:DEBUG:root@computeVM:compute:	--- 192.168.1.11 ping statistics ---
+2015-06-08 14:59:55,141:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:55,141:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.268/0.268/0.268/0.000 ms
+2015-06-08 14:59:55,278:DEBUG:root@computeVM:compute:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 14:59:55,278:DEBUG:root@computeVM:compute:	
+2015-06-08 14:59:55,278:DEBUG:root@computeVM:compute:	--- 192.168.2.21 ping statistics ---
+2015-06-08 14:59:55,278:DEBUG:root@computeVM:compute:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 14:59:55,278:DEBUG:root@computeVM:compute:	rtt min/avg/max/mdev = 0.623/0.623/0.623/0.000 ms
+2015-06-08 14:59:55,417:DEBUG:root@computeVM:compute:	210 Number of sources = 3
+2015-06-08 14:59:55,418:DEBUG:root@computeVM:compute:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 14:59:55,418:DEBUG:root@computeVM:compute:	===============================================================================
+2015-06-08 14:59:55,418:DEBUG:root@computeVM:compute:	^+ time1.srv.ualberta.ca         1   6    17    14  -4775us[-4500us] +/-   17ms
+2015-06-08 14:59:55,418:DEBUG:root@computeVM:compute:	^* time2.srv.ualberta.ca         1   6    17    14  -1267us[ -998us] +/-   17ms
+2015-06-08 14:59:55,418:DEBUG:root@computeVM:compute:	^- time3.srv.ualberta.ca         2   6    17    14    -11ms[  -11ms] +/-   17ms
+2015-06-08 15:00:17,484:DEBUG:controllerVM:	PING www.google.ca (74.125.129.94) 56(84) bytes of data.
+2015-06-08 15:00:17,484:DEBUG:controllerVM:	
+2015-06-08 15:00:17,484:DEBUG:controllerVM:	--- www.google.ca ping statistics ---
+2015-06-08 15:00:17,484:DEBUG:controllerVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:17,484:DEBUG:controllerVM:	rtt min/avg/max/mdev = 25.084/25.084/25.084/0.000 ms
+2015-06-08 15:00:17,653:DEBUG:controllerVM:	PING 192.168.1.21 (192.168.1.21) 56(84) bytes of data.
+2015-06-08 15:00:17,653:DEBUG:controllerVM:	
+2015-06-08 15:00:17,653:DEBUG:controllerVM:	--- 192.168.1.21 ping statistics ---
+2015-06-08 15:00:17,653:DEBUG:controllerVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:17,653:DEBUG:controllerVM:	rtt min/avg/max/mdev = 0.293/0.293/0.293/0.000 ms
+2015-06-08 15:00:17,948:DEBUG:networkVM:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 15:00:17,948:DEBUG:networkVM:	
+2015-06-08 15:00:17,948:DEBUG:networkVM:	--- google.ca ping statistics ---
+2015-06-08 15:00:17,948:DEBUG:networkVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:17,948:DEBUG:networkVM:	rtt min/avg/max/mdev = 17.841/17.841/17.841/0.000 ms
+2015-06-08 15:00:18,117:DEBUG:networkVM:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 15:00:18,117:DEBUG:networkVM:	
+2015-06-08 15:00:18,117:DEBUG:networkVM:	--- 192.168.1.11 ping statistics ---
+2015-06-08 15:00:18,117:DEBUG:networkVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:18,117:DEBUG:networkVM:	rtt min/avg/max/mdev = 0.241/0.241/0.241/0.000 ms
+2015-06-08 15:00:18,253:DEBUG:networkVM:	PING 192.168.2.41 (192.168.2.41) 56(84) bytes of data.
+2015-06-08 15:00:18,254:DEBUG:networkVM:	
+2015-06-08 15:00:18,254:DEBUG:networkVM:	--- 192.168.2.41 ping statistics ---
+2015-06-08 15:00:18,254:DEBUG:networkVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:18,254:DEBUG:networkVM:	rtt min/avg/max/mdev = 0.264/0.264/0.264/0.000 ms
+2015-06-08 15:00:18,557:DEBUG:computeVM:	PING google.ca (216.58.216.131) 56(84) bytes of data.
+2015-06-08 15:00:18,557:DEBUG:computeVM:	
+2015-06-08 15:00:18,558:DEBUG:computeVM:	--- google.ca ping statistics ---
+2015-06-08 15:00:18,558:DEBUG:computeVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:18,558:DEBUG:computeVM:	rtt min/avg/max/mdev = 22.174/22.174/22.174/0.000 ms
+2015-06-08 15:00:18,728:DEBUG:computeVM:	PING 192.168.1.11 (192.168.1.11) 56(84) bytes of data.
+2015-06-08 15:00:18,728:DEBUG:computeVM:	
+2015-06-08 15:00:18,728:DEBUG:computeVM:	--- 192.168.1.11 ping statistics ---
+2015-06-08 15:00:18,728:DEBUG:computeVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:18,728:DEBUG:computeVM:	rtt min/avg/max/mdev = 0.286/0.286/0.286/0.000 ms
+2015-06-08 15:00:18,897:DEBUG:computeVM:	PING 192.168.2.21 (192.168.2.21) 56(84) bytes of data.
+2015-06-08 15:00:18,897:DEBUG:computeVM:	
+2015-06-08 15:00:18,898:DEBUG:computeVM:	--- 192.168.2.21 ping statistics ---
+2015-06-08 15:00:18,898:DEBUG:computeVM:	1 packets transmitted, 1 received, 0% packet loss, time 0ms
+2015-06-08 15:00:18,898:DEBUG:computeVM:	rtt min/avg/max/mdev = 0.285/0.285/0.285/0.000 ms
+2015-06-08 15:00:19,036:DEBUG:controllerVM:	210 Number of sources = 3
+2015-06-08 15:00:19,036:DEBUG:controllerVM:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 15:00:19,037:DEBUG:controllerVM:	===============================================================================
+2015-06-08 15:00:19,037:DEBUG:controllerVM:	^+ time1.srv.ualberta.ca         1   6    17    38  -4775us[-4500us] +/-   17ms
+2015-06-08 15:00:19,037:DEBUG:controllerVM:	^* time2.srv.ualberta.ca         1   6    17    38  -1267us[ -998us] +/-   17ms
+2015-06-08 15:00:19,037:DEBUG:controllerVM:	^- time3.srv.ualberta.ca         2   6    17    37    -11ms[  -11ms] +/-   17ms
+2015-06-08 15:00:19,519:DEBUG:storageVM:	210 Number of sources = 4
+2015-06-08 15:00:19,519:DEBUG:storageVM:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 15:00:19,519:DEBUG:storageVM:	===============================================================================
+2015-06-08 15:00:19,519:DEBUG:storageVM:	^+ ns1.ptpbroadband.com          3   8   377   148  +1391us[+1785us] +/-   71ms
+2015-06-08 15:00:19,519:DEBUG:storageVM:	^* bitdonut.co                   2   8   377    19   +535us[ +681us] +/-   79ms
+2015-06-08 15:00:19,519:DEBUG:storageVM:	^- ntp4.tranzeo.com              2   7   277   213  +5393us[+5756us] +/-  559ms
+2015-06-08 15:00:19,520:DEBUG:storageVM:	^- ntp2.tranzeo.com              2   6   377    18  +5015us[+5015us] +/-  551ms
+2015-06-08 15:00:19,659:DEBUG:computeVM:	210 Number of sources = 1
+2015-06-08 15:00:19,659:DEBUG:computeVM:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 15:00:19,659:DEBUG:computeVM:	===============================================================================
+2015-06-08 15:00:19,659:DEBUG:computeVM:	^? controller                    0   6     0   10y     +0ns[   +0ns] +/-    0ns
+2015-06-08 15:00:19,780:DEBUG:networkVM:	210 Number of sources = 1
+2015-06-08 15:00:19,781:DEBUG:networkVM:	MS Name/IP address         Stratum Poll Reach LastRx Last sample
+2015-06-08 15:00:19,781:DEBUG:networkVM:	===============================================================================
+2015-06-08 15:00:19,781:DEBUG:networkVM:	^? controller                    0   7     0   10y     +0ns[   +0ns] +/-    0ns

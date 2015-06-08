@@ -1,0 +1,751 @@
+2015-06-08 16:29:40,465:DEBUG::	Deploying
+2015-06-08 16:33:13,217:DEBUG::	Deploying
+2015-06-08 16:33:49,809:DEBUG:controllerVM:	Loaded plugins: fastestmirror, priorities
+2015-06-08 16:33:49,809:DEBUG:controllerVM:	
+2015-06-08 16:33:49,809:DEBUG:controllerVM:	base                                                     | 3.6 kB     00:00     
+2015-06-08 16:33:49,809:DEBUG:controllerVM:	
+2015-06-08 16:33:49,809:DEBUG:controllerVM:	extras                                                   | 3.4 kB     00:00     
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	rhscl-python27-epel-7-x86_64                             | 3.0 kB     00:00     
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	updates                                                  | 3.4 kB     00:00     
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	Loading mirror speeds from cached hostfile
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	 * base: mirror.csclub.uwaterloo.ca
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	 * epel: ftp.osuosl.org
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	 * extras: centos.les.net
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	 * updates: centos.les.net
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	Resolving Dependencies
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	--> Running transaction check
+2015-06-08 16:33:49,810:DEBUG:controllerVM:	---> Package rabbitmq-server.noarch 0:3.3.5-4.el7 will be installed
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-xmerl >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-tools >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-stdlib >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-ssl >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-sasl >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-public_key >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-os_mon >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-mnesia >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-kernel >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-erts >= R12B-3 for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,811:DEBUG:controllerVM:	--> Processing Dependency: erlang-sd_notify for package: rabbitmq-server-3.3.5-4.el7.noarch
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	--> Running transaction check
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	---> Package erlang-erts.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	--> Processing Dependency: lksctp-tools for package: erlang-erts-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	---> Package erlang-kernel.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	---> Package erlang-mnesia.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	---> Package erlang-os_mon.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	--> Processing Dependency: erlang-snmp(x86-64) = R16B-03.10.el7 for package: erlang-os_mon-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	--> Processing Dependency: erlang-otp_mibs(x86-64) = R16B-03.10.el7 for package: erlang-os_mon-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	---> Package erlang-public_key.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	--> Processing Dependency: erlang-crypto(x86-64) = R16B-03.10.el7 for package: erlang-public_key-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	--> Processing Dependency: erlang-asn1(x86-64) = R16B-03.10.el7 for package: erlang-public_key-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,812:DEBUG:controllerVM:	---> Package erlang-sasl.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	---> Package erlang-sd_notify.x86_64 0:0.1-1.el7 will be installed
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	---> Package erlang-ssl.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	---> Package erlang-stdlib.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	--> Processing Dependency: erlang-compiler(x86-64) = R16B-03.10.el7 for package: erlang-stdlib-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	---> Package erlang-tools.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	--> Processing Dependency: erlang-runtime_tools(x86-64) = R16B-03.10.el7 for package: erlang-tools-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	--> Processing Dependency: erlang-inets(x86-64) = R16B-03.10.el7 for package: erlang-tools-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	---> Package erlang-xmerl.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	--> Running transaction check
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	---> Package erlang-asn1.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,813:DEBUG:controllerVM:	---> Package erlang-compiler.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	--> Processing Dependency: erlang-hipe(x86-64) = R16B-03.10.el7 for package: erlang-compiler-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package erlang-crypto.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package erlang-inets.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package erlang-otp_mibs.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package erlang-runtime_tools.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package erlang-snmp.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package lksctp-tools.x86_64 0:1.0.13-3.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	--> Running transaction check
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package erlang-hipe.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	--> Processing Dependency: erlang-syntax_tools(x86-64) = R16B-03.10.el7 for package: erlang-hipe-R16B-03.10.el7.x86_64
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	--> Running transaction check
+2015-06-08 16:33:49,814:DEBUG:controllerVM:	---> Package erlang-syntax_tools.x86_64 0:R16B-03.10.el7 will be installed
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	--> Finished Dependency Resolution
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	Dependencies Resolved
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	================================================================================
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	 Package                    Arch         Version               Repository  Size
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	================================================================================
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	Installing:
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	 rabbitmq-server            noarch       3.3.5-4.el7           epel       4.0 M
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	Installing for dependencies:
+2015-06-08 16:33:49,815:DEBUG:controllerVM:	 erlang-asn1                x86_64       R16B-03.10.el7        epel       757 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-compiler            x86_64       R16B-03.10.el7        epel       1.0 M
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-crypto              x86_64       R16B-03.10.el7        epel        85 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-erts                x86_64       R16B-03.10.el7        epel       2.5 M
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-hipe                x86_64       R16B-03.10.el7        epel       2.4 M
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-inets               x86_64       R16B-03.10.el7        epel       799 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-kernel              x86_64       R16B-03.10.el7        epel       1.1 M
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-mnesia              x86_64       R16B-03.10.el7        epel       699 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-os_mon              x86_64       R16B-03.10.el7        epel       114 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-otp_mibs            x86_64       R16B-03.10.el7        epel        31 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-public_key          x86_64       R16B-03.10.el7        epel       537 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-runtime_tools       x86_64       R16B-03.10.el7        epel       178 k
+2015-06-08 16:33:49,816:DEBUG:controllerVM:	 erlang-sasl                x86_64       R16B-03.10.el7        epel       292 k
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 erlang-sd_notify           x86_64       0.1-1.el7             epel       9.1 k
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 erlang-snmp                x86_64       R16B-03.10.el7        epel       1.5 M
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 erlang-ssl                 x86_64       R16B-03.10.el7        epel       585 k
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 erlang-stdlib              x86_64       R16B-03.10.el7        epel       2.2 M
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 erlang-syntax_tools        x86_64       R16B-03.10.el7        epel       335 k
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 erlang-tools               x86_64       R16B-03.10.el7        epel       564 k
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 erlang-xmerl               x86_64       R16B-03.10.el7        epel       997 k
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	 lksctp-tools               x86_64       1.0.13-3.el7          base        87 k
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	Transaction Summary
+2015-06-08 16:33:49,817:DEBUG:controllerVM:	================================================================================
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	Install  1 Package (+21 Dependent packages)
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	Total download size: 21 M
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	Installed size: 36 M
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	Downloading packages:
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	(2/22): erlang-compiler-R1 0% [                 ]  0.0 B/s |    0 B   --:-- ETA 
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	(1/22): erlang-asn1-R16B-03.10.el7.x86_64.rpm              | 757 kB   00:00     
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	(2/22): erlang-compiler-R16B-03.10.el7.x86_64.rpm          | 1.0 MB   00:00     
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	
+2015-06-08 16:33:49,818:DEBUG:controllerVM:	(4/22): erlang-erts-R16B-0 12% [=-              ]  0.0 B/s | 2.5 MB   --:-- ETA 
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	(3/22): erlang-inets-R16B-03.10.el7.x86_64.rpm             | 799 kB   00:00     
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	(4/22): erlang-kernel-R16B-03.10.el7.x86_64.rpm            | 1.1 MB   00:00     
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	(6/22): erlang-erts-R16B-0 28% [====-           ] 4.5 MB/s | 5.9 MB   00:03 ETA 
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	(5/22): erlang-mnesia-R16B-03.10.el7.x86_64.rpm            | 699 kB   00:00     
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	(6/22): erlang-os_mon-R16B-03.10.el7.x86_64.rpm            | 114 kB   00:00     
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	(7/22): erlang-erts-R16B-03.10.el7.x86_64.rpm              | 2.5 MB   00:01     
+2015-06-08 16:33:49,819:DEBUG:controllerVM:	
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	(8/22): erlang-otp_mibs-R16B-03.10.el7.x86_64.rpm          |  31 kB   00:00     
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	(9/22): erlang-runtime_tools-R16B-03.10.el7.x86_64.rpm     | 178 kB   00:00     
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	(10/22): erlang-crypto-R16B-03.10.el7.x86_64.rpm           |  85 kB   00:01     
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	(11/22): erlang-public_key-R16B-03.10.el7.x86_64.rpm       | 537 kB   00:00     
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	(12/22): erlang-sd_notify-0.1-1.el7.x86_64.rpm             | 9.1 kB   00:00     
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	(13/22): erlang-sasl-R16B-03.10.el7.x86_64.rpm             | 292 kB   00:00     
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	
+2015-06-08 16:33:49,820:DEBUG:controllerVM:	(16/22): erlang-ssl-R16B-0 40% [======          ] 4.7 MB/s | 8.3 MB   00:02 ETA 
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	(14/22): erlang-ssl-R16B-03.10.el7.x86_64.rpm              | 585 kB   00:00     
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	(15/22): erlang-snmp-R16B-03.10.el7.x86_64.rpm             | 1.5 MB   00:00     
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	(18/22): erlang-syntax_too 51% [========        ] 4.9 MB/s |  11 MB   00:02 ETA 
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	(16/22): erlang-syntax_tools-R16B-03.10.el7.x86_64.rpm     | 335 kB   00:00     
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	(17/22): erlang-stdlib-R16B-03.10.el7.x86_64.rpm           | 2.2 MB   00:00     
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	(20/22): erlang-xmerl-R16B 64% [==========      ] 5.1 MB/s |  13 MB   00:01 ETA 
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	
+2015-06-08 16:33:49,821:DEBUG:controllerVM:	(18/22): erlang-tools-R16B-03.10.el7.x86_64.rpm            | 564 kB   00:00     
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	(19/22): erlang-xmerl-R16B-03.10.el7.x86_64.rpm            | 997 kB   00:00     
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	(20/22): erlang-hipe-R16B- 71% [===========-    ] 5.0 MB/s |  15 MB   00:01 ETA 
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	(20/22): lksctp-tools-1.0.13-3.el7.x86_64.rpm              |  87 kB   00:00     
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	(21/22): rabbitmq-server-3.3.5-4.el7.noarch.rpm            | 4.0 MB   00:00     
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	(22/22): erlang-hipe-R16B- 95% [=============== ] 5.4 MB/s |  20 MB   00:00 ETA 
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	(22/22): erlang-hipe-R16B- 97% [===============-] 5.1 MB/s |  20 MB   00:00 ETA 
+2015-06-08 16:33:49,822:DEBUG:controllerVM:	
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	(22/22): erlang-hipe-R16B- 99% [===============-] 4.9 MB/s |  21 MB   00:00 ETA 
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	(22/22): erlang-hipe-R16B-03.10.el7.x86_64.rpm             | 2.4 MB   00:03     
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	--------------------------------------------------------------------------------
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	Total                                              5.0 MB/s |  21 MB  00:04     
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	Running transaction check
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	Running transaction test
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	Transaction test succeeded
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	Running transaction
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [                            ]  1/22
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [######                      ]  1/22
+2015-06-08 16:33:49,823:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [########                    ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [############                ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [#############               ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [##############              ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [###############             ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [#################           ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [####################        ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [##########################  ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x [########################### ]  1/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : lksctp-tools-1.0.13-3.el7.x86_64                            1/22 
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [                            ]  2/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [#                           ]  2/22
+2015-06-08 16:33:49,824:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [###                         ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [#######                     ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [########                    ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [##########                  ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [##############              ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [#################           ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [###################         ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [####################        ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [#######################     ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [########################    ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [#########################   ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [##########################  ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03 [########################### ]  2/22
+2015-06-08 16:33:49,825:DEBUG:controllerVM:	  Installing : erlang-syntax_tools-R16B-03.10.el7.x86_64                   2/22 
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [                            ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#                           ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [##                          ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [###                         ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [####                        ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#####                       ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [######                      ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#######                     ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [########                    ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#########                   ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [##########                  ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [###########                 ]  3/22
+2015-06-08 16:33:49,826:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [############                ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#############               ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [##############              ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [###############             ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [################            ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#################           ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [##################          ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [###################         ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [####################        ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#####################       ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [######################      ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#######################     ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [########################    ]  3/22
+2015-06-08 16:33:49,827:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [#########################   ]  3/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [##########################  ]  3/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7. [########################### ]  3/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-erts-R16B-03.10.el7.x86_64                           3/22 
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [                            ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#                           ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [##                          ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [###                         ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [####                        ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#####                       ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [######                      ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#######                     ]  4/22
+2015-06-08 16:33:49,828:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [########                    ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#########                   ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [##########                  ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [###########                 ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [############                ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#############               ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [##############              ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [###############             ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [################            ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#################           ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [##################          ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [###################         ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [####################        ]  4/22
+2015-06-08 16:33:49,829:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#####################       ]  4/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [######################      ]  4/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#######################     ]  4/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [########################    ]  4/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [#########################   ]  4/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [##########################  ]  4/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el [########################### ]  4/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-kernel-R16B-03.10.el7.x86_64                         4/22 
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [                            ]  5/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#                           ]  5/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [##                          ]  5/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [###                         ]  5/22
+2015-06-08 16:33:49,830:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [####                        ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#####                       ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [######                      ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#######                     ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [########                    ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#########                   ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [##########                  ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [###########                 ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [############                ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#############               ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [##############              ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [###############             ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [################            ]  5/22
+2015-06-08 16:33:49,831:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#################           ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [##################          ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [###################         ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [####################        ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#####################       ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [######################      ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#######################     ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [########################    ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [#########################   ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [##########################  ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7. [########################### ]  5/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-hipe-R16B-03.10.el7.x86_64                           5/22 
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [                            ]  6/22
+2015-06-08 16:33:49,832:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#                           ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [##                          ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [###                         ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [####                        ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#####                       ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [######                      ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#######                     ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [########                    ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#########                   ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [##########                  ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [###########                 ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [############                ]  6/22
+2015-06-08 16:33:49,833:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#############               ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [##############              ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [###############             ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [################            ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#################           ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [###################         ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [####################        ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#####################       ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [######################      ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#######################     ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [########################    ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [#########################   ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [##########################  ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10. [########################### ]  6/22
+2015-06-08 16:33:49,834:DEBUG:controllerVM:	  Installing : erlang-compiler-R16B-03.10.el7.x86_64                       6/22 
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-crypto-R16B-03.10.el [                            ]  7/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-crypto-R16B-03.10.el [##########                  ]  7/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-crypto-R16B-03.10.el [###########                 ]  7/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-crypto-R16B-03.10.el [######################      ]  7/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-crypto-R16B-03.10.el [########################    ]  7/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-crypto-R16B-03.10.el [########################### ]  7/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-crypto-R16B-03.10.el7.x86_64                         7/22 
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [                            ]  8/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#                           ]  8/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [##                          ]  8/22
+2015-06-08 16:33:49,835:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [###                         ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [####                        ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#####                       ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [######                      ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#######                     ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [########                    ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#########                   ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [##########                  ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [###########                 ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [############                ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#############               ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [##############              ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [###############             ]  8/22
+2015-06-08 16:33:49,836:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [################            ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#################           ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [##################          ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [###################         ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [####################        ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#####################       ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [######################      ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#######################     ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [########################    ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [#########################   ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [##########################  ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el [########################### ]  8/22
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	  Installing : erlang-stdlib-R16B-03.10.el7.x86_64                         8/22 
+2015-06-08 16:33:49,837:DEBUG:controllerVM:	
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [                            ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [#                           ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [##                          ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [####                        ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [#####                       ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [#######                     ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [########                    ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [##########                  ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [###########                 ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [############                ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [#############               ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [##############              ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [###############             ]  9/22
+2015-06-08 16:33:49,838:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [################            ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [#################           ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [###################         ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [#####################       ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [######################      ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [########################    ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [##########################  ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el [########################### ]  9/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-mnesia-R16B-03.10.el7.x86_64                         9/22 
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [                            ] 10/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [##                          ] 10/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [########                    ] 10/22
+2015-06-08 16:33:49,839:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [#########                   ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [############                ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [###############             ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [################            ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [##################          ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [###################         ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [####################        ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [######################      ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [##########################  ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-0 [########################### ] 10/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-runtime_tools-R16B-03.10.el7.x86_64                 10/22 
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [                            ] 11/22
+2015-06-08 16:33:49,840:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#                           ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [##                          ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [###                         ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [####                        ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#####                       ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [######                      ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#######                     ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [########                    ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#########                   ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [##########                  ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [###########                 ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [############                ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#############               ] 11/22
+2015-06-08 16:33:49,841:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [##############              ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [###############             ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [################            ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#################           ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [##################          ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [###################         ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [####################        ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#####################       ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [######################      ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#######################     ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [########################    ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [#########################   ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [##########################  ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7. [########################### ] 11/22
+2015-06-08 16:33:49,842:DEBUG:controllerVM:	  Installing : erlang-snmp-R16B-03.10.el7.x86_64                          11/22 
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [                            ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [###                         ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [####                        ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [######                      ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [#######                     ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [##########                  ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [############                ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [##############              ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [##################          ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [####################        ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [######################      ] 12/22
+2015-06-08 16:33:49,843:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [#########################   ] 12/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [##########################  ] 12/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10. [########################### ] 12/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-otp_mibs-R16B-03.10.el7.x86_64                      12/22 
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-sd_notify-0.1-1.el7. [                            ] 13/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-sd_notify-0.1-1.el7. [#                           ] 13/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-sd_notify-0.1-1.el7. [######                      ] 13/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-sd_notify-0.1-1.el7. [########################    ] 13/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-sd_notify-0.1-1.el7. [########################### ] 13/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-sd_notify-0.1-1.el7.x86_64                          13/22 
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [                            ] 14/22
+2015-06-08 16:33:49,844:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#                           ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [##                          ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [####                        ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#####                       ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#######                     ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#########                   ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [###########                 ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [############                ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#############               ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [###############             ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#################           ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [###################         ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [####################        ] 14/22
+2015-06-08 16:33:49,845:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [######################      ] 14/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#######################     ] 14/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [########################    ] 14/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [#########################   ] 14/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [##########################  ] 14/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7. [########################### ] 14/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-asn1-R16B-03.10.el7.x86_64                          14/22 
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [                            ] 15/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [#                           ] 15/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [##                          ] 15/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [###                         ] 15/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [####                        ] 15/22
+2015-06-08 16:33:49,846:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [######                      ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [########                    ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [#########                   ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [###########                 ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [#############               ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [###############             ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [#################           ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [##################          ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [####################        ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [#####################       ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [######################      ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [#######################     ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [########################    ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [#########################   ] 15/22
+2015-06-08 16:33:49,847:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [##########################  ] 15/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.1 [########################### ] 15/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-public_key-R16B-03.10.el7.x86_64                    15/22 
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [                            ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [#                           ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [##                          ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [####                        ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [#####                       ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [#######                     ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [########                    ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [##########                  ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [###########                 ] 16/22
+2015-06-08 16:33:49,848:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [#############               ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [##############              ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [###############             ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [################            ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [#################           ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [##################          ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [###################         ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [####################        ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [######################      ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [#######################     ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [########################    ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [#########################   ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [##########################  ] 16/22
+2015-06-08 16:33:49,849:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x [########################### ] 16/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-ssl-R16B-03.10.el7.x86_64                           16/22 
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [                            ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#                           ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [##                          ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [###                         ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [####                        ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [######                      ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#######                     ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [########                    ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#########                   ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [##########                  ] 17/22
+2015-06-08 16:33:49,850:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [###########                 ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [############                ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#############               ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [##############              ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [###############             ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [################            ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#################           ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [##################          ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [###################         ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [####################        ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#####################       ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [######################      ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#######################     ] 17/22
+2015-06-08 16:33:49,851:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [########################    ] 17/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [#########################   ] 17/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [##########################  ] 17/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7 [########################### ] 17/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-inets-R16B-03.10.el7.x86_64                         17/22 
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [                            ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#                           ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [##                          ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [###                         ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [####                        ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#####                       ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#######                     ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [########                    ] 18/22
+2015-06-08 16:33:49,852:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#########                   ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [###########                 ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [############                ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#############               ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [##############              ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [###############             ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [################            ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#################           ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [###################         ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [####################        ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [######################      ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#######################     ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [########################    ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [#########################   ] 18/22
+2015-06-08 16:33:49,853:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [##########################  ] 18/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7 [########################### ] 18/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-tools-R16B-03.10.el7.x86_64                         18/22 
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [                            ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [#                           ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [##                          ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [####                        ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [########                    ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [#########                   ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [##########                  ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [###########                 ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [############                ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [#############               ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [#################           ] 19/22
+2015-06-08 16:33:49,854:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [##################          ] 19/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [#####################       ] 19/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [######################      ] 19/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [#######################     ] 19/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [#########################   ] 19/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [##########################  ] 19/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7. [########################### ] 19/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-sasl-R16B-03.10.el7.x86_64                          19/22 
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [                            ] 20/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [###                         ] 20/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [#####                       ] 20/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [##########                  ] 20/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [###########                 ] 20/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [############                ] 20/22
+2015-06-08 16:33:49,855:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [#############               ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [##############              ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [###############             ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [################            ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [##################          ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [####################        ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [#####################       ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [######################      ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [#######################     ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [########################    ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [##########################  ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el [########################### ] 20/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-os_mon-R16B-03.10.el7.x86_64                        20/22 
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [                            ] 21/22
+2015-06-08 16:33:49,856:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#                           ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [##                          ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [###                         ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#####                       ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [######                      ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#######                     ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [########                    ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#########                   ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [##########                  ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [###########                 ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [############                ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#############               ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [##############              ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [###############             ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [################            ] 21/22
+2015-06-08 16:33:49,857:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#################           ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [##################          ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [###################         ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#####################       ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [######################      ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [########################    ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [#########################   ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [##########################  ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7 [########################### ] 21/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : erlang-xmerl-R16B-03.10.el7.x86_64                         21/22 
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [                            ] 22/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#                           ] 22/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [##                          ] 22/22
+2015-06-08 16:33:49,858:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [###                         ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [####                        ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#####                       ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [######                      ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#######                     ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [########                    ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#########                   ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [##########                  ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [###########                 ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [############                ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#############               ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [##############              ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [###############             ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [################            ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#################           ] 22/22
+2015-06-08 16:33:49,859:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [##################          ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [###################         ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [####################        ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#####################       ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [######################      ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#######################     ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [########################    ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [#########################   ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [##########################  ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7 [########################### ] 22/22
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Installing : rabbitmq-server-3.3.5-4.el7.noarch                         22/22 
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Verifying  : erlang-sd_notify-0.1-1.el7.x86_64                           1/22 
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	  Verifying  : erlang-asn1-R16B-03.10.el7.x86_64                           2/22 
+2015-06-08 16:33:49,860:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : rabbitmq-server-3.3.5-4.el7.noarch                          3/22 
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : erlang-inets-R16B-03.10.el7.x86_64                          4/22 
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : erlang-runtime_tools-R16B-03.10.el7.x86_64                  5/22 
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : erlang-stdlib-R16B-03.10.el7.x86_64                         6/22 
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : erlang-syntax_tools-R16B-03.10.el7.x86_64                   7/22 
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : erlang-compiler-R16B-03.10.el7.x86_64                       8/22 
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : erlang-erts-R16B-03.10.el7.x86_64                           9/22 
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	
+2015-06-08 16:33:49,861:DEBUG:controllerVM:	  Verifying  : erlang-kernel-R16B-03.10.el7.x86_64                        10/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	  Verifying  : erlang-hipe-R16B-03.10.el7.x86_64                          11/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	  Verifying  : erlang-sasl-R16B-03.10.el7.x86_64                          12/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	  Verifying  : erlang-public_key-R16B-03.10.el7.x86_64                    13/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	  Verifying  : erlang-ssl-R16B-03.10.el7.x86_64                           14/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	  Verifying  : erlang-xmerl-R16B-03.10.el7.x86_64                         15/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	  Verifying  : erlang-tools-R16B-03.10.el7.x86_64                         16/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	  Verifying  : erlang-snmp-R16B-03.10.el7.x86_64                          17/22 
+2015-06-08 16:33:49,862:DEBUG:controllerVM:	
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	  Verifying  : erlang-os_mon-R16B-03.10.el7.x86_64                        18/22 
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	  Verifying  : erlang-crypto-R16B-03.10.el7.x86_64                        19/22 
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	  Verifying  : lksctp-tools-1.0.13-3.el7.x86_64                           20/22 
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	  Verifying  : erlang-otp_mibs-R16B-03.10.el7.x86_64                      21/22 
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	  Verifying  : erlang-mnesia-R16B-03.10.el7.x86_64                        22/22 
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	Installed:
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	  rabbitmq-server.noarch 0:3.3.5-4.el7                                          
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	Dependency Installed:
+2015-06-08 16:33:49,863:DEBUG:controllerVM:	  erlang-asn1.x86_64 0:R16B-03.10.el7                                           
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-compiler.x86_64 0:R16B-03.10.el7                                       
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-crypto.x86_64 0:R16B-03.10.el7                                         
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-erts.x86_64 0:R16B-03.10.el7                                           
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-hipe.x86_64 0:R16B-03.10.el7                                           
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-inets.x86_64 0:R16B-03.10.el7                                          
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-kernel.x86_64 0:R16B-03.10.el7                                         
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-mnesia.x86_64 0:R16B-03.10.el7                                         
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-os_mon.x86_64 0:R16B-03.10.el7                                         
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-otp_mibs.x86_64 0:R16B-03.10.el7                                       
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-public_key.x86_64 0:R16B-03.10.el7                                     
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-runtime_tools.x86_64 0:R16B-03.10.el7                                  
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-sasl.x86_64 0:R16B-03.10.el7                                           
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-sd_notify.x86_64 0:0.1-1.el7                                           
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-snmp.x86_64 0:R16B-03.10.el7                                           
+2015-06-08 16:33:49,864:DEBUG:controllerVM:	  erlang-ssl.x86_64 0:R16B-03.10.el7                                            
+2015-06-08 16:33:49,865:DEBUG:controllerVM:	  erlang-stdlib.x86_64 0:R16B-03.10.el7                                         
+2015-06-08 16:33:49,865:DEBUG:controllerVM:	  erlang-syntax_tools.x86_64 0:R16B-03.10.el7                                   
+2015-06-08 16:33:49,865:DEBUG:controllerVM:	  erlang-tools.x86_64 0:R16B-03.10.el7                                          
+2015-06-08 16:33:49,865:DEBUG:controllerVM:	  erlang-xmerl.x86_64 0:R16B-03.10.el7                                          
+2015-06-08 16:33:49,865:DEBUG:controllerVM:	  lksctp-tools.x86_64 0:1.0.13-3.el7                                            
+2015-06-08 16:33:49,865:DEBUG:controllerVM:	
+2015-06-08 16:33:49,865:DEBUG:controllerVM:	Complete!
+2015-06-08 16:33:50,205:DEBUG:controllerVM:	ln -s '/usr/lib/systemd/system/rabbitmq-server.service' '/etc/systemd/system/multi-user.target.wants/rabbitmq-server.service'
+2015-06-08 16:33:57,576:DEBUG:controllerVM:	success
+2015-06-08 16:34:00,916:DEBUG:controllerVM:	success
+2015-06-08 16:34:01,448:DEBUG:controllerVM:	...done.
+2015-06-08 16:34:03,802:DEBUG:root@controllerVM:	Installed RabbitMQ
