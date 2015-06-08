@@ -10,6 +10,7 @@ import string
 import sys
 sys.path.append('../global_config_files')
 import env_config
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 
 ############################ Config ########################################
@@ -26,11 +27,6 @@ heat_test_file = "test_file/test-stack.yml"
 # Logging
 log_file = 'heat_deployment.log'
 env_config.setupLoggingInFabfile(log_file)
-
-# Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
-# Do a fabric run on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
 
@@ -62,28 +58,28 @@ def setup_heat_keystone(HEAT_PASS):
             sudo_log("keystone user-create --name heat --pass {}".format(HEAT_PASS))
             sudo_log("keystone user-role-add --user heat --tenant service --role admin")
         else:
-            logging.debug('heat is already a user. Do nothing',extra=log_dict)
+            log_debug('heat is already a user. Do nothing')
 
         if 'heat_stack_owner' not in sudo("keystone role-list"):
             sudo_log("keystone role-create --name heat_stack_owner")
             sudo_log("keystone user-role-add --user demo --tenant demo --role heat_stack_owner")
         else:
-            logging.debug('heat_stack_owner is already a role. Do nothing',extra=log_dict)
+            log_debug('heat_stack_owner is already a role. Do nothing')
 
         if 'heat_stack_user' not in sudo("keystone role-list"):
             sudo_log("keystone role-create --name heat_stack_user")
         else:
-            logging.debug('heat_stack_user is already a role. Do nothing',extra=log_dict)
+            log_debug('heat_stack_user is already a role. Do nothing')
 
         if 'heat' not in sudo("keystone service-list"):
             sudo_log('keystone service-create --name heat --type orchestration --description "Orchestration"')
         else:
-            logging.debug('heat is already a service. Do nothing',extra=log_dict)
+            log_debug('heat is already a service. Do nothing')
 
         if 'heat-cfn' not in sudo("keystone service-list"):
             sudo_log('keystone service-create --name heat-cfn --type cloudformation --description "Orchestration"')
         else:
-            logging.debug('heat-cfn is already a service. Do nothing',extra=log_dict)
+            log_debug('heat-cfn is already a service. Do nothing')
         
         if '8004' not in sudo("keystone endpoint-list"):
             sudo_log("""keystone endpoint-create \
@@ -93,7 +89,7 @@ def setup_heat_keystone(HEAT_PASS):
             --adminurl http://controller:8004/v1/%\(tenant_id\)s \
             --region regionOne""")
         else:
-            logging.debug('8004 is already an endpoint. Do nothing',extra=log_dict)
+            log_debug('8004 is already an endpoint. Do nothing')
 
         if '8000' not in sudo("keystone endpoint-list"):
             sudo_log("""keystone endpoint-create \
@@ -103,7 +99,7 @@ def setup_heat_keystone(HEAT_PASS):
             --adminurl http://controller:8000/v1 \
             --region regionOne""")
         else:
-            logging.debug('8000 is already an endpoint. Do nothing',extra=log_dict)
+            log_debug('8000 is already an endpoint. Do nothing')
         
 def setup_heat_config_files(HEAT_PASS, HEAT_DBPASS, RABBIT_PASS):
     sudo_log("yum install -y openstack-heat-api openstack-heat-api-cfn openstack-heat-engine python-heatclient")
@@ -153,10 +149,6 @@ def download_packages():
 @roles('controller')
 def setup_heat():
 
-    # set up logging format dictionary
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
-
     # upload admin-openrc.sh to set variables in host machine
     put(admin_openrc)
     
@@ -185,10 +177,6 @@ def deploy():
 
 @roles('controller')
 def create_stack():
-
-    # set up logging format dictionary
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
     # upload admin-openrc.sh to set variables in host machine
     put(admin_openrc)

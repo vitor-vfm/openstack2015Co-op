@@ -12,7 +12,7 @@ import ConfigParser
 import sys
 sys.path.append('../global_config_files')
 import env_config
-from env_config import log_debug, log_info, log_error
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 
 ############################ Config ########################################
@@ -27,9 +27,6 @@ if output['debug']:
 
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
-
-run_log = env_config.run_log
-sudo_log = env_config.sudo_log
 
 ################### General functions ########################################
 

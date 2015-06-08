@@ -10,6 +10,7 @@ import logging
 import sys
 sys.path.append('../global_config_files')
 import env_config
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 ################### Configuring Environment ########################################
 
@@ -85,10 +86,6 @@ keystone_conf = 'config_files/keystone.conf'
 log_file = 'keystone_deployment.log'
 env_config.setupLoggingInFabfile(log_file)
 
-# Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
-# Do a fabric run on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### Deployment ########################################
 
@@ -121,34 +118,30 @@ def set_keystone_config_file(admin_token,password):
                 parameter = '\'' + new_line[0] + '\''
                 value = '\'' + new_line[1] + '\''
                 if sudo_log('crudini --set {} {} {} {}'.format(conf_file,section,parameter,value)).return_code != 0:
-                    logging.error('Crudini couldn\'t set up {} on section {} of conf file {}'\
-                            .format(parameter,section,conf_file),extra=log_dict)
+                    log_error('Crudini couldn\'t set up {} on section {} of conf file {}'\
+                            .format(parameter,section,conf_file))
 
 
 
 @roles('controller')
 def setupKeystone():
-    # info for logging
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
-
-    logging.debug('Setting up keystone on host',extra=log_dict)
+    log_debug('Setting up keystone on host')
 
     if sudo_log("systemctl restart mariadb").return_code != 0:
-        logging.error('Failed to restart mariadb',extra=log_dict)
+        log_error('Failed to restart mariadb')
         # we need mariadb working in order to proceed
         sys.exit("Failed to restart mariadb")
     else:
-	logging.debug("Succesfully restarted mariadb", extra=log_dict)
+	log_debug("Succesfully restarted mariadb")
 
     fileContents = keystoneConfigFileContents
     fileContents = fileContents.replace('NEW_PASS',passwd['ADMIN_PASS'])
     
     if sudo_log('echo "' + fileContents + '" | mysql -u root').return_code != 0:
-	logging.error("Failed to setup to mariadb")
+	log_error("Failed to setup to mariadb")
     else:
-	logging.debug("Setup mariadb", extra=log_dict)  
+	log_debug("Setup mariadb")  
   
     admin_token = run('openssl rand -hex 10')
     sudo_log("yum -y install openstack-keystone python-keystoneclient")
@@ -164,18 +157,18 @@ def setupKeystone():
 
     # populate the Identity service database
     if sudo_log("su -s /bin/sh -c 'keystone-manage db_sync' keystone").return_code != 0:
-        logging.error('Failed to populate database',extra=log_dict)
+        log_error('Failed to populate database')
     else:
-        logging.debug('Populated database',extra=log_dict)
+        log_debug('Populated database')
 
 
     # start the Identity service and configure it to start when the system boots
     if sudo_log("systemctl enable openstack-keystone.service").return_code != 0:
-        logging.error('Failed to enable openstack-keystone.service',extra=log_dict)
+        log_error('Failed to enable openstack-keystone.service')
     if sudo_log("systemctl start openstack-keystone.service").return_code != 0:
-        logging.error('Failed to start openstack-keystone.service',extra=log_dict)
+        log_error('Failed to start openstack-keystone.service')
     else:
-        logging.debug('Started openstack-keystone.service',extra=log_dict)
+        log_debug('Started openstack-keystone.service')
 
 
     # configure a periodic task that purges expired tokens hourly
@@ -186,7 +179,7 @@ def setupKeystone():
     # need to restart keystone so that it can read in the 
     # new admin_token from the configuration file
     if sudo_log("systemctl restart openstack-keystone.service").return_code != 0:
-        logging.error('Failed to restart openstack-keystone.service',extra=log_dict)
+        log_error('Failed to restart openstack-keystone.service')
 
     # configure prereqs for creating tenants, users, and roles
     exports = 'export OS_SERVICE_TOKEN={}; export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0'\
@@ -228,22 +221,15 @@ def setupKeystone():
 
 
 def deploy():
-    log_dict = {'host_string':'','role':''} 
-    logging.debug('Deploying',extra=log_dict)
+    log_debug('Deploying')
     execute(setupKeystone)
-    logging.debug('Done',extra=log_dict)
+    log_debug('Done')
 
 ######################################## TDD #########################################
 
 
 @roles('controller')
 def keystone_tdd():
-
-    
-    # info for logging
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':env_config.getRole()}
-
 
     # 'OK' message
     okay = '[ ' + green('OK') + ' ]'
@@ -294,9 +280,7 @@ def keystone_tdd():
             print red('demo was allowed to run user-list')
 
 def tdd():
-    global log_dict
-    log_dict = {'host_string':'','role':''} 
-    logging.debug('Starting TDD function',extra=log_dict)
-    logging.debug('Done',extra=log_dict)
+    log_debug('Starting TDD function')
+    log_debug('Done')
     execute(keystone_tdd)
     #execute(env_config.keystone_check, 'keystone', roles='controller')

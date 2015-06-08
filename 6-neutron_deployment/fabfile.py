@@ -10,6 +10,7 @@ import subprocess
 import sys
 sys.path.append('../global_config_files')
 import env_config
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 
 
@@ -37,11 +38,6 @@ database_script = env_config.databaseScript.replace("NEUTRON_DBPASS",passwd["NEU
 log_file = 'neutron_deployment.log'
 env_config.setupLoggingInFabfile(log_file)
 
-# Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
-# Do a fabric run on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
-
 
 ################### Deployment ########################################
 
@@ -68,14 +64,14 @@ def create_neutron_database():
             # add the admin role to the neutron user
             sudo_log('keystone user-role-add --user neutron --tenant service --role admin')
         else:
-            logging.debug('neutron is already a user. Do nothing',extra=log_dict)
+            log_debug('neutron is already a user. Do nothing')
 
         # check if service neutron has been created and if not, create it
         if 'neutron' not in sudo_log("keystone service-list"):
             # create the neutron service entity
             sudo_log('keystone service-create --name neutron --type network --description "OpenStack Networking"')
         else:
-            logging.debug('neutron is already a service. Do nothing',extra=log_dict)
+            log_debug('neutron is already a service. Do nothing')
 
         # check if a 9696 endpoint already exists and if not, create one
         if '9696' not in sudo_log("keystone endpoint-list"):
@@ -87,7 +83,7 @@ def create_neutron_database():
                     "--internalurl http://controller:9696 " + \
                     "--region regionOne")
         else:
-            logging.debug('9696 is already an endpoint. Do nothing',extra=log_dict)
+            log_debug('9696 is already an endpoint. Do nothing')
 
 def configure_networking_server_component():
     # configure neutron.conf with crudini
@@ -181,10 +177,6 @@ def configure_nova_to_use_neutron():
 
 @roles('controller')
 def controller_deploy():
-
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
     
     create_neutron_database()
 
@@ -331,10 +323,6 @@ def configure_Open_vSwitch_service():
 
 @roles('network')
 def network_deploy():
-
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'network'}
     
     # edit sysctl.conf
     sysctl_conf = '/etc/sysctl.conf'
@@ -405,10 +393,6 @@ def configure_ML2_plug_in_compute():
 
 @roles('compute')
 def compute_deploy():
-
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'compute'}
     
     # edit sysctl.conf
     sysctl_conf = '/etc/sysctl.conf'
@@ -460,10 +444,7 @@ def compute_deploy():
 
 def deploy():
 
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':'', 'role':''}
-    logging.debug('Beginning deployment',extra=log_dict)
+    log_debug('Beginning deployment')
     
     # with settings(warn_only=True):
     execute(controller_deploy)
@@ -474,10 +455,6 @@ def deploy():
 
 @roles('controller')
 def controller_tdd():
-
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
     # Check loaded extensions to verify launch of neutron
     alias_name_pairs = list()
@@ -513,10 +490,6 @@ def controller_tdd():
 @roles('controller')
 def verify_neutron_agents_network():
 
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
-
     # this test should be done after the network deployment,
     # even though it's done on the controller node
 
@@ -551,10 +524,6 @@ def network_tdd():
 
 @roles('controller')
 def verify_neutron_agents_compute():
-
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
     # this test should be done after the compute deployment,
     # even though it's done on the controller node
