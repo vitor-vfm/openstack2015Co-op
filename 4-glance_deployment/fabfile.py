@@ -10,6 +10,7 @@ import string
 import sys
 sys.path.append('../global_config_files')
 import env_config
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 
 ############################ Config ########################################
@@ -25,32 +26,6 @@ glance_api_config_file = "/etc/glance/glance-api.conf"
 
 glance_registry_config_file = "/etc/glance/glance-registry.conf"
 
-
-def sudo_log(command):
-    output = sudo(command)
-    if output.return_code != 0:
-        logging.error("Problem on command '{}'".format(command),extra=log_dict)
-    else:
-        for line in output.splitlines():
-            # don't log lines that have passwords
-            if 'pass' not in line.lower():
-                # skip empty lines
-                if line != '' or line !='\n':
-                    logging.debug(line,extra=log_dict)
-    return output
-
-def run_log(command):
-    output = run(command)
-    if output.return_code != 0:
-        logging.error("Problem on command '{}'".format(command),extra=log_dict)
-    else:
-        for line in output.splitlines():
-            # don't log lines that have passwords
-            if 'pass' not in line.lower():
-                # skip empty lines
-                if line != '' or line !='\n':
-                    logging.debug(line,extra=log_dict)
-    return output
 
 # logging setup
 
@@ -87,17 +62,17 @@ def setup_glance_keystone(GLANCE_PASS):
             sudo_log("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
             sudo_log("keystone user-role-add --user glance --tenant service --role admin")
         else:
-            logging.debug('User glance already in user list',extra=log_dict)
+            log_debug('User glance already in user list')
 
         if 'glance' not in sudo("keystone service-list"):
             sudo_log("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
         else:
-            logging.debug('Service glance already in service list',extra=log_dict)
+            log_debug('Service glance already in service list')
 
         if '9292' not in sudo("keystone endpoint-list"):
             sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
         else:
-            logging.debug('Endpoint 9292 already in endpoint list',extra=log_dict)
+            log_debug('Endpoint 9292 already in endpoint list')
     
 def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
     sudo_log("yum install -y openstack-glance python-glanceclient")
@@ -155,10 +130,6 @@ def download_packages():
 @roles('controller')
 def setup_glance():
 
-    # info for logging
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
-
     download_packages()
     
     # upload admin-openrc.sh to set variables in host machine
@@ -187,11 +158,6 @@ def deploy():
 
 @roles('controller')
 def glance_tdd():
-
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
-
 
     sudo_log("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"

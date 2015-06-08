@@ -11,6 +11,7 @@ import sys
 sys.path.append('../global_config_files')
 
 import env_config
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 
 ############################ Config ########################################
@@ -21,6 +22,11 @@ mode = 'normal'
 if output['debug']:
     mode = 'debug'
 
+# Logging config
+
+log_file = 'basic-network.log'
+env_config.setupLoggingInFabfile(log_file)
+
 ################### Deployment ########################################
 
 # General function to install packages that should be in all or several nodes
@@ -28,26 +34,26 @@ if output['debug']:
 def install_packages():
     
     # Install Chrony
-    sudo('yum -y install chrony')
+    sudo_log('yum -y install chrony')
     # enable Chrony
-    sudo('systemctl enable chronyd.service')
-    sudo('systemctl start chronyd.service')
+    sudo_log('systemctl enable chronyd.service')
+    sudo_log('systemctl start chronyd.service')
 
     # Install EPEL (Extra Packages for Entreprise Linux
-    sudo('yum -y install yum-plugin-priorities')
-    sudo('yum -y install epel-release')
+    sudo_log('yum -y install yum-plugin-priorities')
+    sudo_log('yum -y install epel-release')
 
     # Install RDO repository for Juno
-    sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+    sudo_log('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
 
     # Install Crudini
-    sudo("yum -y install crudini")
+    sudo_log("yum -y install crudini")
 
     # Install wget
-    sudo("yum -y install wget")
+    sudo_log("yum -y install wget")
 
 
-    sudo("crudini --set /etc/selinux/config '' SELINUX disabled")
+    sudo_log("crudini --set /etc/selinux/config '' SELINUX disabled")
 
 
     # Install MariaDB
@@ -55,7 +61,7 @@ def install_packages():
     
     if env.host_string in env.roledefs['controller']:
 	    # get packages
-        sudo('yum -y install mariadb mariadb-server MySQL-python')
+        sudo_log('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
         # NB: crudini was not used because of unexpected parsing 1) without equal sign 2) ! include dir  
@@ -66,7 +72,7 @@ def install_packages():
             confFile = 'my.cnf'
 
             # make a backup
-            sudo("cp {} {}.back12".format(confFile,confFile))
+            sudo_log("cp {} {}.back12".format(confFile,confFile))
             if mode == 'debug':
                 # change only backup file
                 confFile += '.back12'
@@ -81,9 +87,9 @@ def install_packages():
                         pattern_to_find = line[:line.index('=')]
                     else:
                         pattern_to_find = line
-                    sudo('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
+                    sudo_log('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
-                    sudo('''sed -i '/{}/ a\{}' {}'''.format(section_header,line,confFile))
+                    sudo_log('''sed -i '/{}/ a\{}' {}'''.format(section_header,line,confFile))
 
             else:
                 # simply add the section
@@ -93,27 +99,27 @@ def install_packages():
 
             # set bind-address (controller's management interface)
             bind_address = env_config.controllerManagement['IPADDR']
-            if sudo('grep bind-address {}'.format(confFile)).return_code != 0:
+            if sudo_log('grep bind-address {}'.format(confFile)).return_code != 0:
                 # simply add the new line
                 new_line = "bind-address = " + bind_address
-                sudo("""sed -i "/{}/a {}" my.cnf""".format(section_header,new_line))
+                sudo_log("""sed -i "/{}/a {}" my.cnf""".format(section_header,new_line))
             else:
-                sudo("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
+                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
 
             if mode == 'debug':
                 print "Here is the final my.cnf file:"
-                print blue(sudo("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
+                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
 
         # enable MariaDB
-        sudo('systemctl enable mariadb.service')
-        sudo('systemctl start mariadb.service')
+        sudo_log('systemctl enable mariadb.service')
+        sudo_log('systemctl start mariadb.service')
         
 
     # Upgrade to implement changes
-    sudo('yum -y upgrade')
+    sudo_log('yum -y upgrade')
 
 def ask_for_reboot():
-    sudo('wall Everybody please reboot')
+    sudo_log('wall Everybody please reboot')
 
 @roles('controller','compute','network','storage')
 def deploy():

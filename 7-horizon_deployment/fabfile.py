@@ -10,6 +10,7 @@ import logging
 import sys
 sys.path.append('../global_config_files')
 import env_config
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 
 ############################ Config ########################################
@@ -23,11 +24,6 @@ etc_horizon_config_file = "/etc/openstack-dashboard/local_settings"
 # Logging
 log_file = 'horizon_deployment.log'
 env_config.setupLoggingInFabfile(log_file)
-
-# Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
-# Do a fabric run on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
 
@@ -95,9 +91,6 @@ def setup_horizon():
 
 @roles('controller')
 def deploy():
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
     setup_horizon()
 
@@ -115,9 +108,6 @@ def reach_dashboard():
         
 @roles('controller')
 def tdd():
-    # dictionary for logging format
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
     with settings(warn_only=True):
         reach_dashboard()
