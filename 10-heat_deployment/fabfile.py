@@ -50,7 +50,6 @@ def setup_heat_database(HEAT_DBPASS):
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON heat.* TO 'heat'@'%' IDENTIFIED BY '{}';".format(HEAT_DBPASS)
 
     
-    print("mysql commands are: " + mysql_commands)
     sudo_log('echo "{}" | mysql -u root'.format(mysql_commands))
     
 

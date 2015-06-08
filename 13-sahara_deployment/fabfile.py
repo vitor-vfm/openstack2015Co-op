@@ -51,35 +51,35 @@ def set_parameter(config_file, section, parameter, value):
 
 
 def setup_sahara_database(SAHARA_DBPASS):
-    print("SAHARA_DBPASS is: {}".format(SAHARA_DBPASS))
     mysql_commands = "CREATE DATABASE IF NOT EXISTS sahara;"
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON sahara.* TO 'sahara'@'localhost' IDENTIFIED BY '{}';".format(SAHARA_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON sahara.* TO 'sahara'@'%' IDENTIFIED BY '{}';".format(SAHARA_DBPASS)
 
     
-    print("mysql commands are: " + mysql_commands)
     sudo_log('echo "{}" | mysql -u root'.format(mysql_commands))
     
-    sudo_log("sahara-db-manage -p --config-file /etc/sahara/sahara.conf upgrade head")
+    sudo_log("sahara-db-manage --config-file /etc/sahara/sahara.conf upgrade head")
 
 
 def setup_sahara_keystone(SAHARA_PASS):
-#    source_command = "source admin-openrc.sh"
-#    with prefix(source_command):
+    source_command = open(admin_openrc,'r').read()
+    with prefix(source_command):
         #sudo_log("keystone user-create --name sahara --pass {}".format(SAHARA_PASS))
         #sudo_log("keystone user-role-add --user sahara --tenant service --role admin")
         #sudo_log("keystone role-create --name sahara_stack_owner")
         #sudo_log("keystone user-role-add --user demo --tenant demo --role sahara_stack_owner")
         #sudo_log("keystone role-create --name sahara_stack_user")
-    sudo_log('keystone service-create --name sahara --type data_processing --description "Data processing service"')
-        #sudo_log('keystone service-create --name sahara-cfn --type cloudformation --description "Orchestration"')
-        
-    sudo_log("""keystone endpoint-create \
-        --service-id $(keystone service-list | awk '/ sahara / {print $2}') \
-        #--publicurl http://controller:8386/v1.1/%\(tenant_id\)s \
-        #--internalurl http://controller:8386/v1.1/%\(tenant_id\)s \
-        #--adminurl http://controller:8386/v1.1/%\(tenant_id\)s \
-        #--region regionOne""")
+        if 'sahara' not in sudo_log('keystone service-list'):
+            sudo_log('keystone service-create --name sahara --type data_processing --description "Data processing service"')
+            #sudo_log('keystone service-create --name sahara-cfn --type cloudformation --description "Orchestration"')
+            
+        if '8386' not in sudo_log('keystone endpoint-list'):
+            sudo_log("""keystone endpoint-create \
+                --service-id $(keystone service-list | awk '/ sahara / {print $2}') \
+                --publicurl http://controller:8386/v1.1/%\(tenant_id\)s \
+                --internalurl http://controller:8386/v1.1/%\(tenant_id\)s \
+                --adminurl http://controller:8386/v1.1/%\(tenant_id\)s \
+                --region regionOne""")
 
         #sudo_log("""keystone endpoint-create \
         #--service-id $(keystone service-list | awk '/ cloudformation / {print $2}') \
@@ -131,8 +131,8 @@ def setup_sahara_config_files(SAHARA_PASS, SAHARA_DBPASS, RABBIT_PASS):
 
 
 
-#def populate_database():
-#    sudo_log("su -s /bin/sh -c 'sahara-manage db_sync' sahara")
+# def populate_database():
+#     sudo_log("su -s /bin/sh -c 'sahara-manage db_sync' sahara")
 
 def start_sahara_services():
     sudo_log("systemctl restart mariadb.service")
@@ -172,11 +172,12 @@ def setup_sahara():
     # end of foreign
 
     # My test version of foreign
+    setup_sahara_config_files(passwd['SAHARA_PASS'], passwd['SAHARA_DBPASS'], passwd['RABBIT_PASS'])
+
     setup_sahara_database(passwd['SAHARA_DBPASS'])
     setup_sahara_keystone(passwd['SAHARA_PASS'])
 
-    setup_sahara_config_files(passwd['SAHARA_PASS'], passwd['SAHARA_DBPASS'], passwd['RABBIT_PASS'])
-    populate_database()
+    # populate_database()
     # End of my test
  
 
@@ -198,5 +199,8 @@ def deploy():
 @roles('controller')       
 def tdd():
     with settings(warn_only=True):
-        run_log("source demo-openrc.sh")
-        run_log("sahara cluster-list")
+        # run_log("source demo-openrc.sh")
+        # run_log("sahara cluster-list")
+        exports = open(env_config.demo_openrc,'r').read()
+        with prefix(exports):
+            run_log("sahara cluster-list")
