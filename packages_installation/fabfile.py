@@ -21,9 +21,6 @@ mode = 'normal'
 if output['debug']:
     mode = 'debug'
 
-# config files for MariaDB
-# mariadb_repo = 'config_files/mariadb_repo'
-
 ################### Deployment ########################################
 
 # General function to install packages that should be in all or several nodes
