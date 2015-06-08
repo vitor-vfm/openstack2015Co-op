@@ -16,20 +16,14 @@ import env_config
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+passwd = env_config.passwd
 
 admin_openrc = "../global_config_files/admin-openrc.sh"
 
 demo_openrc = "../global_config_files/demo-openrc.sh"
 
-controller_management_interface_file_location = '../1-network_deployment/config_files/controller_management_interface_config'
-controller_management_interface_file_name = 'controller_management_interface_config'
-
-compute_management_interface_file_location = '../1-network_deployment/config_files/compute_management_interface_config'
-compute_management_interface_file_name = 'compute_management_interface_config'
-
 etc_nova_config_file = "/etc/nova/nova.conf"
 
-passwd = env_config.passwd
 
 def sudo_log(command):
     output = sudo(command)
@@ -231,7 +225,7 @@ def setup_nova_on_compute():
     # NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
     # NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
     # RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
-    NETWORK_MANAGEMENT_IP = get_parameter(compute_management_interface_file_location, "''", 'IPADDR')
+    NETWORK_MANAGEMENT_IP = env_config.networkManagement['IPADDR']
 
     setup_nova_config_files_on_compute(passwd['NOVA_PASS'], passwd['NOVA_DBPASS'], passwd['RABBIT_PASS'], NETWORK_MANAGEMENT_IP)        
     start_services_on_compute()
@@ -263,7 +257,7 @@ def setup_nova_on_controller():
     # NOVA_DBPASS = get_parameter(env_config.global_config_file,'mysql','NOVA_DBPASS')
     # NOVA_PASS = get_parameter(env_config.global_config_file,'keystone','NOVA_PASS')
     # RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
-    CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_location, "''", 'IPADDR')
+    CONTROLLER_MANAGEMENT_IP = env_config.controllerManagement['IPADDR']
 
     # setup nova database
     setup_nova_database_on_controller(passwd['NOVA_DBPASS'])
