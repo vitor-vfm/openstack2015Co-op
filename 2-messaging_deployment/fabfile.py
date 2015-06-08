@@ -2,7 +2,8 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
-from fabric.colors import green, red
+from fabric.colors import green, red, blue
+from fabric.state import output
 from fabric.contrib.files import append
 import string
 import paramiko
@@ -20,9 +21,17 @@ def if_error():
 
 ############################ Config ########################################
 
+# set mode
+mode = 'normal'
+if output.debug:
+    mode = 'debug'
+elif output.exceptions:
+    mode = 'test'
+
 env.roledefs = env_config.roledefs
 
-messaging_config_file = 'messaging_config'
+passwd = env_config.passwd
+# messaging_config_file = 'messaging_config'
 
 
 # Logging config
@@ -68,8 +77,7 @@ def installRabbitMQ():
     if sudo_log('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
         logging.error('Failed to add port 5672 to firewall',extra=log_dict)
     sudo_log('firewall-cmd --reload')
-    sudo_log('rabbitmqctl change_password guest {}'.format(\
-        get_value('messaging_config', '""', 'PASSWORD')))
+    sudo_log('rabbitmqctl change_password guest {}'.format(passwd['RABBIT_PASS']))
     # Assuming we're using RabbitMQ version 3.3.0 or later, do the next 2 lines
 #    sudo_log('if [ ! -f /etc/rabbitmq/rabbitmq.config ]; then' + '\n' 
  #           'echo "[{rabbit, [{loopback_users, []}]}]." >> /etc/rabbitmq/rabbitmq.config' + '\n'
@@ -128,10 +136,23 @@ def installRabbitMQtdd():
     else:
         logging.debug('Successfully installed rabbitmq-server',extra=log_dict)
 
-    time[0] = run_log('date +"%b %d %R"')
-    sudo_log('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
-    time[1] = run_log('date +"%b %d %R"')
+    confFile = '/etc/rabbitmq/rabbitmq-env.conf'
 
+    # make a backup
+    sudo_log("cp {} {}.bak".format(confFile,confFile))
+
+    if mode == 'debug':
+        # make changes to back up file
+        confFile += '.bak'
+
+    time[0] = run_log('date +"%b %d %R"')
+    sudo_log('echo "NODENAME=rabbit@localhost" > ' + confFile)
+    if mode == 'debug':
+        print blue("NODENAME will be set to rabbit@localhost")
+        print "New file: "
+        sudo_log("cat " + confFile)
+
+    time[1] = run_log('date +"%b %d %R"')
     sudo_log('systemctl enable rabbitmq-server.service')
     time[2] = run_log('date +"%b %d %R"')
     sudo_log('systemctl start rabbitmq-server.service')
@@ -142,8 +163,7 @@ def installRabbitMQtdd():
     time[5] = run_log('date +"%b %d %R"')
     sudo_log('firewall-cmd --reload')
     time[6] = run_log('date +"%b %d %R"')
-    sudo_log('rabbitmqctl change_password guest {}'.format(
-        get_value('messaging_config', '""', 'PASSWORD')))
+    sudo_log('rabbitmqctl change_password guest {}'.format(passwd['RABBIT_PASS']))
     time[7] = run_log('date +"%b %d %R"')
     return time
 
