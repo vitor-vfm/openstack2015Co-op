@@ -1,6 +1,6 @@
 from __future__ import with_statement
-from fabric.api import *
 from fabric.decorators import with_settings
+from fabric.api import *
 from fabric.context_managers import cd
 from fabric.colors import green, red
 import string
@@ -239,6 +239,7 @@ def deploy():
 @roles('controller')
 def keystone_tdd():
 
+    
     # info for logging
     global log_dict
     log_dict = {'host_string':env.host_string, 'role':env_config.getRole()}
@@ -251,6 +252,7 @@ def keystone_tdd():
     # if we don't set warn_only, the script will stop after these commands
     with settings(warn_only=True):
 
+        env_config.keystone_check('keystone')
 
         # Check if 'admin' and 'demo' are users
         user_list_output = sudo_log("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['ADMIN_PASS']))
@@ -296,4 +298,5 @@ def tdd():
     log_dict = {'host_string':'','role':''} 
     logging.debug('Starting TDD function',extra=log_dict)
     logging.debug('Done',extra=log_dict)
-    execute(env_config.keystone_check, 'keystone', roles='controller')
+    execute(keystone_tdd)
+    #execute(env_config.keystone_check, 'keystone', roles='controller')
