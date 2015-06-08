@@ -209,8 +209,9 @@ def glance_tdd():
         
     sudo_log("rm -r /tmp/images")
 
+    
     env_config.database_check('glance')
-
+    env_config.keystone_check('glance')
 def tdd():
     with settings(warn_only=True):
         execute(glance_tdd)
