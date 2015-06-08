@@ -15,7 +15,6 @@ import env_config
 
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
-mainCfg = env_config.mainCfg
 
 @hosts('localhost')
 def readKeyStoneDBConfigFile(fileName):
@@ -61,10 +60,8 @@ def read_config_file_with_sections(file_location):
 keystoneConfigFileContents = readKeyStoneDBConfigFile('keystoneDBSetup.sql')
  
 # config files for user Usr
-# admin_info = env_config.read_dict('config_files/keystone_admin_config') 
-# demo_user = env_config.read_dict('config_files/keystone_demo_config')
-admin_email = env_config.parseConfig(mainCfg,'keystone')['ADMIN_EMAIL']
-demo_email = env_config.parseConfig(mainCfg,'keystone')['DEMO_EMAIL']
+admin_email = env_config.keystone['ADMIN_EMAIL']
+demo_email = env_config.keystone['DEMO_EMAIL']
 
 # create these files for easier access for other components when configuring with keystone
 
