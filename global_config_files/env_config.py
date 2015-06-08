@@ -287,6 +287,13 @@ else:
 
     global_config_location =  '../global_config_files/'
 
+    # mariadb
+    mariaDBmysqldSpecs = ['default-storage-engine=innodb',
+                          'innodb_file_per_table',
+                          'collation-server=utf8_general_ci',
+                          'init-connect=SET NAMES utf8',
+                          'character-set-server=utf8']
+
     # scripts to be sourced
     admin_openrc = global_config_location + 'admin-openrc.sh'
     demo_openrc = global_config_location + 'demo-openrc.sh'
