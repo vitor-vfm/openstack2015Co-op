@@ -83,7 +83,7 @@ def install_packages():
                         pattern_to_find = line
                     sudo('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
-                    sudo('''sed -i '/{}/ a\{}' {}'''.format(section_header,line,confFile))
+                    sudo("sed -i '/{}/ a\{}' {}".format(section_header,line,confFile))
 
             else:
                 # simply add the section
@@ -96,7 +96,7 @@ def install_packages():
             if sudo('grep bind-address {}'.format(confFile)).return_code != 0:
                 # simply add the new line
                 new_line = "bind-address = " + bind_address
-                sudo("""sed -i "/{}/a {}" my.cnf""".format(section_header,new_line))
+                sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
             else:
                 sudo("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
 
