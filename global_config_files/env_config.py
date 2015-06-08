@@ -3,7 +3,7 @@ import logging
 from subprocess import check_output, call
 from fabric.api import run, sudo, env
 from fabric.colors import red, green
-
+from fabric.api import *
 ##################### General functions ######################
 
 
