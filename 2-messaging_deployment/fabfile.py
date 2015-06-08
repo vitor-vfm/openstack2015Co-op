@@ -23,15 +23,12 @@ def if_error():
 
 # set mode
 mode = 'normal'
-if output.debug:
+if output['debug']:
     mode = 'debug'
-elif output.exceptions:
-    mode = 'test'
 
 env.roledefs = env_config.roledefs
 
 passwd = env_config.passwd
-# messaging_config_file = 'messaging_config'
 
 
 # Logging config
