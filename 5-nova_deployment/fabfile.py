@@ -280,15 +280,20 @@ def deploy():
 @roles('controller')
 def verify():
 
+
+
     # dictionary for logging format
     global log_dict
     log_dict = {'host_string':env.host_string, 'role':'controller'}
+  
+    env_config.database_check('nova')
+    env_config.keystone_check('nova')
 
     source_command = "source admin-openrc.sh"
     with prefix(source_command):
         sudo_log("nova service-list")
         sudo_log("nova image-list")
-
+    
 
 def tdd():
     with settings(warn_only=True):
