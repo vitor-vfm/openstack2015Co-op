@@ -2,7 +2,8 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
-from fabric.colors import green, red
+from fabric.state import output
+from fabric.colors import green, red, blue
 import string
 
 
@@ -16,9 +17,12 @@ import env_config
 
 env.roledefs = env_config.roledefs
 
+mode = 'normal'
+if output['debug']:
+    mode = 'debug'
+
 # config files for MariaDB
-mariadb_repo = 'config_files/mariadb_repo'
-mariadb_mysqld_specs = 'config_files/mariadb_mysqld_specs'
+# mariadb_repo = 'config_files/mariadb_repo'
 
 ################### Deployment ########################################
 
@@ -57,45 +61,50 @@ def install_packages():
         sudo('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
+
         section_header = '\[mysqld\]'
 
         with cd('/etc/'):
-            # check if the section is already in the file
-            if run("grep '{}' my.cnf".format(section_header)).return_code == 0:
-                # do a search and replace for all the variables
-                config_file = open(mariadb_mysqld_specs, 'r').readlines(True)
-                # make a backup
-                sudo("cp my.cnf my.cnf.back12")
+            confFile = 'my.cnf'
 
-                for line in config_file:
+            # make a backup
+            sudo("cp {} {}.back12".format(confFile,confFile))
+            if mode == 'debug':
+                # change only backup file
+                confFile += '.back12'
+
+            # check if the section is already in the file
+            if run("grep '{}' {}".format(section_header,confFile)).return_code == 0:
+                # do a search and replace for all the variables
+                specs = env_config.mariaDBmysqldSpecs
+                for line in specs:
                     # delete old line in the file
-                    # remove \n
-                    line = line[:-1]
                     if ('=' in line):
                         pattern_to_find = line[:line.index('=')]
                     else:
                         pattern_to_find = line
-                    sudo('sed -i "/{}/ d" my.cnf'.format(pattern_to_find))
+                    sudo('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
-                    sudo('''sed -i '/{}/ a\{}' my.cnf'''.format(section_header,line))
+                    sudo('''sed -i '/{}/ a\{}' {}'''.format(section_header,line,confFile))
 
             else:
                 # simply add the section
-                config_file = '\n' + section_header + '\n'
-                config_file += open(mariadb_mysqld_specs, 'r').read()
-                sudo('echo -e "{}" >>my.cnf'.format(config_file))
-            
+                append(confFile,'\n' + section_header + '\n')
+                for line in specs:
+                    append(confFile,line)
+
             # set bind-address (controller's management interface)
-            controller_NIC = '../1-network_deployment/config_files/controller_management_interface_config'
-            bind_address = local("crudini --get {} '' IPADDR".format(controller_NIC),capture=True)
-            if sudo('grep bind-address my.cnf').return_code != 0:
+            bind_address = env_config.controllerManagement['IPADDR']
+            if sudo('grep bind-address {}'.format(confFile)).return_code != 0:
                 # simply add the new line
                 new_line = "bind-address = " + bind_address
                 sudo("""sed -i "/{}/a {}" my.cnf""".format(section_header,new_line))
             else:
-                sudo("sed -i '/bind-address/ s/=.*/={}/' my.cnf".format(bind_address))
-            # sudo('crudini --set my.cnf mysqld bind-address {}'.format(bind_address))
-            sudo('grep bind-address my.cnf')
+                sudo("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
+
+            if mode == 'debug':
+                print "Here is the final my.cnf file:"
+                print blue(sudo("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
 
         # enable MariaDB
         sudo('systemctl enable mariadb.service')
