@@ -126,13 +126,14 @@ def ask_for_reboot():
     sudo_log('wall Everybody please reboot')
 
 
-@roles('controller','compute','network','storage')
+#@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def test():
     run("echo Hello $(hostname)")
 
 
-
-@roles('controller','compute','network','storage')
+#@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def deploy():
     execute(install_packages)
 
