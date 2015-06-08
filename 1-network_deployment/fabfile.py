@@ -22,17 +22,6 @@ mode = 'normal'
 if output['debug']:
     mode = 'debug'
 
-# determine config file from local host
-
-hostname = local("echo $HOSTNAME",capture=True)
-if 'ipmi5' in hostname:
-    main_config = 'config_files/production_config.cfg'
-else:
-    main_config = 'config_files/development_config.cfg'
-
-
-
-
 # Logging config
 
 log_file = 'basic-network.log'
@@ -49,22 +38,6 @@ sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 def debug_str(command):
     # runs a command and returns its output in blue
     return blue(sudo(command,quiet=True))
-
-def read_dict_local(section):
-    # parse main config file and return all the 
-    # variables in the given section in a dictionary
-
-    # save config file in a ConfigParser object
-    parser = ConfigParser.ConfigParser()
-    parser.read(main_config)
-
-    # read variables and their values into a list of tuples
-    name_value_pairs = parser.items(section)
-
-    # return those pairs in a dictionary
-    # ConfigParser puts all the letters in lowercase,
-    # so we need to change them back to upper
-    return {name.upper():value for name,value in name_value_pairs}
 
 def generate_ip(ip_address,nodes_in_role,node):
 	# generate an IP address based on a base ip, a node, and a role list
@@ -156,9 +129,10 @@ def set_up_network_interface(specs_dict,role):
 
 
     logging.debug('Set up virtual NIC with conf file {}'.format(config_file_name),extra=log_dict)
+
 def set_hosts():
     # configure the /etc/hosts file to put aliases
-    aliases = read_dict_local('hosts')
+    aliases = env_config.hosts
 
     # make backup
     run_log("cp /etc/hosts /etc/hosts.back12")
@@ -222,81 +196,13 @@ def configChrony():
         else:
             print "Chrony config OK"
 
-# def configureNTP():
-
-#     confFile = '/etc/ntp.conf'
-#     newLine = 'server controller iburst'
-
-#     # check if file has been configured already
-#     confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
-#     # if int(sudo_log("grep -c '{}' {}".format(newLine,confFile))) == 0:
-#     if newLine not in confFileStr:
-
-#         # make a backup
-#         sudo_log('cp {} {}.back12'.format(confFile,confFile))
-
-#         # comment out all server keys
-#         sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
-
-#         # add one server key to reference the controller node
-#         sudo_log("echo '{}' >>{}".format(newLine,confFile))
-#     else:
-#         message = 'NTP conf file has already been set. Nothing done'
-#         print message
-#         logging.debug(message,extra=log_dict)
-
-#     # enable and start ntp service
-#     sudo_log("systemctl enable ntpd.service")
-#     sudo_log("systemctl start ntpd.service")
-
-# def configureNTP_on_controller():
-
-
-#     NTP_SERVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
-#     NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
-#     confFile = '/etc/ntp.conf'
-
-
-#     logging.debug("Making sure we have ntp",extra=log_dict)
-#     sudo_log('yum -y install ntp')
-
-#     # check if file has been configured already
-#     confFileStr = sudo("cat " + confFile,warn_only=True,quiet=True)
-#     ipToCheck = NTP_SERVERS[0]
-#     if ipToCheck in confFileStr:
-#         message = 'NTP conf file has already been set. Nothing done'
-#         print message
-#         logging.debug(message,extra=log_dict)
-#         return
-
-#     # make a backup
-#     sudo_log('cp {} {}.back12'.format(confFile,confFile))
-
-#     # comment out all server keys
-#     sudo_log("sed -iE '/^server/ s/^/#/' " + confFile)
-
-#     # add one server key to reference the controller node
-
-#     linesToAdd = ["restrict -4 default kod notrap nomodify","restrict -6 default kod notrap nomodify"]
-#     append(confFile,linesToAdd,use_sudo=True)
-
-#     for NTP_SERVER in NTP_SERVERS:
-#         sudo_log("echo '{}' >>{}".format("server {} iburst".format(NTP_SERVER),confFile))
-
-#     sudo("cat " + confFile)
-#     # enable and start ntp service
-#     sudo_log("systemctl enable ntpd.service")
-#     sudo_log("systemctl start ntpd.service")
-
-def deployInterface(interface):
+def deployInterface(interface,specs):
     if mode == 'debug':
         print ''
         print blue('Deploying Interface {} now'.format(interface))
         print ''
-
-    specs = interface
-    specs = read_dict_local(interface)
-    set_up_network_interface(specs,env_config.getRole())
+    role = env_config.getRole()
+    set_up_network_interface(specs,role)
 
 @roles('controller')
 def controller_network_deploy():
@@ -304,9 +210,9 @@ def controller_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':env_config.getRole()}
 
-    deployInterface('controller management')
+    deployInterface('controller management',env_config.controllerManagement)
 
-    deployInterface('controller tunnels')
+    deployInterface('controller tunnels',env_config.controllerTunnels)
 
     restart_network()
     set_hosts()
@@ -319,11 +225,11 @@ def network_node_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':'network'}
 
-    deployInterface('network management')
+    deployInterface('network management',env_config.networkManagement)
 
-    deployInterface('network tunnels')
+    deployInterface('network tunnels',env_config.networkTunnels)
 
-    deployInterface('network external')
+    deployInterface('network external',env_config.networkExternal)
 
 
     restart_network()
@@ -337,9 +243,9 @@ def compute_network_deploy():
     global log_dict
     log_dict = {'host_string':env.host_string,'role':'compute'}
 
-    deployInterface('compute management')
+    deployInterface('compute management',env_config.computeManagement)
 
-    deployInterface('compute tunnels')
+    deployInterface('compute tunnels',env_config.computeTunnels)
 
     restart_network()
     set_hosts()
@@ -370,93 +276,6 @@ def deploy():
 
 ######################################## TDD #########################################
 
-@roles('controller')
-def chronyTDDController():
-    # check if ntp servers are in the sources
-    sourcesTable = sudo_log('chronyc sources')
-    for server in env_config.ntpServers:
-        if server in sourcesTable:
-            print green("server {} is a source for chrony".format(server))
-        else:
-            print red("server {} is not a source for chrony".format(server))
-
-@roles([r for r in env.roledefs.keys() if r != 'controller'])
-def chronyTDDOtherNodes():
-    # check if controller is in the sources
-    sourcesTable = sudo_log('chronyc sources')
-    if 'controller' in sourcesTable:
-        print green("controller is a source for chrony")
-    else:
-        print red("controlles is not a source for chrony")
-
-
-
-
-def chronyTDD():
-    execute(chronyTDDController)
-    execute(chronyTDDOtherNodes)
-
-    
-
-def controller_ntp_tdd_part1():
-
-    # this repeats, we need to make it proper
-    NTP_SERVERS = ["195.43.74.123", "206.108.0.131", "206.108.0.132"]
-    NTP_SERVERS_HOSTNAME = ["ntp.amnic.net","ntp1.torix.ca","ntp2.torix.ca"]
-
-    for NTP_SERVER in NTP_SERVERS:
-        if NTP_SERVER in sudo_log("ntpq -c peers"):
-            print(green("Found ntp server in column 'remote'"))
-            return
-
-    for NTP_SERVER_HOSTNAME in NTP_SERVERS_HOSTNAME:
-        if NTP_SERVER_HOSTNAME in sudo_log("ntpq -c peers"):
-            print(green("Found ntp server hostname in column 'remote'"))
-            return
-
-    
-    print(red("Didnt find ntp server in column 'remote'"))
-    print("Try waiting for sync")
-
-
-def controller_ntp_tdd_part2():
-
-
-    if "sys_peer" in sudo_log("ntpq -c assoc"):
-        print(green("Found sys_peer"))
-        return
-    
-    print(red("Didnt find sys_peer"))
-    print("Try waiting for sync")
-
-@roles('controller')
-def controller_ntp_tdd():
-    controller_ntp_tdd_part1()
-    controller_ntp_tdd_part2()
-
-
-def other_nodes_ntp_tdd_part1():
-    if "controller" in sudo_log("ntpq -c peers"):
-        print(green("Found controller in column 'remote'"))
-        return
-    
-    print(red("Didnt find controller in column 'remote'"))
-    print("Try waiting for sync")
-
-
-def other_nodes_ntp_tdd_part2():
-    if "sys_peer" in sudo_log("ntpq -c assoc"):
-        print(green("Found sys_peer"))
-        return
-    
-    print(red("Didnt find sys_peer"))
-    print("Try waiting for sync")
-
-@roles('network','compute')
-def other_nodes_ntp_tdd():
-    other_nodes_ntp_tdd_part1()
-    other_nodes_ntp_tdd_part2()
-        
 # pings an ip address and see if it works
 def ping_ip(ip_address, host, role='', type_interface=''):
     ping_command = 'ping -q -c 1 ' + ip_address
@@ -477,7 +296,7 @@ def network_tdd_controller():
 
     # ping management interface on network nodes
     nodes_in_role = env.roledefs['network']
-    base_ip = read_dict_local('network management')['IPADDR']
+    base_ip = env_config.networkManagement['IPADDR']
     # generate a list of tuples (IP,node) for each network node
     management_network_interfaces = [( generate_ip(base_ip,nodes_in_role,node) ,node) for node in nodes_in_role]
     # ping the management interfaces
@@ -497,13 +316,13 @@ def network_tdd_network():
     ping_ip('google.ca', 'google.ca')
 
     # management interfaces on controller
-    specs_dict = read_dict_local('controller management')
+    specs_dict = env_config.controllerManagement
     ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['controller'], node), node) for node in env.roledefs['controller']]
     for ip, host in ip_list:
         ping_ip(ip, host, 'controller', 'management')
 
     # instance tunnel interfaces on compute
-    specs_dict = read_dict_local('compute tunnels')
+    specs_dict = env_config.computeTunnels
     ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['compute'], node), node) for node in env.roledefs['compute']]
     for ip, host in ip_list:
         ping_ip(ip, host, 'compute', 'instance tunnel')
@@ -519,7 +338,7 @@ def network_tdd_compute():
 
     # ping management interface on controller nodes
     nodes_in_role = env.roledefs['controller']
-    base_ip = read_dict_local('controller management')['IPADDR']
+    base_ip = env_config.controllerManagement['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
     management_controller_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
     # ping the management interfaces
@@ -528,12 +347,36 @@ def network_tdd_compute():
 
     # ping instance tunnel interface on network nodes
     nodes_in_role = env.roledefs['network']
-    base_ip = read_dict_local('network tunnels')['IPADDR']
+    base_ip = env_config.networkTunnels['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
     network_tunnels_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
     # ping the management interfaces
     for interface_ip, network_node in network_tunnels_interfaces:
         ping_ip(interface_ip, network_node, 'network', 'instance tunnel')
+
+
+@roles('controller')
+def chronyTDDController():
+    # check if ntp servers are in the sources
+    sourcesTable = sudo_log('chronyc sources')
+    for server in env_config.ntpServers:
+        if server in sourcesTable:
+            print green("server {} is a source for chrony".format(server))
+        else:
+            print red("server {} is not a source for chrony".format(server))
+
+@roles([r for r in env.roledefs.keys() if r != 'controller'])
+def chronyTDDOtherNodes():
+    # check if controller is in the sources
+    sourcesTable = sudo_log('chronyc sources')
+    if 'controller' in sourcesTable:
+        print green("controller is a source for chrony")
+    else:
+        print red("controller is not a source for chrony")
+
+def chronyTDD():
+    execute(chronyTDDController)
+    execute(chronyTDDOtherNodes)
 
             
 def tdd():

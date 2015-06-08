@@ -4,6 +4,8 @@ from subprocess import check_output, call
 from fabric.api import run, sudo, env
 from fabric.colors import red, green
 
+
+
 ##################### General functions ######################
 
 
@@ -172,6 +174,41 @@ def keystone_check(name):
             user_exists(name)
             user_enabled(name)
 
+            
+
+
+
+# # Read the values from a node file into a list
+# def read_nodes(node):
+#     node_info = open(node, 'r')
+#     node_string = node_info.read().splitlines()
+#     # remove comments (lines that have # in the beginning)
+#     # node_string_stripped = [node_element.strip() for node_element in node_string if node_element[0] != '#']
+#     node_info.close()
+#     #print node_string_stripped
+#     return node_string
+
+# # Make a dictionary from a config file with the format "KEY=value" on each 
+# # line
+# def read_dict(config_file):
+#     config_file_info = open(config_file, 'r')
+#     config_file_without_comments = [line for line in config_file_info.readlines() if line[0] != '#']
+#     config_file_string = "".join(config_file_without_comments)
+#     # config_file_string = config_file_info.read().replace('=','\n').splitlines()
+#     config_file_string = config_file_string.replace('=','\n').splitlines()
+#     config_file_string_stripped = [config_element.strip() for config_element in config_file_string]
+#     config_file_dict = dict()
+    
+#     # Make a dictionary from the string from the file with the the first value
+#     # on a line being the key to the value after the '=' on the same line
+#     for config_file_key_index in range(0,len(config_file_string_stripped)-1,2):
+#         config_file_value_index = config_file_key_index + 1
+#         config_file_dict[config_file_string_stripped[config_file_key_index]] = config_file_string_stripped[config_file_value_index]
+    
+#     config_file_info.close()
+
+#     #run("rm -rf %s" % config_file)
+#     return config_file_dict
 
 # General database check that will be used in several TDDs
 def database_check(db):
@@ -247,7 +284,7 @@ def getRole():
     # if none was found
     raise ValueError("Host " + env.hoststring + " not in roledefs")
 
-# parse a config file and return all the 
+# parse main config file and return all the 
 # variables in the given section in a dictionary
 def parseConfig(cfg,section):
     print cfg
@@ -267,7 +304,51 @@ def parseConfig(cfg,section):
     # return those pairs in a dictionary
     return {name:value for name,value in nameValuePairs}
 
-############################## Logging #########################
+# parse main config file and get
+# roledefs dictionary
+def getRoledefsDict(cfg):
+
+    # get a dictionary mapping a role to a 
+    # CSV string with all the nodes in that role
+    nodesInRole = parseConfig(cfg,'roledefs')
+
+    # split CSV strings into lists and return the dict
+    return {role: (nodesInRole[role].split(',')) for role in nodesInRole}
+
+######################### Global variables ######################
+
+global_config_location =  '../global_config_files/'
+
+# determine config file from local host
+
+hostname = check_output("echo $HOSTNAME",shell=True)
+if 'ipmi5' in hostname:
+    mainCfg = global_config_location + 'production_global_config.cfg'
+else:
+    mainCfg = global_config_location + 'development_global_config.cfg'
+
+# Variables that can be imported into the env dictionary
+
+roledefs = getRoledefsDict(mainCfg)
+hosts = roledefs.values()
+
+# Get nodes and their roles from the config files
+# compute_nodes = read_nodes('../global_config_files/compute_nodes')
+# controller_nodes = read_nodes('../global_config_files/controller_nodes')
+# network_nodes = read_nodes('../global_config_files/network_nodes')
+# storage_nodes = read_nodes('../global_config_files/storage_nodes')
+
+# hosts = compute_nodes + controller_nodes + network_nodes
+# roledefs = { 'controller':controller_nodes, 'compute':compute_nodes, 'network':network_nodes, 'storage':storage_nodes }
+
+# LOGGING
+
+#log_location = '/var/log/juno/'
+#if not check_output('sudo if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
+#    # location not created; make it
+#    call('sudo mkdir -p ' + log_location,shell=True)
+#    call('sudo chmod 777 ' + log_location,shell=True)
+
 
 log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:%(role)s:\t%(message)s'
 log_location = '../var/log/juno/'
@@ -277,100 +358,16 @@ if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),she
     call('chmod 744 ' + log_location,shell=True)
 log_dict = {'host_string':'','role':''} # default value for log_dict
 
-######################### Global variables ######################
 
-if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
-    # PRODUCTION
-    pass
-else:
-    # DEVELOPMENT
+# scripts to be sourced
 
-    global_config_location =  '../global_config_files/'
+admin_openrc = global_config_location + 'admin-openrc.sh'
+demo_openrc = global_config_location + 'demo-openrc.sh'
 
-    # scripts to be sourced
-    admin_openrc = global_config_location + 'admin-openrc.sh'
-    demo_openrc = global_config_location + 'demo-openrc.sh'
+# get passwords from config file
+passwdFile = global_config_location + 'passwd.cfg'
+passwd = parseConfig(passwdFile,'passwords')
 
-    # for the env dictionary
-    roledefs = { 'compute' : ['root@computeVM'],
-                 'network' : ['root@networkVM'],
-                 'storage' : ['root@storageVM'],
-                 'controller' : ['root@controllerVM']}
-    hosts = roledefs.values()
-
-    # keystone data
-    keystone = { 'ADMIN_EMAIL' : 'admin@example.com',
-                 'DEMO_EMAIL' : 'demo@example.com'}
-
-    # ntp
-    ntpServers = ['time1.srv.ualberta.ca','time2.srv.ualberta.ca','time3.srv.ualberta.ca']
-
-    # get passwords from config file
-    passwd = { 'METADATA_SECRET' : '34m3t$3c43',
-               'RABBIT_PASS' : '34RabbGuest43',
-               'NOVA_DBPASS' : '34nova_db43',
-               'NEUTRON_DBPASS' : '34neu43',
-               'HEAT_DBPASS' : '34heat_db43',
-               'GLANCE_DBPASS' : '34glance_db43',
-               'SAHARA_DBPASS' : '34sahara_db43',
-               'CINDER_DBPASS' : '34cinder_db43',
-               'ADMIN_PASS' : '34adm43',
-               'DEMO_PASS' : '34demo43',
-               'NOVA_PASS' : '34nova_ks43',
-               'NEUTRON_PASS' : '34neu43',
-               'HEAT_PASS' : '34heat_ks43',
-               'GLANCE_PASS' : '34glance_ks43',
-               'SAHARA_PASS' : '34sahara_ks43',
-               'CINDER_PASS' : '34cinder_ks43',
-               'SWIFT_PASS' : '34$w1f43',
-               'TROVE_PASS' : '34Tr0v343',
-               'TROVE_DBPASS' : '34Tr0v3db4s343'}
-
-    # basic networking
-
-    controllerManagement = { 'DEVICE' : 'eth1',
-                             'IPADDR' : '192.168.1.11',
-                             'NETMASK' : '255.255.255.0'}
-
-    controllerTunnels = { 'DEVICE' : 'eth2',
-                          'IPADDR' : '192.168.2.11',
-                          'NETMASK' : '255.255.255.0'}
-
-    networkManagement = { 'DEVICE' : 'eth1',
-                          'IPADDR' : '192.168.1.21',
-                          'NETMASK' : '255.255.255.0'}
-
-    networkTunnels = { 'DEVICE' : 'eth2',
-                       'IPADDR' : '192.168.2.21',
-                       'NETMASK' : '255.255.255.0'}
-
-    networkExternal = { 'DEVICE' : 'eth3',
-                        'TYPE' : 'Ethernet',
-                        'ONBOOT' : '"yes"',
-                        'BOOTPROTO' : '"none"',
-                        'IPADDR' : '192.168.3.21'}
-
-    computeManagement = { 'DEVICE' : 'eth1',
-                          'IPADDR' : '192.168.1.41',
-                          'NETMASK' : '255.255.255.0'}
-
-    computeTunnels = { 'DEVICE' : 'eth2',
-                       'IPADDR' : '192.168.2.41',
-                       'NETMASK' : '255.255.255.0'}
-
-    hosts = { controllerManagement['IPADDR'] : 'controller',
-              networkManagement['IPADDR'] : 'network'}
-
-    # add the compute nodes to hosts config
-    computeIPs = dict()
-    baseIP = computeManagement['IPADDR']
-    for i, computeNode in enumerate(roledefs['compute']):
-        # increment base ip
-        baseIPListOfInts = [int(octet) for octet in baseIP.split('.')]
-        baseIPListOfInts[-1] += i
-        IP = "".join([str(octet)+'.' for octet in baseIPListOfInts])
-        IP = IP[:-1] # remove last dot
-
-        hosts[IP] = 'compute' + str(i+1)
-
-
+# ntp
+# get a list of ntp servers, from config file
+ntpServers = parseConfig(mainCfg,'ntp')['servers'].split(',')
