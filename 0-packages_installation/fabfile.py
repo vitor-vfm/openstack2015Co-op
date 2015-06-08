@@ -29,6 +29,8 @@ env_config.setupLoggingInFabfile(log_file)
 
 ################### Deployment ########################################
 
+
+
 # General function to install packages that should be in all or several nodes
 @with_settings(warn_only=True)
 def install_packages():
@@ -120,6 +122,13 @@ def install_packages():
 
 def ask_for_reboot():
     sudo_log('wall Everybody please reboot')
+
+
+@roles('controller','compute','network','storage')
+def test():
+    run("echo Hello $(hostname)")
+
+
 
 @roles('controller','compute','network','storage')
 def deploy():
