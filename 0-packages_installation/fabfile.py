@@ -28,8 +28,10 @@ log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
 
 ################### Deployment ########################################
-
-
+@roles('controller','compute','network')
+def renameHost():
+	run('hostnamectl set-hostname %s' % env['host'])
+	run('hostname')
 
 # General function to install packages that should be in all or several nodes
 @with_settings(warn_only=True)
