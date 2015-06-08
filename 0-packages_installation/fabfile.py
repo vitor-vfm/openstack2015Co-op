@@ -58,6 +58,7 @@ def install_packages():
         sudo('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
+        # NB: crudini was not used because of unexpected parsing 1) without equal sign 2) ! include dir  
 
         section_header = '\[mysqld\]'
 
