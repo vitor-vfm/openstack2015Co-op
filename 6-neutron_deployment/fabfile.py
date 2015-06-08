@@ -30,6 +30,9 @@ neutron_conf = '/etc/neutron/neutron.conf'
 # get passwords from their config file
 passwd = env_config.passwd
 
+# get database script
+database_script = env_config.databaseScript.replace("NEUTRON_DBPASS",passwd["NEUTRON_DBPASS"])
+
 # Logging
 log_file = 'neutron_deployment.log'
 env_config.setupLoggingInFabfile(log_file)
@@ -47,12 +50,9 @@ sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 def create_neutron_database():
 
     # read script, removing comments
-    database_script = "".join( [line for line in open(database_script_file,'r').readlines() \
-            if line[0:2] != '--'] )
+    # database_script = "".join( [line for line in open(database_script_file,'r').readlines() \
+    #         if line[0:2] != '--'] )
     # database_script = local("grep -v '^--' {}".format(database_script_file))
-
-    # subtitute real password
-    database_script = database_script.replace("NEUTRON_DBPASS",passwd["NEUTRON_DBPASS"])
     
     # send the commands to mysql client
     sudo_log('''echo "{}" | mysql -u root'''.format(database_script))
@@ -257,8 +257,7 @@ def configure_ML2_plug_in_network():
     # configure the external flat provider network 
     sudo_log('crudini --set ' + ml2_conf_file + ' ovs enable_tunneling True')
     sudo_log('crudini --set ' + ml2_conf_file + ' ovs bridge_mappings external:br-ex')
-    local_ip_file_location = '../1-network_deployment/config_files/network_node_instance_tunnels_interface_config'
-    local_ip = local("crudini --get {} '' IPADDR".format(local_ip_file_location),capture=True)
+    local_ip = env_config.networkTunnels['IPADDR']
     sudo_log('crudini --set ' + ml2_conf_file + ' ovs local_ip ' + local_ip)
 
     # enable GRE tunnels 
@@ -324,8 +323,7 @@ def configure_Open_vSwitch_service():
     if 'br-ex' not in sudo_log("ovs-vsctl list-br"):
         sudo_log("ovs-vsctl add-br br-ex")
 
-        interface_config_file = "../1-network_deployment/config_files/network_node_external_interface_config"
-        interface_name = local("crudini --get {} '' DEVICE".format(interface_config_file),capture=True)
+        interface_name = env_config.networkExternal['DEVICE']
         sudo_log("ovs-vsctl --log-file=/home/uadm/ovslog add-port br-ex '{}'".format(interface_name))
 
     
@@ -399,8 +397,7 @@ def configure_ML2_plug_in_compute():
 
     # configure the external flat provider network 
     sudo_log('crudini --set ' + ml2_conf_file + ' ovs enable_tunneling True')
-    local_ip_file_location = '../1-network_deployment/config_files/compute_instance_tunnels_interface_config'
-    local_ip = local("crudini --get {} '' IPADDR".format(local_ip_file_location),capture=True)
+    local_ip = env_config.computeTunnels['IPADDR']
     sudo_log('crudini --set ' + ml2_conf_file + ' ovs local_ip ' + local_ip)
 
     # enable GRE tunnels 
@@ -564,13 +561,9 @@ def verify_neutron_agents_compute():
 
     # verify successful launch of the compute agents
 
-    # get list of compute nodes from the hosts config file
-    hosts_config = open('../1-network_deployment/config_files/hosts_config','r').readlines()
-    lines_with_compute = [line for line in hosts_config if 'compute' in line and line[0] != '#']
-    number_of_compute_nodes = len(lines_with_compute)
-    # hostnames will be compute1, compute2, etc.
-    list_of_compute_hostnames = ['compute' + str(i+1) for i in range(number_of_compute_nodes)] 
-
+    # get list of compute nodes from the hosts config
+    list_of_compute_hostnames = [hostname for hostname in env_config.hosts.values()\
+            if 'compute' in hostname]
 
     exports = open(admin_openrc,'r').read()
     with prefix(exports):
