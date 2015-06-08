@@ -213,33 +213,6 @@ def database_check(db):
         logging.debug(message,extra=log_dict)
 
 
-# Do a fabric command on the string 'command' and log results
-def fabricLog(command,func,log_dict):
-    output = func(command)
-    if output.return_code != 0:
-        logging.error("Problem on command '{}'".format(command),extra=log_dict)
-    else:
-        for line in output.splitlines():
-            # don't log lines that have passwords
-            if 'pass' not in line.lower():
-                # skip empty lines
-                if line != '' or line !='\n':
-                    logging.debug(line,extra=log_dict)
-    return output
-
-
-def setupLoggingInFabfile(log_file):
-    logfilename = log_location + log_file
-
-    if log_file not in check_output('ls ' + log_location,shell=True):
-        # file doesn't exist yet; create it
-        call('touch ' + logfilename,shell=True)
-        call('chmod 644 ' + logfilename,shell=True)
-
-    logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=log_format)
-    # set paramiko logging to only output warnings
-    logging.getLogger("paramiko").setLevel(logging.WARNING)
-
 def getRole():
     for role in env.roledefs.keys():
         if env.host_string in env.roledefs[role]:
@@ -269,7 +242,50 @@ def parseConfig(cfg,section):
 
 ############################## Logging #########################
 
-log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:%(role)s:\t%(message)s'
+def log_general(func,msg):
+    d = {'host_string':env.host}
+    return func(msg,extra = d)
+
+log_debug = lambda msg : log_general(logging.debug,msg)
+log_error = lambda msg : log_general(logging.error,msg)
+log_info = lambda msg : log_general(logging.info,msg)
+
+# Do a fabric command on the string 'command' and log results
+def fabricLog(command,func):
+    output = func(command)
+    if output.return_code != 0:
+        log_error("Problem on command '{}'")
+    else:
+        for line in output.splitlines():
+            # don't log lines that have passwords
+            if 'pass' not in line.lower():
+                # skip empty lines
+                if line != '' or line !='\n':
+                    log_debug(line)
+    return output
+
+
+def run_log(command):
+    return fabricLog(command,run)
+
+def sudo_log(command):
+    return fabricLog(command,sudo)
+
+def setupLoggingInFabfile(log_file):
+    logfilename = log_location + log_file
+
+    if log_file not in check_output('ls ' + log_location,shell=True):
+        # file doesn't exist yet; create it
+        call('touch ' + logfilename,shell=True)
+        call('chmod 644 ' + logfilename,shell=True)
+
+    logging.basicConfig(filename=logfilename,level=logging.DEBUG,format=log_format,\
+            host_string=env.host)
+    # set paramiko logging to only output warnings
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+
+log_format = '%(asctime)-15s:%(levelname)s:%(host_string)s:\t%(message)s'
 log_location = '../var/log/juno/'
 if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),shell=True):
     # location not created yet
@@ -312,7 +328,7 @@ else:
     # ntp
     ntpServers = ['time1.srv.ualberta.ca','time2.srv.ualberta.ca','time3.srv.ualberta.ca']
 
-    # get passwords from config file
+    # passwords
     passwd = { 'METADATA_SECRET' : '34m3t$3c43',
                'RABBIT_PASS' : '34RabbGuest43',
                'NOVA_DBPASS' : '34nova_db43',

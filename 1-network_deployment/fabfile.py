@@ -12,6 +12,7 @@ import ConfigParser
 import sys
 sys.path.append('../global_config_files')
 import env_config
+from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 
 ############################ Config ########################################
@@ -26,12 +27,6 @@ if output['debug']:
 
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
-log_dict = {'host_string':'','role':''}
-
-# Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
-# Do a fabric sudo on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
 
 ################### General functions ########################################
 
@@ -128,7 +123,7 @@ def set_up_network_interface(specs_dict,role):
             print debug_str('rm ' + config_file_name)
 
 
-    logging.debug('Set up virtual NIC with conf file {}'.format(config_file_name),extra=log_dict)
+    log_debug('Set up virtual NIC with conf file {}'.format(config_file_name))
 
 def set_hosts():
     # configure the /etc/hosts file to put aliases
@@ -206,9 +201,6 @@ def deployInterface(interface,specs):
 
 @roles('controller')
 def controller_network_deploy():
-    # create log dictionary (to set up the log formatting)
-    global log_dict
-    log_dict = {'host_string':env.host_string,'role':env_config.getRole()}
 
     deployInterface('controller management',env_config.controllerManagement)
 
@@ -217,13 +209,10 @@ def controller_network_deploy():
     restart_network()
     set_hosts()
     configChrony()
-    logging.debug('Deployment done on host',extra=log_dict)
+    log_debug('Deployment done on host')
 
 @roles('network')
 def network_node_network_deploy():
-    # create log dictionary (to set up the log formatting)
-    global log_dict
-    log_dict = {'host_string':env.host_string,'role':'network'}
 
     deployInterface('network management',env_config.networkManagement)
 
@@ -235,13 +224,10 @@ def network_node_network_deploy():
     restart_network()
     set_hosts()
     configChrony()
-    logging.debug('Deployment done on host',extra=log_dict)
+    log_debug('Deployment done on host')
 
 @roles('compute')
 def compute_network_deploy():
-    # create log dictionary (to set up the log formatting)
-    global log_dict
-    log_dict = {'host_string':env.host_string,'role':'compute'}
 
     deployInterface('compute management',env_config.computeManagement)
 
@@ -250,22 +236,16 @@ def compute_network_deploy():
     restart_network()
     set_hosts()
     configChrony()
-    logging.debug('Deployment done on host',extra=log_dict)
+    log_debug('Deployment done on host')
 
 @roles('storage')
 def storage_network_deploy():
-    # create log dictionary (to set up the log formatting)
-    global log_dict
-    log_dict = {'host_string':env.host_string,'role':'compute'}
 
     configChrony()
     
-    logging.debug('Deployment done on host',extra=log_dict)
+    log_debug('Deployment done on host')
 
 def deploy():
-    # create log dictionary (to set up the log formatting)
-    log_dict = {'host_string':'','role':''}
-    logging.debug('Starting deployment',extra=log_dict)
    
     print blue('Ensure that you\'ve run packages installation fabfile first')
 
@@ -287,9 +267,6 @@ def ping_ip(ip_address, host, role='', type_interface=''):
 
 @roles('controller')
 def network_tdd_controller():
-    # create log dictionary (to set up the log formatting)
-    global log_dict
-    log_dict = {'host_string':env.host_string,'role':'controller'}
 
     # ping a website
     ping_ip('www.google.ca','google.ca')
@@ -305,9 +282,6 @@ def network_tdd_controller():
 
 @roles('network')
 def network_tdd_network():
-    # create log dictionary (to set up the log formatting)
-    global log_dict
-    log_dict = {'host_string':env.host_string,'role':'network'}
 
     # needs to ping management interface(s) on controller node(s)
     # and instance tunnels interface(s) on compute node(s)
@@ -329,9 +303,6 @@ def network_tdd_network():
 
 @roles('compute')
 def network_tdd_compute():
-    # create log dictionary (to set up the log formatting)
-    global log_dict
-    log_dict = {'host_string':env.host_string,'role':'compute'}
 
     # check for connection to internet
     ping_ip('google.ca', 'google.ca')
