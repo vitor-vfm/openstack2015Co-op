@@ -29,6 +29,8 @@ env_config.setupLoggingInFabfile(log_file)
 
 ################### Deployment ########################################
 
+
+
 # General function to install packages that should be in all or several nodes
 @with_settings(warn_only=True)
 def install_packages():
@@ -89,7 +91,7 @@ def install_packages():
                         pattern_to_find = line
                     sudo_log('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
-                    sudo_log('''sed -i '/{}/ a\{}' {}'''.format(section_header,line,confFile))
+                    sudo("sed -i '/{}/ a\{}' {}".format(section_header,line,confFile))
 
             else:
                 # simply add the section
@@ -102,7 +104,7 @@ def install_packages():
             if sudo_log('grep bind-address {}'.format(confFile)).return_code != 0:
                 # simply add the new line
                 new_line = "bind-address = " + bind_address
-                sudo_log("""sed -i "/{}/a {}" my.cnf""".format(section_header,new_line))
+                sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
             else:
                 sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
 
@@ -120,6 +122,13 @@ def install_packages():
 
 def ask_for_reboot():
     sudo_log('wall Everybody please reboot')
+
+
+@roles('controller','compute','network','storage')
+def test():
+    run("echo Hello $(hostname)")
+
+
 
 @roles('controller','compute','network','storage')
 def deploy():
