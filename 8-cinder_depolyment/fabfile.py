@@ -21,14 +21,6 @@ env.roledefs = env_config.roledefs
 
 admin_openrc = "../global_config_files/admin-openrc.sh"
 
-demo_openrc = "../global_config_files/demo-openrc.sh"
-
-controller_management_interface_file_location = '../1-network_deployment/config_files/controller_management_interface_config'
-controller_management_interface_file_name = 'controller_management_interface_config'
-
-compute_management_interface_file_location = '../1-network_deployment/config_files/compute_management_interface_config'
-compute_management_interface_file_name = 'compute_management_interface_config'
-
 etc_cinder_config_file = "/etc/cinder/cinder.conf"
 
 passwd = env_config.passwd
@@ -41,9 +33,9 @@ env_config.setupLoggingInFabfile(log_file)
 log_dict = {'host_string':'','role':''}
 
 # Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
+run_log = lambda command : env_config.fabricLog(command,run)
 # Do a fabric sudo on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
+sudo_log = lambda command : env_config.fabricLog(command,sudo)
     
 ################### General functions ########################################
 
@@ -62,11 +54,6 @@ def set_up_NIC_using_nmcli(ifname,ip):
     sudo_log(command)
 
 
-def get_parameter(config_file, section, parameter):
-    crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
-    return local(crudini_command, capture=True)
-#    return sudo_log(crudini_command)
-
 def set_parameter(config_file, section, parameter, value):
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
     sudo_log(crudini_command)
@@ -83,25 +70,25 @@ def setup_cinder_database_on_controller(CINDER_DBPASS):
     
 
 
-def setup_cinder_keystone_on_controller(CINDER_PASS):
-    source_command = "source admin-openrc.sh"
-    with prefix(source_command):
-        sudo_log("keystone user-create --name cinder --pass {}".format(CINDER_PASS))
-        sudo_log("keystone user-role-add --user cinder --tenant service --role admin")
-        sudo_log("keystone service-create --name cinder --type volume --description 'OpenStack Block Storage'")
-        sudo_log("keystone service-create --name cinderv2 --type volumev2 --description 'OpenStack Block Storage'")
-        sudo_log("keystone endpoint-create \
-        --service-id $(keystone service-list | awk '/ volume / {print $2}') \
-        --publicurl http://controller:8776/v1/%\(tenant_id\)s \
-        --internalurl http://controller:8776/v1/%\(tenant_id\)s \
-        --adminurl http://controller:8776/v1/%\(tenant_id\)s \
-        --region regionOne")
-        sudo_log("keystone endpoint-create \
-        --service-id $(keystone service-list | awk '/ volumev2 / {print $2}') \
-        --publicurl http://controller:8776/v2/%\(tenant_id\)s \
-        --internalurl http://controller:8776/v2/%\(tenant_id\)s \
-        --adminurl http://controller:8776/v2/%\(tenant_id\)s \
-        --region regionOne")
+#def setup_cinder_keystone_on_controller(CINDER_PASS):
+#    source_command = "source admin-openrc.sh"
+#    with prefix(source_command):
+#        sudo_log("keystone user-create --name cinder --pass {}".format(CINDER_PASS))
+#        sudo_log("keystone user-role-add --user cinder --tenant service --role admin")
+#        sudo_log("keystone service-create --name cinder --type volume --description 'OpenStack Block Storage'")
+#        sudo_log("keystone service-create --name cinderv2 --type volumev2 --description 'OpenStack Block Storage'")
+#        sudo_log("keystone endpoint-create \
+#        --service-id $(keystone service-list | awk '/ volume / {print $2}') \
+#        --publicurl http://controller:8776/v1/%\(tenant_id\)s \
+#        --internalurl http://controller:8776/v1/%\(tenant_id\)s \
+#        --adminurl http://controller:8776/v1/%\(tenant_id\)s \
+#        --region regionOne")
+#        sudo_log("keystone endpoint-create \
+#        --service-id $(keystone service-list | awk '/ volumev2 / {print $2}') \
+#        --publicurl http://controller:8776/v2/%\(tenant_id\)s \
+#        --internalurl http://controller:8776/v2/%\(tenant_id\)s \
+#        --adminurl http://controller:8776/v2/%\(tenant_id\)s \
+#        --region regionOne")
 
 def setup_cinder_config_files_on_controller(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP):
     installation_command = "yum install -y openstack-cinder python-cinderclient python-oslo-db"
@@ -158,7 +145,7 @@ def setup_cinder_on_controller():
     #setup_cinder_keystone_on_controller(passwd['CINDER_PASS'])
 
 
-    CONTROLLER_MANAGEMENT_IP = get_parameter(controller_management_interface_file_location, "''", 'IPADDR')
+    CONTROLLER_MANAGEMENT_IP =  env_config.controllerManagement['IPADDR']
 
     setup_cinder_config_files_on_controller(passwd['CINDER_PASS'], passwd['CINDER_DBPASS'], passwd['RABBIT_PASS'], CONTROLLER_MANAGEMENT_IP)
     populate_database_on_controller()
@@ -247,10 +234,10 @@ def setup_cinder_on_storage():
     config_file = "/etc/lvm/lvm.conf"
     # variable setup
 
-    CINDER_DBPASS = get_parameter(env_config.global_config_file,'mysql','CINDER_DBPASS')
-    CINDER_PASS = get_parameter(env_config.global_config_file,'keystone','CINDER_PASS')
-    RABBIT_PASS = get_parameter(env_config.global_config_file,'rabbitmq', 'RABBIT_PASS')
-    NETWORK_MANAGEMENT_IP = get_parameter(compute_management_interface_file_location, "''", 'IPADDR')
+    CINDER_DBPASS = passwd['CINDER_DBPASS']
+    CINDER_PASS = passwd['CINDER_PASS']
+    RABBIT_PASS = passwd['RABBIT_PASS']
+    NETWORK_MANAGEMENT_IP = env_config.networkManagement['IPADDR']
 
     setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)        
     start_services_on_storage()
