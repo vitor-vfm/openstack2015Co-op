@@ -5,7 +5,7 @@ from fabric.context_managers import cd
 from fabric.state import output
 from fabric.colors import green, red, blue
 import string
-
+import myLib
 
 import sys
 sys.path.append('../global_config_files')
@@ -30,8 +30,10 @@ env_config.setupLoggingInFabfile(log_file)
 ################### Deployment ########################################
 @roles('controller','compute','network')
 def renameHost():
+	msg='Renaming host to %s' % env['host']
 	run('hostnamectl set-hostname %s' % env['host'])
-	run('hostname')
+	printMessage("good", msg)
+	logging.debug(msg)
 
 # General function to install packages that should be in all or several nodes
 @with_settings(warn_only=True)
@@ -57,9 +59,8 @@ def install_packages():
     sudo_log("yum -y install wget")
 
 
-    sudo_log("crudini --set /etc/selinux/config '' SELINUX disabled")
 
-
+def instalMariaDB():
     # Install MariaDB
     # Only on controller node(s)
     
@@ -137,3 +138,5 @@ def test():
 def deploy():
     execute(install_packages)
 
+
+def
