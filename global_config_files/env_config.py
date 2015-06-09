@@ -389,11 +389,12 @@ else:
     # add the compute nodes to hosts config
     baseIP = computeManagement['IPADDR']
     for i, computeNode in enumerate(roledefs['compute']):
-        # increment base ip
+        # turn IP into a list of ints 
         baseIPListOfInts = [int(octet) for octet in baseIP.split('.')]
+        # increment last octet
         baseIPListOfInts[-1] += i
-        IP = "".join([str(octet)+'.' for octet in baseIPListOfInts])
-        IP = IP[:-1] # remove last dot
+        # turn it back into a string
+        IP = ".".join([str(octet) for octet in baseIPListOfInts])
 
         hosts[IP] = 'compute' + str(i+1)
 
