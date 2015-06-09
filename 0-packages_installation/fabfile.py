@@ -138,5 +138,6 @@ def test():
 def deploy():
     execute(install_packages)
 
-
-def
+@roles('controller','compute','network')
+def tdd():
+	run('hostname')
