@@ -7,7 +7,8 @@ from fabric.colors import green, red, blue
 import string
 
 import sys
-sys.path.append('..','../global_config_files')
+sys.path.append('../global_config_files')
+sys.path.append('..')
 import myLib
 
 import env_config
