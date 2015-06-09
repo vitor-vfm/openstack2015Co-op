@@ -223,7 +223,6 @@ def getRole():
 # parse a config file and return all the 
 # variables in the given section in a dictionary
 def parseConfig(cfg,section):
-    print cfg
 
     # save config file in a ConfigParser object
     parser = ConfigParser.ConfigParser()
@@ -254,7 +253,7 @@ log_info = lambda msg : log_general(logging.info,msg)
 def fabricLog(command,func):
     output = func(command)
     if output.return_code != 0:
-        log_error("Problem on command '{}'")
+        log_error("Problem on command '{}'".format(command))
     else:
         for line in output.splitlines():
             # don't log lines that have passwords
