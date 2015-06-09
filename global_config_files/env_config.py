@@ -405,5 +405,7 @@ else:
             "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' " +\
             "IDENTIFIED BY 'NEUTRON_DBPASS';"
 
-
+    # Partitioning data
+    partition = {   'size_reduction_of_home' : '3.5G',
+                    'partition_size' : '500M' }
 
