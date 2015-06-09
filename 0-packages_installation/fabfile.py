@@ -50,6 +50,9 @@ def install_packages():
     # Install RDO repository for Juno
     sudo_log('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
 
+    # Install GlusterFS
+    sudo_log('yum -y install glusterfs-fuse glusterfs')
+
     # Install Crudini
     sudo_log("yum -y install crudini")
 
