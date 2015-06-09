@@ -223,7 +223,6 @@ def getRole():
 # parse a config file and return all the 
 # variables in the given section in a dictionary
 def parseConfig(cfg,section):
-    print cfg
 
     # save config file in a ConfigParser object
     parser = ConfigParser.ConfigParser()
@@ -254,7 +253,7 @@ log_info = lambda msg : log_general(logging.info,msg)
 def fabricLog(command,func):
     output = func(command)
     if output.return_code != 0:
-        log_error("Problem on command '{}'")
+        log_error("Problem on command '{}'".format(command))
     else:
         for line in output.splitlines():
             # don't log lines that have passwords
@@ -390,11 +389,12 @@ else:
     # add the compute nodes to hosts config
     baseIP = computeManagement['IPADDR']
     for i, computeNode in enumerate(roledefs['compute']):
-        # increment base ip
+        # turn IP into a list of ints 
         baseIPListOfInts = [int(octet) for octet in baseIP.split('.')]
+        # increment last octet
         baseIPListOfInts[-1] += i
-        IP = "".join([str(octet)+'.' for octet in baseIPListOfInts])
-        IP = IP[:-1] # remove last dot
+        # turn it back into a string
+        IP = ".".join([str(octet) for octet in baseIPListOfInts])
 
         hosts[IP] = 'compute' + str(i+1)
 
