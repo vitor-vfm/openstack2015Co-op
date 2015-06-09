@@ -9,11 +9,10 @@ import subprocess
 
 import sys
 sys.path.append('../global_config_files')
+sys.path.append('..')
 import env_config
 from env_config import log_debug, log_info, log_error, run_log, sudo_log
-
-
-
+from myLib import *
 
 
 ############################ Config ########################################
@@ -309,7 +308,7 @@ def configure_Open_vSwitch_service():
     sudo_log("systemctl start openvswitch.service")
 
     # for testing
-    sudo_log("ovs-vsctl del-br br-ex")
+    # sudo_log("ovs-vsctl del-br br-ex")
 
     # add br-ex bridge
     if 'br-ex' not in sudo_log("ovs-vsctl list-br"):
@@ -348,7 +347,7 @@ def network_deploy():
 
     configure_metadata_agent()
 
-    # configure_Open_vSwitch_service()
+    configure_Open_vSwitch_service()
 
     # finalize installation
 
@@ -439,6 +438,55 @@ def compute_deploy():
     # start Open vSwitch
     sudo_log("systemctl enable neutron-openvswitch-agent.service")
     sudo_log("systemctl start neutron-openvswitch-agent.service")
+
+# initial network
+def createExternalNetwork():
+    msg = 'create external network on network node'
+    runCheck(msg,'neutron net-create ext-net --router:external True '+\
+            '--provider:physical_network external --provider:network_type flat')
+
+def createInitialSubnet():
+    msg = 'create initial subnet on network node'
+
+    # fix this IP scheme
+    floatingIPStart = '192.168.3.100'
+    floatingIPEnd = '192.168.3.200'
+    ExternalNetworkGateway = '192.168.3.1'
+    ExternalNetworkCIDR = '192.168.3.0/24'
+
+    runCheck(msg,'neutron subnet-create ext-subnet --allocation-pool start={},end={} --disable-dhcp --gateway {} {}'\
+              .format(floatingIPStart,floatingIPEnd,ExternalNetworkGateway,ExternalNetworkCIDR))
+
+def createDemoTenantNetwork():
+    msg = 'create initial demo tenant network on network node'
+    gateway = '192.168.1.1'
+    cidr = '192.168.1.0/24'
+    runCheck(msg,'neutron subnet-create demo-net --name demo-subnet --gateway {} {}'.format(gateway,cidr))
+
+def createSetupRouter():
+    msg = 'create the demo router'
+    runCheck(msg,'neutron router-create demo-router')
+
+    msg = 'attach the demo router to the demo subnet'
+    runCheck(msg,'neutron router-interface-add demo-router demo-subnet')
+
+    msg = 'attach the router to the external network by setting it as the gateway'
+    runCheck(msg,'neutron router-gateway-set demo-router ext-net')
+
+
+@roles('network')
+def createInitialNetwork():
+    # Creates a sample network for testing 
+
+    # get admin credentials
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
+        createExternalNetwork()
+        createInitialSubnet()
+        createDemoTenantNetwork()
+        createSetupRouter()
+
+
 
 
 
