@@ -28,8 +28,10 @@ log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
 
 ################### Deployment ########################################
-
-
+@roles('controller','compute','network')
+def renameHost():
+	run('hostnamectl set-hostname %s' % env['host'])
+	run('hostname')
 
 # General function to install packages that should be in all or several nodes
 @with_settings(warn_only=True)
@@ -124,13 +126,14 @@ def ask_for_reboot():
     sudo_log('wall Everybody please reboot')
 
 
-@roles('controller','compute','network','storage')
+#@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def test():
     run("echo Hello $(hostname)")
 
 
-
-@roles('controller','compute','network','storage')
+#@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def deploy():
     execute(install_packages)
 

@@ -296,7 +296,10 @@ log_dict = {'host_string':'','role':''} # default value for log_dict
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
     # PRODUCTION
-    pass
+	roledefs = { 'compute' : ['root@compute1','root@compute2','root@compute3','root@compute4'],
+			 'network' : ['root@network'],
+			 'controller' : ['root@controller']}
+
 else:
     # DEVELOPMENT
 
