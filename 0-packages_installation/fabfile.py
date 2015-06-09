@@ -6,9 +6,10 @@ from fabric.state import output
 from fabric.colors import green, red, blue
 import string
 
-
 import sys
 sys.path.append('../global_config_files')
+sys.path.append('..')
+import myLib
 
 import env_config
 from env_config import log_debug, log_info, log_error, run_log, sudo_log
@@ -28,8 +29,12 @@ log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
 
 ################### Deployment ########################################
-
-
+@roles('controller','compute','network')
+def renameHost():
+	msg='Renaming host to %s' % env['host']
+	run('hostnamectl set-hostname %s' % env['host'])
+	printMessage("good", msg)
+	logging.debug(msg)
 
 # General function to install packages that should be in all or several nodes
 @with_settings(warn_only=True)
@@ -48,6 +53,9 @@ def install_packages():
     # Install RDO repository for Juno
     sudo_log('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
 
+    # Install GlusterFS
+    sudo_log('yum -y install glusterfs-fuse glusterfs')
+
     # Install Crudini
     sudo_log("yum -y install crudini")
 
@@ -55,9 +63,8 @@ def install_packages():
     sudo_log("yum -y install wget")
 
 
-    sudo_log("crudini --set /etc/selinux/config '' SELINUX disabled")
 
-
+def instalMariaDB():
     # Install MariaDB
     # Only on controller node(s)
     
@@ -124,13 +131,17 @@ def ask_for_reboot():
     sudo_log('wall Everybody please reboot')
 
 
-@roles('controller','compute','network','storage')
+#@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def test():
     run("echo Hello $(hostname)")
 
 
-
-@roles('controller','compute','network','storage')
+#@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def deploy():
     execute(install_packages)
 
+@roles('controller','compute','network')
+def tdd():
+	run('hostname')

@@ -144,6 +144,7 @@ def set_hosts():
     run_log("sed -i '/controller/d' {}".format(confFile))
     run_log("sed -i '/network/d' {}".format(confFile))
     run_log("sed -i '/compute/d' {}".format(confFile))
+    run_log("sed -i '/storage/d' {}".format(confFile))
 
     # add new aliases
     lines_to_add = [ip + "\t" + aliases[ip] for ip in aliases.keys()]
@@ -241,8 +242,11 @@ def compute_network_deploy():
 @roles('storage')
 def storage_network_deploy():
 
-    configChrony()
+    deployInterface('storage management',env_config.storageManagement)
     
+    restart_network()
+    set_hosts()
+    configChrony()
     log_debug('Deployment done on host')
 
 def deploy():
@@ -253,6 +257,7 @@ def deploy():
         execute(controller_network_deploy)
         execute(network_node_network_deploy)
         execute(compute_network_deploy)
+        execute(storage_network_deploy)
 
 ######################################## TDD #########################################
 
@@ -325,6 +330,13 @@ def network_tdd_compute():
     for interface_ip, network_node in network_tunnels_interfaces:
         ping_ip(interface_ip, network_node, 'network', 'instance tunnel')
 
+@roles(env.roledefs.keys())
+def network_tdd_all():
+    # see if all the nodes can ping all the management interfaces
+    for ip in env_config.hosts.keys():
+        ping_ip(ip,env_config.hosts[ip])
+
+
 
 @roles('controller')
 def chronyTDDController():
@@ -335,6 +347,7 @@ def chronyTDDController():
             print green("server {} is a source for chrony".format(server))
         else:
             print red("server {} is not a source for chrony".format(server))
+
 
 @roles([r for r in env.roledefs.keys() if r != 'controller'])
 def chronyTDDOtherNodes():
@@ -355,4 +368,5 @@ def tdd():
 	execute(network_tdd_controller)
 	execute(network_tdd_network)
 	execute(network_tdd_compute)
+	execute(network_tdd_all)
 	execute(chronyTDD)
