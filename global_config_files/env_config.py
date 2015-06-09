@@ -383,8 +383,13 @@ else:
                        'IPADDR' : '192.168.2.41',
                        'NETMASK' : '255.255.255.0'}
 
+    storageManagement = { 'DEVICE' : 'eth1',
+                          'IPADDR' : '192.168.1.51',
+                          'NETMASK' : '255.255.255.0'}
+
     hosts = { controllerManagement['IPADDR'] : 'controller',
-              networkManagement['IPADDR'] : 'network'}
+              networkManagement['IPADDR'] : 'network',
+              storageManagement['IPADDR'] : 'storage'}
 
     # add the compute nodes to hosts config
     baseIP = computeManagement['IPADDR']
