@@ -5,10 +5,10 @@ from fabric.context_managers import cd
 from fabric.state import output
 from fabric.colors import green, red, blue
 import string
-import myLib
 
 import sys
-sys.path.append('../global_config_files')
+sys.path.append('..','../global_config_files')
+import myLib
 
 import env_config
 from env_config import log_debug, log_info, log_error, run_log, sudo_log
