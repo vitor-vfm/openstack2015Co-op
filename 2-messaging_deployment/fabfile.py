@@ -64,9 +64,11 @@ def installRabbitMQ():
         log_error('Failed to start rabbitmq-server.service')
     if sudo_log('systemctl restart rabbitmq-server.service').return_code != 0:
         log_error('Failed to restart rabbitmq-server.service')
-    if sudo_log('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
-        log_error('Failed to add port 5672 to firewall')
-    sudo_log('firewall-cmd --reload')
+
+    # Unnecessary since we don't have a firewall between the nodes
+    # if sudo_log('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
+    #     log_error('Failed to add port 5672 to firewall')
+    # sudo_log('firewall-cmd --reload')
 
 @roles('controller')
 def change_password():
