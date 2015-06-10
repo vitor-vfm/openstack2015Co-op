@@ -11,8 +11,9 @@ import ConfigParser
 
 import sys
 sys.path.append('../global_config_files')
+sys.path.append('..')
 import env_config
-from env_config import log_debug, log_info, log_error, run_log, sudo_log
+from myLib import *
 
 
 ############################ Config ########################################
@@ -61,15 +62,16 @@ def set_up_NIC_using_nmcli(specs_dict):
 
     ifname = specs_dict['DEVICE']
     ip = specs_dict['IPADDR']
-    # ifname = sudo_log("crudini --get {} '' DEVICE".format(conf_file))
-    # ip = sudo_log("crudini --get {} '' IPADDR".format(conf_file))
+    # ifname = sudo("crudini --get {} '' DEVICE".format(conf_file))
+    # ip = sudo("crudini --get {} '' IPADDR".format(conf_file))
 
     command = "nmcli connection add type ethernet"
     command += " con-name " + ifname # connection name is the same as interface name
     command += " ifname " + ifname
     command += " ip4 " + ip
 
-    sudo_log(command)
+    msg = "Set up a new NIC with name {} and IP {}".format(ifname,ip)
+    runCheck(msg, command)
 
 
 # General function to restart network
@@ -77,12 +79,14 @@ def restart_network():
     # restarting network to implement changes 
     # turn off NetworkManager and use regular network application to restart
 
-    # sudo_log('chkconfig NetworkManager off')
-    # sudo_log('service NetworkManager stop')
-    sudo_log('service network restart')
-    # sudo_log('service NetworkManager start')
+    # sudo('chkconfig NetworkManager off')
+    # sudo('service NetworkManager stop')
 
-    # sudo_log("systemctl restart NetworkManager")
+    msg = "Restart network service"
+    runCheck(msg, 'service network restart')
+
+    # sudo('service NetworkManager start')
+    # sudo("systemctl restart NetworkManager")
 
 # General function to set a virtual NIC
 def set_up_network_interface(specs_dict,role):
@@ -110,7 +114,8 @@ def set_up_network_interface(specs_dict,role):
     # change to network-scripts directory
     with cd('/etc/sysconfig/network-scripts'):
         # create ifcfg file in the directory
-        sudo_log('echo -e "{}" >{}'.format(config_file,config_file_name))
+        msg = 'Set up NIC with conf file {}'.format(config_file_name)
+        runCheck(msg, 'echo -e "{}" >{}'.format(config_file,config_file_name))
 
         if mode == 'debug':
             print blue('This is the test config file: ')
@@ -123,14 +128,13 @@ def set_up_network_interface(specs_dict,role):
             print debug_str('rm ' + config_file_name)
 
 
-    log_debug('Set up virtual NIC with conf file {}'.format(config_file_name))
 
 def set_hosts():
     # configure the /etc/hosts file to put aliases
     aliases = env_config.hosts
 
     # make backup
-    run_log("cp /etc/hosts /etc/hosts.back12")
+    run("cp /etc/hosts /etc/hosts.back12")
 
 
     if mode == 'normal':
@@ -141,17 +145,19 @@ def set_hosts():
         print blue("Debugging set_hosts")
 
     # delete previous aliases
-    run_log("sed -i '/controller/d' {}".format(confFile))
-    run_log("sed -i '/network/d' {}".format(confFile))
-    run_log("sed -i '/compute/d' {}".format(confFile))
-    run_log("sed -i '/storage/d' {}".format(confFile))
+    msg = "Delete aliases for the nodes that were already in /etc/hosts"
+    runCheck(msg, "sed -i '/controller/d' {};".format(confFile) + \
+            "sed -i '/network/d' {};".format(confFile) + \
+            "sed -i '/compute/d' {};".format(confFile) + \
+            "sed -i '/storage/d' {}".format(confFile))
 
     # add new aliases
     lines_to_add = [ip + "\t" + aliases[ip] for ip in aliases.keys()]
     for line in lines_to_add:
-        run_log("echo '{}' >>{}".format(line,confFile))
+        msg = "Add new aliases for /etc/hosts/"
+        runCheck(msg, "echo '{}' >>{}".format(line,confFile))
     # delete empty lines
-    run_log("sed -i '/^$/ d' {}".format(confFile))
+    run("sed -i '/^$/ d' {}".format(confFile))
 
     if mode == 'debug':
         # show file to check
@@ -173,30 +179,35 @@ def configChrony():
 
     confFile = '/etc/chrony.conf'
     # make a backup
-    sudo_log('cp {} {}.back12'.format(confFile,confFile))
+    sudo('cp {} {}.back12'.format(confFile,confFile))
 
     if mode == 'debug':
         confFile += '.back12'
 
     with settings(warn_only=True):
-        run_log("echo '{}' > {}".format(chrony_conf,confFile))
+        msg = 'Add NTP server to ' + confFile
+        runCheck(msg, "echo '{}' > {}".format(chrony_conf,confFile))
 
         if mode == 'debug':
             print blue('This is what the conf file will look like: ')
             print blue(sudo('cat ' + confFile,quiet=True))
 
-        run_log('systemctl restart chronyd.service')
-        result=run_log('systemctl is-enabled chronyd.service')
-        if result.failed :
-            print "Chrony config failed"
-        else:
-            print "Chrony config OK"
+        msg = 'Restart chronyd service'
+        runCheck(msg, 'systemctl restart chronyd.service')
 
 def deployInterface(interface,specs):
     if mode == 'debug':
         print ''
         print blue('Deploying Interface {} now'.format(interface))
         print ''
+
+    if 'management' in interface:
+        # set hostname according to the alias in /etc/hosts
+        # (network, compute1, compute2, etc)
+        hostname = env_config.hosts[specs['IPADDR']]
+        msg = 'Set hostname to ' + hostname
+        runCheck(msg, "hostname " + hostname)
+
     role = env_config.getRole()
     set_up_network_interface(specs,role)
 
@@ -210,7 +221,7 @@ def controller_network_deploy():
     restart_network()
     set_hosts()
     configChrony()
-    log_debug('Deployment done on host')
+    logging.debug('Deployment done on host' + env.host_string)
 
 @roles('network')
 def network_node_network_deploy():
@@ -225,7 +236,7 @@ def network_node_network_deploy():
     restart_network()
     set_hosts()
     configChrony()
-    log_debug('Deployment done on host')
+    logging.debug('Deployment done on host' + env.host)
 
 @roles('compute')
 def compute_network_deploy():
@@ -237,7 +248,7 @@ def compute_network_deploy():
     restart_network()
     set_hosts()
     configChrony()
-    log_debug('Deployment done on host')
+    logging.debug('Deployment done on host' + env.host)
 
 @roles('storage')
 def storage_network_deploy():
@@ -247,7 +258,7 @@ def storage_network_deploy():
     restart_network()
     set_hosts()
     configChrony()
-    log_debug('Deployment done on host')
+    logging.debug('Deployment done on host' + env.host)
 
 def deploy():
    
@@ -264,11 +275,13 @@ def deploy():
 # pings an ip address and see if it works
 def ping_ip(ip_address, host, role='', type_interface=''):
     ping_command = 'ping -q -c 1 ' + ip_address
-    result = run_log(ping_command)
-    if result.return_code != 0:
-        print(red('Problem from {} to {}({})\'s {} interface'.format(env.host_string, host, role, type_interface)))
+
+    if type_interface:
+        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host,type_interface,ip_address,env.host)
     else:
-        print(green('Okay from {} to {}({})\'s {} interface'.format(env.host_string, host, role, type_interface)))
+        msg = 'Ping {} from {}'.format(ip_address,env.host)
+
+    runCheck(msg, ping_command)
 
 @roles('controller')
 def network_tdd_controller():
@@ -330,33 +343,44 @@ def network_tdd_compute():
     for interface_ip, network_node in network_tunnels_interfaces:
         ping_ip(interface_ip, network_node, 'network', 'instance tunnel')
 
-@roles(env.roledefs.keys())
-def network_tdd_all():
-    # see if all the nodes can ping all the management interfaces
+@roles('storage')
+def network_tdd_storage():
+    # see if the storage node can ping all the management interfaces
     for ip in env_config.hosts.keys():
-        ping_ip(ip,env_config.hosts[ip])
+        ping_ip(ip,env_config.hosts[ip],type_interface='management')
 
 
 
 @roles('controller')
 def chronyTDDController():
     # check if ntp servers are in the sources
-    sourcesTable = sudo_log('chronyc sources')
+    msg = 'Get chrony sources on ' + env.host
+    sourcesTable = runCheck(msg, 'chronyc sources')
     for server in env_config.ntpServers:
         if server in sourcesTable:
-            print green("server {} is a source for chrony".format(server))
+            resultmsg = "server {} is a source for chrony".format(server)
+            print green(resultmsg)
+            logging.debug(resultmsg)
         else:
-            print red("server {} is not a source for chrony".format(server))
+            resultmsg = "server {} is not a source for chrony".format(server)
+            print red(resultmsg)
+            logging.error(resultmsg)
 
 
-@roles([r for r in env.roledefs.keys() if r != 'controller'])
+# run this on all nodes except controller
+@roles([r for r in env_config.roles if r != 'controller'])
 def chronyTDDOtherNodes():
     # check if controller is in the sources
-    sourcesTable = sudo_log('chronyc sources')
+    msg = 'Get chrony sources on ' + env.host
+    sourcesTable = runCheck(msg, 'chronyc sources')
     if 'controller' in sourcesTable:
-        print green("controller is a source for chrony")
+        resultmsg = "controller is a source for chrony"
+        print green(resultmsg)
+        logging.debug(resultmsg)
     else:
-        print red("controller is not a source for chrony")
+        resultmsg = "controller is not a source for chrony"
+        print red(resultmsg)
+        logging.error(resultmsg)
 
 def chronyTDD():
     execute(chronyTDDController)
@@ -368,5 +392,5 @@ def tdd():
 	execute(network_tdd_controller)
 	execute(network_tdd_network)
 	execute(network_tdd_compute)
-	execute(network_tdd_all)
+	execute(network_tdd_storage)
 	execute(chronyTDD)

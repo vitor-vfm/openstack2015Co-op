@@ -319,6 +319,8 @@ else:
                  'network' : ['root@networkVM'],
                  'storage' : ['root@storageVM'],
                  'controller' : ['root@controllerVM']}
+
+    roles = roledefs.keys()
     hosts = roledefs.values()
 
     # keystone data

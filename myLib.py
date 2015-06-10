@@ -27,3 +27,4 @@ def runCheck(msg,command):
         errormsg = 'Failure on: ' + msg
         logging.error(errormsg)
     printMessage(result,msg)
+    return out
