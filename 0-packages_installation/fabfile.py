@@ -108,7 +108,7 @@ def instalMariaDB():
 
             # set bind-address (controller's management interface)
             bind_address = env_config.controllerManagement['IPADDR']
-            if sudo_log('grep bind-address {}'.format(confFile)).return_code != 0:
+            if sudo('grep bind-address {}'.format(confFile),warn_only=True).return_code != 0:
                 # simply add the new line
                 new_line = "bind-address = " + bind_address
                 sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
