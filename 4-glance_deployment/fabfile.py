@@ -46,7 +46,7 @@ def set_parameter(config_file, section, parameter, value):
 
 def setup_glance_database(GLANCE_DBPASS):
     mysql_commands = "CREATE DATABASE IF NOT EXISTS glance;"
-    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
+    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'controller' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
 
     
@@ -56,8 +56,10 @@ def setup_glance_database(GLANCE_DBPASS):
 
 
 def setup_glance_keystone(GLANCE_PASS):
-    source_command = "source admin-openrc.sh"
-    with prefix(source_command):
+    # source_command = "source admin-openrc.sh"
+    # with prefix(source_command):
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
         if 'glance' not in sudo("keystone user-list"):
             sudo_log("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
             sudo_log("keystone user-role-add --user glance --tenant service --role admin")
