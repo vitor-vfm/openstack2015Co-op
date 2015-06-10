@@ -439,39 +439,65 @@ def compute_deploy():
     sudo_log("systemctl enable neutron-openvswitch-agent.service")
     sudo_log("systemctl start neutron-openvswitch-agent.service")
 
-# initial network
+# INITIAL NETWORK
+
 def createExternalNetwork():
-    msg = 'create external network on network node'
-    runCheck(msg,'neutron net-create ext-net --router:external True '+\
-            '--provider:physical_network external --provider:network_type flat')
+    if 'ext-net' in run('neutron --debug net-list'):
+        msg = 'Ext-net already created'
+        printMessage('good',msg)
+    else:
+        msg = 'create external network on network node'
+        runCheck(msg,'neutron net-create ext-net --router:external True '+\
+                '--provider:physical_network external --provider:network_type flat')
 
 def createInitialSubnet():
-    msg = 'create initial subnet on network node'
 
     # fix this IP scheme
-    floatingIPStart = '192.168.3.100'
-    floatingIPEnd = '192.168.3.200'
-    ExternalNetworkGateway = '192.168.3.1'
-    ExternalNetworkCIDR = '192.168.3.0/24'
+    floatingIPStart = '192.168.122.50'
+    floatingIPEnd = '192.168.122.100'
+    ExternalNetworkGateway = '192.168.122.1'
+    ExternalNetworkCIDR = '192.168.122.0/24'
 
-    runCheck(msg,'neutron subnet-create ext-subnet --allocation-pool start={},end={} --disable-dhcp --gateway {} {}'\
-              .format(floatingIPStart,floatingIPEnd,ExternalNetworkGateway,ExternalNetworkCIDR))
+    if 'ext-subnet' in run('neutron subnet-list'):
+        msg = 'ext-net already created'
+        printMessage('good',msg)
+    else:
+        msg = 'create initial subnet on external net on network node'
+        runCheck(msg,'neutron subnet-create ext-net --name ext-subnet --allocation-pool start={},end={} --disable-dhcp --gateway {} {}'\
+                  .format(floatingIPStart,floatingIPEnd,ExternalNetworkGateway,ExternalNetworkCIDR))
 
 def createDemoTenantNetwork():
-    msg = 'create initial demo tenant network on network node'
-    gateway = '192.168.1.1'
-    cidr = '192.168.1.0/24'
-    runCheck(msg,'neutron subnet-create demo-net --name demo-subnet --gateway {} {}'.format(gateway,cidr))
+    gateway = '10.0.0.1'
+    cidr = '10.0.0.0/8'
+
+
+    if 'demo-net' in run('neutron net-list'):
+        msg = 'Demo-net already created'
+        printMessage('good',msg)
+    else:
+        msg = 'create initial demo tenant network on network node'
+        runCheck(msg, 'neutron net-create demo-net')
+
+    if 'demo-subnet' in run('neutron subnet-list'):
+        msg = 'Demo-subnet already created'
+        printMessage('good',msg)
+    else:
+        msg = 'create subnet on demo-net'
+        runCheck(msg,'neutron subnet-create demo-net --name demo-subnet --gateway {} {}'.format(gateway,cidr))
 
 def createSetupRouter():
-    msg = 'create the demo router'
-    runCheck(msg,'neutron router-create demo-router')
+    if 'demo-router' in run('neutron router-list'):
+        msg = 'Demo-router already created'
+        printMessage('good',msg)
+    else:
+        msg = 'create the demo router'
+        runCheck(msg,'neutron router-create demo-router')
 
-    msg = 'attach the demo router to the demo subnet'
-    runCheck(msg,'neutron router-interface-add demo-router demo-subnet')
+        msg = 'attach the demo router to the demo subnet'
+        runCheck(msg,'neutron router-interface-add demo-router demo-subnet')
 
-    msg = 'attach the router to the external network by setting it as the gateway'
-    runCheck(msg,'neutron router-gateway-set demo-router ext-net')
+        msg = 'attach the router to the external network by setting it as the gateway'
+        runCheck(msg,'neutron router-gateway-set demo-router ext-net')
 
 
 @roles('network')
