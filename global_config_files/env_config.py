@@ -372,6 +372,7 @@ else:
     networkExternal = { 'DEVICE' : 'eth3',
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
+                        # 'BOOTPROTO' : '"dhcp"'}
                         'BOOTPROTO' : '"none"',
                         'IPADDR' : '192.168.3.21'}
 
