@@ -201,6 +201,13 @@ def deployInterface(interface,specs):
         print blue('Deploying Interface {} now'.format(interface))
         print ''
 
+    if 'management' in interface:
+        # set hostname according to the alias in /etc/hosts
+        # (network, compute1, compute2, etc)
+        hostname = env_config.hosts[specs['IPADDR']]
+        msg = 'Set hostname to ' + hostname
+        runCheck(msg, "hostname " + hostname)
+
     role = env_config.getRole()
     set_up_network_interface(specs,role)
 
