@@ -223,6 +223,7 @@ def getRole():
 # parse a config file and return all the 
 # variables in the given section in a dictionary
 def parseConfig(cfg,section):
+    print cfg
 
     # save config file in a ConfigParser object
     parser = ConfigParser.ConfigParser()
@@ -253,7 +254,7 @@ log_info = lambda msg : log_general(logging.info,msg)
 def fabricLog(command,func):
     output = func(command)
     if output.return_code != 0:
-        log_error("Problem on command '{}'".format(command))
+        log_error("Problem on command '{}'")
     else:
         for line in output.splitlines():
             # don't log lines that have passwords
@@ -296,10 +297,7 @@ log_dict = {'host_string':'','role':''} # default value for log_dict
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
     # PRODUCTION
-	roledefs = { 'compute' : ['root@compute1','root@compute2','root@compute3','root@compute4'],
-			 'network' : ['root@network'],
-			 'controller' : ['root@controller']}
-
+    pass
 else:
     # DEVELOPMENT
 
@@ -383,23 +381,17 @@ else:
                        'IPADDR' : '192.168.2.41',
                        'NETMASK' : '255.255.255.0'}
 
-    storageManagement = { 'DEVICE' : 'eth1',
-                          'IPADDR' : '192.168.1.51',
-                          'NETMASK' : '255.255.255.0'}
-
     hosts = { controllerManagement['IPADDR'] : 'controller',
-              networkManagement['IPADDR'] : 'network',
-              storageManagement['IPADDR'] : 'storage'}
+              networkManagement['IPADDR'] : 'network'}
 
     # add the compute nodes to hosts config
     baseIP = computeManagement['IPADDR']
     for i, computeNode in enumerate(roledefs['compute']):
-        # turn IP into a list of ints 
+        # increment base ip
         baseIPListOfInts = [int(octet) for octet in baseIP.split('.')]
-        # increment last octet
         baseIPListOfInts[-1] += i
-        # turn it back into a string
-        IP = ".".join([str(octet) for octet in baseIPListOfInts])
+        IP = "".join([str(octet)+'.' for octet in baseIPListOfInts])
+        IP = IP[:-1] # remove last dot
 
         hosts[IP] = 'compute' + str(i+1)
 
