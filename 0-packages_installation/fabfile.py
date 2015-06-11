@@ -28,7 +28,7 @@ if output['debug']:
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
 
-################### Deployment ########################################
+########################## Deployment ########################################
 @roles('controller','compute','network')
 def renameHost():
 	msg='Renaming host to %s' % env['host']
@@ -40,12 +40,6 @@ def renameHost():
 @with_settings(warn_only=True)
 def install_packages():
     
-    # Install Chrony
-    sudo_log('yum -y install chrony')
-    # enable Chrony
-    sudo_log('systemctl enable chronyd.service')
-    sudo_log('systemctl start chronyd.service')
-
     # Install EPEL (Extra Packages for Entreprise Linux
     sudo_log('yum -y install yum-plugin-priorities')
     sudo_log('yum -y install epel-release')
