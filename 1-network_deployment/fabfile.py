@@ -206,7 +206,7 @@ def deployInterface(interface,specs):
         # (network, compute1, compute2, etc)
         hostname = env_config.hosts[specs['IPADDR']]
         msg = 'Set hostname to ' + hostname
-        runCheck(msg, "hostname " + hostname)
+        runCheck(msg, "hostnamectl set-hostname " + hostname)
 
     role = env_config.getRole()
     set_up_network_interface(specs,role)
