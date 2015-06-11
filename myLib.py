@@ -263,10 +263,7 @@ def keystone_check(name, verbose=False):
             print align_n("Public url incorrect")
     # call all functions 
 
-    admin_openrc = global_config_location + 'admin-openrc.sh'
-    admin_openrc_file = open(admin_openrc,'r')
-    exports = admin_openrc_file.read()
-    with prefix(exports): 
+    with prefix(admin_openrc):
         user_check()
         tenant_check()
         service_exists(name)
@@ -275,8 +272,6 @@ def keystone_check(name, verbose=False):
         if name != 'keystone':
             user_exists(name)
             user_enabled(name)
-
-    admin_openrc_file.close()
 
 #keystone_check('glance', True)
 
