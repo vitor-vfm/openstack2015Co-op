@@ -10,8 +10,9 @@ import paramiko
 import logging
 import sys
 sys.path.append('../global_config_files')
+sys.path.append('..')
+from myLib import *
 import env_config
-from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
 @roles('compute')
 def if_error():
@@ -28,152 +29,124 @@ if output['debug']:
     mode = 'debug'
 
 env.roledefs = env_config.roledefs
-
 passwd = env_config.passwd
 
-
-# Logging config
-log_file = 'rabbit_deployment.log'
-env_config.setupLoggingInFabfile(log_file)
-
-
-
-################### General functions ########################################
+######################### General functions ################################
 
 def get_value(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
     return local(crudini_command, capture=True)
 
 def set_value(config_file, section, parameter, value):
-    sudo_log("crudini --set {} {} {} {}".format(config_file, section, parameter, value))
-    log_debug('Setting parameter () on section {} of config file {}'.format(parameter,section,config_file))
+    run("crudini --set {} {} {} {}".format(config_file, section, parameter, value))
 
-############################# MESSAGING #####################################
+########################### Deployment #####################################
 
 @roles('controller')
 def installRabbitMQ():
 
-    sudo_log('yum -y install rabbitmq-server')
-    #execute(if_error)
-    if sudo_log('echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf').return_code != 0:
-        log_error('Failed to create rabbitmq-env.conf on this host ')
-    #execute(if_error)
-    if sudo_log('systemctl enable rabbitmq-server.service').return_code != 0:
-        log_error('Failed to enable rabbitmq-server.service')
-    if sudo_log('systemctl start rabbitmq-server.service').return_code != 0:
-        log_error('Failed to start rabbitmq-server.service')
-    if sudo_log('systemctl restart rabbitmq-server.service').return_code != 0:
-        log_error('Failed to restart rabbitmq-server.service')
+    msg = "Install rabbitmq-server"
+    runCheck(msg, 'yum -y install rabbitmq-server')
+
+    msg = "Set NODENAME on rabbit-env.conf"
+    runCheck(msg, 'echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
+
+    msg = "Enable rabbitmq service"
+    runCheck(msg, 'systemctl enable rabbitmq-server.service')
+
+    msg = "Start rabbitmq service"
+    runCheck(msg, 'systemctl start rabbitmq-server.service')
 
     # Unnecessary since we don't have a firewall between the nodes
-    # if sudo_log('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
-    #     log_error('Failed to add port 5672 to firewall')
-    # sudo_log('firewall-cmd --reload')
+    # if run('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
+    # run('firewall-cmd --reload')
 
 @roles('controller')
-def change_password():
-    sudo_log('rabbitmqctl change_password guest {}'.format(passwd['RABBIT_PASS']))
-    if sudo_log('systemctl restart rabbitmq-server.service').return_code != 0:
-        logging.error('Failed to restart rabbitmq-server.service',extra=log_dict)
+def setGuestPassword():
+    """
+    Set password for user 'guest' according to passwd dictionary
+    """
 
-    # Assuming we're using RabbitMQ version 3.3.0 or later, do the next 2 lines
-#    sudo_log('if [ ! -f /etc/rabbitmq/rabbitmq.config ]; then' + '\n' 
- #           'echo "[{rabbit, [{loopback_users, []}]}]." >> /etc/rabbitmq/rabbitmq.config' + '\n'
-  #          'else' + '\n'
-   #         'if ! grep -qe "^[{rabbit, [{loopback_users, []}]}]. A$" "/etc/rabbitmq/rabbitmq.config"; then' + '\n'
-    #        'echo "[{rabbit, [{loopback_users, []}]}]." >> /etc/rabbitmq/rabbitmq.config' + '\n'
-     #       'fi' + '\n'
-      #      'fi')
-    #sudo_log('systemctl restart rabbitmq-server.service')
-    log_debug('Installed RabbitMQ')
+    msg = "Set password for user guest"
+    runCheck(msg, 'rabbitmqctl change_password guest ' + passwd['RABBIT_PASS'])
 
-
-    
-################### Deployment ########################################
+    msg = "Restart rabbitmq service"
+    runCheck(msg, 'systemctl restart rabbitmq-server.service')
 
 def deploy():
-
-    log_debug('Deploying')
-
     execute(installRabbitMQ)
-    execute(change_password)
-
+    execute(setGuestPassword)
 
 ######################################## TDD #########################################
 
+def runAndRecordTime(command,timestamps):
+    """
+    Run the command, record the current system time on the host,
+    and append the result, as a tuple, to the list 'timestamps'.
 
-
-#        print(green("GOOD"))
- #   else:
-  #      print(red("BAD")) 
-   #sudo_log("rm -r /tmp/images")
-
-
-
-#def tdd():
-#    with settings(warn_only=True):
-        # Following command lists errors. Find out how to get it to find 
-        # specific errors or a certain number of them based on time.
-        #sudo_log cat messages | egrep '(error|warning)'
- #       time = installRabbitMQtdd()
-  #      check_log(time)
+    Worker for installRabbitMQtdd
+    """
+    run(command)
+    time = run('date +"%b %d %R"')
+    timestamps.append( (command,time) )
         
 @roles('controller')
 def installRabbitMQtdd():
+    """
+    Perform several operations using rabbit, record the time
+    in which they were made and use them to later check
+    /var/log/messages for errors
 
-    time = [0]*8
-    if sudo_log('yum install rabbitmq-server').return_code != 0:
-        log_error('Failed to install rabbitmq-server')
-    else:
-        log_debug('Successfully installed rabbitmq-server')
+    Inputs: none
+
+    Outputs: A list of tuples (command,time)
+    """
+
+    timestamps = list()
 
     confFile = '/etc/rabbitmq/rabbitmq-env.conf'
 
-    # make a backup
-    sudo_log("cp {} {}.bak".format(confFile,confFile))
+    command = 'echo "NODENAME=rabbit@localhost" > ' + confFile
+    runAndRecordTime(command,timestamps)
 
-    if mode == 'debug':
-        # make changes to back up file
-        confFile += '.bak'
+    command = 'systemctl enable rabbitmq-server.service'
+    runAndRecordTime(command,timestamps)
 
-    time[0] = run_log('date +"%b %d %R"')
-    sudo_log('echo "NODENAME=rabbit@localhost" > ' + confFile)
-    if mode == 'debug':
-        print blue("NODENAME will be set to rabbit@localhost")
-        print "New file: "
-        sudo_log("cat " + confFile)
+    command = 'systemctl start rabbitmq-server.service'
+    runAndRecordTime(command,timestamps)
 
-    time[1] = run_log('date +"%b %d %R"')
-    sudo_log('systemctl enable rabbitmq-server.service')
-    time[2] = run_log('date +"%b %d %R"')
-    sudo_log('systemctl start rabbitmq-server.service')
-    time[3] = run_log('date +"%b %d %R"')
-    sudo_log('systemctl restart rabbitmq-server.service')
-    time[4] = run_log('date +"%b %d %R"')
-    sudo_log('firewall-cmd --permanent --add-port=5672/tcp')
-    time[5] = run_log('date +"%b %d %R"')
-    sudo_log('firewall-cmd --reload')
-    time[6] = run_log('date +"%b %d %R"')
-    sudo_log('rabbitmqctl change_password guest {}'.format(passwd['RABBIT_PASS']))
-    time[7] = run_log('date +"%b %d %R"')
-    return time
+    command = 'systemctl restart rabbitmq-server.service'
+    runAndRecordTime(command,timestamps)
 
-@roles('compute', 'controller', 'network')
-def check_log(time):
+    command = 'rabbitmqctl change_password guest {}'.format(passwd['RABBIT_PASS'])
+    runAndRecordTime(command,timestamps)
+
+    return timestamps
+
+@roles('controller')
+def check_log(timestamps):
+    """
+    Look for errors in /var/log/messages
+    at the times specified by timestamps
+
+    Print results
+    """
 
     with settings(quiet=True):
-        for error_num in range(8):
-            run_log('echo {} > time'.format(time[error_num]))
-            if run_log("sudo cat /var/log/messages | egrep '(debug|warning|critical)' | grep -f time"):
-                # Make it specify which one doesn't work
-                print(red("Error in so far unspecified function"))
+        for command, time in timestamps:
+            # Grep for message levels "ERROR", "WARNING", and "CRITICAL" and for the timestamp
+            error = run("cat /var/log/messages | egrep -i '(error|warning|critical)' | grep '{}'".format(time))
+
+            if error:
+                print red("/var/log/messages shows an error when the following command was run")
+                print red("Command: " + command)
+                print red("Log error message: ")
+                print red(error)
             else:
-                print(green("Success, whatever this is"))
-            run_log('rm time')
+                print(green("No error when the command '{}' was run".format(command)))
 
 @roles('controller')
 def tdd():
-    log_debug('Running TDD function')
     with settings(warn_only=True):
         time = installRabbitMQtdd()
         execute(check_log,time)
