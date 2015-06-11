@@ -86,7 +86,7 @@ def create_neutron_database():
 def configure_networking_server_component():
     # configure neutron.conf with crudini
     # crudini --set config_file section parameter value
-
+ 
     neutron_conf = '/etc/neutron/neutron.conf'
     
     # make a backup
@@ -529,6 +529,32 @@ def deploy():
     execute(compute_deploy)
 
 ######################################## TDD #########################################
+
+print 'good'
+@roles('network', 'controller', 'compute')
+def createInitialNetworkTdd(schema="192.168.122"):
+
+    # this is repeated, need to translate into env_config
+    floatingIPStart = '{}.10'.format(schema)
+    floatingIPEnd = '{}.20'.format(schema)
+    ExternalNetworkGateway = '{}.1'.format(schema)
+    ExternalNetworkCIDR = '{}.0/24'.format(schema)
+
+
+    ping_ip(floatingIPStart, 
+
+# pings an ip address and see if it works
+def ping_ip(ip_address, host, role='', type_interface=''):
+    ping_command = 'ping -q -c 1 ' + ip_address
+
+    if type_interface:
+        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host,type_interface,ip_address,env.host)
+    else:
+        msg = 'Ping {} from {}'.format(ip_address,env.host)
+
+    runCheck(msg, ping_command)
+
+
 
 @roles('controller')
 def controller_tdd():
