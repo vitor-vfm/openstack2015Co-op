@@ -293,6 +293,22 @@ if not check_output('if [ -e {} ]; then echo found; fi'.format(log_location),she
     call('chmod 744 ' + log_location,shell=True)
 log_dict = {'host_string':'','role':''} # default value for log_dict
 
+
+def createDatabaseScript(databaseName,password):
+    """
+    Returns a database script based on
+    a general template.
+
+    Inputs: a database name and a password
+    Outputs: a string containing a MySQL script
+    """
+
+    return  "CREATE DATABASE IF NOT EXISTS {}; ".format(databaseName) + \
+            "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'controller' ".format(databaseName,databaseName) + \
+            "IDENTIFIED BY '{}'; ".format(password) +\
+            "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'%' ".format(databaseName,databaseName) + \
+            "IDENTIFIED BY '{}';".format(password)
+
 ######################### Global variables ######################
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
@@ -336,6 +352,7 @@ else:
                'CINDER_DBPASS' : '34cinder_db43',
                'ADMIN_PASS' : '34adm43',
                'DEMO_PASS' : '34demo43',
+               'KEYSTONE_DBPASS' : '34keydb43',
                'NOVA_PASS' : '34nova_ks43',
                'NEUTRON_PASS' : '34neu43',
                'HEAT_PASS' : '34heat_ks43',
@@ -346,7 +363,9 @@ else:
                'TROVE_PASS' : '34Tr0v343',
                'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
-    # basic networking
+    """
+    BASIC NETWORKING
+    """
 
     controllerManagement = { 'DEVICE' : 'eth1',
                              'IPADDR' : '192.168.1.11',
@@ -398,17 +417,27 @@ else:
 
         hosts[IP] = 'compute' + str(i+1)
 
-    # neutron
+    """
+    KEYSTONE
+    """
+
+    # this script creates a database to be used by Keystone
+    databaseScriptKeystone = createDatabaseScript('keystone',passwd['KEYSTONE_DBPASS'])
+
+    # these are the variables whose values will be set in keystone.conf
+
+
+
+    """
+    NEUTRON
+    """
 
     # this script creates a database to be used by Neutron
-    # 'NEUTRON_DBPASS' should be replaced by a suitable password
-    databaseScriptNeutron = "CREATE DATABASE IF NOT EXISTS neutron; " + \
-            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'controller' " + \
-            "IDENTIFIED BY '{}'; ".format(passwd['NEUTRON_DBPASS']) +\
-            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' " +\
-            "IDENTIFIED BY '{}';".format(passwd['NEUTRON_DBPASS'])
+    databaseScriptNeutron = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
 
-    # Partitioning data
+    """
+    Partitioning data
+    """
     partition = {   'size_reduction_of_home' : '3.5G',
                     'partition_size' : '500M' }
 
