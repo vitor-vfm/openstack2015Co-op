@@ -150,10 +150,6 @@ else:
     admin and demo respectively. They export system variables that 
     allow the user to execute certain keystone CLI commands. They 
     are necessary every time the deployment scripts use keystone.
-
-
-    We also save them as local text files, because it\'s sometimes useful
-    to send them via scp to the hosts and source them from there.
     """
 
     admin_openrc = "export OS_TENANT_NAME=admin; " +\
@@ -165,10 +161,3 @@ else:
             "export OS_USERNAME=demo; " + \
             "export OS_PASSWORD={}; ".format(passwd['DEMO_PASS']) + \
             "export OS_AUTH_URL=http://controller:5000/v2.0"
-
-    # save them as local files; clobber if necessary
-    admin_openrc_local = '../global_config_files/admin-openrc.sh' 
-    demo_openrc_local = '../global_config_files/demo-openrc.sh' 
-
-    call("echo '{}' >{}".format(admin_openrc,admin_openrc_local),shell=True)
-    call("echo '{}' >{}".format(demo_openrc,demo_openrc_local),shell=True)

@@ -28,11 +28,10 @@ usage = \
 
 
 # logs directories
-deploymentLogsDirectory = 'var/log/juno/'
 openstackComponentsLogsDirectory = '/var/log/'
 
 # dictionaries that map parameters to files
-componentsLogs = { 'glance' : 'glance/api.log',
+logFiles       = { 'glance' : 'glance/api.log',
                    'glance-api' : 'glance/api.log',
                    'glance-registry' : 'glance/registry.log',
                    'heat' : 'heat/heat-manage.log',
@@ -56,22 +55,49 @@ componentsLogs = { 'glance' : 'glance/api.log',
                    'rabbitmq' : 'rabbitmq/rabbit@localhost.log',
                    'rabbitmq-localhost-sasl' : 'rabbitmq/rabbit@localhost-sasl.log'}
 
-deploymentLogs = { 'basic-network' : 'basic-network.log',
-                   'glance_deployment' : 'glance_deployment.log',
-                   'horizon_deployment' : 'horizon_deployment.log',
-                   'heat_deployment' : 'heat_deployment.log',
-                   'keystone_deployment' : 'keystone_deployment.log',
-                   'neutron_deployment' : 'neutron_deployment.log',
-                   'nova_deployment' : 'nova_deployment.log',
-                   'rabbit_deployment' : 'rabbit_deployment.log',
-                   'swift_deployment' : 'swift_deployment.log'}
+# componentsLogs = { 'glance' : 'glance/api.log',
+#                    'glance-api' : 'glance/api.log',
+#                    'glance-registry' : 'glance/registry.log',
+#                    'heat' : 'heat/heat-manage.log',
+#                    'heat-api-cfn' : 'heat/heat-api-cfn.log',
+#                    'heat-api' : 'heat/heat-api.log',
+#                    'heat-engine' : 'heat/heat-engine.log',
+#                    'heat-manage' : 'heat/heat-manage.log',
+#                    'keystone' : 'keystone/keystone.log',
+#                    'keystone-tokenflush' : 'keystone/keystone-tokenflush.log',
+#                    'mariadb' : 'mariadb/server.log',
+#                    'neutron' : 'neutron/server.log',
+#                    'nova' : 'nova/nova-api.log',
+#                    'nova-api' : 'nova/nova-api.log',
+#                    'nova-cert' : 'nova/nova-cert.log',
+#                    'nova-conductor' : 'nova/nova-conductor.log',
+#                    'nova-consoleauth' : 'nova/nova-consoleauth.log',
+#                    'nova-manage' : 'nova/nova-manage.log',
+#                    'nova-novncproxy' : 'nova/nova-novncproxy.log',
+#                    'nova-scheduler' : 'nova/nova-scheduler.log',
+#                    'rabbit' : 'rabbitmq/rabbit@localhost.log',
+#                    'rabbitmq' : 'rabbitmq/rabbit@localhost.log',
+#                    'rabbitmq-localhost-sasl' : 'rabbitmq/rabbit@localhost-sasl.log'}
 
-# add directories and concatenate
-logFiles = dict()
-for program in componentsLogs:
-    logFiles[program] = openstackComponentsLogsDirectory + componentsLogs[program]
-for program in deploymentLogs:
-    logFiles[program] = deploymentLogsDirectory + deploymentLogs[program]
+# deploymentLogs = { 'basic-network' : 'basic-network.log',
+#                    'glance_deployment' : 'glance_deployment.log',
+#                    'horizon_deployment' : 'horizon_deployment.log',
+#                    'heat_deployment' : 'heat_deployment.log',
+#                    'keystone_deployment' : 'keystone_deployment.log',
+#                    'neutron_deployment' : 'neutron_deployment.log',
+#                    'nova_deployment' : 'nova_deployment.log',
+#                    'rabbit_deployment' : 'rabbit_deployment.log',
+#                    'swift_deployment' : 'swift_deployment.log'}
+
+# add directory and concatenate
+# logFiles = dict()
+# for program in componentsLogs:
+#     logFiles[program] = openstackComponentsLogsDirectory + componentsLogs[program]
+# for program in deploymentLogs:
+#     logFiles[program] = deploymentLogsDirectory + deploymentLogs[program]
+
+logFiles = {program:(openstackComponentsLogsDirectory + logFiles[program]) for program in logFiles.keys()}
+logFiles['deployment'] = '/tmp/test.log'
 
 
 ############# Log display #####################
