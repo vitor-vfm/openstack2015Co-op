@@ -312,8 +312,13 @@ def createDatabaseScript(databaseName,password):
 ######################### Global variables ######################
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
-    # PRODUCTION
-    pass
+	# PRODUCTION
+	roledefs = { 'compute' : ['root@compute1','root@compute2','root@compute3','root@compute4' ],
+                 'network' : ['root@network'],
+                 'storage' : ['root@storage'],
+                 'controller' : ['root@controller']}
+	logfilename='/opt/coop2015/coop2015/fabric.log'
+
 else:
     # DEVELOPMENT
 

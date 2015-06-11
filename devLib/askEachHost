@@ -1,0 +1,35 @@
+#!/bin/bash
+QUESTION="$1"
+
+function b {
+	for host in controller network compute1 compute2 compute3 compute4;
+	do 
+		echo "####### asking $host"
+		ssh root@$host "$1"
+		echo .
+	done
+}
+
+while getopts ":hfm" opt; do
+  case ${opt} in
+    h ) echo "usage is "
+    	echo "$0 'enter command between quotes' "
+    	exit
+      ;;
+    f ) echo -e " \n You ask for frequently use commands \n"
+    	echo "$0 'ping -c 1 google.com ' "
+    	echo "$0 'nmcli d'"
+    	echo "$0 'ip a'"
+    	echo "$0 'op -b -n 1 | head -5'"
+    	echo "$0 'grep \"\$(date +\"%b %d %H\")\" /var/log/messages| grep -Ei \"(warning|error|critical)\"' "
+    	exit
+      ;;
+    m ) 
+    	b 'grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(warning|error|critical)"' 
+    	exit
+      ;;
+  esac
+done
+
+b "$QUESTION"
+
