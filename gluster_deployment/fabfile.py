@@ -13,8 +13,9 @@ import env_config
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
-PARTITION = '/dev/sda3'
-VOLUME = 'vol0'
+PARTITION = '/dev/sda1'
+EX_VOLUME = 'vol0'
+GLANCE_VOLUME = 'exp1'
 
 ############################# GENERAL FUNCTIONS ############################
 
@@ -22,31 +23,32 @@ def get_parameter(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
     return local(crudini_command, capture=True)
 
+@roles('controller', 'compute', 'network', 'storage')
 def shrinkHome():
-    run('umount /home')
-    run('lvresize -L -{} /dev/mapper/centos-home'.format(get_parameter(global_config, '', 'size_reduction_of_home')))
-    run('mkfs -t xfs -f /dev/centos/home')
-    run('mount /home')
+    run('umount /rootfs')
+    run('lvresize -L -{} /dev/mapper/centos-root'.format(env_config.partition['size_reduction_of_home']))
+    run('mkfs -t xfs -f /dev/centos/root')
+    run('mount /rootfs')
 
-@roles('controllernode','networknode','computenode')
+@roles('controller', 'network', 'compute', 'storage')
 def prepGlusterFS():
     run('lvs')
-    run('lvcreate -i 3 -I 8 500G centos')
+    run('lvcreate -i 1 -I 8 -L {} centos'.format(env_config.partition['partition_size']))
     run('lvrename /dev/centos/lvol0 strFile')
-    run('lvcreate -i 3 -I 8 500G centos')
+    run('lvcreate -i 1 -I 8 -L {} centos'.format(env_config.partition['partition_size']))
     run('lvrename /dev/centos/lvol0 strObj')
-    run('lvcreate -i 3 -I 8 500G centos')
+    run('lvcreate -i 1 -I 8 -L {} centos'.format(env_config.partition['partition_size']))
     run('lvrename /dev/centos/lvol0 strBlk')
     run('lvs')
 
-@roles('controller', 'compute', 'network')
+@roles('controller', 'compute', 'network', 'storage')
 def setup_gluster():
     # Get and install gluster
     sudo('wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     sudo('yum -y install glusterfs glusterfs-fuse glusterfs-server')
     sudo('systemctl start glusterd')
     # Make the file system (probably include this in partition function)
-    #sudo('mkfs.ext4 {}'.format(PARTITION))
+    #sudo('mkfs.xfs {}'.format(PARTITION))
     # Mount the brick on the established partition
     sudo('mkdir -p /data/gluster/brick')
     sudo('mount {} /data/gluster'.format(PARTITION))
@@ -61,7 +63,7 @@ def setup_gluster():
     sudo('service glusterd restart')
     sudo('iptables -F')
 
-@roles('controller', 'compute', 'network')
+@roles('controller', 'compute', 'network', 'storage')
 def probe():
     with settings(warn_only=True):
         # peer probe the ip addresses of all the nodes
@@ -69,11 +71,11 @@ def probe():
             if node != env.host_string:
                 node_ip = node.split('@', 1)[-1]
                 if sudo('gluster peer probe {}'.format(node_ip)).return_code:
-                    print(red('{} cannot probe {}'.format(env.user, node.split('@', 1)[0])))
+                    print(red('{} cannot probe {}'.format(env.host, node.split('@', 1)[0])))
                 else:
-                    print(green('{} can probe {}'.format(env.user, node.split('@', 1)[0])))
+                    print(green('{} can probe {}'.format(env.host, node.split('@', 1)[0])))
     
-@roles('controller', 'compute', 'network')
+@roles('controller', 'compute', 'network', 'storage')
 def prevolume_start():
     sudo('setfattr -x trusted.glusterfs.volume-id /data/gluster/brick')
     sudo('service glusterd restart')
@@ -84,19 +86,45 @@ def create_volume():
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
     node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/brick' for node in env_config.hosts])
-    sudo('gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
+    sudo('gluster volume create {} rep {} transport tcp {} force'.format(GLANCE_VOLUME, num_nodes, node_ips))
     #prevolume_start()
-    sudo('gluster volume start {} force'.format(VOLUME))
+    sudo('gluster volume start {} force'.format(GLANCE_VOLUME))
+    sudo('/bin/systemctl restart glusterd.service')
 
-@roles('controller', 'compute', 'network')
+@roles('controller', 'compute', 'network', 'storage')
 def mounter():
-    sudo('mkdir /mnt/gluster')
-    sudo('mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, VOLUME))
+    sudo('mkdir -p /mnt/gluster')
+    sudo('mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
 
+@roles('controller', 'compute')
+def put_in_nova_line():
+    run("crudini --set '/etc/nova/nova.conf' 'glance' 'libvirt_type' 'qemu'")
+
+@roles('controller')
+def put_in_glance_line():
+    run("crudini --set '/etc/glance/glance-api.conf' 'glance_store' 'filesystem_store_datadir' '/mnt/gluster/glance/images'")
+
+@roles('controller')
+def backup_glance_with_gluster():
+    run('mkdir -p /mnt/gluster/glance/images')
+    run('chown -R glance:glance /mnt/gluster/glance/')
+    run('mkdir /mnt/gluster/instance/')
+    run('chown -R nova:nova /mnt/gluster/instance/')
+    run('service openstack-glance-api restart') 
+
+@roles('controller', 'compute')
+def put_in_other_nova_line():
+    run("crudini --set '/etc/nova/nova.conf' 'DEFAULT' 'instances_path' '/mnt/gluster/instance'")
+
+@roles('compute')
+def setup_nova_paths():
+    run('mkdir -p /mnt/gluster/instance/')
+    run('chown -R nova:nova /mnt/gluster/instance/')
+    run('service openstack-nova-compute restart')
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
-@roles('controller', 'compute', 'network')
+@roles('controller', 'compute', 'network', 'storage')
 def destroy_gluster():
     sudo('umount /data/gluster')
     sudo('rm -rf /var/lib/glusterd')
@@ -104,16 +132,46 @@ def destroy_gluster():
 
 @roles('compute')
 def destroy_vol():
-    sudo('yes | gluster volume stop {}'.format(VOLUME)) 
-    sudo('yes | gluster volume delete {}'.format(VOLUME))
+    sudo('yes | gluster volume stop {}'.format(GLANCE_VOLUME)) 
+    sudo('yes | gluster volume delete {}'.format(GLANCE_VOLUME))
 
-@roles('controller', 'compute', 'network')
+@roles('controller', 'compute', 'network', 'storage')
 def destroy_mount():
     sudo('umount /mnt/gluster') 
     sudo('rm -rf /mnt/gluster')
 
+@roles('controller')
+def destroy_backup():
+    run('rm -rf /mnt/gluster/glance')
+    run('rm -rf /mnt/gluster/instance')
+    run('service openstack-glance-api restart')
 
-    
+@roles('compute')
+def destroy_nova_paths():
+    run('rm -rf /mnt/gluster/instance/')
+    run('service openstack-nova-compute restart')
+
+##################### Glance ###############################################
+
+def deploy_glance():
+    execute(setup_gluster)
+    execute(probe)
+    execute(create_volume)
+    execute(put_in_nova_line)
+    execute(mounter)
+    execute(put_in_glance_line)
+    execute(backup_glance_with_gluster)
+    execute(put_in_other_nova_line)
+    execute(setup_nova_paths)
+
+def undeploy_glance():
+    execute(destroy_backup)
+    execute(destroy_mount)
+    execute(destroy_vol)
+    execute(destroy_gluster) 
+    execute(destroy_nova_paths)
+
+
 ################### Deployment #############################################
 
 def deploy():

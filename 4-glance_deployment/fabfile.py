@@ -46,7 +46,7 @@ def set_parameter(config_file, section, parameter, value):
 
 def setup_glance_database(GLANCE_DBPASS):
     mysql_commands = "CREATE DATABASE IF NOT EXISTS glance;"
-    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
+    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'controller' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
 
     
@@ -56,8 +56,10 @@ def setup_glance_database(GLANCE_DBPASS):
 
 
 def setup_glance_keystone(GLANCE_PASS):
-    source_command = "source admin-openrc.sh"
-    with prefix(source_command):
+    # source_command = "source admin-openrc.sh"
+    # with prefix(source_command):
+    exports = open(admin_openrc,'r').read()
+    with prefix(exports):
         if 'glance' not in sudo("keystone user-list"):
             sudo_log("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
             sudo_log("keystone user-role-add --user glance --tenant service --role admin")
@@ -126,6 +128,41 @@ def start_glance_services():
 def download_packages():
     # make sure we have crudini
     sudo_log('yum install -y crudini')
+
+@roles('controller')
+def setup_GlusterFS_controller():
+    # change the path that Glance uses for its file system
+    gluster_volume = env_config.volumeNames['glance']
+    run_log('crudini --set /etc/glance/glance-api.conf '' \
+            filesystem_store_datadir {}/images'.format(gluster_volume))
+
+    run_log('mkdir -p {}/images'.format(gluster_volume))
+    run_log('chown -R glance:glance {}'.format(gluster_volume))
+
+    # Are we creating an instance store? Is Nova also using Gluster?
+
+    # create the directory for the instance store
+    # run_log('mkdir /mnt/gluster/instance/')
+    # run_log('chown -R nova:nova /mnt/gluster/instance/')
+    # run_log('service openstack-glance-api restart')
+
+# Are we creating an instance store? Is Nova also using Gluster?
+# @roles('compute')
+# def setup_GlusterFS_compute():
+#     # change the path that nova uses for its file system
+#     run_log('crudini --set /etc/nova/nova-api.conf '' \
+#             instances_path /mnt/gluster/instance')
+
+#     run_log('mkdir -p /mnt/gluster/instance/')
+#     run_log('chown -R nova:nova /mnt/gluster/instance/')
+#     run_log('service openstack-nova-compute restart')
+
+    pass
+
+def setup_GlusterFS():
+    # configure Glance to use a gluster FS volume
+    execute(setup_GlusterFS_controller)
+
    
 @roles('controller')
 def setup_glance():
@@ -151,6 +188,7 @@ def setup_glance():
 
 def deploy():
     execute(setup_glance)
+    # setup_GlusterFS()
 
 ######################################## TDD #########################################
 

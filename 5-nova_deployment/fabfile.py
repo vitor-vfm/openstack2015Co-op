@@ -44,7 +44,7 @@ def set_parameter(config_file, section, parameter, value):
 
 def setup_nova_database_on_controller(NOVA_DBPASS):
     mysql_commands = "CREATE DATABASE IF NOT EXISTS nova;"
-    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY '{}';".format(NOVA_DBPASS)
+    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'controller' IDENTIFIED BY '{}';".format(NOVA_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY '{}';".format(NOVA_DBPASS)
 
     

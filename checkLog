@@ -147,6 +147,7 @@ def main(args):
                 return
 
     date = past = tail = level = grep = ""
+    warn = False
     if '-d' in args:
         date = args[ args.index('-d') + 1 ]
     if '-to' in args:

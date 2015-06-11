@@ -9,13 +9,13 @@ import string
 
 import sys, os
 sys.path.append('../global_config_files')
-sys.path.append('..')
-from myLib import *
-logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
 import env_config
 from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
+sys.path.append('..')
+from myLib import *
+logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
 ############################ Config ########################################
 
@@ -30,7 +30,7 @@ if output['debug']:
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
 
-################### Deployment ########################################
+########################## Deployment ########################################
 @roles('controller','compute','network')
 def renameHost():
 	msg='Renaming host to %s' % env['host']
@@ -72,18 +72,15 @@ def installConfigureChrony():
 @with_settings(warn_only=True)
 def install_packages():
     
-    # Install Chrony
-    sudo_log('yum -y install chrony')
-    # enable Chrony
-    sudo_log('systemctl enable chronyd.service')
-    sudo_log('systemctl start chronyd.service')
-
     # Install EPEL (Extra Packages for Entreprise Linux
     sudo_log('yum -y install yum-plugin-priorities')
     sudo_log('yum -y install epel-release')
 
     # Install RDO repository for Juno
     sudo_log('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+
+    # Install GlusterFS
+    sudo_log('yum -y install glusterfs-fuse glusterfs')
 
     # Install Crudini
     sudo_log("yum -y install crudini")
@@ -137,7 +134,7 @@ def instalMariaDB():
 
             # set bind-address (controller's management interface)
             bind_address = env_config.controllerManagement['IPADDR']
-            if sudo_log('grep bind-address {}'.format(confFile)).return_code != 0:
+            if sudo('grep bind-address {}'.format(confFile),warn_only=True).return_code != 0:
                 # simply add the new line
                 new_line = "bind-address = " + bind_address
                 sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
@@ -181,9 +178,10 @@ def deploy():
 
 @roles('controller','compute','network')
 def tdd():
-	print('checking var/log/messages for chronyd output')
-	run('grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(chronyd)"')
-	logging.info(env.host +"TDD")
+	with settings(warn_only=True):
+		print('checking var/log/messages for chronyd output')
+		run('grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(chronyd)"')
+	logging.info( " TDD on " +env.host)
 	with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
 		var1=run('systemctl status chronyd.service |grep Active')
 		var2=run('date')

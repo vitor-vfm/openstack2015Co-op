@@ -9,11 +9,10 @@ import subprocess
 
 import sys
 sys.path.append('../global_config_files')
+sys.path.append('..')
 import env_config
 from env_config import log_debug, log_info, log_error, run_log, sudo_log
-
-
-
+from myLib import *
 
 
 ############################ Config ########################################
@@ -21,7 +20,6 @@ from env_config import log_debug, log_info, log_error, run_log, sudo_log
 env.roledefs = env_config.roledefs
 
 # define local config file locations
-database_script_file = 'config_files/database_creation.sql'
 admin_openrc = '../global_config_files/admin-openrc.sh'
 global_config = '../global_config_files/global_config'
 
@@ -32,7 +30,7 @@ neutron_conf = '/etc/neutron/neutron.conf'
 passwd = env_config.passwd
 
 # get database script
-database_script = env_config.databaseScript.replace("NEUTRON_DBPASS",passwd["NEUTRON_DBPASS"])
+database_script = env_config.databaseScriptNeutron
 
 # Logging
 log_file = 'neutron_deployment.log'
@@ -309,7 +307,7 @@ def configure_Open_vSwitch_service():
     sudo_log("systemctl start openvswitch.service")
 
     # for testing
-    sudo_log("ovs-vsctl del-br br-ex")
+    # sudo_log("ovs-vsctl del-br br-ex")
 
     # add br-ex bridge
     if 'br-ex' not in sudo_log("ovs-vsctl list-br"):
@@ -348,7 +346,7 @@ def network_deploy():
 
     configure_metadata_agent()
 
-    # configure_Open_vSwitch_service()
+    configure_Open_vSwitch_service()
 
     # finalize installation
 
@@ -439,6 +437,85 @@ def compute_deploy():
     # start Open vSwitch
     sudo_log("systemctl enable neutron-openvswitch-agent.service")
     sudo_log("systemctl start neutron-openvswitch-agent.service")
+
+# INITIAL NETWORK
+
+def createExternalNetwork():
+    if 'ext-net' in run('neutron net-list'):
+        msg = 'Ext-net already created'
+        print msg
+    else:
+        msg = 'create external network on network node'
+        runCheck(msg,'neutron net-create ext-net --router:external True '+\
+                '--provider:physical_network external --provider:network_type flat')
+
+def createInitialSubnet():
+
+    # fix this IP scheme
+    floatingIPStart = '192.168.122.10'
+    floatingIPEnd = '192.168.122.20'
+    ExternalNetworkGateway = '192.168.122.1'
+    ExternalNetworkCIDR = '192.168.122.0/24'
+
+    if 'ext-subnet' in run('neutron subnet-list'):
+        msg = 'ext-net already created'
+        print msg
+    else:
+        msg = 'create initial subnet on external net on network node'
+        runCheck(msg,'neutron subnet-create ext-net --name ext-subnet --allocation-pool start={},end={} --disable-dhcp --gateway {} {}'\
+                  .format(floatingIPStart,floatingIPEnd,ExternalNetworkGateway,ExternalNetworkCIDR))
+
+def createDemoTenantNetwork():
+    gateway = '10.0.0.1'
+    cidr = '10.0.0.0/8'
+
+
+    if 'demo-net' in run('neutron net-list'):
+        msg = 'Demo-net already created'
+        print msg
+    else:
+        msg = 'create initial demo tenant network on network node'
+        runCheck(msg, 'neutron net-create demo-net')
+
+    if 'demo-subnet' in run('neutron subnet-list'):
+        msg = 'Demo-subnet already created'
+        print msg
+    else:
+        msg = 'create subnet on demo-net'
+        runCheck(msg,'neutron subnet-create demo-net --name demo-subnet --gateway {} {}'.format(gateway,cidr))
+
+def createSetupRouter():
+    if 'demo-router' in run('neutron router-list'):
+        msg = 'Demo-router already created'
+        print msg
+    else:
+        msg = 'create the demo router'
+        runCheck(msg,'neutron router-create demo-router')
+
+        msg = 'attach the demo router to the demo subnet'
+        runCheck(msg,'neutron router-interface-add demo-router demo-subnet')
+
+        msg = 'attach the router to the external network by setting it as the gateway'
+        runCheck(msg,'neutron router-gateway-set demo-router ext-net')
+
+
+@roles('network')
+def createInitialNetwork():
+    # Creates a sample network for testing 
+
+    # get admin credentials
+    adminCred = env_config.admin_openrc
+    demoCred = env_config.demo_openrc
+
+    with prefix(adminCred):
+        createExternalNetwork()
+        createInitialSubnet()
+
+    with prefix(demoCred):
+        createDemoTenantNetwork()
+        createSetupRouter()
+
+
 
 
 

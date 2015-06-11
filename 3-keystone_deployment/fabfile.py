@@ -213,7 +213,7 @@ def setupKeystone():
         if 'keystone' not in sudo_log("keystone service-list"):
             sudo_log("keystone service-create --name keystone --type identity " + \
                     "--description 'OpenStack Identity'")
-        if '5000' not in sudo_log("keystone endpoint-list"):
+        if 'adminurl http://controller:35357' not in sudo_log("keystone endpoint-list"):
             sudo_log("keystone endpoint-create " + \
                     "--service-id $(keystone service-list | awk '/ identity / {print $2}') " + \
                     "--publicurl http://controller:5000/v2.0 --internalurl http://controller:5000/v2.0 " + \

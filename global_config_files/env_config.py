@@ -223,6 +223,7 @@ def getRole():
 # parse a config file and return all the 
 # variables in the given section in a dictionary
 def parseConfig(cfg,section):
+    print cfg
 
     # save config file in a ConfigParser object
     parser = ConfigParser.ConfigParser()
@@ -253,7 +254,7 @@ log_info = lambda msg : log_general(logging.info,msg)
 def fabricLog(command,func):
     output = func(command)
     if output.return_code != 0:
-        log_error("Problem on command '{}'".format(command))
+        log_error("Problem on command '{}'")
     else:
         for line in output.splitlines():
             # don't log lines that have passwords
@@ -295,10 +296,12 @@ log_dict = {'host_string':'','role':''} # default value for log_dict
 ######################### Global variables ######################
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
-    # PRODUCTION
-	roledefs = { 'compute' : ['root@compute1','root@compute2','root@compute3','root@compute4'],
-			 'network' : ['root@network'],
-			 'controller' : ['root@controller']}
+	# PRODUCTION
+	roledefs = { 'compute' : ['root@compute1','root@compute2','root@compute3','root@compute4' ],
+                 'network' : ['root@network'],
+                 'storage' : ['root@storage'],
+                 'controller' : ['root@controller']}
+	logfilename='/opt/coop2015/coop2015/fabric.log'
 
 else:
     # DEVELOPMENT
@@ -313,14 +316,24 @@ else:
                           'character-set-server=utf8']
 
     # scripts to be sourced
-    admin_openrc = global_config_location + 'admin-openrc.sh'
-    demo_openrc = global_config_location + 'demo-openrc.sh'
+    admin_openrc_file = global_config_location + 'admin-openrc.sh'
+    demo_openrc_file= global_config_location + 'demo-openrc.sh'
+
+    admin_openrc_f = open(admin_openrc_file,'r')
+    admin_openrc = admin_openrc_f.read()
+    admin_openrc_f.close()
+
+    demo_openrc_f = open(demo_openrc_file,'r')
+    demo_openrc = demo_openrc_f.read()
+    demo_openrc_f.close()
 
     # for the env dictionary
     roledefs = { 'compute' : ['root@computeVM'],
                  'network' : ['root@networkVM'],
                  'storage' : ['root@storageVM'],
                  'controller' : ['root@controllerVM']}
+
+    roles = roledefs.keys()
     hosts = roledefs.values()
 
     # keystone data
@@ -372,6 +385,7 @@ else:
     networkExternal = { 'DEVICE' : 'eth3',
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
+                        # 'BOOTPROTO' : '"dhcp"'}
                         'BOOTPROTO' : '"none"',
                         'IPADDR' : '192.168.3.21'}
 
@@ -383,18 +397,22 @@ else:
                        'IPADDR' : '192.168.2.41',
                        'NETMASK' : '255.255.255.0'}
 
+    storageManagement = {   'DEVICE' : 'eth1',
+                            'IPADDR' : '192.168.1.51',
+                            'NETMASK' : '255.255.255.0'}
+
     hosts = { controllerManagement['IPADDR'] : 'controller',
-              networkManagement['IPADDR'] : 'network'}
+              networkManagement['IPADDR'] : 'network',
+              storageManagement['IPADDR'] : 'storage'}
 
     # add the compute nodes to hosts config
     baseIP = computeManagement['IPADDR']
     for i, computeNode in enumerate(roledefs['compute']):
-        # turn IP into a list of ints 
+        # increment base ip
         baseIPListOfInts = [int(octet) for octet in baseIP.split('.')]
-        # increment last octet
         baseIPListOfInts[-1] += i
-        # turn it back into a string
-        IP = ".".join([str(octet) for octet in baseIPListOfInts])
+        IP = "".join([str(octet)+'.' for octet in baseIPListOfInts])
+        IP = IP[:-1] # remove last dot
 
         hosts[IP] = 'compute' + str(i+1)
 
@@ -402,11 +420,13 @@ else:
 
     # this script creates a database to be used by Neutron
     # 'NEUTRON_DBPASS' should be replaced by a suitable password
-    databaseScript = "CREATE DATABASE IF NOT EXISTS neutron; " + \
-            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' " + \
-            "IDENTIFIED BY 'NEUTRON_DBPASS'; " +\
+    databaseScriptNeutron = "CREATE DATABASE IF NOT EXISTS neutron; " + \
+            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'controller' " + \
+            "IDENTIFIED BY '{}'; ".format(passwd['NEUTRON_DBPASS']) +\
             "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' " +\
-            "IDENTIFIED BY 'NEUTRON_DBPASS';"
+            "IDENTIFIED BY '{}';".format(passwd['NEUTRON_DBPASS'])
 
-
+    # Partitioning data
+    partition = {   'size_reduction_of_home' : '3.5G',
+                    'partition_size' : '500M' }
 
