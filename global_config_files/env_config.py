@@ -311,8 +311,16 @@ else:
                           'character-set-server=utf8']
 
     # scripts to be sourced
-    admin_openrc = global_config_location + 'admin-openrc.sh'
-    demo_openrc = global_config_location + 'demo-openrc.sh'
+    admin_openrc_file = global_config_location + 'admin-openrc.sh'
+    demo_openrc_file= global_config_location + 'demo-openrc.sh'
+
+    admin_openrc_f = open(admin_openrc_file,'r')
+    admin_openrc = admin_openrc_f.read()
+    admin_openrc_f.close()
+
+    demo_openrc_f = open(demo_openrc_file,'r')
+    demo_openrc = demo_openrc_f.read()
+    demo_openrc_f.close()
 
     # for the env dictionary
     roledefs = { 'compute' : ['root@computeVM'],
@@ -407,11 +415,11 @@ else:
 
     # this script creates a database to be used by Neutron
     # 'NEUTRON_DBPASS' should be replaced by a suitable password
-    databaseScript = "CREATE DATABASE IF NOT EXISTS neutron; " + \
-            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' " + \
-            "IDENTIFIED BY 'NEUTRON_DBPASS'; " +\
+    databaseScriptNeutron = "CREATE DATABASE IF NOT EXISTS neutron; " + \
+            "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'controller' " + \
+            "IDENTIFIED BY '{}'; ".format(passwd['NEUTRON_DBPASS']) +\
             "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' " +\
-            "IDENTIFIED BY 'NEUTRON_DBPASS';"
+            "IDENTIFIED BY '{}';".format(passwd['NEUTRON_DBPASS'])
 
     # Partitioning data
     partition = {   'size_reduction_of_home' : '3.5G',

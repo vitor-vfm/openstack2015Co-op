@@ -20,7 +20,6 @@ from myLib import *
 env.roledefs = env_config.roledefs
 
 # define local config file locations
-database_script_file = 'config_files/database_creation.sql'
 admin_openrc = '../global_config_files/admin-openrc.sh'
 global_config = '../global_config_files/global_config'
 
@@ -31,7 +30,7 @@ neutron_conf = '/etc/neutron/neutron.conf'
 passwd = env_config.passwd
 
 # get database script
-database_script = env_config.databaseScript.replace("NEUTRON_DBPASS",passwd["NEUTRON_DBPASS"])
+database_script = env_config.databaseScriptNeutron
 
 # Logging
 log_file = 'neutron_deployment.log'
@@ -442,9 +441,9 @@ def compute_deploy():
 # INITIAL NETWORK
 
 def createExternalNetwork():
-    if 'ext-net' in run('neutron --debug net-list'):
+    if 'ext-net' in run('neutron net-list'):
         msg = 'Ext-net already created'
-        printMessage('good',msg)
+        print msg
     else:
         msg = 'create external network on network node'
         runCheck(msg,'neutron net-create ext-net --router:external True '+\
@@ -453,14 +452,14 @@ def createExternalNetwork():
 def createInitialSubnet():
 
     # fix this IP scheme
-    floatingIPStart = '192.168.122.50'
-    floatingIPEnd = '192.168.122.100'
+    floatingIPStart = '192.168.122.10'
+    floatingIPEnd = '192.168.122.20'
     ExternalNetworkGateway = '192.168.122.1'
     ExternalNetworkCIDR = '192.168.122.0/24'
 
     if 'ext-subnet' in run('neutron subnet-list'):
         msg = 'ext-net already created'
-        printMessage('good',msg)
+        print msg
     else:
         msg = 'create initial subnet on external net on network node'
         runCheck(msg,'neutron subnet-create ext-net --name ext-subnet --allocation-pool start={},end={} --disable-dhcp --gateway {} {}'\
@@ -473,14 +472,14 @@ def createDemoTenantNetwork():
 
     if 'demo-net' in run('neutron net-list'):
         msg = 'Demo-net already created'
-        printMessage('good',msg)
+        print msg
     else:
         msg = 'create initial demo tenant network on network node'
         runCheck(msg, 'neutron net-create demo-net')
 
     if 'demo-subnet' in run('neutron subnet-list'):
         msg = 'Demo-subnet already created'
-        printMessage('good',msg)
+        print msg
     else:
         msg = 'create subnet on demo-net'
         runCheck(msg,'neutron subnet-create demo-net --name demo-subnet --gateway {} {}'.format(gateway,cidr))
@@ -488,7 +487,7 @@ def createDemoTenantNetwork():
 def createSetupRouter():
     if 'demo-router' in run('neutron router-list'):
         msg = 'Demo-router already created'
-        printMessage('good',msg)
+        print msg
     else:
         msg = 'create the demo router'
         runCheck(msg,'neutron router-create demo-router')
@@ -505,10 +504,14 @@ def createInitialNetwork():
     # Creates a sample network for testing 
 
     # get admin credentials
-    exports = open(admin_openrc,'r').read()
-    with prefix(exports):
+    adminCred = env_config.admin_openrc
+    demoCred = env_config.demo_openrc
+
+    with prefix(adminCred):
         createExternalNetwork()
         createInitialSubnet()
+
+    with prefix(demoCred):
         createDemoTenantNetwork()
         createSetupRouter()
 
