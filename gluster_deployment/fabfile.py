@@ -97,8 +97,30 @@ def mounter():
     sudo('mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
 
 @roles('controller', 'compute')
-def put_in_line():
+def put_in_nova_line():
     run("crudini --set '/etc/nova/nova.conf' 'glance' 'libvirt_type' 'qemu'")
+
+@roles('controller')
+def put_in_glance_line():
+    run("crudini --set '/etc/glance/glance-api.conf' 'glance_store' 'filesystem_store_datadir' '/mnt/gluster/glance/images'")
+
+@roles('controller')
+def backup_glance_with_gluster():
+    run('mkdir -p /mnt/gluster/glance/images')
+    run('chown -R glance:glance /mnt/gluster/glance/')
+    run('mkdir /mnt/gluster/instance/')
+    run('chown -R nova:nova /mnt/gluster/instance/')
+    run('service openstack-glance-api restart') 
+
+@roles('controller', 'compute')
+def put_in_other_nova_line():
+    run("crudini --set '/etc/nova/nova.conf' 'DEFAULT' 'instances_path' '/mnt/gluster/instance'")
+
+@roles('compute')
+def setup_nova_paths():
+    run('mkdir -p /mnt/gluster/instance/')
+    run('chown -R nova:nova /mnt/gluster/instance/')
+    run('service openstack-nova-compute restart')
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
@@ -118,15 +140,38 @@ def destroy_mount():
     sudo('umount /mnt/gluster') 
     sudo('rm -rf /mnt/gluster')
 
+@roles('controller')
+def destroy_backup():
+    run('rm -rf /mnt/gluster/glance')
+    run('rm -rf /mnt/gluster/instance')
+    run('service openstack-glance-api restart')
+
+@roles('compute')
+def destroy_nova_paths():
+    run('rm -rf /mnt/gluster/instance/')
+    run('service openstack-nova-compute restart')
+
 ##################### Glance ###############################################
 
 def deploy_glance():
     execute(setup_gluster)
     execute(probe)
     execute(create_volume)
-    execute(put_in_line)
+    execute(put_in_nova_line)
     execute(mounter)
-    
+    execute(put_in_glance_line)
+    execute(backup_glance_with_gluster)
+    execute(put_in_other_nova_line)
+    execute(setup_nova_paths)
+
+def undeploy_glance():
+    execute(destroy_backup)
+    execute(destroy_mount)
+    execute(destroy_vol)
+    execute(destroy_gluster) 
+    execute(destroy_nova_paths)
+
+
 ################### Deployment #############################################
 
 def deploy():
