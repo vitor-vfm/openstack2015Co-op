@@ -9,26 +9,14 @@ import logging
 
 import sys
 sys.path.append('../global_config_files')
+sys.path.append('..')
 import env_config
-from env_config import log_debug, log_info, log_error, run_log, sudo_log
+from myLib import *
 
-################### Configuring Environment ########################################
+########################## Configuring Environment ########################################
 
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
-
-@hosts('localhost')
-def readKeyStoneDBConfigFile(fileName):
-    # basically reads the entire file given 
-    # and returns the content of the file
-    # in a single string
-
-    dbFile = open('config_files/' + fileName, 'r')
-    lines = [line for line in dbFile.readlines()]
-    fileContent = ""
-    for oneLine in lines:
-        fileContent = fileContent + oneLine + '\n'
-    return fileContent
 
 @hosts('localhost')
 def read_config_file_with_sections(file_location):
@@ -57,128 +45,93 @@ def read_config_file_with_sections(file_location):
     return file_dict
 
 
-#keystone DB file 
-keystoneConfigFileContents = readKeyStoneDBConfigFile('keystoneDBSetup.sql')
- 
 # config files for user Usr
 admin_email = env_config.keystone['ADMIN_EMAIL']
 demo_email = env_config.keystone['DEMO_EMAIL']
 
-# create these files for easier access for other components when configuring with keystone
-
-# create admin_openrc.sh file in ../global_config_files/admin_openrc.sh
-adminFile = open('../global_config_files/admin-openrc.sh', 'w')
-admin_openrc_contents = "export OS_TENANT_NAME=admin; export OS_USERNAME=admin; export OS_PASSWORD={}; export OS_AUTH_URL=http://controller:35357/v2.0".format(passwd['ADMIN_PASS'])
-adminFile.write(admin_openrc_contents)
-adminFile.close()
-
-# create demo_openrc.sh file in ../global_config_files/demo_openrc.sh
-demoFile = open('../global_config_files/demo-openrc.sh', 'w')
-demo_openrc_contents = "export OS_TENANT_NAME=demo; export OS_USERNAME=demo; export OS_PASSWORD={}; export OS_AUTH_URL=http://controller:5000/v2.0".format(passwd['DEMO_PASS'])
-demoFile.write(demo_openrc_contents)
-demoFile.close()
-
-# config file for keystone
-keystone_conf = 'config_files/keystone.conf'
-
-# logging setup
-
-log_file = 'keystone_deployment.log'
-env_config.setupLoggingInFabfile(log_file)
-
-
 ################### Deployment ########################################
 
-def set_keystone_config_file(admin_token,password):
-    # edits the keystone config file without messing up
-    # what's already there
+def setKeystoneConfigFile(admin_token,password):
+    """
+    Configure variables in keystone.conf
+    """
 
-    # This was mostly done before we knew about crudini
+    confFile= '/etc/keystone/keystone.conf'
 
-    conf_file = 'keystone.conf'
-    conf_file_contents = read_config_file_with_sections(keystone_conf)
+    msg = 'Make a backup of keystone.conf'
+    runCheck(msg, "cp {} {}.back12".format(confFile,confFile))
 
-    with cd('/etc/keystone'):
-        # make backup
-        sudo_log("cp {} {}.back12".format(conf_file,conf_file))
-        # for testing
-        #conf_file += '.back12'
+    # for testing
+    confFile += '.back12'
 
-        for header in conf_file_contents.keys():
-            lines_to_add = conf_file_contents[header]
-            # replace password
-            lines_to_add = [line.replace('KEYSTONE_DBPASS',password) for line in lines_to_add]
-            # replace admin token
-            lines_to_add = [line.replace('ADMIN_TOKEN',admin_token) for line in lines_to_add]
+    crudiniCommands = "\n" + \
+    "crudini --set {} DEFAULT admin_token {}\n""".format(confFile,admin_token) + \
+    "crudini --set {} DEFAULT verbose True\n".format(confFile) + \
+    "crudini --set {} database connection mysql://keystone:{}@controller/keystone\n".format(confFile,password) + \
+    "crudini --set {} token provider keystone.token.providers.uuid.Provider\n".format(confFile) + \
+    "crudini --set {} token driver keystone.token.persistence.backends.sql.Token\n".format(confFile) + \
+    "crudini --set {} revoke driver keystone.contrib.revoke.backends.sql.Revoke\n".format(confFile)
 
-            for new_line in lines_to_add:
-                section = header[1:-1]
-                # new_line = new_line.split('=')
-                new_line = [line.strip() for line in new_line.split('=')]
-                parameter = '\'' + new_line[0] + '\''
-                value = '\'' + new_line[1] + '\''
-                if sudo_log('crudini --set {} {} {} {}'.format(conf_file,section,parameter,value)).return_code != 0:
-                    log_error('Crudini couldn\'t set up {} on section {} of conf file {}'\
-                            .format(parameter,section,conf_file))
+    msg = 'Set up variables in {} using crudini'.format(confFile)
+    runCheck(msg, crudiniCommands)
 
-
+    print 'New file: '
+    run('cat ' + confFile + " | egrep -v '^#' | egrep -v '^$'")
 
 @roles('controller')
 def setupKeystone():
 
-    log_debug('Setting up keystone on host')
+    msg = "Restart MariaDB service"
+    out = runCheck(msg, "systemctl restart mariadb")
 
-    if sudo_log("systemctl restart mariadb").return_code != 0:
-        log_error('Failed to restart mariadb')
+    if out.return_code != 0:
         # we need mariadb working in order to proceed
         sys.exit("Failed to restart mariadb")
-    else:
-	log_debug("Succesfully restarted mariadb")
 
-    fileContents = keystoneConfigFileContents
-    fileContents = fileContents.replace('NEW_PASS',passwd['ADMIN_PASS'])
+    # get Keystone database creation scripts
+    databaseCreation = createDatabaseScript('keystone',passwd['KEYSTONE_DBPASS'])
     
-    if sudo_log('echo "' + fileContents + '" | mysql -u root').return_code != 0:
-	log_error("Failed to setup to mariadb")
-    else:
-	log_debug("Setup mariadb")  
+    msg = "Create database for keystone"
+    runCheck(msg, 'echo "' + databaseCreation + '" | mysql -u root')
   
-    admin_token = run('openssl rand -hex 10')
-    sudo_log("yum -y install openstack-keystone python-keystoneclient")
+    msg = "Generate an admin token"
+    admin_token = runCheck(msg, 'openssl rand -hex 10')
+
+    msg = "Install keystone packages"
+    runCheck(msg, "yum -y install openstack-keystone python-keystoneclient")
     
     # set config files
-    set_keystone_config_file(admin_token,passwd['ADMIN_PASS'])
+    setKeystoneConfigFile(admin_token,passwd['KEYSTONE_DBPASS'])
+    # from this point on script is not fixed yet
+    return
     
     # create generic certificates and keys and restrict access to the associated files
-    sudo_log("keystone-manage pki_setup --keystone-user keystone --keystone-group keystone")
-    sudo_log("chown -R keystone:keystone /var/log/keystone")
-    sudo_log("chown -R keystone:keystone /etc/keystone/ssl")
-    sudo_log("chmod -R o-rwx /etc/keystone/ssl")
+    run("keystone-manage pki_setup --keystone-user keystone --keystone-group keystone")
+    run("chown -R keystone:keystone /var/log/keystone")
+    run("chown -R keystone:keystone /etc/keystone/ssl")
+    run("chmod -R o-rwx /etc/keystone/ssl")
 
-    # populate the Identity service database
-    if sudo_log("su -s /bin/sh -c 'keystone-manage db_sync' keystone").return_code != 0:
-        log_error('Failed to populate database')
-    else:
-        log_debug('Populated database')
+    msg = 'Populate the Identity service database'
+    runCheck("su -s /bin/sh -c 'keystone-manage db_sync' keystone")
 
 
     # start the Identity service and configure it to start when the system boots
-    if sudo_log("systemctl enable openstack-keystone.service").return_code != 0:
+    if run("systemctl enable openstack-keystone.service").return_code != 0:
         log_error('Failed to enable openstack-keystone.service')
-    if sudo_log("systemctl start openstack-keystone.service").return_code != 0:
+    if run("systemctl start openstack-keystone.service").return_code != 0:
         log_error('Failed to start openstack-keystone.service')
     else:
         log_debug('Started openstack-keystone.service')
 
 
     # configure a periodic task that purges expired tokens hourly
-    sudo_log("(crontab -l -u keystone 2>&1 | grep -q token_flush) || " + \
+    run("(crontab -l -u keystone 2>&1 | grep -q token_flush) || " + \
             "echo '@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/" + \
             "keystone-tokenflush.log 2>&1' >> /var/spool/cron/keystone")
 
     # need to restart keystone so that it can read in the 
     # new admin_token from the configuration file
-    if sudo_log("systemctl restart openstack-keystone.service").return_code != 0:
+    if run("systemctl restart openstack-keystone.service").return_code != 0:
         log_error('Failed to restart openstack-keystone.service')
 
     # configure prereqs for creating tenants, users, and roles
@@ -188,42 +141,40 @@ def setupKeystone():
     with prefix(exports):
 
         # create tenants, users, and roles
-        if 'admin' not in sudo_log("keystone tenant-list"):
-            sudo_log("keystone tenant-create --name admin --description 'Admin Tenant'")
-        if 'admin' not in sudo_log("keystone user-list"):
-            sudo_log("keystone user-create --name admin --pass {} --email {}"\
+        if 'admin' not in run("keystone tenant-list"):
+            run("keystone tenant-create --name admin --description 'Admin Tenant'")
+        if 'admin' not in run("keystone user-list"):
+            run("keystone user-create --name admin --pass {} --email {}"\
                     .format(passwd['ADMIN_PASS'], admin_email))
-        if 'admin' not in sudo_log("keystone role-list"):
-            sudo_log("keystone role-create --name admin")
-            sudo_log("keystone user-role-add --user admin --tenant admin --role admin")
+        if 'admin' not in run("keystone role-list"):
+            run("keystone role-create --name admin")
+            run("keystone user-role-add --user admin --tenant admin --role admin")
         
         # note, the following can be repeated to make more tenants and 
         # create a demo tenant for typical operations in environment
-        if 'demo' not in sudo_log("keystone tenant-list"):
-            sudo_log("keystone tenant-create --name demo --description 'Demo Tenant'")
-        # sudo_log("keystone user-create --name demo --tenant demo --pass {} --email {}".format(demo_user['PASSWD'], demo_user['EMAIL'])) 
-        if 'demo' not in sudo_log("keystone user-list"):
-            sudo_log("keystone user-create --name demo --tenant demo --pass {} --email {}".format('34demo43', 'demo@gmail.com')) 
+        if 'demo' not in run("keystone tenant-list"):
+            run("keystone tenant-create --name demo --description 'Demo Tenant'")
+        # run("keystone user-create --name demo --tenant demo --pass {} --email {}".format(demo_user['PASSWD'], demo_user['EMAIL'])) 
+        if 'demo' not in run("keystone user-list"):
+            run("keystone user-create --name demo --tenant demo --pass {} --email {}".format('34demo43', 'demo@gmail.com')) 
 
         # create one or more unique users with the admin role under the service tenant
-        if 'service' not in sudo_log("keystone tenant-list"):
-            sudo_log("keystone tenant-create --name service --description 'Service Tenant'")
+        if 'service' not in run("keystone tenant-list"):
+            run("keystone tenant-create --name service --description 'Service Tenant'")
 
         # create the service entity for the Identity service
-        if 'keystone' not in sudo_log("keystone service-list"):
-            sudo_log("keystone service-create --name keystone --type identity " + \
+        if 'keystone' not in run("keystone service-list"):
+            run("keystone service-create --name keystone --type identity " + \
                     "--description 'OpenStack Identity'")
-        if 'adminurl http://controller:35357' not in sudo_log("keystone endpoint-list"):
-            sudo_log("keystone endpoint-create " + \
+        if 'adminurl http://controller:35357' not in run("keystone endpoint-list"):
+            run("keystone endpoint-create " + \
                     "--service-id $(keystone service-list | awk '/ identity / {print $2}') " + \
                     "--publicurl http://controller:5000/v2.0 --internalurl http://controller:5000/v2.0 " + \
                     "--adminurl http://controller:35357/v2.0 --region regionOne")
 
 
 def deploy():
-    log_debug('Deploying')
     execute(setupKeystone)
-    log_debug('Done')
 
 ######################################## TDD #########################################
 
@@ -241,7 +192,7 @@ def keystone_tdd():
         env_config.keystone_check('keystone')
 
         # Check if 'admin' and 'demo' are users
-        user_list_output = sudo_log("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['ADMIN_PASS']))
+        user_list_output = run("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['ADMIN_PASS']))
         if 'admin' in user_list_output:
             print okay
         else:
@@ -253,7 +204,7 @@ def keystone_tdd():
             print red('demo not a user')
 
         # Check if 'admin', 'service' and 'demo' are tenants
-        tenant_list_output = sudo_log("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(passwd['ADMIN_PASS']))
+        tenant_list_output = run("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list".format(passwd['ADMIN_PASS']))
         for name in ['admin','demo','service']:
             if name in tenant_list_output:
                 print okay
@@ -261,7 +212,7 @@ def keystone_tdd():
                 print red('{} not a tenant'.format(name))
 
         # Check if '_member_' and 'admin' are roles
-        role_list_output = sudo_log("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(passwd['ADMIN_PASS']))
+        role_list_output = run("keystone --os-tenant-name admin --os-username admin --os-password {} --os-auth-url http://controller:35357/v2.0 role-list".format(passwd['ADMIN_PASS']))
         if '_member_' in role_list_output:
             print okay
         else:
@@ -273,7 +224,7 @@ def keystone_tdd():
             print red('admin not a role')
 
         # Check if non-admin user is forbidden to perform admin tasks
-        user_list_output = sudo_log("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['DEMO_PASS']))
+        user_list_output = run("keystone --os-tenant-name demo --os-username demo --os-password {} --os-auth-url http://controller:35357/v2.0 user-list".format(passwd['DEMO_PASS']))
         if 'You are not authorized to perform the requested action' in user_list_output:
             print okay
         else:
