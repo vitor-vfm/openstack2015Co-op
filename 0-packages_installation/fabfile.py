@@ -1,19 +1,21 @@
 from __future__ import with_statement
 from fabric.api import *
+from fabric.contrib.files import append, exists, sed
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
 from fabric.state import output
 from fabric.colors import green, red, blue
 import string
 
-import sys
+import sys, os
 sys.path.append('../global_config_files')
-sys.path.append('..')
-import myLib
 
 import env_config
 from env_config import log_debug, log_info, log_error, run_log, sudo_log
 
+sys.path.append('..')
+from myLib import *
+logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
 ############################ Config ########################################
 
@@ -28,24 +30,48 @@ if output['debug']:
 log_file = 'basic-network.log'
 env_config.setupLoggingInFabfile(log_file)
 
-################### Deployment ########################################
+########################## Deployment ########################################
 @roles('controller','compute','network')
 def renameHost():
 	msg='Renaming host to %s' % env['host']
 	run('hostnamectl set-hostname %s' % env['host'])
 	printMessage("good", msg)
-	logging.debug(msg)
+	logging.info(msg)
+
+
+@roles('controller','compute','network')
+def installConfigureChrony():
+	msg='installing chrony'
+	sudo('yum -y install chrony')
+	var1=run('rpm -qa |grep chrony ')
+	printMessage("good", msg)
+	logging.info(msg +" version "+ var1)
+	if env.host == 'controller':
+		sed ('/etc/chrony.conf','server 0.centos.pool.ntp.org iburst','server time1.srv.ualberta.ca iburst')
+		sed ('/etc/chrony.conf','server 1.centos.pool.ntp.org iburst','server time2.srv.ualberta.ca iburst')
+		sed ('/etc/chrony.conf','server 2.centos.pool.ntp.org iburst','server time3.srv.ualberta.ca iburst')
+		sed ('/etc/chrony.conf','server 3.centos.pool.ntp.org iburst','')
+	else:
+		run('echo "server controller iburst" > /etc/chrony.conf')
+
+	run('systemctl restart chronyd.service')
+	result=run('systemctl status chronyd.service')
+	if result.failed:
+		logging.info(" starting Chrony on " +env.host)
+		run('systemctl start chronyd.service')
+		run('systemctl enable chronyd.service')
+	else:
+		logging.info(" restarting Chrony on " +env.host)
+		run('systemctl restart chronyd.service')
+	printMessage("good",msg)
+	var1=run('systemctl status chronyd.service |grep Active')
+	logging.info(env.host +" Chrony is "+ var1)
+
 
 # General function to install packages that should be in all or several nodes
 @with_settings(warn_only=True)
 def install_packages():
     
-    # Install Chrony
-    sudo_log('yum -y install chrony')
-    # enable Chrony
-    sudo_log('systemctl enable chronyd.service')
-    sudo_log('systemctl start chronyd.service')
-
     # Install EPEL (Extra Packages for Entreprise Linux
     sudo_log('yum -y install yum-plugin-priorities')
     sudo_log('yum -y install epel-release')
@@ -133,8 +159,16 @@ def ask_for_reboot():
 
 #@roles('controller','compute','network','storage')
 @roles('controller','compute','network')
+@with_settings(warn_only=True)
 def test():
-    run("echo Hello $(hostname)")
+	result=run('systemctl status chronyd.service')
+	if result.failed:
+		run('systemctl start chronyd.service')
+		run('systemctl enable chronyd.service')
+	else:
+		printMessage("good",result)
+	var1=run('systemctl status chronyd.service |grep Active')
+
 
 
 #@roles('controller','compute','network','storage')
@@ -144,4 +178,13 @@ def deploy():
 
 @roles('controller','compute','network')
 def tdd():
-	run('hostname')
+	with settings(warn_only=True):
+		print('checking var/log/messages for chronyd output')
+		run('grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(chronyd)"')
+	logging.info( " TDD on " +env.host)
+	with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
+		var1=run('systemctl status chronyd.service |grep Active')
+		var2=run('date')
+	logging.info(env.host +" Chrony is "+ var1)
+	logging.info(env.host +" the date is "+ var2)
+

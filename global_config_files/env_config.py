@@ -296,8 +296,13 @@ log_dict = {'host_string':'','role':''} # default value for log_dict
 ######################### Global variables ######################
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
-    # PRODUCTION
-    pass
+	# PRODUCTION
+	roledefs = { 'compute' : ['root@compute1','root@compute2','root@compute3','root@compute4' ],
+                 'network' : ['root@network'],
+                 'storage' : ['root@storage'],
+                 'controller' : ['root@controller']}
+	logfilename='/opt/coop2015/coop2015/fabric.log'
+
 else:
     # DEVELOPMENT
 
@@ -309,19 +314,6 @@ else:
                           'collation-server=utf8_general_ci',
                           'init-connect=SET NAMES utf8',
                           'character-set-server=utf8']
-
-    # scripts to be sourced
-    admin_openrc_file = global_config_location + 'admin-openrc.sh'
-    demo_openrc_file= global_config_location + 'demo-openrc.sh'
-
-    admin_openrc_f = open(admin_openrc_file,'r')
-    admin_openrc = admin_openrc_f.read()
-    admin_openrc_f.close()
-
-    demo_openrc_f = open(demo_openrc_file,'r')
-    demo_openrc = demo_openrc_f.read()
-    demo_openrc_f.close()
-
     # for the env dictionary
     roledefs = { 'compute' : ['root@computeVM'],
                  'network' : ['root@networkVM'],
@@ -425,3 +417,35 @@ else:
     partition = {   'size_reduction_of_home' : '3.5G',
                     'partition_size' : '500M' }
 
+
+
+
+    """
+    admin-openrc and demo-openrc
+    
+    These scripts set up credentials for the keystone users
+    admin and demo respectively. They export system variables that 
+    allow the user to execute certain keystone CLI commands. They 
+    are necessary every time the deployment scripts use keystone.
+
+
+    We also save them as local text files, because it's sometimes useful
+    to send them via scp to the hosts and source them from there.
+    """
+
+    admin_openrc = "export OS_TENANT_NAME=admin; " +\
+            "export OS_USERNAME=admin; " + \
+            "export OS_PASSWORD={}; ".format(passwd['ADMIN_PASS']) + \
+            "export OS_AUTH_URL=http://controller:35357/v2.0"
+
+    demo_openrc = "export OS_TENANT_NAME=demo; " +\
+            "export OS_USERNAME=demo; " + \
+            "export OS_PASSWORD={}; ".format(passwd['DEMO_PASS']) + \
+            "export OS_AUTH_URL=http://controller:5000/v2.0"
+
+    # save them as local files; clobber if necessary
+    admin_openrc_local = '../global_config_files/admin-openrc.sh' 
+    demo_openrc_local = '../global_config_files/demo-openrc.sh' 
+
+    call("echo '{}' >{}".format(admin_openrc,admin_openrc_local),shell=True)
+    call("echo '{}' >{}".format(demo_openrc,demo_openrc_local),shell=True)

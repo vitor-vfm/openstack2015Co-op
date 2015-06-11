@@ -168,6 +168,15 @@ def set_hosts():
 
 def configChrony():
 
+    # Install Chrony
+    run('yum -y install chrony')
+
+    # enable Chrony
+    msg = 'Enable Chrony service'
+    runCheck(msg, 'systemctl enable chronyd.service')
+    msg = 'Start Chrony service'
+    runCheck(msg, 'systemctl start chronyd.service')
+
     chrony_conf = ''
     if env_config.getRole() == 'controller':
         # reference the ntp servers
@@ -192,7 +201,7 @@ def configChrony():
             print blue('This is what the conf file will look like: ')
             print blue(sudo('cat ' + confFile,quiet=True))
 
-        msg = 'Restart chronyd service'
+        msg = 'Restart Chrony service'
         runCheck(msg, 'systemctl restart chronyd.service')
 
 def deployInterface(interface,specs):

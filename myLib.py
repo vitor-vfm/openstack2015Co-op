@@ -1,6 +1,6 @@
 from fabric.colors import green, red
 from fabric.api import run
-
+from global_config_files.env_config import *
 
 def printMessage(status, msg):
 	if (status == "good"):
@@ -9,11 +9,13 @@ def printMessage(status, msg):
 		 print(red("\t\t[OOP's] ") + " I CANNOT: "+ msg)
 
 import logging
-
-logging.basicConfig(filename='/tmp/test.log',level=logging.DEBUG)
-#logging.debug('This message should go to the log file')
-#logging.info('So should this')
-#logging.warning('And this, too')
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%b %d %H:%M',
+                    #filename='/opt/coop2015/coop2015/fabric.log',
+                    filename=logfilename,
+                    filemode='a'
+                    )
 
 
 def runCheck(msg,command):
