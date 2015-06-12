@@ -66,10 +66,6 @@ else:
     roles = roledefs.keys()
     hosts = roledefs.values()
 
-    # keystone data
-    keystone = { 'ADMIN_EMAIL' : 'admin@example.com',
-                 'DEMO_EMAIL' : 'demo@example.com'}
-
     # ntp
     ntpServers = ['time1.srv.ualberta.ca','time2.srv.ualberta.ca','time3.srv.ualberta.ca']
 
@@ -170,8 +166,9 @@ else:
     ##############################################################################
 
 
+    keystone_emails = { 'ADMIN_EMAIL' : 'admin@example.com',
+                         'DEMO_EMAIL' : 'demo@example.com'}
 
-    # these are the variables whose values will be set in keystone.conf
 
 
     ##############################################################################

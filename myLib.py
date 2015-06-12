@@ -1,6 +1,6 @@
 from fabric.colors import green, red
 from fabric.api import run
-from global_config_files.env_config import *
+from env_config import *
 
 def printMessage(status, msg):
 	if (status == "good"):
