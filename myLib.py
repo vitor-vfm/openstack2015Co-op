@@ -322,19 +322,24 @@ def keystone_check(name, verbose=False):
 # General database check that will be used in several TDDs
 def database_check(db):
 
-    # 'OK' message
-    okay = '[ ' + green('OK') + ' ]'
-        
+
+    def sudo_v(command):
+        # ref: http://www.pythoncentral.io/one-line-if-statement-in-python-ternary-conditional-operator/
+        # <expression1> if <condition> else <expression2>        
+        return sudo(command) if verbose else sudo(command, quiet=True)
+
+
+
     def db_exists(db):
         command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{}';".format(db)
-        if db in sudo("""echo "{}" | mysql -u root""".format(command)):
+        if db in sudo_v("""echo "{}" | mysql -u root""".format(command)):
             return True
         else:
             return False
         
     def table_count(db):
         command = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{}';".format(db) 
-        output = sudo("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
+        output = sudo_v("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
         return int(output)
 
     if db_exists(db):
