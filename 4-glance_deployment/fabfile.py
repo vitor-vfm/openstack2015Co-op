@@ -9,39 +9,24 @@ import string
 
 import sys
 sys.path.append('../global_config_files')
+sys.path.append('..')
 import env_config
-from env_config import log_debug, log_info, log_error, run_log, sudo_log
-
+from myLib import align_n
 
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
-admin_openrc = "../global_config_files/admin-openrc.sh"
-demo_openrc = "../global_config_files/demo-openrc.sh"
-
-
 glance_api_config_file = "/etc/glance/glance-api.conf"
-
 glance_registry_config_file = "/etc/glance/glance-registry.conf"
-
-
-# logging setup
-
-log_file = 'glance_deployment.log'
-env_config.setupLoggingInFabfile(log_file)
 
 ################### General functions ########################################
 
-def get_parameter(config_file, section, parameter):
-    crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
-    return local(crudini_command, capture=True)
-#    return sudo_log(crudini_command)
 
 def set_parameter(config_file, section, parameter, value):
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
-    sudo_log(crudini_command)
+    run(crudini_command)
 
 
 def setup_glance_database(GLANCE_DBPASS):
@@ -51,33 +36,36 @@ def setup_glance_database(GLANCE_DBPASS):
 
     
     print("mysql commands are: " + mysql_commands)
-    sudo_log('echo "{}" | mysql -u root'.format(mysql_commands))
+    run("echo '{}' | mysql -u root".format(mysql_commands))
     
 
 
 def setup_glance_keystone(GLANCE_PASS):
-    # source_command = "source admin-openrc.sh"
-    # with prefix(source_command):
-    exports = open(admin_openrc,'r').read()
-    with prefix(exports):
+    with prefix(admin_openrc):
         if 'glance' not in sudo("keystone user-list"):
-            sudo_log("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
-            sudo_log("keystone user-role-add --user glance --tenant service --role admin")
+            run("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
+            run("keystone user-role-add --user glance --tenant service --role admin")
         else:
-            log_debug('User glance already in user list')
+            pass
+            #new logging method REQUIRED
+            #log_debug('User glance already in user list')
 
         if 'glance' not in sudo("keystone service-list"):
-            sudo_log("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
+            run("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
         else:
-            log_debug('Service glance already in service list')
+            pass
+            #new logging method REQUIRED
+            #log_debug('Service glance already in service list')
 
         if '9292' not in sudo("keystone endpoint-list"):
-            sudo_log("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
+            run("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
         else:
-            log_debug('Endpoint 9292 already in endpoint list')
+            pass
+            #new logging method REQUIRED
+            #log_debug('Endpoint 9292 already in endpoint list')
     
 def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
-    sudo_log("yum install -y openstack-glance python-glanceclient")
+    run("yum install -y openstack-glance python-glanceclient")
     
     set_parameter(glance_api_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
@@ -119,15 +107,12 @@ def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
 
 
 def populate_database():
-    sudo_log("su -s /bin/sh -c 'glance-manage db_sync' glance")
+    run("su -s /bin/sh -c 'glance-manage db_sync' glance")
 
 def start_glance_services():
-    sudo_log("systemctl enable openstack-glance-api.service openstack-glance-registry.service")
-    sudo_log("systemctl start openstack-glance-api.service openstack-glance-registry.service")
+    run("systemctl enable openstack-glance-api.service openstack-glance-registry.service")
+    run("systemctl start openstack-glance-api.service openstack-glance-registry.service")
 
-def download_packages():
-    # make sure we have crudini
-    sudo_log('yum install -y crudini')
 
 @roles('controller')
 def setup_GlusterFS_controller():
@@ -167,15 +152,6 @@ def setup_GlusterFS():
 @roles('controller')
 def setup_glance():
 
-    download_packages()
-    
-    # upload admin-openrc.sh to set variables in host machine
-    put(admin_openrc)
-    
-    # variable setup
-    # GLANCE_DBPASS = get_parameter(env_config.global_config_file, 'mysql', 'GLANCE_DBPASS')
-    # GLANCE_PASS = get_parameter(env_config.global_config_file, 'keystone', 'GLANCE_PASS')    
-
     # setup glance database
     setup_glance_database(passwd['GLANCE_DBPASS'])
     setup_glance_keystone(passwd['GLANCE_PASS'])
@@ -197,25 +173,24 @@ def deploy():
 @roles('controller')
 def glance_tdd():
 
-    sudo_log("mkdir /tmp/images")
+    run("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
-#    sudo_log("wget -P /tmp/images http://cdn.download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img")
-    sudo_log("wget -P /tmp/images " + url)
-    source_command = "source admin-openrc.sh"
-    with prefix(source_command):
-        sudo_log("glance image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
-        output = sudo_log("glance image-list")
+    run("wget -P /tmp/images " + url)
+    with prefix(admin_openrc):
+        run("glance image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
+        output = run("glance image-list")
 
     if 'cirros-0.3.3-x86_64' in output:
-        print(green("Successfully installed cirros image"))
+        print(align_y("Successfully installed cirros image"))
     else:
-        print(red("Couldn't install cirros image"))
+        print(align_n("Couldn't install cirros image"))
         
-    sudo_log("rm -r /tmp/images")
+    run("rm -r /tmp/images")
 
     
     env_config.database_check('glance')
     env_config.keystone_check('glance')
+
 def tdd():
     with settings(warn_only=True):
         execute(glance_tdd)
