@@ -29,9 +29,6 @@ def setKeystoneConfigFile(admin_token,password):
     msg = 'Make a backup of keystone.conf'
     runCheck(msg, "cp {} {}.back12".format(confFile,confFile))
 
-    # for testing
-    confFile += '.back12'
-
     crudiniCommands = "\n" + \
     "crudini --set {} DEFAULT admin_token {}\n""".format(confFile,admin_token) + \
     "crudini --set {} DEFAULT verbose True\n".format(confFile) + \
@@ -43,8 +40,12 @@ def setKeystoneConfigFile(admin_token,password):
     msg = 'Set up variables in {} using crudini'.format(confFile)
     runCheck(msg, crudiniCommands)
 
-    print 'New file: '
-    run('cat ' + confFile + " | egrep -v '^#' | egrep -v '^$'")
+    # need to restart keystone so that it can read in the 
+    # new admin_token from the configuration file
+    msg = "Restart keystone service"
+    runCheck(msg, "systemctl restart openstack-keystone.service")
+
+
 
 def createGenericCertificatesAndKeys():
     """
@@ -75,7 +76,7 @@ def configureCronToPurgeExpiredTokens():
             "echo '@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/ keystone-tokenflush.log 2>&1' " + \
             ">> /var/spool/cron/keystone")
 
-def createUsersRolesAndTenants():
+def createUsersRolesAndTenants(admin_token):
     """
     Create (a) a user, a tenant, and role called 'admin', (b) a user and a 
     tenant called 'demo', (c) a tenant called 'service', and (d) a service 
@@ -83,75 +84,84 @@ def createUsersRolesAndTenants():
     """
 
     # get admin credentials
-    credentials = "export OS_SERVICE_TOKEN={}; " + \
-            "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0".format(admin_token)
+    credentials = "export OS_SERVICE_TOKEN={}; ".format(admin_token) + \
+            "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0 "
+    credentials += env_config.admin_openrc
     with prefix(credentials):
 
         # before each creation, we check if the user, role or tenant already
         # exists to avoid duplicates
 
-        if 'admin' not in run("keystone tenant-list"):
+        out = run("keystone tenant-list",warn_only=True)
+        if out.return_code == 0 and 'admin' not in out:
             msg = "Create 'admin' tenant"
             runCheck(msg, "keystone tenant-create --name admin --description 'Admin Tenant'")
         else:
-            print blue("'admin' tenant already created. Nothing done")
+            print blue("'admin' tenant already created or error in list. Nothing done")
 
-        if 'admin' not in run("keystone user-list"):
+        out = run("keystone user-list",warn_only=True)
+        if out.return_code == 0 and 'admin' not in out:
             msg = "Create 'admin' user"
             runCheck(msg, "keystone user-create --name admin --pass {} --email {}"\
-                    .format(passwd['ADMIN_PASS'], admin_email))
+                    .format(passwd['ADMIN_PASS'], env_config.keystone_emails['ADMIN_EMAIL']))
         else:
-            print blue("'admin' user already created. Nothing done")
+            print blue("'admin' user already created or error in list. Nothing done")
 
-        if 'admin' not in run("keystone role-list"):
+        out = run("keystone role-list",warn_only=True)
+        if out.return_code == 0 and 'admin' not in out:
             msg = "Create 'admin' role"
             runCheck(msg, "keystone role-create --name admin")
 
             msg = "Give role 'admin' to user 'admin'"
             runCheck(msg, "keystone user-role-add --user admin --tenant admin --role admin")
         else:
-            print blue("'admin' role already created. Nothing done")
+            print blue("'admin' role already created or error in list. Nothing done")
 
 
         
-        if 'demo' not in run("keystone tenant-list"):
+        out = run("keystone tenant-list",warn_only=True)
+        if out.return_code == 0 and 'demo' not in out:
             msg = "Create 'demo' tenant"
             runCheck(msg, "keystone tenant-create --name demo --description 'Demo Tenant'")
         else:
-            print blue("'demo' tenant already created. Nothing done")
+            print blue("'demo' tenant already created or error in list. Nothing done")
 
-        if 'demo' not in run("keystone user-list"):
+        out = run("keystone user-list",warn_only=True)
+        if out.return_code == 0 and 'demo' not in out:
             msg = "Create 'demo' user"
-            runCheck(msg, "keystone user-create --name demo --tenant demo" +\
-                    "--pass {} --email {}".format('34demo43', 'demo@gmail.com')) 
+            runCheck(msg, "keystone user-create --name demo --tenant demo " +\
+                    "--pass {} --email {}".format('34demo43', env_config.keystone_emails['DEMO_EMAIL'])) 
         else:
-            print blue("'demo' user already created. Nothing done")
+            print blue("'demo' user already created or error in list. Nothing done")
 
 
 
-        if 'service' not in run("keystone tenant-list"):
+        out = run("keystone tenant-list",warn_only=True)
+        if out.return_code == 0 and 'service' not in out:
             msg = "Create 'service' tenant"
             runCheck(msg, "keystone tenant-create --name service --description 'Service Tenant'")
         else:
-            print blue("'service' tenant already created. Nothing done")
+            print blue("'service' tenant already created or error in list. Nothing done")
 
 
 
-        if 'keystone' not in run("keystone service-list"):
+        out = run("keystone service-list",warn_only=True)
+        if out.return_code == 0 and 'keystone' not in out:
             msg = "Create 'keystone' service"
             runCheck(msg, "keystone service-create --name keystone --type identity " + \
                     "--description 'OpenStack Identity'")
         else:
-            print blue("'keystone' service already created")
+            print blue("'keystone' service already created or error in list. Nothing done")
 
-        if 'adminurl http://controller:35357' not in run("keystone endpoint-list"):
+        out = run("keystone endpoint-list",warn_only=True)
+        if out.return_code == 0 and 'adminurl http://controller:35357' not in out:
             msg = "Create an endpoint for the 'keystone' service"
             runCheck(msg, "keystone endpoint-create " + \
                     "--service-id $(keystone service-list | awk '/ identity / {print $2}') " + \
                     "--publicurl http://controller:5000/v2.0 --internalurl http://controller:5000/v2.0 " + \
                     "--adminurl http://controller:35357/v2.0 --region regionOne")
         else:
-            print blue("Endpoint for the 'keystone' service already created")
+            print blue("Endpoint for the 'keystone' service already created or error in list. Nothing done")
 
  
 @roles('controller')
@@ -180,10 +190,10 @@ def setupKeystone():
     
     createGenericCertificatesAndKeys()
 
+    createUsersRolesAndTenants(admin_token)
+
     msg = 'Populate the Identity service database'
     runCheck(msg, "su -s /bin/sh -c 'keystone-manage db_sync' keystone")
-
-    createUsersRolesAndTenants(admin_token)
 
     # start the Identity service and configure it to start when the system boots
     msg = "Enable keystone service"
@@ -193,10 +203,6 @@ def setupKeystone():
 
     configureCronToPurgeExpiredTokens()
 
-    # need to restart keystone so that it can read in the 
-    # new admin_token from the configuration file
-    msg = "Restart keystone service"
-    runCheck(msg, "systemctl restart openstack-keystone.service")
 
 
 def deploy():
