@@ -161,6 +161,15 @@ if __name__ == '__main__':
 
     print 'Finished Testing ' + '[ ' + green('OK') + ' ]'        
 
+def run_v(command, verbose=False):
+    # ref: http://www.pythoncentral.io/one-line-if-statement-in-python-ternary-conditional-operator/
+    # <expression1> if <condition> else <expression2>        
+    return run(command) if verbose else run(command, quiet=True)
+
+
+
+
+
 def keystone_check(name, verbose=False):
     
     """
@@ -193,14 +202,6 @@ def keystone_check(name, verbose=False):
     - quiet and verbose modes (DONE)
 
     """
-
-
-    def run_v(command):
-        # ref: http://www.pythoncentral.io/one-line-if-statement-in-python-ternary-conditional-operator/
-        # <expression1> if <condition> else <expression2>        
-        return run(command) if verbose else run(command, quiet=True)
-
-
     def tenant_check():
         tenants = ['admin', 'demo', 'service']
 
@@ -323,11 +324,6 @@ def keystone_check(name, verbose=False):
 def database_check(db,verbose=False):
 
 
-    def run_v(command):
-        # ref: http://www.pythoncentral.io/one-line-if-statement-in-python-ternary-conditional-operator/
-        # <expression1> if <condition> else <expression2>        
-        return run(command) if verbose else run(command, quiet=True)
-
 
 
     def db_exists(db):
@@ -349,18 +345,14 @@ def database_check(db,verbose=False):
     else:
         message = "DB " + db + " does not exist"
         print align_n(message)
-        print red(message)
         logging.debug(message)
 
     nbr = table_count(db)
     if nbr > 0:
         message = "table for " + db + " has " + str(nbr) + " entries"
         print align_y(message)
-        print green(message)
-        print okay
         logging.debug(message)
     else:
         message = "table for " + db + " is empty. Nbr of entries : " + str(nbr)
         print align_n(message)
-        print red(message)
         logging.debug(message)
