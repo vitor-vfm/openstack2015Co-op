@@ -1,4 +1,4 @@
-l;import ConfigParser
+import ConfigParser
 import logging 
 from subprocess import check_output, call
 from fabric.api import run, sudo, env
