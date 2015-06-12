@@ -320,7 +320,7 @@ def keystone_check(name, verbose=False):
 
 
 # General database check that will be used in several TDDs
-def database_check(db):
+def database_check(db,verbose=False):
 
 
     def sudo_v(command):
@@ -345,7 +345,6 @@ def database_check(db):
     if db_exists(db):
         message = "DB " + db + " exists"
         print align_y(message)
-        print okay
         logging.debug(message)
     else:
         message = "DB " + db + " does not exist"
