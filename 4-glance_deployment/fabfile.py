@@ -11,7 +11,7 @@ import sys
 sys.path.append('../global_config_files')
 sys.path.append('..')
 import env_config
-from myLib import *
+from myLib import database_check, keystone_check, run_v, align_n, align_y
 
 ############################ Config ########################################
 
