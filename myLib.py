@@ -161,6 +161,15 @@ if __name__ == '__main__':
 
     print 'Finished Testing ' + '[ ' + green('OK') + ' ]'        
 
+def run_v(command, verbose=False):
+    # ref: http://www.pythoncentral.io/one-line-if-statement-in-python-ternary-conditional-operator/
+    # <expression1> if <condition> else <expression2>        
+    return run(command) if verbose else run(command, quiet=True)
+
+
+
+
+
 def keystone_check(name, verbose=False):
     
     """
@@ -193,61 +202,53 @@ def keystone_check(name, verbose=False):
     - quiet and verbose modes (DONE)
 
     """
-
-
-    def sudo_v(command):
-        # ref: http://www.pythoncentral.io/one-line-if-statement-in-python-ternary-conditional-operator/
-        # <expression1> if <condition> else <expression2>        
-        return sudo(command) if verbose else sudo(command, quiet=True)
-
-
     def tenant_check():
         tenants = ['admin', 'demo', 'service']
 
         for tenant in tenants:
-            if tenant in sudo_v("keystone tenant-list | awk '// {print $4}'"):
-                print align_y(tenant + 'tenant enabled')
+            if tenant in run_v("keystone tenant-list | awk '// {print $4}'"):
+                print align_y(tenant + ' tenant enabled')
 
-                if "True" == sudo_v("keystone tenant-list | awk '/" + tenant + "/ {print $6}'"):
-                    print align_y(tenant + "tenant enabled")
+                if "True" == run_v("keystone tenant-list | awk '/" + tenant + "/ {print $6}'"):
+                    print align_y(tenant + " tenant enabled")
                 else:
-                    print align_n(tenant + "tenant disabled")
+                    print align_n(tenant + "  tenant disabled")
 
             else:
-                print align_n(tenant + "tenant absent")
+                print align_n(tenant + " tenant absent")
 
     def user_check():
         users = ['admin', 'demo']
 
         for user in users:
-            if user in sudo_v("keystone user-list | awk '// {print $4}'"):
-                print align_y(user + 'user enabled')
+            if user in run_v("keystone user-list | awk '// {print $4}'"):
+                print align_y(user + ' user enabled')
 
-                if "True" == sudo_v("keystone user-list | awk '/" + user + "/ {print $6}'"):
-                    print align_y(user + "user enabled")
+                if "True" == run_v("keystone user-list | awk '/" + user + "/ {print $6}'"):
+                    print align_y(user + " user enabled")
                 else:
-                    print align_n(user + "user disabled")
+                    print align_n(user + " user disabled")
 
             else:
-                print align_n(user + "user absent")
+                print align_n(user + " user absent")
 
 
         
 
     def user_exists(name):
-        if name in sudo_v("keystone user-list | awk '// {print $4}'"):
-            print align_y(user + 'user exists')
+        if name in run_v("keystone user-list | awk '// {print $4}'"):
+            print align_y(user + ' user exists')
         else:
-            print align_n(user + "user absent")
+            print align_n(user + " user absent")
             
     def user_enabled(name):
-        if "True" == sudo_v("keystone user-list | awk '/" + name + "/ {print $6}'"):
-            print align_y(user + "user enabled")
+        if "True" == run_v("keystone user-list | awk '/" + name + "/ {print $6}'"):
+            print align_y(user + " user enabled")
         else:
-            print align_n(user + "user disabled")
+            print align_n(user + " user disabled")
 
     def service_exists(name):
-        if name in sudo_v("keystone service-list | awk '// {print$4}'"):
+        if name in run_v("keystone service-list | awk '// {print$4}'"):
             print align_y(name + 'service exists')
         else:
             print align_n(name + 'service absent')
@@ -270,23 +271,23 @@ def keystone_check(name, verbose=False):
             'ceilometer': ['http://controller:8777','http://controller:8777','http://controller:8777']
         }
 
-        #service_type = sudo_v("keystone service-list | awk '/ " + name + "/ {print $6}'")
-        if name not in sudo_v("keystone service-list"):
+        #service_type = run_v("keystone service-list | awk '/ " + name + "/ {print $6}'")
+        if name not in run_v("keystone service-list"):
             print(red("Service not found in service list. Service does not exist, so endpoint can't exist. Exiting function"))
             return
             
 
-        service_id = sudo_v("keystone service-list | awk '/ "+ name + " / {print $2}'")
+        service_id = run_v("keystone service-list | awk '/ "+ name + " / {print $2}'")
 
-        if service_id not in sudo_v("keystone endpoint-list"):
+        if service_id not in run_v("keystone endpoint-list"):
             print(red("Service id not found in endpoint list. Endpoint does not exist. Exiting function"))
             return
 
         urls = ref_d[name]
 
-        admin_url_found = sudo_v("keystone endpoint-list | awk '/" + service_id + "/ {print$10}'")
-        internal_url_found = sudo_v("keystone endpoint-list | awk '/" + service_id + "/ {print$8}'")
-        public_url_found = sudo_v("keystone endpoint-list | awk '/" + service_id + "/ {print$6}'")
+        admin_url_found = run_v("keystone endpoint-list | awk '/" + service_id + "/ {print$10}'")
+        internal_url_found = run_v("keystone endpoint-list | awk '/" + service_id + "/ {print$8}'")
+        public_url_found = run_v("keystone endpoint-list | awk '/" + service_id + "/ {print$6}'")
 
         proper_admin_url = urls[0]
         proper_internal_url = urls[1]
@@ -323,23 +324,18 @@ def keystone_check(name, verbose=False):
 def database_check(db,verbose=False):
 
 
-    def sudo_v(command):
-        # ref: http://www.pythoncentral.io/one-line-if-statement-in-python-ternary-conditional-operator/
-        # <expression1> if <condition> else <expression2>        
-        return sudo(command) if verbose else sudo(command, quiet=True)
-
 
 
     def db_exists(db):
         command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{}';".format(db)
-        if db in sudo_v("""echo "{}" | mysql -u root""".format(command)):
+        if db in run_v("""echo "{}" | mysql -u root""".format(command)):
             return True
         else:
             return False
         
     def table_count(db):
         command = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{}';".format(db) 
-        output = sudo_v("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
+        output = run_v("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
         return int(output)
 
     if db_exists(db):
@@ -349,18 +345,14 @@ def database_check(db,verbose=False):
     else:
         message = "DB " + db + " does not exist"
         print align_n(message)
-        print red(message)
         logging.debug(message)
 
     nbr = table_count(db)
     if nbr > 0:
         message = "table for " + db + " has " + str(nbr) + " entries"
         print align_y(message)
-        print green(message)
-        print okay
         logging.debug(message)
     else:
         message = "table for " + db + " is empty. Nbr of entries : " + str(nbr)
         print align_n(message)
-        print red(message)
         logging.debug(message)

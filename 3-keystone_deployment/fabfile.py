@@ -13,7 +13,6 @@ import env_config
 from myLib import runCheck, createDatabaseScript, keystone_check, database_check, align_y, align_n
 
 ########################## Configuring Environment ########################################
-
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
@@ -219,7 +218,7 @@ def keystone_tdd():
         database_check('keystone')
 
         # Check if 'admin' and 'demo' are users
-        user_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
+        user_list_output = run_v("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 user-list"\
                 .format(passwd['ADMIN_PASS']))
         if 'admin' in user_list_output:
@@ -233,7 +232,7 @@ def keystone_tdd():
             print align_n('demo not a user')
 
         # Check if 'admin', 'service' and 'demo' are tenants
-        tenant_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
+        tenant_list_output = run_v("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list"\
                 .format(passwd['ADMIN_PASS']))
         for name in ['admin','demo','service']:
@@ -243,7 +242,7 @@ def keystone_tdd():
                 print align_n('{} not a tenant'.format(name))
 
         # Check if '_member_' and 'admin' are roles
-        role_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
+        role_list_output = run_v("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 role-list"\
                 .format(passwd['ADMIN_PASS']))
         if '_member_' in role_list_output:
@@ -257,7 +256,7 @@ def keystone_tdd():
             print align_n('admin not a role')
 
         # Check if non-admin user is forbidden to perform admin tasks
-        user_list_output = run("keystone --os-tenant-name demo --os-username demo " + \
+        user_list_output = run_v("keystone --os-tenant-name demo --os-username demo " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 user-list"\
                 .format(passwd['DEMO_PASS']))
         if 'You are not authorized to perform the requested action' in user_list_output:
