@@ -346,12 +346,12 @@ def database_check(db):
         message = "DB " + db + " exists"
         print align_y(message)
         print okay
-        logging.debug(message,extra=log_dict)
+        logging.debug(message)
     else:
         message = "DB " + db + " does not exist"
         print align_n(message)
         print red(message)
-        logging.debug(message,extra=log_dict)
+        logging.debug(message)
 
     nbr = table_count(db)
     if nbr > 0:
@@ -359,9 +359,9 @@ def database_check(db):
         print align_y(message)
         print green(message)
         print okay
-        logging.debug(message,extra=log_dict)
+        logging.debug(message)
     else:
         message = "table for " + db + " is empty. Nbr of entries : " + str(nbr)
         print align_n(message)
         print red(message)
-        logging.debug(message,extra=log_dict)
+        logging.debug(message)
