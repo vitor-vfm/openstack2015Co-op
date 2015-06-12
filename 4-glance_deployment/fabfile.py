@@ -11,7 +11,7 @@ import sys
 sys.path.append('../global_config_files')
 sys.path.append('..')
 import env_config
-from myLib import align_n
+from myLib import *
 
 ############################ Config ########################################
 
@@ -173,7 +173,7 @@ def deploy():
 @roles('controller')
 def glance_tdd():
 
-    run("mkdir /tmp/images")
+    run_v("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
     run("wget -P /tmp/images " + url)
     with prefix(admin_openrc):
@@ -188,8 +188,8 @@ def glance_tdd():
     run("rm -r /tmp/images")
 
     
-    env_config.database_check('glance')
-    env_config.keystone_check('glance')
+    database_check('glance')
+    keystone_check('glance')
 
 def tdd():
     with settings(warn_only=True):
