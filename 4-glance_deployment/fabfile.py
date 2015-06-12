@@ -2,15 +2,15 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
-from fabric.colors import green, red
+from fabric.colors import green, red, blue
 from fabric.contrib.files import append
 import logging
 import string
 
 import sys
-sys.path.append('../global_config_files')
 sys.path.append('..')
 import env_config
+from myLib import runCheck, createDatabaseScript
 from myLib import database_check, keystone_check, run_v, align_n, align_y
 
 ############################ Config ########################################
@@ -25,47 +25,70 @@ glance_registry_config_file = "/etc/glance/glance-registry.conf"
 
 
 def set_parameter(config_file, section, parameter, value):
+    """
+    Change a parameter in a config file
+
+    Wrapper for crudini
+    """
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
-    run(crudini_command)
+    result = run(crudini_command,warn_only=True)
+    if result.return_code != 0:
+        print red("\t\t[OOPS] Couldn't set parameter {} on {}".format(parameter,config_file))
+    else:
+        print green('\t\t[GOOD]')
+    return result
 
 
 def setup_glance_database(GLANCE_DBPASS):
-    mysql_commands = "CREATE DATABASE IF NOT EXISTS glance;"
-    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'controller' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
-    mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY '{}';".format(GLANCE_DBPASS)
 
+    mysql_commands = createDatabaseScript('glance',GLANCE_DBPASS)
     
-    print("mysql commands are: " + mysql_commands)
-    run("echo '{}' | mysql -u root".format(mysql_commands))
+    msg = "Create database for keystone"
+    runCheck(msg, 'echo "' + mysql_commands + '" | mysql -u root')
     
 
 
 def setup_glance_keystone(GLANCE_PASS):
-    with prefix(admin_openrc):
-        if 'glance' not in sudo("keystone user-list"):
-            run("keystone user-create --name glance --pass {}".format(GLANCE_PASS))
-            run("keystone user-role-add --user glance --tenant service --role admin")
-        else:
-            pass
-            #new logging method REQUIRED
-            #log_debug('User glance already in user list')
+    """
+    Set up Keystone credentials for Glance
 
-        if 'glance' not in sudo("keystone service-list"):
-            run("keystone service-create --name glance --type image --description 'OpenStack Image Service'")
-        else:
-            pass
-            #new logging method REQUIRED
-            #log_debug('Service glance already in service list')
+    Create (a) a user and a service called 'glance', and 
+    (b) an endpoint for the 'glance' service
+    """
 
-        if '9292' not in sudo("keystone endpoint-list"):
-            run("keystone endpoint-create --service-id $(keystone service-list | awk '/ image / {print $2}') --publicurl http://controller:9292 --internalurl http://controller:9292  --adminurl http://controller:9292 --region regionOne")
+    # get admin credentials to run the CLI commands
+    credentials = env_config.admin_openrc
+
+    with prefix(credentials):
+        # before each creation, we check a list to avoid duplicates
+
+        if 'glance' not in run("keystone user-list"):
+            msg = "Create user glance"
+            runCheck(msg, "keystone user-create --name glance --pass {}".format(GLANCE_PASS))
+
+            msg = "Give the user 'glance the role of admin"
+            runCheck(msg, "keystone user-role-add --user glance --tenant service --role admin")
         else:
-            pass
-            #new logging method REQUIRED
-            #log_debug('Endpoint 9292 already in endpoint list')
+            print blue("User glance already created. Do nothing")
+
+        if 'glance' not in run("keystone service-list"):
+            msg = "Create service glance"
+            runCheck(msg, "keystone service-create --name glance --type image --description 'OpenStack Image Service'")
+        else:
+            print blue("Service glance already created. Do nothing")
+
+        if 'http://controller:9292' not in run("keystone endpoint-list"):
+            msg = "Create endpoint for service glance"
+            runCheck(msg, "keystone endpoint-create " + \
+                    "--service-id $(keystone service-list | awk '/ image / {print $2}') " +\
+                    "--publicurl http://controller:9292 " + \
+                    "--internalurl http://controller:9292 " + \
+                    "--adminurl http://controller:9292 " + \
+                    "--region regionOne")
+        else:
+            print blue("Enpoint for service glance already created. Do nothing")
     
 def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
-    run("yum install -y openstack-glance python-glanceclient")
     
     set_parameter(glance_api_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
@@ -74,10 +97,6 @@ def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_user', 'glance')   
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS)   
     set_parameter(glance_api_config_file, 'paste_deploy', 'flavor', 'keystone')
-
-    #CHECK IF WE NEED TO:
-    # "Comment out any auth_host, auth_port, and auth_protocol options because the identity_uri option replaces them." -- manual
-    #
 
     set_parameter(glance_api_config_file, 'glance_store', 'default_store', 'file')
     set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', '/var/lib/glance/images/')
@@ -96,10 +115,6 @@ def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
     set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS)   
     set_parameter(glance_registry_config_file, 'paste_deploy', 'flavor', 'keystone')
 
-    #CHECK IF WE NEED TO:
-    # "Comment out any auth_host, auth_port, and auth_protocol options because the identity_uri option replaces them." -- manual
-    #
-
     set_parameter(glance_registry_config_file, 'DEFAULT', 'notification_driver', 'noop')
     set_parameter(glance_registry_config_file, 'DEFAULT', 'verbose', 'True')
     
@@ -107,42 +122,44 @@ def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
 
 
 def populate_database():
-    run("su -s /bin/sh -c 'glance-manage db_sync' glance")
+    msg = "Populate database"
+    runCheck(msg, "su -s /bin/sh -c 'glance-manage db_sync' glance")
 
 def start_glance_services():
-    run("systemctl enable openstack-glance-api.service openstack-glance-registry.service")
-    run("systemctl start openstack-glance-api.service openstack-glance-registry.service")
+    msg = "Enable glance services"
+    runCheck(msg, "systemctl enable openstack-glance-api.service openstack-glance-registry.service")
+    msg = "Start glance services"
+    runCheck(msg, "systemctl start openstack-glance-api.service openstack-glance-registry.service")
 
 
 @roles('controller')
 def setup_GlusterFS_controller():
     # change the path that Glance uses for its file system
     gluster_volume = env_config.volumeNames['glance']
-    run_log('crudini --set /etc/glance/glance-api.conf '' \
+    runCheck(msg, 'crudini --set /etc/glance/glance-api.conf '' \
             filesystem_store_datadir {}/images'.format(gluster_volume))
 
-    run_log('mkdir -p {}/images'.format(gluster_volume))
-    run_log('chown -R glance:glance {}'.format(gluster_volume))
+    runCheck(msg, 'mkdir -p {}/images'.format(gluster_volume))
+    runCheck(msg, 'chown -R glance:glance {}'.format(gluster_volume))
 
     # Are we creating an instance store? Is Nova also using Gluster?
 
     # create the directory for the instance store
-    # run_log('mkdir /mnt/gluster/instance/')
-    # run_log('chown -R nova:nova /mnt/gluster/instance/')
-    # run_log('service openstack-glance-api restart')
+    # runCheck(msg, 'mkdir /mnt/gluster/instance/')
+    # runCheck(msg, 'chown -R nova:nova /mnt/gluster/instance/')
+    # runCheck(msg, 'service openstack-glance-api restart')
 
 # Are we creating an instance store? Is Nova also using Gluster?
 # @roles('compute')
 # def setup_GlusterFS_compute():
 #     # change the path that nova uses for its file system
-#     run_log('crudini --set /etc/nova/nova-api.conf '' \
+# runCheck(msg, 'crudini --set /etc/nova/nova-api.conf '' \
 #             instances_path /mnt/gluster/instance')
 
-#     run_log('mkdir -p /mnt/gluster/instance/')
-#     run_log('chown -R nova:nova /mnt/gluster/instance/')
-#     run_log('service openstack-nova-compute restart')
+# runCheck(msg, 'mkdir -p /mnt/gluster/instance/')
+# runCheck(msg, 'chown -R nova:nova /mnt/gluster/instance/')
+# runCheck(msg, 'service openstack-nova-compute restart')
 
-    pass
 
 def setup_GlusterFS():
     # configure Glance to use a gluster FS volume
@@ -152,12 +169,18 @@ def setup_GlusterFS():
 @roles('controller')
 def setup_glance():
 
-    # setup glance database
+    # Install packages
+    msg = "Install OpenStack Glance packages"
+    runCheck(msg, "yum install -y openstack-glance python-glanceclient")
+
     setup_glance_database(passwd['GLANCE_DBPASS'])
+    
     setup_glance_keystone(passwd['GLANCE_PASS'])
 
     setup_glance_config_files(passwd['GLANCE_PASS'], passwd['GLANCE_DBPASS'])
+
     populate_database()
+
     start_glance_services()
         
 ################### Deployment ########################################

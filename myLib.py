@@ -6,7 +6,7 @@ def printMessage(status, msg):
 	if (status == "good"):
 		 print(green("\t\t[GOOD] ") + " I can: "+ msg)
 	else:
-		 print(red("\t\t[OOP's] ") + " I CANNOT: "+ msg)
+		 print(red("\t\t[OOPS] ") + " I CANNOT: "+ msg)
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
