@@ -10,7 +10,7 @@ import string
 import sys
 sys.path.append('..')
 import env_config
-from myLib import runCheck, createDatabaseScript
+from myLib import runCheck, createDatabaseScript, set_parameter
 from myLib import database_check, keystone_check, run_v, align_n, align_y
 
 ############################ Config ########################################
@@ -21,22 +21,7 @@ passwd = env_config.passwd
 glance_api_config_file = "/etc/glance/glance-api.conf"
 glance_registry_config_file = "/etc/glance/glance-registry.conf"
 
-################### General functions ########################################
-
-
-def set_parameter(config_file, section, parameter, value):
-    """
-    Change a parameter in a config file
-
-    Wrapper for crudini
-    """
-    crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
-    result = run(crudini_command,warn_only=True)
-    if result.return_code != 0:
-        print red("\t\t[OOPS] Couldn't set parameter {} on {}".format(parameter,config_file))
-    else:
-        print green('\t\t[GOOD]')
-    return result
+######################## Deployment ########################################
 
 
 def setup_glance_database(GLANCE_DBPASS):

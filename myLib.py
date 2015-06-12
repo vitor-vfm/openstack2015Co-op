@@ -19,7 +19,10 @@ logging.basicConfig(level=logging.DEBUG,
 
 
 def runCheck(msg,command):
-
+    """
+    Runs a fabric command and reports
+    results, logging them in necessary
+    """
     out = run(command,warn_only=True)
     if out.return_code == 0:
         result = 'good'
@@ -30,6 +33,22 @@ def runCheck(msg,command):
         logging.error(errormsg)
     printMessage(result,msg)
     return out
+
+
+def set_parameter(config_file, section, parameter, value):
+    """
+    Change a parameter in a config file
+
+    Wrapper for crudini
+    """
+    crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
+    result = run(crudini_command,warn_only=True)
+    if result.return_code != 0:
+        print red("\t\t[OOPS] Couldn't set parameter {} on {}".format(parameter,config_file))
+    else:
+        print green('\t\t[GOOD]')
+    return result
+
 
 def createDatabaseScript(databaseName,password):
     """
