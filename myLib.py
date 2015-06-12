@@ -113,7 +113,7 @@ def align_y(message):
 
     """
 
-    max_len = 60
+    max_len = 80
 
    
     new_message = [fix_length(message, max_len)]
@@ -133,7 +133,7 @@ def align_n(message):
 
     """
 
-    max_len = 60
+    max_len = 80
     
     new_message = [fix_length(message, max_len)]
 
