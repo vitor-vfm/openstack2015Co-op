@@ -10,7 +10,7 @@ import logging
 import sys
 sys.path.append('..')
 import env_config
-from myLib import runCheck, createDatabaseScript
+from myLib import runCheck, createDatabaseScript, keystone_check, database_check, align_y, align_n
 
 ########################## Configuring Environment ########################################
 
@@ -203,30 +203,27 @@ def deploy():
 
 ######################################## TDD #########################################
 
-
 @roles('controller')
 def keystone_tdd():
 
-    # 'OK' message
-    okay = '[ ' + green('OK') + ' ]'
-    
     with settings(warn_only=True):
 
-        env_config.keystone_check('keystone')
+        keystone_check('keystone')
+        database_check('keystone')
 
         # Check if 'admin' and 'demo' are users
         user_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 user-list"\
                 .format(passwd['ADMIN_PASS']))
         if 'admin' in user_list_output:
-            print okay
+            print align_y('Admin was found in user list')
         else:
-            print red('admin not a user')
+            print align_n('admin not a user')
 
         if 'demo' in user_list_output:
-            print okay
+            print align_y('Demo was found in user list')
         else:
-            print red('demo not a user')
+            print align_n('demo not a user')
 
         # Check if 'admin', 'service' and 'demo' are tenants
         tenant_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
@@ -234,34 +231,35 @@ def keystone_tdd():
                 .format(passwd['ADMIN_PASS']))
         for name in ['admin','demo','service']:
             if name in tenant_list_output:
-                print okay
+                print align_y('{} was found in tenant list'.format(name))
             else:
-                print red('{} not a tenant'.format(name))
+                print align_n('{} not a tenant'.format(name))
 
         # Check if '_member_' and 'admin' are roles
         role_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 role-list"\
                 .format(passwd['ADMIN_PASS']))
         if '_member_' in role_list_output:
-            print okay
+            print align_y('_member_ is a role')
         else:
-            print red('_member_ not a role')
+            print align_n('_member_ not a role')
 
         if 'admin' in role_list_output:
-            print okay
+            print align_y('admin is a role')
         else:
-            print red('admin not a role')
+            print align_n('admin not a role')
 
         # Check if non-admin user is forbidden to perform admin tasks
         user_list_output = run("keystone --os-tenant-name demo --os-username demo " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 user-list"\
                 .format(passwd['DEMO_PASS']))
         if 'You are not authorized to perform the requested action' in user_list_output:
-            print okay
+            print align_y('demo was not allowed to run user-list')
         else:
-            print red('demo was allowed to run user-list')
+            print align_n('demo was allowed to run user-list')
 
 def tdd():
     print blue('Starting TDD function')
     execute(keystone_tdd)
     print blue('Done')
+
