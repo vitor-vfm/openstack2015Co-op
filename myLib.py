@@ -256,15 +256,15 @@ def keystone_check(name, verbose=False):
 
     def user_exists(name):
         if name in run_v("keystone user-list | awk '// {print $4}'"):
-            print align_y(user + ' user exists')
+            print align_y(name + ' user exists')
         else:
-            print align_n(user + " user absent")
+            print align_n(name + " user absent")
             
     def user_enabled(name):
         if "True" == run_v("keystone user-list | awk '/" + name + "/ {print $6}'"):
-            print align_y(user + " user enabled")
+            print align_y(name + " user enabled")
         else:
-            print align_n(user + " user disabled")
+            print align_n(name + " user disabled")
 
     def service_exists(name):
         if name in run_v("keystone service-list | awk '// {print$4}'"):
@@ -317,7 +317,7 @@ def keystone_check(name, verbose=False):
         else:
             print align_n("Admin url incorrect")
 
-        if (internal_url_found == proper_proper_url):
+        if (internal_url_found == proper_internal_url):
             print align_y("Internal url correct")
         else:
             print align_n("Internal url incorrect")
