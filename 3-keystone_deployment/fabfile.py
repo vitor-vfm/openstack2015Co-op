@@ -83,7 +83,8 @@ def createUsersRolesAndTenants():
     """
 
     # get admin credentials
-    credentials = env_config.admin_openrc
+    credentials = "export OS_SERVICE_TOKEN={}; " + \
+            "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0".format(admin_token)
     with prefix(credentials):
 
         # before each creation, we check if the user, role or tenant already
@@ -182,7 +183,7 @@ def setupKeystone():
     msg = 'Populate the Identity service database'
     runCheck(msg, "su -s /bin/sh -c 'keystone-manage db_sync' keystone")
 
-    createUsersRolesAndTenants()
+    createUsersRolesAndTenants(admin_token)
 
     # start the Identity service and configure it to start when the system boots
     msg = "Enable keystone service"
