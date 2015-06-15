@@ -40,6 +40,7 @@ def runCheck(msg,command):
         result = 'oops'
         errormsg = 'Failure on: ' + msg
         logging.error(errormsg)
+        logging.error(out)
     printMessage(result,msg)
     return out
 
@@ -61,7 +62,7 @@ def set_parameter(config_file, section, parameter, value):
 
 def get_parameter(config_file, section, parameter, value):
     """
-    Change a parameter in a config file
+    Get a parameter in a config file
 
     Wrapper for crudini
     """
@@ -160,7 +161,9 @@ def align_y(message):
    
     new_message = [fix_length(message, max_len)]
 
+
     new_message.append('[  ' + green('OK') + '  ]')
+    new_message.append('\n')
     return "".join(new_message)
 
 
@@ -179,7 +182,8 @@ def align_n(message):
     
     new_message = [fix_length(message, max_len)]
 
-    new_message.append('[ ' + red('FAIL') + ' ]')        
+    new_message.append('[ ' + red('FAIL') + ' ]\n')        
+    new_message.append('\n')
     return "".join(new_message)
 
 def _test():
