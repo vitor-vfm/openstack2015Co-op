@@ -6,7 +6,7 @@ from fabric.colors import green, red
 from fabric.contrib.files import append
 import string
 import sys
-#sys.path.append('../global_config_files')
+sys.path.append('../')#global_config_files')
 import env_config
 import myLib
 
@@ -108,48 +108,48 @@ def put_in_glance_line():
 def backup_glance_with_gluster():
     runCheck('Making the place where stuff from Glance will be stored', 'mkdir -p /mnt/gluster/glance/images')
     runCheck('Changing the owner to Glance', 'chown -R glance:glance /mnt/gluster/glance/')
-    runCheck('Making the place where stuff from Nova will be stored', 'mkdir /mnt/gluster/instance/')
-    runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/instance/')
+    #runCheck('Making the place where stuff from Nova will be stored', 'mkdir /mnt/gluster/instance/')
+    #runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/instance/')
     runCheck('Restarting Glance', 'service openstack-glance-api restart') 
 
 @roles('controller', 'compute')
 def put_in_other_nova_line():
-    run("crudini --set '/etc/nova/nova.conf' 'DEFAULT' 'instances_path' '/mnt/gluster/instance'")
+    runCheck('Adding another line to nova.conf', "crudini --set '/etc/nova/nova.conf' 'DEFAULT' 'instances_path' '/mnt/gluster/instance'")
 
 @roles('compute')
 def setup_nova_paths():
-    run('mkdir -p /mnt/gluster/instance/')
-    run('chown -R nova:nova /mnt/gluster/instance/')
-    run('service openstack-nova-compute restart')
+    runCheck('Making the place where stuff from Nova will be stored', 'mkdir -p /mnt/gluster/instance/')
+    runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/instance/')
+    runCheck('Restarting Nova', 'service openstack-nova-compute restart')
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
 @roles('controller', 'compute', 'network', 'storage')
 def destroy_gluster():
-    sudo('umount /data/gluster')
-    sudo('rm -rf /var/lib/glusterd')
-    sudo('rm -rf /data/gluster')
+    runCheck('Unmounting gluster from /data/', 'umount /data/gluster')
+    runCheck('Removing glusterd from /var/lib/', 'rm -rf /var/lib/glusterd')
+    runCheck('Removing gluster from /data/', 'rm -rf /data/gluster')
 
 @roles('compute')
 def destroy_vol():
-    sudo('yes | gluster volume stop {}'.format(GLANCE_VOLUME)) 
-    sudo('yes | gluster volume delete {}'.format(GLANCE_VOLUME))
+    runCheck('Stopping gluster volume', 'yes | gluster volume stop {}'.format(GLANCE_VOLUME)) 
+    runCheck('Deleting gluster volume', 'yes | gluster volume delete {}'.format(GLANCE_VOLUME))
 
 @roles('controller', 'compute', 'network', 'storage')
 def destroy_mount():
-    sudo('umount /mnt/gluster') 
-    sudo('rm -rf /mnt/gluster')
+    runCheck('Unmounting gluster from /mnt/', 'umount /mnt/gluster') 
+    runCheck('Removing gluster from /mnt/', 'rm -rf /mnt/gluster')
 
 @roles('controller')
 def destroy_backup():
-    run('rm -rf /mnt/gluster/glance')
-    run('rm -rf /mnt/gluster/instance')
-    run('service openstack-glance-api restart')
+    runCheck('Removing glance from gluster', 'rm -rf /mnt/gluster/glance')
+    #runCheck('Removing instance from gluster', 'rm -rf /mnt/gluster/instance')
+    runCheck('Restarting glance', 'service openstack-glance-api restart')
 
 @roles('compute')
 def destroy_nova_paths():
-    run('rm -rf /mnt/gluster/instance/')
-    run('service openstack-nova-compute restart')
+    runCheck('Removing instance from gluster', 'rm -rf /mnt/gluster/instance/')
+    runCheck('Restarting nova', 'service openstack-nova-compute restart')
 
 ##################### Glance ###############################################
 
