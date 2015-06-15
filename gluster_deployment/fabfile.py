@@ -165,11 +165,11 @@ def deploy_glance():
     execute(setup_nova_paths)
 
 def undeploy_glance():
+    execute(destroy_nova_paths)
     execute(destroy_backup)
     execute(destroy_mount)
     execute(destroy_vol)
     execute(destroy_gluster) 
-    execute(destroy_nova_paths)
 
 
 ################### Deployment #############################################
