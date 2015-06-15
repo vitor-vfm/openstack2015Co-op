@@ -277,23 +277,25 @@ def verify():
                 #     print align_n("{} host is NOT controller".format(service)) 
 
 
-        # NEED TO DO TDD FOR THE ARGUMENT BELOW
-        # Cehck if there is at least one image active
-        if 'ACTIVE' in run("cat image-list",quiet=True):
-            print align_y("images active".format(service)) 
-        else:
-            print align_n("no images active".format(service)) 
-            logging.error("No images active on nova image-list")
+        # checks all statuses to make sure all images are ACTIVE
+        statuses = run("cat image-list | awk '// {print $6}' ",quiet=True)
+    
+        statuses = statuses.split()
+        for status in statuses[1:]:
+            image_name = run("cat image-list | awk '/%s/ {print $4}'" % status,quiet=True)
+            image_id = run("cat image-list | awk '/%s/ {print $2}'" % status,quiet=True)
+            if status == 'ACTIVE':
+                print align_y("Image: {}, ID: {} is {}".format(image_name, image_id, "ACTIVE"))
+            else:
+                print align_n("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
+                logging.error("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
 
         # run the lists and save them in local files
         run('rm service-list',quiet=True)
         run('rm image-list',quiet=True)
-
     
 
 def tdd():
     with settings(warn_only=True):
         # to be done on the controller node
         execute(verify)
-
-
