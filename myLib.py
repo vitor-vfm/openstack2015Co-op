@@ -4,9 +4,11 @@ from env_config import *
 
 def printMessage(status, msg):
 	if (status == "good"):
-		 print(green("\t\t[GOOD] ") + " I can: "+ msg)
+		 #print(green("\t\t[GOOD] ") + " I can: "+ msg)
+                print align_y('I can: ' + msg)
 	else:
-		 print(red("\t\t[OOPS] ") + " I CANNOT: "+ msg)
+		 #print(red("\t\t[OOPS] ") + " I CANNOT: "+ msg)
+                print align_n('I CANNOT: ' + msg)
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
@@ -49,11 +51,25 @@ def set_parameter(config_file, section, parameter, value):
     Wrapper for crudini
     """
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
-    result = run(crudini_command,warn_only=True)
+    result = run(crudini_command,warn_only=True,quiet=True)
     if result.return_code != 0:
-        print red("\t\t[OOPS] Couldn't set parameter {} on {}".format(parameter,config_file))
+        print align_n("Couldn't set parameter {} on {}".format(parameter,config_file))
+        print red("SHELL OUTPUT: " + result)
     else:
-        print green('\t\t[GOOD]')
+        print align_y(crudini_command)
+    return result
+
+def get_parameter(config_file, section, parameter, value):
+    """
+    Change a parameter in a config file
+
+    Wrapper for crudini
+    """
+    crudini_command = "crudini --get {} {} {} {}".format(config_file, section, parameter, value)
+    result = run(crudini_command,warn_only=True,quiet=True)
+    if result.return_code != 0:
+        print align_n("\t\t[OOPS] Couldn't get parameter {} on {}".format(parameter,config_file))
+        print red("SHELL OUTPUT: " + result)
     return result
 
 

@@ -6,9 +6,9 @@ from fabric.colors import green, red
 from fabric.contrib.files import append
 import string
 import sys
-sys.path.append('../global_config_files')
+#sys.path.append('../global_config_files')
 import env_config
-
+import myLib
 
 ############################ Config ########################################
 
@@ -44,14 +44,14 @@ def prepGlusterFS():
 @roles('controller', 'compute', 'network', 'storage')
 def setup_gluster():
     # Get and install gluster
-    sudo('wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
-    sudo('yum -y install glusterfs glusterfs-fuse glusterfs-server')
-    sudo('systemctl start glusterd')
+    runCheck('Getting packages for gluster', 'wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
+    runCheck('Installing gluster packages', 'yum -y install glusterfs glusterfs-fuse glusterfs-server')
+    runCheck('Starting glusterd', 'systemctl start glusterd')
     # Make the file system (probably include this in partition function)
     #sudo('mkfs.xfs {}'.format(PARTITION))
     # Mount the brick on the established partition
     sudo('mkdir -p /data/gluster/brick')
-    sudo('mount {} /data/gluster'.format(PARTITION))
+    runCheck('Mounting brick on partition', 'mount {} /data/gluster'.format(PARTITION))
     # Setup the ports
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
@@ -60,7 +60,7 @@ def setup_gluster():
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 38465:38469 -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
     # Ensure the nodes can probe each other
-    sudo('service glusterd restart')
+    runCheck('Restarting glusterd', 'service glusterd restart')
     sudo('iptables -F')
 
 @roles('controller', 'compute', 'network', 'storage')
@@ -77,8 +77,8 @@ def probe():
     
 @roles('controller', 'compute', 'network', 'storage')
 def prevolume_start():
-    sudo('setfattr -x trusted.glusterfs.volume-id /data/gluster/brick')
-    sudo('service glusterd restart')
+    runCheck('Setting conditions so a volume can be made', 'setfattr -x trusted.glusterfs.volume-id /data/gluster/brick')
+    runCheck('Restarting glusterd', 'service glusterd restart')
 
 @roles('compute')
 def create_volume():
@@ -86,31 +86,31 @@ def create_volume():
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
     node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/brick' for node in env_config.hosts])
-    sudo('gluster volume create {} rep {} transport tcp {} force'.format(GLANCE_VOLUME, num_nodes, node_ips))
+    runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(GLANCE_VOLUME, num_nodes, node_ips))
     #prevolume_start()
-    sudo('gluster volume start {} force'.format(GLANCE_VOLUME))
-    sudo('/bin/systemctl restart glusterd.service')
+    runCheck('Starting volume', 'gluster volume start {} force'.format(GLANCE_VOLUME))
+    runCheck('Restarting glusterd', '/bin/systemctl restart glusterd.service')
 
 @roles('controller', 'compute', 'network', 'storage')
 def mounter():
-    sudo('mkdir -p /mnt/gluster')
-    sudo('mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
+    runCheck('Making mount point', 'mkdir -p /mnt/gluster')
+    runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
 
 @roles('controller', 'compute')
 def put_in_nova_line():
-    run("crudini --set '/etc/nova/nova.conf' 'glance' 'libvirt_type' 'qemu'")
+    runCheck('Putting line into nova.conf file', "crudini --set '/etc/nova/nova.conf' 'glance' 'libvirt_type' 'qemu'")
 
 @roles('controller')
 def put_in_glance_line():
-    run("crudini --set '/etc/glance/glance-api.conf' 'glance_store' 'filesystem_store_datadir' '/mnt/gluster/glance/images'")
+    runCheck('Putting line into glance-api.conf', "crudini --set '/etc/glance/glance-api.conf' 'glance_store' 'filesystem_store_datadir' '/mnt/gluster/glance/images'")
 
 @roles('controller')
 def backup_glance_with_gluster():
-    run('mkdir -p /mnt/gluster/glance/images')
-    run('chown -R glance:glance /mnt/gluster/glance/')
-    run('mkdir /mnt/gluster/instance/')
-    run('chown -R nova:nova /mnt/gluster/instance/')
-    run('service openstack-glance-api restart') 
+    runCheck('Making the place where stuff from Glance will be stored', 'mkdir -p /mnt/gluster/glance/images')
+    runCheck('Changing the owner to Glance', 'chown -R glance:glance /mnt/gluster/glance/')
+    runCheck('Making the place where stuff from Nova will be stored', 'mkdir /mnt/gluster/instance/')
+    runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/instance/')
+    runCheck('Restarting Glance', 'service openstack-glance-api restart') 
 
 @roles('controller', 'compute')
 def put_in_other_nova_line():
@@ -165,11 +165,11 @@ def deploy_glance():
     execute(setup_nova_paths)
 
 def undeploy_glance():
+    execute(destroy_nova_paths)
     execute(destroy_backup)
     execute(destroy_mount)
     execute(destroy_vol)
     execute(destroy_gluster) 
-    execute(destroy_nova_paths)
 
 
 ################### Deployment #############################################
