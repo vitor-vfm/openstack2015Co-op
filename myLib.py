@@ -51,11 +51,25 @@ def set_parameter(config_file, section, parameter, value):
     Wrapper for crudini
     """
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
-    result = run(crudini_command,warn_only=True)
+    result = run(crudini_command,warn_only=True,quiet=True)
     if result.return_code != 0:
         print red("\t\t[OOPS] Couldn't set parameter {} on {}".format(parameter,config_file))
+        print red("SHELL OUTPUT: " + result)
     else:
         print green('\t\t[GOOD]')
+    return result
+
+def get_parameter(config_file, section, parameter, value):
+    """
+    Change a parameter in a config file
+
+    Wrapper for crudini
+    """
+    crudini_command = "crudini --get {} {} {} {}".format(config_file, section, parameter, value)
+    result = run(crudini_command,warn_only=True,quiet=True)
+    if result.return_code != 0:
+        print red("\t\t[OOPS] Couldn't get parameter {} on {}".format(parameter,config_file))
+        print red("SHELL OUTPUT: " + result)
     return result
 
 
