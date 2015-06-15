@@ -325,9 +325,9 @@ def network_deploy():
     # edit sysctl.conf
     sysctl_conf = '/etc/sysctl.conf'
 
-    set_parameter(sysctl_conf,'','net.ipv4.ip_forward','1')
-    set_parameter(sysctl_conf,'','net.ipv4.conf.all.rp_filter','0')
-    set_parameter(sysctl_conf,'','net.ipv4.conf.default.rp_filter','0')
+    set_parameter(sysctl_conf,"''",'net.ipv4.ip_forward','1')
+    set_parameter(sysctl_conf,"''",'net.ipv4.conf.all.rp_filter','0')
+    set_parameter(sysctl_conf,"''",'net.ipv4.conf.default.rp_filter','0')
 
     msg = "Implement changes on sysctl"
     runCheck(msg, "sysctl -p")
@@ -400,8 +400,8 @@ def compute_deploy():
     # edit sysctl.conf
     sysctl_conf = '/etc/sysctl.conf'
 
-    set_parameter(sysctl_conf,'','net.ipv4.conf.all.rp_filter','0')
-    set_parameter(sysctl_conf,'','net.ipv4.conf.default.rp_filter','0')
+    set_parameter(sysctl_conf,"''",'net.ipv4.conf.all.rp_filter','0')
+    set_parameter(sysctl_conf,"''",'net.ipv4.conf.default.rp_filter','0')
 
     msg = "Implement changes on sysctl on compute node " + env.host
     runCheck(msg, "sysctl -p")
