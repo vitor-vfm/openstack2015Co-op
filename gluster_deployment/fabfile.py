@@ -15,7 +15,7 @@ from myLib import runCheck
 env.roledefs = env_config.roledefs
 PARTITION = '/dev/sda1'
 EX_VOLUME = 'vol0'
-GLANCE_VOLUME = 'exp1'
+GLANCE_VOLUME = 'glance-volume'
 
 ############################# GENERAL FUNCTIONS ############################
 
