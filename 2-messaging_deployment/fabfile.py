@@ -11,7 +11,7 @@ import logging
 import sys
 sys.path.append('../global_config_files')
 sys.path.append('..')
-from myLib import *
+from myLib import runCheck
 import env_config
 
 @roles('compute')
