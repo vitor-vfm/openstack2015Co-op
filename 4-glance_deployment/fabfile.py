@@ -184,7 +184,7 @@ def glance_tdd():
     run_v("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
     run("wget -P /tmp/images " + url)
-    with prefix(admin_openrc):
+    with prefix(env_config.admin_openrc):
         run("glance image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
         output = run("glance image-list")
 
