@@ -218,9 +218,9 @@ def keystone_tdd():
         database_check('keystone')
 
         # Check if 'admin' and 'demo' are users
-        user_list_output = run_v("keystone --os-tenant-name admin --os-username admin " + \
+        user_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 user-list"\
-                .format(passwd['ADMIN_PASS']))
+                                 .format(passwd['ADMIN_PASS']), quiet=True)
         if 'admin' in user_list_output:
             print align_y('Admin was found in user list')
         else:
@@ -232,9 +232,9 @@ def keystone_tdd():
             print align_n('demo not a user')
 
         # Check if 'admin', 'service' and 'demo' are tenants
-        tenant_list_output = run_v("keystone --os-tenant-name admin --os-username admin " + \
+        tenant_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 tenant-list"\
-                .format(passwd['ADMIN_PASS']))
+                .format(passwd['ADMIN_PASS']), quiet=True)
         for name in ['admin','demo','service']:
             if name in tenant_list_output:
                 print align_y('{} was found in tenant list'.format(name))
@@ -242,9 +242,9 @@ def keystone_tdd():
                 print align_n('{} not a tenant'.format(name))
 
         # Check if '_member_' and 'admin' are roles
-        role_list_output = run_v("keystone --os-tenant-name admin --os-username admin " + \
+        role_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 role-list"\
-                .format(passwd['ADMIN_PASS']))
+                .format(passwd['ADMIN_PASS']), quiet=True)
         if '_member_' in role_list_output:
             print align_y('_member_ is a role')
         else:
@@ -256,9 +256,9 @@ def keystone_tdd():
             print align_n('admin not a role')
 
         # Check if non-admin user is forbidden to perform admin tasks
-        user_list_output = run_v("keystone --os-tenant-name demo --os-username demo " + \
+        user_list_output = run("keystone --os-tenant-name demo --os-username demo " + \
                 "--os-password {} --os-auth-url http://controller:35357/v2.0 user-list"\
-                .format(passwd['DEMO_PASS']))
+                .format(passwd['DEMO_PASS']), quiet=True)
         if 'You are not authorized to perform the requested action' in user_list_output:
             print align_y('demo was not allowed to run user-list')
         else:
