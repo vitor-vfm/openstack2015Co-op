@@ -160,7 +160,9 @@ def align_y(message):
    
     new_message = [fix_length(message, max_len)]
 
+
     new_message.append('[  ' + green('OK') + '  ]')
+    new_message.append('\n')
     return "".join(new_message)
 
 
@@ -179,7 +181,8 @@ def align_n(message):
     
     new_message = [fix_length(message, max_len)]
 
-    new_message.append('[ ' + red('FAIL') + ' ]')        
+    new_message.append('[ ' + red('FAIL') + ' ]\n')        
+    new_message.append('\n')
     return "".join(new_message)
 
 def _test():
