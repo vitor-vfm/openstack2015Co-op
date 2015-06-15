@@ -207,7 +207,7 @@ def deploy():
 
 
 
-@roles('controller')
+#@roles('controller')
 def verify():
 
     database_check('nova')
@@ -274,18 +274,21 @@ def verify():
 
 
         # NEED TO DO TDD FOR THE ARGUMENT BELOW
-        # Cehck if there is at least one image active
-        if 'ACTIVE' in run("nova image-list",quiet=True):
-            print align_y("images active".format(service)) 
-        else:
-            print align_n("no images active".format(service)) 
-            logging.error("No images active on nova image-list")
-
+        # checks all statuses to make sure all images are ACTIVE
+        statuses = run("nova image-list | awk '// {print $6}' ")
+    
+        statuses = statuses.split()
+        for status in statuses[1:]:
+            image_name = run("nova image-list | awk '/{}/' {print $4}")
+            image_id = run("nova image-list | awk '/{}/' {print $2}")
+            if status == 'ACTIVE':
+                print align_y("Image: {}, ID: {} is {}".format(image_name, image_id, "ACTIVE"))
+            else:
+                print align_n("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
+                logging.error("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
     
 
 def tdd():
     with settings(warn_only=True):
         # to be done on the controller node
         execute(verify)
-
-
