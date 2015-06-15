@@ -216,13 +216,17 @@ def verify():
     nova_services = ['nova-conductor','nova-consoleauth','nova-scheduler', 'nova-cert']
     
     with prefix(env_config.admin_openrc):
+        # run the lists and save them in local files
+        run('nova service-list >service-list',quiet=True)
+        run('nova image-list >image-list',quiet=True)
+
         for service in nova_services:
-            if service in run("nova service-list",quiet=True):
+            if service in run("cat service-list",quiet=True):
                 print align_y("{} exists in nova service list".format(service)) 
                 check_for = {'6':'controller','8':'internal','10':'enabled','12':'up'}
 
                 for location, correct_value in check_for.iteritems():
-                    current_value = run("nova service-list | awk '/%s/ {print $%s}'" % (service,location),quiet=True)
+                    current_value = run("cat service-list | awk '/%s/ {print $%s}'" % (service,location),quiet=True)
                     if (current_value.strip() == correct_value.strip()):
                         print align_y("{} host is {}".format(service, correct_value)) 
                     else:
@@ -235,12 +239,12 @@ def verify():
 
         # separate check for nova-compute as it has different values
         service = 'nova-compute'
-        if service in run("nova service-list",quiet=True):
+        if service in run("cat service-list",quiet=True):
             print align_y("{} exists in nova service list".format(service)) 
             check_for = {'6':'compute1','8':'nova','10':'enabled','12':'up'}
             
             for location, correct_value in check_for.iteritems():
-                current_value = run("nova service-list | awk '/%s/ {print $%s}'" % (service,location),quiet=True)
+                current_value = run("cat service-list | awk '/%s/ {print $%s}'" % (service,location),quiet=True)
                 if (current_value.strip() == correct_value):
                     print align_y("{} host is {}".format(service, correct_value)) 
                 else:
@@ -252,40 +256,46 @@ def verify():
             logging.error("{} does NOT exist in nova service list".format(service)) 
 
                 
-                # if (run("nova service-list | awk '/{}/ {print $6}'".format(service)) == 'controller'):
+                # if (run("cat service-list | awk '/{}/ {print $6}'".format(service)) == 'controller'):
                 #     print align_y("{} host is controller".format(service)) 
                 # else:
                 #     print align_n("{} host is NOT controller".format(service)) 
 
-                # if (run("nova service-list | awk '/{}/ {print $8}'".format(service)) == 'internal'):
+                # if (run("cat service-list | awk '/{}/ {print $8}'".format(service)) == 'internal'):
                 #     print align_y("{} host is internal".format(service)) 
                 # else:
                 #     print align_n("{} host is NOT internal".format(service)) 
 
-                # if (run("nova service-list | awk '/{}/ {print $10}'".format(service)) == 'enabled'):
+                # if (run("cat service-list | awk '/{}/ {print $10}'".format(service)) == 'enabled'):
                 #     print align_y("{} host is enabled".format(service)) 
                 # else:
                 #     print align_n("{} host is NOT enabled".format(service)) 
 
-                # if (run("nova service-list | awk '/{}/ {print $12}'".format(service)) == 'up'):
+                # if (run("cat service-list | awk '/{}/ {print $12}'".format(service)) == 'up'):
                 #     print align_y("{} host is controller".format(service)) 
                 # else:
                 #     print align_n("{} host is NOT controller".format(service)) 
 
 
-        # NEED TO DO TDD FOR THE ARGUMENT BELOW
-        # Cehck if there is at least one image active
-        if 'ACTIVE' in run("nova image-list",quiet=True):
-            print align_y("images active".format(service)) 
-        else:
-            print align_n("no images active".format(service)) 
-            logging.error("No images active on nova image-list")
+        # checks all statuses to make sure all images are ACTIVE
+        statuses = run("cat image-list | awk '// {print $6}' ",quiet=True)
+    
+        statuses = statuses.split()
+        for status in statuses[1:]:
+            image_name = run("cat image-list | awk '/%s/ {print $4}'" % status,quiet=True)
+            image_id = run("cat image-list | awk '/%s/ {print $2}'" % status,quiet=True)
+            if status == 'ACTIVE':
+                print align_y("Image: {}, ID: {} is {}".format(image_name, image_id, "ACTIVE"))
+            else:
+                print align_n("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
+                logging.error("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
 
+        # run the lists and save them in local files
+        run('rm service-list',quiet=True)
+        run('rm image-list',quiet=True)
     
 
 def tdd():
     with settings(warn_only=True):
         # to be done on the controller node
         execute(verify)
-
-

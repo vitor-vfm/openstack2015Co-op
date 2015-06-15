@@ -10,10 +10,9 @@ import logging
 import ConfigParser
 
 import sys
-sys.path.append('../global_config_files')
 sys.path.append('..')
 import env_config
-from myLib import *
+from myLib import runCheck, getRole
 
 
 ############################ Config ########################################
@@ -23,11 +22,6 @@ env.roledefs = env_config.roledefs
 mode = 'normal'
 if output['debug']:
     mode = 'debug'
-
-# Logging config
-
-log_file = 'basic-network.log'
-env_config.setupLoggingInFabfile(log_file)
 
 ################### General functions ########################################
 
@@ -178,7 +172,7 @@ def configChrony():
     runCheck(msg, 'systemctl start chronyd.service')
 
     chrony_conf = ''
-    if env_config.getRole() == 'controller':
+    if getRole() == 'controller':
         # reference the ntp servers
         for server in env_config.ntpServers:
             chrony_conf += "server {} iburst\n".format(server)
@@ -217,7 +211,7 @@ def deployInterface(interface,specs):
         msg = 'Set hostname to ' + hostname
         runCheck(msg, "hostnamectl set-hostname " + hostname)
 
-    role = env_config.getRole()
+    role = getRole()
     set_up_network_interface(specs,role)
 
 @roles('controller')
