@@ -40,6 +40,7 @@ def runCheck(msg,command):
         result = 'oops'
         errormsg = 'Failure on: ' + msg
         logging.error(errormsg)
+        logging.error(out)
     printMessage(result,msg)
     return out
 
@@ -61,7 +62,7 @@ def set_parameter(config_file, section, parameter, value):
 
 def get_parameter(config_file, section, parameter, value):
     """
-    Change a parameter in a config file
+    Get a parameter in a config file
 
     Wrapper for crudini
     """
