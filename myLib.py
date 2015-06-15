@@ -17,6 +17,13 @@ logging.basicConfig(level=logging.DEBUG,
                     filemode='a'
                     )
 
+def grep(pattern,stream):
+    """
+    takes a string and a pattern
+    and returns all the lines in the string
+    that contain the pattern
+    """
+    return [l for l in stream.splitlines() if pattern in l]
 
 def runCheck(msg,command):
     """
@@ -225,10 +232,10 @@ def keystone_check(name, verbose=False):
         tenants = ['admin', 'demo', 'service']
 
         for tenant in tenants:
-            if tenant in run_v("keystone tenant-list | awk '// {print $4}'"):
+            if tenant in run_v("cat tenant-list | awk '// {print $4}'"):
                 print align_y(tenant + ' tenant enabled')
 
-                if "True" == run_v("keystone tenant-list | awk '/" + tenant + "/ {print $6}'"):
+                if "True" == run_v("cat tenant-list | awk '/" + tenant + "/ {print $6}'"):
                     print align_y(tenant + " tenant enabled")
                 else:
                     print align_n(tenant + "  tenant disabled")
@@ -240,10 +247,10 @@ def keystone_check(name, verbose=False):
         users = ['admin', 'demo']
 
         for user in users:
-            if user in run_v("keystone user-list | awk '// {print $4}'"):
+            if user in run_v("cat user-list | awk '// {print $4}'"):
                 print align_y(user + ' user enabled')
 
-                if "True" == run_v("keystone user-list | awk '/" + user + "/ {print $6}'"):
+                if "True" == run_v("cat user-list | awk '/" + user + "/ {print $6}'"):
                     print align_y(user + " user enabled")
                 else:
                     print align_n(user + " user disabled")
@@ -255,19 +262,19 @@ def keystone_check(name, verbose=False):
         
 
     def user_exists(name):
-        if name in run_v("keystone user-list | awk '// {print $4}'"):
+        if name in run_v("cat user-list | awk '// {print $4}'"):
             print align_y(name + ' user exists')
         else:
             print align_n(name + " user absent")
             
     def user_enabled(name):
-        if "True" == run_v("keystone user-list | awk '/" + name + "/ {print $6}'"):
+        if "True" == run_v("cat user-list | awk '/" + name + "/ {print $6}'"):
             print align_y(name + " user enabled")
         else:
             print align_n(name + " user disabled")
 
     def service_exists(name):
-        if name in run_v("keystone service-list | awk '// {print$4}'"):
+        if name in run_v("cat service-list | awk '// {print$4}'"):
             print align_y(name + 'service exists')
         else:
             print align_n(name + 'service absent')
@@ -290,23 +297,23 @@ def keystone_check(name, verbose=False):
             'ceilometer': ['http://controller:8777','http://controller:8777','http://controller:8777']
         }
 
-        #service_type = run_v("keystone service-list | awk '/ " + name + "/ {print $6}'")
-        if name not in run_v("keystone service-list"):
+        #service_type = run_v("cat service-list | awk '/ " + name + "/ {print $6}'")
+        if name not in run_v("cat service-list"):
             print(red("Service not found in service list. Service does not exist, so endpoint can't exist. Exiting function"))
             return
             
 
-        service_id = run_v("keystone service-list | awk '/ "+ name + " / {print $2}'")
+        service_id = run_v("cat service-list | awk '/ "+ name + " / {print $2}'")
 
-        if service_id not in run_v("keystone endpoint-list"):
+        if service_id not in run_v("cat endpoint-list"):
             print(red("Service id not found in endpoint list. Endpoint does not exist. Exiting function"))
             return
 
         urls = ref_d[name]
 
-        admin_url_found = run_v("keystone endpoint-list | awk '/" + service_id + "/ {print$10}'")
-        internal_url_found = run_v("keystone endpoint-list | awk '/" + service_id + "/ {print$8}'")
-        public_url_found = run_v("keystone endpoint-list | awk '/" + service_id + "/ {print$6}'")
+        admin_url_found = run_v("cat endpoint-list | awk '/" + service_id + "/ {print$10}'")
+        internal_url_found = run_v("cat endpoint-list | awk '/" + service_id + "/ {print$8}'")
+        public_url_found = run_v("cat endpoint-list | awk '/" + service_id + "/ {print$6}'")
 
         proper_admin_url = urls[0]
         proper_internal_url = urls[1]
@@ -329,6 +336,12 @@ def keystone_check(name, verbose=False):
     # call all functions 
 
     with prefix(admin_openrc):
+        # Get lists and save them into local files
+        run("keystone service-list >service-list",quiet=True)
+        run("keystone tenant-list >tenant-list",quiet=True)
+        run("keystone user-list >user-list",quiet=True)
+        run("keystone endpoint-list >endpoint-list",quiet=True)
+
         user_check()
         tenant_check()
         service_exists(name)
@@ -337,6 +350,12 @@ def keystone_check(name, verbose=False):
         if name != 'keystone':
             user_exists(name)
             user_enabled(name)
+
+        # remove local files
+        run("rm service-list",quiet=True)
+        run("rm tenant-list",quiet=True)
+        run("rm user-list",quiet=True)
+        run("rm endpoint-list",quiet=True)
 
 
 # General database check that will be used in several TDDs
