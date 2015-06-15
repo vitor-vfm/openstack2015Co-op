@@ -8,7 +8,7 @@ import string
 import sys
 sys.path.append('../')#global_config_files')
 import env_config
-import myLib
+from myLib import runCheck
 
 ############################ Config ########################################
 
@@ -231,3 +231,9 @@ def tdd():
         sudo('touch /mnt/gluster/testfile')
         execute(check_for_file)
         sudo('rm /mnt/gluster/testfile')
+
+
+def glance_tdd():
+    with settings(hide('warnings', 'running', 'stdout', 'stderr')):
+        execute(deploy_glance)
+        execute(tdd)    
