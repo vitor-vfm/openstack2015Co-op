@@ -4,9 +4,11 @@ from env_config import *
 
 def printMessage(status, msg):
 	if (status == "good"):
-		 print(green("\t\t[GOOD] ") + " I can: "+ msg)
+		 #print(green("\t\t[GOOD] ") + " I can: "+ msg)
+        align_y(msg)
 	else:
-		 print(red("\t\t[OOPS] ") + " I CANNOT: "+ msg)
+		 #print(red("\t\t[OOPS] ") + " I CANNOT: "+ msg)
+        align_n(msg)
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
