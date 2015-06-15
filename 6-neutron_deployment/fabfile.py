@@ -591,90 +591,73 @@ def controller_tdd():
     print 'Checking loaded extensions'
     
     with prefix(env_config.admin_openrc):
-        ext_list = run('neutron ext-list',quiet=True)
+        # save ext-list into a file, to avoid running the list command several times
+        ext_list = run('neutron ext-list >ext-list',quiet=True)
 
         if ext_list.return_code != 0:
             print red('Could not run ext-list')
             return
 
-        # save ext-list into a file, to avoid running the list command several times
-        run("echo '{}' >ext_list_local".format(ext_list))
-
         for pair in alias_name_pairs:
             alias = pair[0]
-            name = run("cat ext_list_local | grep ' {} ' | cut -d\| -f3".format(alias),quiet=True)
+            name = run("cat ext-list | grep ' {} ' | cut -d\| -f3".format(alias),quiet=True)
             if pair[1] not in name:
                 print align_n("Alias {} should be {}, is {}".format(alias,pair[1],name.strip()))
             else:
                 print align_y("Alias {} is {}, as expected".format(alias,name.strip()))
 
-        run('rm ext_list_local')
+        run('rm ext-list',quiet=True)
 
 @roles('controller')
-def verify_neutron_agents_network():
-
-    # this test should be done after the network deployment,
-    # even though it's done on the controller node
+def verify_neutron_agents(neutron_agents,hostname):
 
     # verify successful launch of the neutron agents
 
-    neutron_agents = ['Metadata agent','Open vSwitch agent','L3 agent','DHCP agent']
-
     with prefix(env_config.admin_openrc):
-        # grab the agent list as a list of lines, skipping header
-        agent_list = run("neutron agent-list",quiet=True).splitlines()[3:]
+
+        # grab the agent list and save it to a file
+        run("neutron agent-list >agent-list",quiet=True)
 
         for agent in neutron_agents:
-            agent_line = [line for line in agent_list if agent in line]
-            if not agent_line:
+            agent_line = run("cat agent-list | grep '%s' | grep '%s'" % (agent,hostname),quiet=True)
+            if agent_line.return_code != 0:
                 print align_n("Neutron agent {} not found in agent-list".format(agent))
             else:
-                agent_line = agent_line[0]
-                hostname = 'network'
-                if hostname not in agent_line or ':-)' not in agent_line:
-                    print align_n("Problem with agent {}".format(agent))
+                n_lines = len(agent_line.splitlines())
+
+                if n_lines > 1:
+                    print align_n('There\'s more than one agent called ' + agent)
+                elif hostname not in agent_line:
+                    print align_n('Host for agent %s is not %s' % (agent,hostname))
+                elif ':-)' not in agent_line:
+                    print align_n("Status for %s agent is not ':-)'" % agent)
                 else:
                     print align_y("Neutron agent {} OK!".format(agent))
+
+        # remove local file
+        run("rm agent-list",quiet=True)
 
 
 @roles('network')
 def network_tdd():
-    execute(verify_neutron_agents_network)
+    agents = ['Metadata','Open vSwitch','L3','DHCP']
+    execute(verify_neutron_agents,neutron_agents=agents,hostname='network')
 
-@roles('controller')
-def verify_neutron_agents_compute():
+@roles('compute')
+def compute_tdd():
 
-    # this test should be done after the compute deployment,
-    # even though it's done on the controller node
-
-    # verify successful launch of the compute agents
-
+    agents = ['Open vSwitch']
     # get list of compute nodes from the hosts config
     list_of_compute_hostnames = [hostname for hostname in env_config.hosts.values()\
             if 'compute' in hostname]
 
-    with prefix(env_config.admin_openrc):
-        # grab the agent list as a list of lines, skipping header
-        agent_list = run("neutron agent-list",quiet=True).splitlines()[3:]
-
-        for agent in list_of_compute_hostnames:
-            agent_line = [line for line in agent_list if agent in line]
-            if not agent_line:
-                print red("Neutron agent {} not found in agent-list".format(agent))
-            else:
-                agent_line = agent_line[0]
-                if ':-)' not in agent_line:
-                    print align_n("Problem with agent {}".format(agent))
-                else:
-                    print align_y("Neutron agent {} OK!".format(agent))
-
-@roles('compute')
-def compute_tdd():
-    execute(verify_neutron_agents_compute)
+    for host in list_of_compute_hostnames:
+        execute(verify_neutron_agents,neutron_agents=agents,hostname=host)
 
 def tdd():
     with settings(warn_only=True):
         execute(controller_tdd)
+        execute(network_tdd)
         execute(compute_tdd)
 
 
