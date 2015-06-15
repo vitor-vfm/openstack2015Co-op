@@ -11,6 +11,7 @@ import sys
 sys.path.append('..')
 import env_config
 from myLib import runCheck, createDatabaseScript, set_parameter
+from myLib import align_y, align_n
 
 
 ############################ Config ########################################
@@ -24,7 +25,7 @@ neutron_conf = '/etc/neutron/neutron.conf'
 # get database script
 database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
 
-################### Deployment ########################################
+######################### Deployment ########################################
 
 # CONTROLLER
 
@@ -386,12 +387,12 @@ def configure_ML2_plug_in_compute():
     configure_ML2_plugin_general()
 
     # configure the external flat provider network 
-    run('crudini --set ' + ml2_conf_file + ' ovs enable_tunneling True')
+    set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
     local_ip = env_config.computeTunnels['IPADDR']
-    run('crudini --set ' + ml2_conf_file + ' ovs local_ip ' + local_ip)
+    set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
 
     # enable GRE tunnels 
-    run('crudini --set ' + ml2_conf_file + ' agent tunnel_types gre')
+    set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
 @roles('compute')
 def compute_deploy():
@@ -399,13 +400,14 @@ def compute_deploy():
     # edit sysctl.conf
     sysctl_conf = '/etc/sysctl.conf'
 
-    run("crudini --set  {} '' net.ipv4.conf.all.rp_filter 0".format(sysctl_conf))
-    run("crudini --set  {} '' net.ipv4.conf.default.rp_filter 0".format(sysctl_conf))
+    set_parameter(sysctl_conf,'','net.ipv4.conf.all.rp_filter','0')
+    set_parameter(sysctl_conf,'','net.ipv4.conf.default.rp_filter','0')
 
-    run("sysctl -p")
+    msg = "Implement changes on sysctl on compute node " + env.host
+    runCheck(msg, "sysctl -p")
 
-    # install networking components
-    run("yum -y install openstack-neutron-ml2 openstack-neutron-openvswitch")
+    msg = 'Install networking components'
+    runCheck(msg, "yum -y install openstack-neutron-ml2 openstack-neutron-openvswitch")
 
     # configuration
 
@@ -415,9 +417,10 @@ def compute_deploy():
 
     configure_nova_to_use_neutron()
 
-    # enable Open vSwitch
-    run('systemctl enable openvswitch.service')
-    run('systemctl start openvswitch.service')
+    # msg = 'Enable Open vSwitch'
+    # runCheck(msg, 'systemctl enable openvswitch.service')
+    # msg = 'Start Open vSwitch'
+    # runCheck(msg, 'systemctl start openvswitch.service')
 
     # finalize installation
 
@@ -425,22 +428,25 @@ def compute_deploy():
     # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
     # If this symbolic link does not exist, create it
     if 'plugin.ini' not in run('ls /etc/neutron'):
-        run('ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini')
+        msg = 'Create a symbolic link to Open vSwitch\'s conf file'
+        runCheck(msg, 'ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini')
 
     # Due to a packaging bug, the Open vSwitch agent initialization script explicitly looks for 
     # the Open vSwitch plug-in configuration file rather than a symbolic link /etc/neutron/plugin.ini pointing to the ML2 
     # plug-in configuration file. Run the following commands to resolve this issue:
+    msg = 'Chenge Open vSwitch to look for a symbolic link to to the ML2 conf file'
     run("cp /usr/lib/systemd/system/neutron-openvswitch-agent.service " + \
             "/usr/lib/systemd/system/neutron-openvswitch-agent.service.orig")
     run("sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' " + \
             "/usr/lib/systemd/system/neutron-openvswitch-agent.service")
 
-    # restart Nova service
-    # run("systemctl restart openstack-nova-compute.service")
+    msg = 'Restart Nova service'
+    runCheck(msg, "systemctl restart openstack-nova-compute.service")
 
-    # start Open vSwitch
-    run("systemctl enable neutron-openvswitch-agent.service")
-    run("systemctl start neutron-openvswitch-agent.service")
+    msg = 'Enable Open vSwitch'
+    runCheck(msg, 'systemctl enable openvswitch.service')
+    msg = 'Start Open vSwitch'
+    runCheck(msg, 'systemctl start openvswitch.service')
 
 # INITIAL NETWORK
 
@@ -455,7 +461,7 @@ def createExternalNetwork():
 
 def createInitialSubnet():
 
-    # fix this IP scheme
+    # Change this IP schema before deployment
     floatingIPStart = '192.168.122.10'
     floatingIPEnd = '192.168.122.20'
     ExternalNetworkGateway = '192.168.122.1'
@@ -532,7 +538,6 @@ def deploy():
 
 ######################################## TDD #########################################
 
-print 'good'
 @roles('network', 'controller', 'compute')
 def createInitialNetworkTdd(schema="192.168.122"):
 
@@ -550,11 +555,14 @@ def ping_ip(ip_address, host, role='', type_interface=''):
     ping_command = 'ping -q -c 1 ' + ip_address
 
     if type_interface:
-        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host,type_interface,ip_address,env.host)
+        msg = 'ping {}\'s {} interface ({}) from {}'.format(host,type_interface,ip_address,env.host)
     else:
-        msg = 'Ping {} from {}'.format(ip_address,env.host)
+        msg = 'ping {} from {}'.format(ip_address,env.host)
 
-    runCheck(msg, ping_command)
+    if run(ping_command,quiet=True).return_code == 0:
+        res = align_y('Can ' + msg)
+    else:
+        res = align_y('CANNOT ' + msg)
 
 
 
@@ -583,13 +591,24 @@ def controller_tdd():
     print 'Checking loaded extensions'
     
     with prefix(env_config.admin_openrc):
+        ext_list = run('neutron ext-list',quiet=True)
+
+        if ext_list.return_code != 0:
+            print red('Could not run ext-list')
+            return
+
+        # save ext-list into a file, to avoid running the list command several times
+        run("echo '{}' >ext_list_local".format(ext_list))
+
         for pair in alias_name_pairs:
             alias = pair[0]
-            name = run('neutron ext-list | grep {} | cut -d\| -f3'.format(alias))
+            name = run("cat ext_list_local | grep ' {} ' | cut -d\| -f3".format(alias),quiet=True)
             if pair[1] not in name:
-                print red("Problem with alias {}: should be {}, is {}".format(alias,pair[1],name.strip()))
+                print align_n("Alias {} should be {}, is {}".format(alias,pair[1],name.strip()))
             else:
-                print green("alias {} is {}, as expected".format(alias,name.strip()))
+                print align_y("Alias {} is {}, as expected".format(alias,name.strip()))
+
+        run('rm ext_list_local')
 
 @roles('controller')
 def verify_neutron_agents_network():
@@ -603,21 +622,19 @@ def verify_neutron_agents_network():
 
     with prefix(env_config.admin_openrc):
         # grab the agent list as a list of lines, skipping header
-        agent_list = run("neutron agent-list").splitlines()[3:]
+        agent_list = run("neutron agent-list",quiet=True).splitlines()[3:]
 
         for agent in neutron_agents:
             agent_line = [line for line in agent_list if agent in line]
             if not agent_line:
-                print red("Neutron agent {} not found in agent-list".format(agent))
+                print align_n("Neutron agent {} not found in agent-list".format(agent))
             else:
                 agent_line = agent_line[0]
                 hostname = 'network'
                 if hostname not in agent_line or ':-)' not in agent_line:
-                    print red("Problem with agent {}".format(agent))
-                    get_line = "neutron agent-list | grep '{}' ".format(agent)
-                    print red(run(get_line))
+                    print align_n("Problem with agent {}".format(agent))
                 else:
-                    print green("Neutron agent {} OK!".format(agent))
+                    print align_y("Neutron agent {} OK!".format(agent))
 
 
 @roles('network')
@@ -638,7 +655,7 @@ def verify_neutron_agents_compute():
 
     with prefix(env_config.admin_openrc):
         # grab the agent list as a list of lines, skipping header
-        agent_list = run("neutron agent-list").splitlines()[3:]
+        agent_list = run("neutron agent-list",quiet=True).splitlines()[3:]
 
         for agent in list_of_compute_hostnames:
             agent_line = [line for line in agent_list if agent in line]
@@ -647,11 +664,9 @@ def verify_neutron_agents_compute():
             else:
                 agent_line = agent_line[0]
                 if ':-)' not in agent_line:
-                    print red("Problem with agent {}".format(agent))
-                    get_line = "neutron agent-list | grep '{}' ".format(agent)
-                    print red(run(get_line))
+                    print align_n("Problem with agent {}".format(agent))
                 else:
-                    print green("Neutron agent {} OK!".format(agent))
+                    print align_y("Neutron agent {} OK!".format(agent))
 
 @roles('compute')
 def compute_tdd():
@@ -660,5 +675,6 @@ def compute_tdd():
 def tdd():
     with settings(warn_only=True):
         execute(controller_tdd)
+        execute(compute_tdd)
 
 
