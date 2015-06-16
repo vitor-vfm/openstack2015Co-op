@@ -63,7 +63,7 @@ def installConfigureChrony():
 @with_settings(warn_only=True)
 def install_packages():
     
-    # Install EPEL (Extra Packages for Entreprise Linux
+    # Install EPEL (Extra Packages for Entreprise Linux)
     run('yum -y install yum-plugin-priorities')
     run('yum -y install epel-release')
 
