@@ -13,6 +13,7 @@ import env_config
 
 from myLib import *
 logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
+
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -20,6 +21,10 @@ env.roledefs = env_config.roledefs
 mode = 'normal'
 if output['debug']:
     mode = 'debug'
+
+# Logging config
+
+log_file = 'basic-network.log'
 
 ########################## Deployment ########################################
 @roles('controller','compute','network')
@@ -32,7 +37,7 @@ def renameHost():
 
 @roles('controller','compute','network')
 def installConfigureChrony():
-	msg='installing chrony'
+	msg='installing chrony on %s'% env.host
 	sudo('yum -y install chrony')
 	var1=run('rpm -qa |grep chrony ')
 	printMessage("good", msg)
@@ -73,8 +78,9 @@ def install_packages():
 
 
 	# Install RDO repository for Juno
-	print('installing rdo-release-juno.')
-	sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+	print('installing yum-plugin-priorities and epel-release')
+	with settings(warn_only=True):
+		sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
 	printMessage("good", 'rdo-release-juno.rpm is installed')
 	logging.info( 'rdo-release-juno.rpm is installed')
 
@@ -90,15 +96,13 @@ def install_packages():
 		logging.info(item +" is version "+ var1)
 
 
-@roles('controller')
 def installMariaDB():
-    """
-    Install MariaDB and set its conf files
-    """
+    # Install MariaDB
+    # Only on controller node(s)
     
     if env.host_string in env.roledefs['controller']:
 	    # get packages
-        run('yum -y install mariadb mariadb-server MySQL-python')
+        sudo_log('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
         # NB: crudini was not used because of unexpected parsing 1) without equal sign 2) ! include dir  
@@ -109,7 +113,7 @@ def installMariaDB():
             confFile = 'my.cnf'
 
             # make a backup
-            run("cp {} {}.back12".format(confFile,confFile))
+            sudo_log("cp {} {}.back12".format(confFile,confFile))
             if mode == 'debug':
                 # change only backup file
                 confFile += '.back12'
@@ -124,7 +128,7 @@ def installMariaDB():
                         pattern_to_find = line[:line.index('=')]
                     else:
                         pattern_to_find = line
-                    run('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
+                    sudo_log('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
                     sudo("sed -i '/{}/ a\{}' {}".format(section_header,line,confFile))
 
@@ -141,22 +145,21 @@ def installMariaDB():
                 new_line = "bind-address = " + bind_address
                 sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
             else:
-                run("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
+                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
 
             if mode == 'debug':
                 print "Here is the final my.cnf file:"
-                print blue(run("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
+                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
 
         # enable MariaDB
-        run('systemctl enable mariadb.service')
-        run('systemctl start mariadb.service')
+        sudo_log('systemctl enable mariadb.service')
+        sudo_log('systemctl start mariadb.service')
         
-
     # Upgrade to implement changes
-    run('yum -y upgrade')
+    sudo_log('yum -y upgrade')
 
 def ask_for_reboot():
-    run('wall Everybody please reboot')
+    sudo_log('wall Everybody please reboot')
 
 
 #@roles('controller','compute','network','storage')
@@ -176,17 +179,19 @@ def test():
 #@roles('controller','compute','network','storage')
 @roles('controller','compute','network')
 def deploy():
-    execute(install_packages)
+	execute(renameHost)
+	execute(installConfigureChrony)
+	execute(install_packages)
 
 @roles('controller','compute','network')
 def tdd():
-	run('echo "Running TDD on hostname: $(hostname)" ')
-	logging.info( "Running TDD on " +env.host)
+	with settings(warn_only=True):
+		print('checking var/log/messages for chronyd output')
+		run('grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(chronyd)"')
+	logging.info( " TDD on " +env.host)
 	with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
 		var1=run('systemctl status chronyd.service |grep Active')
 		var2=run('date')
-	print(env.host +" Chrony is "+ var1)
-	print(env.host +" the date is "+ var2)
 	logging.info(env.host +" Chrony is "+ var1)
 	logging.info(env.host +" the date is "+ var2)
 
