@@ -50,10 +50,7 @@ def checkLog(time):
         if error:
 
             # avoid too many lines
-            errorlines = error.splitlines(True)
-            if len(errorlines) > maxLines:
-                tail = errorlines[-maxLines:]
-                error = "".join(tail)
+            error = run("echo '{}' | tail -{}".format(error,maxLines),quiet=True)
                 
             result += red("Found error on log " + log + "\n")
             result += error
@@ -129,6 +126,8 @@ def createDatabaseScript(databaseName,password):
             "DROP DATABASE IF EXISTS {}; ".format(databaseName) + \
             "CREATE DATABASE {}; ".format(databaseName) + \
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'controller' ".format(databaseName,databaseName) + \
+            "IDENTIFIED BY '{}'; ".format(password) +\
+            "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'localhost' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}'; ".format(password) +\
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'%' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}';".format(password)
