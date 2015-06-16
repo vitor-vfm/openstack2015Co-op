@@ -151,7 +151,8 @@ def destroy_nova_paths():
     runCheck('Removing instance from gluster', 'rm -rf /mnt/gluster/instance/')
     runCheck('Restarting nova', 'service openstack-nova-compute restart')
 
-##################### Glance ###############################################
+
+############################### Glance ########################################
 
 def deploy_glance():
     execute(setup_gluster)
@@ -172,7 +173,7 @@ def undeploy_glance():
     execute(destroy_gluster) 
 
 
-################### Deployment #############################################
+################################ Deployment ##################################
 
 def deploy():
     execute(setup_gluster)
@@ -185,7 +186,7 @@ def undeploy():
     execute(destroy_vol)
     execute(destroy_gluster)
 
-######################################## TDD ###############################
+################################# TDD ########################################
 
 
 
