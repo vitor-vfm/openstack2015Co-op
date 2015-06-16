@@ -8,13 +8,12 @@ from fabric.colors import green, red, blue
 import string
 
 import sys, os
-sys.path.append('../global_config_files')
+#from myLib import log_debug, log_info, log_error, run_log, run
 
-import env_config
-from env_config import log_debug, log_info, log_error, run_log, sudo_log
-
+import logging
 sys.path.append('..')
-from myLib import *
+import env_config
+from myLib import runCheck
 logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
 ############################ Config ########################################
@@ -28,7 +27,7 @@ if output['debug']:
 # Logging config
 
 log_file = 'basic-network.log'
-env_config.setupLoggingInFabfile(log_file)
+#env_config.setupLoggingInFabfile(log_file)
 
 ########################## Deployment ########################################
 @roles('controller','compute','network')
@@ -73,20 +72,20 @@ def installConfigureChrony():
 def install_packages():
     
     # Install EPEL (Extra Packages for Entreprise Linux
-    sudo_log('yum -y install yum-plugin-priorities')
-    sudo_log('yum -y install epel-release')
+    run('yum -y install yum-plugin-priorities')
+    run('yum -y install epel-release')
 
     # Install RDO repository for Juno
-    sudo_log('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+    run('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
 
     # Install GlusterFS
-    sudo_log('yum -y install glusterfs-fuse glusterfs')
+    run('yum -y install glusterfs-fuse glusterfs')
 
     # Install Crudini
-    sudo_log("yum -y install crudini")
+    run("yum -y install crudini")
 
     # Install wget
-    sudo_log("yum -y install wget")
+    run("yum -y install wget")
 
 
 
@@ -96,7 +95,7 @@ def instalMariaDB():
     
     if env.host_string in env.roledefs['controller']:
 	    # get packages
-        sudo_log('yum -y install mariadb mariadb-server MySQL-python')
+        run('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
         # NB: crudini was not used because of unexpected parsing 1) without equal sign 2) ! include dir  
@@ -107,7 +106,7 @@ def instalMariaDB():
             confFile = 'my.cnf'
 
             # make a backup
-            sudo_log("cp {} {}.back12".format(confFile,confFile))
+            run("cp {} {}.back12".format(confFile,confFile))
             if mode == 'debug':
                 # change only backup file
                 confFile += '.back12'
@@ -122,7 +121,7 @@ def instalMariaDB():
                         pattern_to_find = line[:line.index('=')]
                     else:
                         pattern_to_find = line
-                    sudo_log('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
+                    run('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
                     sudo("sed -i '/{}/ a\{}' {}".format(section_header,line,confFile))
 
@@ -139,22 +138,22 @@ def instalMariaDB():
                 new_line = "bind-address = " + bind_address
                 sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
             else:
-                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
+                run("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
 
             if mode == 'debug':
                 print "Here is the final my.cnf file:"
-                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
+                print blue(run("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
 
         # enable MariaDB
-        sudo_log('systemctl enable mariadb.service')
-        sudo_log('systemctl start mariadb.service')
+        run('systemctl enable mariadb.service')
+        run('systemctl start mariadb.service')
         
 
     # Upgrade to implement changes
-    sudo_log('yum -y upgrade')
+    run('yum -y upgrade')
 
 def ask_for_reboot():
-    sudo_log('wall Everybody please reboot')
+    run('wall Everybody please reboot')
 
 
 #@roles('controller','compute','network','storage')
