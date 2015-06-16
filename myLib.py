@@ -35,9 +35,16 @@ def checkLog(time):
 
     result = ""
 
-    for log in env_config.lslogs:
+    # remove last digit to avoid too
+    # much precision
+    time = time[:-1]
+
+    for log in lslogs:
         # Filter out all lines before the timestamp and grep for errors
-        error = run("sed '0,/{}/d' {} | egrep -i '(error|warning|critical)'".format(time,log),warn_only=True)
+        error = run("if [ -e {} ]; then ".format(log) +\
+                "sed '0,/{}/d' {}; fi".format(time,log)\
+                # "sed -n '/{}/,/{}/p' {}; fi".format(before,after,log)\
+                ,quiet=True)
 
         if error:
             result += red("Found error on log " + log + "\n")
@@ -54,7 +61,8 @@ def runCheck(msg,command):
     Runs a fabric command and reports
     results, logging them in necessary
     """
-    time = run('date +"%b %d %R"')
+    # time = run('date +"%Y-%m-%d %H:%M"')
+    time = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
     out = run(command,warn_only=True)
 
     if out.return_code == 0:
@@ -109,7 +117,9 @@ def createDatabaseScript(databaseName,password):
     Outputs: a string containing a MySQL script
     """
 
-    return  "CREATE DATABASE IF NOT EXISTS {}; ".format(databaseName) + \
+    return \
+            "DROP DATABASE IF EXISTS {}; ".format(databaseName) + \
+            "CREATE DATABASE {}; ".format(databaseName) + \
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'controller' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}'; ".format(password) +\
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'%' ".format(databaseName,databaseName) + \
