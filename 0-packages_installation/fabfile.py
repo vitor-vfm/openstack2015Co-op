@@ -9,11 +9,11 @@ import string
 
 import sys, os
 sys.path.append('..')
+<<<<<<< HEAD
 import env_config
 
 from myLib import *
 logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
-
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -21,10 +21,6 @@ env.roledefs = env_config.roledefs
 mode = 'normal'
 if output['debug']:
     mode = 'debug'
-
-# Logging config
-
-log_file = 'basic-network.log'
 
 ########################## Deployment ########################################
 @roles('controller','compute','network')
@@ -67,6 +63,7 @@ def installConfigureChrony():
 # General function to install packages that should be in all or several nodes
 @roles('controller','compute','network')
 def install_packages():
+<<<<<<< HEAD
 	# Install EPEL (Extra Packages for Entreprise Linux
 	print('installing yum-plugin-priorities and epel-release')
 	sudo('yum -y install yum-plugin-priorities')
@@ -95,13 +92,15 @@ def install_packages():
 		logging.info(item +" is version "+ var1)
 
 
-def instalMariaDB():
-    # Install MariaDB
-    # Only on controller node(s)
+@roles('controller')
+def installMariaDB():
+    """
+    Install MariaDB and set its conf files
+    """
     
     if env.host_string in env.roledefs['controller']:
 	    # get packages
-        sudo_log('yum -y install mariadb mariadb-server MySQL-python')
+        run('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
         # NB: crudini was not used because of unexpected parsing 1) without equal sign 2) ! include dir  
@@ -112,7 +111,7 @@ def instalMariaDB():
             confFile = 'my.cnf'
 
             # make a backup
-            sudo_log("cp {} {}.back12".format(confFile,confFile))
+            run("cp {} {}.back12".format(confFile,confFile))
             if mode == 'debug':
                 # change only backup file
                 confFile += '.back12'
@@ -127,7 +126,7 @@ def instalMariaDB():
                         pattern_to_find = line[:line.index('=')]
                     else:
                         pattern_to_find = line
-                    sudo_log('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
+                    run('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
                     sudo("sed -i '/{}/ a\{}' {}".format(section_header,line,confFile))
 
@@ -144,22 +143,22 @@ def instalMariaDB():
                 new_line = "bind-address = " + bind_address
                 sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
             else:
-                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
+                run("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
 
             if mode == 'debug':
                 print "Here is the final my.cnf file:"
-                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
+                print blue(run("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
 
         # enable MariaDB
-        sudo_log('systemctl enable mariadb.service')
-        sudo_log('systemctl start mariadb.service')
+        run('systemctl enable mariadb.service')
+        run('systemctl start mariadb.service')
         
 
     # Upgrade to implement changes
-    sudo_log('yum -y upgrade')
+    run('yum -y upgrade')
 
 def ask_for_reboot():
-    sudo_log('wall Everybody please reboot')
+    run('wall Everybody please reboot')
 
 
 #@roles('controller','compute','network','storage')
