@@ -31,6 +31,33 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                  'controller' : ['root@controller']}
 	logfilename='/opt/coop2015/coop2015/fabric.log'
 
+	my_cnf="""
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+# Settings user and group are ignored when systemd is used.
+# If you need to run mysqld under a different user or group,
+# customize your systemd unit file for mariadb according to the
+# instructions in http://fedoraproject.org/wiki/Systemd
+bind-address = 192.168.1.11
+default-storage-engine = innodb
+innodb_file_per_table
+collation-server = utf8_general_ci
+init-connect = 'SET NAMES utf8'
+character-set-server = utf8
+
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+#
+# include all files from the config directory
+#
+!includedir /etc/my.cnf.d
+"""
+
 ##############################################################################
 
 ########  ######## ##     ## 
@@ -50,14 +77,32 @@ else:
     logfilename = '/tmp/test.log'
 
 
-    global_config_location =  '../global_config_files/'
+    my_cnf="""
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+# Settings user and group are ignored when systemd is used.
+# If you need to run mysqld under a different user or group,
+# customize your systemd unit file for mariadb according to the
+# instructions in http://fedoraproject.org/wiki/Systemd
+bind-address = 192.168.1.11
+default-storage-engine = innodb
+innodb_file_per_table
+collation-server = utf8_general_ci
+init-connect = 'SET NAMES utf8'
+character-set-server = utf8
 
-    # mariadb
-    mariaDBmysqldSpecs = ['default-storage-engine=innodb',
-                          'innodb_file_per_table',
-                          'collation-server=utf8_general_ci',
-                          'init-connect=SET NAMES utf8',
-                          'character-set-server=utf8']
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+#
+# include all files from the config directory
+#
+!includedir /etc/my.cnf.d
+"""
     # for the env dictionary
     roledefs = { 'compute' : ['root@computeVM'],
                  'network' : ['root@networkVM'],
