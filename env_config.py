@@ -57,6 +57,29 @@ pid-file=/var/run/mariadb/mariadb.pid
 #
 !includedir /etc/my.cnf.d
 """
+    # passwords
+	passwd = { 'METADATA_SECRET' : '34m3t$3c43',
+               'ROOT_SECRET' : '34root43',
+               'RABBIT_PASS' : '34RabbGuest43',
+               'NOVA_DBPASS' : '34nova_db43',
+               'NEUTRON_DBPASS' : '34neu43',
+               'HEAT_DBPASS' : '34heat_db43',
+               'GLANCE_DBPASS' : '34glance_db43',
+               'SAHARA_DBPASS' : '34sahara_db43',
+               'CINDER_DBPASS' : '34cinder_db43',
+               'ADMIN_PASS' : '34adm43',
+               'DEMO_PASS' : '34demo43',
+               'KEYSTONE_DBPASS' : '34keydb43',
+               'NOVA_PASS' : '34nova_ks43',
+               'NEUTRON_PASS' : '34neu43',
+               'HEAT_PASS' : '34heat_ks43',
+               'GLANCE_PASS' : '34glance_ks43',
+               'SAHARA_PASS' : '34sahara_ks43',
+               'CINDER_PASS' : '34cinder_ks43',
+               'SWIFT_PASS' : '34$w1f43',
+               'TROVE_PASS' : '34Tr0v343',
+               'TROVE_DBPASS' : '34Tr0v3db4s343'}
+
 
 ##############################################################################
 
@@ -117,6 +140,7 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     # passwords
     passwd = { 'METADATA_SECRET' : '34m3t$3c43',
+               'ROOT_SECRET' : '34root43',
                'RABBIT_PASS' : '34RabbGuest43',
                'NOVA_DBPASS' : '34nova_db43',
                'NEUTRON_DBPASS' : '34neu43',
