@@ -8,12 +8,9 @@ from fabric.colors import green, red, blue
 import string
 
 import sys, os
-sys.path.append('../global_config_files')
-
-import env_config
-from env_config import log_debug, log_info, log_error, run_log, sudo_log
-
 sys.path.append('..')
+import env_config
+
 from myLib import *
 logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
@@ -28,7 +25,6 @@ if output['debug']:
 # Logging config
 
 log_file = 'basic-network.log'
-env_config.setupLoggingInFabfile(log_file)
 
 ########################## Deployment ########################################
 @roles('controller','compute','network')
@@ -69,25 +65,34 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
-@with_settings(warn_only=True)
+@roles('controller','compute','network')
 def install_packages():
-    
-    # Install EPEL (Extra Packages for Entreprise Linux
-    sudo_log('yum -y install yum-plugin-priorities')
-    sudo_log('yum -y install epel-release')
+	# Install EPEL (Extra Packages for Entreprise Linux
+	print('installing yum-plugin-priorities and epel-release')
+	sudo('yum -y install yum-plugin-priorities')
+	sudo('yum -y install epel-release')
+	for item in ['yum-plugin-priorities','epel-release']:
+		var1=run('rpm -qa |grep %s ' %item)
+		printMessage("good", item +" is version "+ var1)
+		logging.info(item +" is version "+ var1)
 
-    # Install RDO repository for Juno
-    sudo_log('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+
+	# Install RDO repository for Juno
+	print('installing rdo-release-juno.')
+	sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+	printMessage("good", 'rdo-release-juno.rpm is installed')
+	logging.info( 'rdo-release-juno.rpm is installed')
 
     # Install GlusterFS
-    sudo_log('yum -y install glusterfs-fuse glusterfs')
+    #sudo_log('yum -y install glusterfs-fuse glusterfs')
 
     # Install Crudini
-    sudo_log("yum -y install crudini")
-
-    # Install wget
-    sudo_log("yum -y install wget")
-
+	print('installing crudini wget')
+	sudo("yum -y install crudini wget")
+	for item in ['crudini','wget']:
+		var1=run('rpm -qa |grep %s ' %item)
+		printMessage("good", item +" is version "+ var1)
+		logging.info(item +" is version "+ var1)
 
 
 def instalMariaDB():
@@ -178,13 +183,13 @@ def deploy():
 
 @roles('controller','compute','network')
 def tdd():
-	with settings(warn_only=True):
-		print('checking var/log/messages for chronyd output')
-		run('grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(chronyd)"')
-	logging.info( " TDD on " +env.host)
+	run('echo "Running TDD on hostname: $(hostname)" ')
+	logging.info( "Running TDD on " +env.host)
 	with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
 		var1=run('systemctl status chronyd.service |grep Active')
 		var2=run('date')
+	print(env.host +" Chrony is "+ var1)
+	print(env.host +" the date is "+ var2)
 	logging.info(env.host +" Chrony is "+ var1)
 	logging.info(env.host +" the date is "+ var2)
 
