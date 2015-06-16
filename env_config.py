@@ -235,6 +235,7 @@ else:
     ##############################################################################
 
     glanceGlusterBrick = '/mnt/gluster/glance/images'
+    novaGlusterBrick = '/mnt/gluster/instance'
 
 
 
