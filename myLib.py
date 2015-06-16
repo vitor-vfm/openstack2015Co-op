@@ -27,12 +27,52 @@ def grep(pattern,stream):
     """
     return [l for l in stream.splitlines() if pattern in l]
 
-def runCheck(msg,command):
+def checkLog(time):
+    """
+    given a timestamp, outputs all error in the logs 
+    that happened after the timestamp
+    """
+
+    result = ""
+    maxLines = 20
+
+    # remove last digit to avoid too
+    # much precision
+    time = time[:-1]
+
+    for log in lslogs:
+        # Filter out all lines before the timestamp and grep for errors
+        error = run("if [ -e {} ]; then ".format(log) +\
+                "sed '0,/{}/d' {}; fi".format(time,log)\
+                # "sed -n '/{}/,/{}/p' {}; fi".format(before,after,log)\
+                ,quiet=True)
+
+        if error:
+
+            # avoid too many lines
+            errorlines = error.splitlines(True)
+            if len(errorlines) > maxLines:
+                tail = errorlines[-maxLines:]
+                error = "".join(tail)
+                
+            result += red("Found error on log " + log + "\n")
+            result += error
+            result += "\n"
+
+    return result
+        
+
+
+
+def runCheck(msg,command,quiet=False):
     """
     Runs a fabric command and reports
     results, logging them in necessary
     """
-    out = run(command,warn_only=True)
+    # time = run('date +"%Y-%m-%d %H:%M"')
+    time = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
+    out = run(command,quiet=quiet,warn_only=True)
+
     if out.return_code == 0:
         result = 'good'
         logging.debug('Success on: ' + msg)
@@ -41,6 +81,8 @@ def runCheck(msg,command):
         errormsg = 'Failure on: ' + msg
         logging.error(errormsg)
         logging.error(out)
+        print checkLog(time)
+
     printMessage(result,msg)
     return out
 
@@ -83,7 +125,9 @@ def createDatabaseScript(databaseName,password):
     Outputs: a string containing a MySQL script
     """
 
-    return  "CREATE DATABASE IF NOT EXISTS {}; ".format(databaseName) + \
+    return \
+            "DROP DATABASE IF EXISTS {}; ".format(databaseName) + \
+            "CREATE DATABASE {}; ".format(databaseName) + \
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'controller' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}'; ".format(password) +\
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'%' ".format(databaseName,databaseName) + \

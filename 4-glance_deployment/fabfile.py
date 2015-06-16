@@ -120,31 +120,13 @@ def start_glance_services():
 @roles('controller')
 def setup_GlusterFS_controller():
     # change the path that Glance uses for its file system
-    gluster_volume = env_config.volumeNames['glance']
+    msg = 'Configure Glance to use Gluster'
+    glusterBrick = env_config.glanceGlusterBrick
     runCheck(msg, 'crudini --set /etc/glance/glance-api.conf '' \
-            filesystem_store_datadir {}/images'.format(gluster_volume))
+            filesystem_store_datadir {}'.format(glusterBrick))
 
-    runCheck(msg, 'mkdir -p {}/images'.format(gluster_volume))
-    runCheck(msg, 'chown -R glance:glance {}'.format(gluster_volume))
-
-    # Are we creating an instance store? Is Nova also using Gluster?
-
-    # create the directory for the instance store
-    # runCheck(msg, 'mkdir /mnt/gluster/instance/')
-    # runCheck(msg, 'chown -R nova:nova /mnt/gluster/instance/')
-    # runCheck(msg, 'service openstack-glance-api restart')
-
-# Are we creating an instance store? Is Nova also using Gluster?
-# @roles('compute')
-# def setup_GlusterFS_compute():
-#     # change the path that nova uses for its file system
-# runCheck(msg, 'crudini --set /etc/nova/nova-api.conf '' \
-#             instances_path /mnt/gluster/instance')
-
-# runCheck(msg, 'mkdir -p /mnt/gluster/instance/')
-# runCheck(msg, 'chown -R nova:nova /mnt/gluster/instance/')
-# runCheck(msg, 'service openstack-nova-compute restart')
-
+    runCheck(msg, 'mkdir -p {}/images'.format(glusterBrick))
+    runCheck(msg, 'chown -R glance:glance {}'.format(glusterBrick))
 
 def setup_GlusterFS():
     # configure Glance to use a gluster FS volume
@@ -172,7 +154,7 @@ def setup_glance():
 
 def deploy():
     execute(setup_glance)
-    # setup_GlusterFS()
+    setup_GlusterFS()
 
 ######################################## TDD #########################################
 

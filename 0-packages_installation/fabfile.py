@@ -8,13 +8,10 @@ from fabric.colors import green, red, blue
 import string
 
 import sys, os
-#from myLib import log_debug, log_info, log_error, run_log, run
-
-import logging
 sys.path.append('..')
+# from myLib import *
 import env_config
-from myLib import runCheck
-logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
+# logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
 ############################ Config ########################################
 
@@ -23,11 +20,6 @@ env.roledefs = env_config.roledefs
 mode = 'normal'
 if output['debug']:
     mode = 'debug'
-
-# Logging config
-
-log_file = 'basic-network.log'
-#env_config.setupLoggingInFabfile(log_file)
 
 ########################## Deployment ########################################
 @roles('controller','compute','network')
@@ -89,9 +81,11 @@ def install_packages():
 
 
 
-def instalMariaDB():
-    # Install MariaDB
-    # Only on controller node(s)
+@roles('controller')
+def installMariaDB():
+    """
+    Install MariaDB and set its conf files
+    """
     
     if env.host_string in env.roledefs['controller']:
 	    # get packages
