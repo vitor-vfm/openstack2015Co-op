@@ -34,6 +34,7 @@ def checkLog(time):
     """
 
     result = ""
+    maxLines = 20
 
     # remove last digit to avoid too
     # much precision
@@ -47,6 +48,10 @@ def checkLog(time):
                 ,quiet=True)
 
         if error:
+
+            # avoid too many lines
+            error = run("echo '{}' | tail -{}".format(error,maxLines),quiet=True)
+                
             result += red("Found error on log " + log + "\n")
             result += error
             result += "\n"
@@ -56,14 +61,14 @@ def checkLog(time):
 
 
 
-def runCheck(msg,command):
+def runCheck(msg,command,quiet=False):
     """
     Runs a fabric command and reports
     results, logging them in necessary
     """
     # time = run('date +"%Y-%m-%d %H:%M"')
     time = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
-    out = run(command,warn_only=True)
+    out = run(command,quiet=quiet,warn_only=True)
 
     if out.return_code == 0:
         result = 'good'
@@ -121,6 +126,8 @@ def createDatabaseScript(databaseName,password):
             "DROP DATABASE IF EXISTS {}; ".format(databaseName) + \
             "CREATE DATABASE {}; ".format(databaseName) + \
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'controller' ".format(databaseName,databaseName) + \
+            "IDENTIFIED BY '{}'; ".format(password) +\
+            "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'localhost' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}'; ".format(password) +\
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'%' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}';".format(password)

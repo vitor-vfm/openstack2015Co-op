@@ -85,82 +85,59 @@ def createUsersRolesAndTenants(admin_token):
     # get admin credentials
     credentials = "export OS_SERVICE_TOKEN={}; ".format(admin_token) + \
             "export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0 "
-    credentials += env_config.admin_openrc
+    # credentials += env_config.admin_openrc
     with prefix(credentials):
 
-        # before each creation, we check if the user, role or tenant already
-        # exists to avoid duplicates
+        msg = "Create 'admin' tenant"
+        runCheck(msg, "keystone tenant-create --name admin --description 'Admin Tenant'")
 
-        out = run("keystone tenant-list",warn_only=True)
-        if out.return_code == 0 and 'admin' not in out:
-            msg = "Create 'admin' tenant"
-            runCheck(msg, "keystone tenant-create --name admin --description 'Admin Tenant'")
-        else:
-            print blue("'admin' tenant already created or error in list. Nothing done")
+        msg = "Create 'admin' user"
+        runCheck(msg, "keystone user-create --name admin --pass {} --email {}"\
+                .format(passwd['ADMIN_PASS'], env_config.keystone_emails['ADMIN_EMAIL']))
 
-        out = run("keystone user-list",warn_only=True)
-        if out.return_code == 0 and 'admin' not in out:
-            msg = "Create 'admin' user"
-            runCheck(msg, "keystone user-create --name admin --pass {} --email {}"\
-                    .format(passwd['ADMIN_PASS'], env_config.keystone_emails['ADMIN_EMAIL']))
-        else:
-            print blue("'admin' user already created or error in list. Nothing done")
+        msg = "Create 'admin' role"
+        runCheck(msg, "keystone role-create --name admin")
 
-        out = run("keystone role-list",warn_only=True)
-        if out.return_code == 0 and 'admin' not in out:
-            msg = "Create 'admin' role"
-            runCheck(msg, "keystone role-create --name admin")
-
-            msg = "Give role 'admin' to user 'admin'"
-            runCheck(msg, "keystone user-role-add --user admin --tenant admin --role admin")
-        else:
-            print blue("'admin' role already created or error in list. Nothing done")
+        msg = "Give role 'admin' to user 'admin'"
+        runCheck(msg, "keystone user-role-add --user admin --tenant admin --role admin")
 
 
-        
-        out = run("keystone tenant-list",warn_only=True)
-        if out.return_code == 0 and 'demo' not in out:
-            msg = "Create 'demo' tenant"
-            runCheck(msg, "keystone tenant-create --name demo --description 'Demo Tenant'")
-        else:
-            print blue("'demo' tenant already created or error in list. Nothing done")
+    
+        msg = "Create 'demo' tenant"
+        runCheck(msg, "keystone tenant-create --name demo --description 'Demo Tenant'")
 
-        out = run("keystone user-list",warn_only=True)
-        if out.return_code == 0 and 'demo' not in out:
-            msg = "Create 'demo' user"
-            runCheck(msg, "keystone user-create --name demo --tenant demo " +\
-                    "--pass {} --email {}".format('34demo43', env_config.keystone_emails['DEMO_EMAIL'])) 
-        else:
-            print blue("'demo' user already created or error in list. Nothing done")
+        msg = "Create 'demo' user"
+        runCheck(msg, "keystone user-create --name demo --tenant demo " +\
+                "--pass {} --email {}".format('34demo43', env_config.keystone_emails['DEMO_EMAIL'])) 
 
 
 
-        out = run("keystone tenant-list",warn_only=True)
-        if out.return_code == 0 and 'service' not in out:
-            msg = "Create 'service' tenant"
-            runCheck(msg, "keystone tenant-create --name service --description 'Service Tenant'")
-        else:
-            print blue("'service' tenant already created or error in list. Nothing done")
+        msg = "Create 'service' tenant"
+        runCheck(msg, "keystone tenant-create --name service --description 'Service Tenant'")
 
 
 
-        out = run("keystone service-list",warn_only=True)
-        if out.return_code == 0 and 'keystone' not in out:
-            msg = "Create 'keystone' service"
-            runCheck(msg, "keystone service-create --name keystone --type identity " + \
-                    "--description 'OpenStack Identity'")
-        else:
-            print blue("'keystone' service already created or error in list. Nothing done")
+        msg = "Create 'keystone' service"
+        runCheck(msg, "keystone service-create --name keystone --type identity " + \
+                "--description 'OpenStack Identity'")
 
-        out = run("keystone endpoint-list",warn_only=True)
-        if out.return_code == 0 and 'adminurl http://controller:35357' not in out:
-            msg = "Create an endpoint for the 'keystone' service"
-            runCheck(msg, "keystone endpoint-create " + \
-                    "--service-id $(keystone service-list | awk '/ identity / {print $2}') " + \
-                    "--publicurl http://controller:5000/v2.0 --internalurl http://controller:5000/v2.0 " + \
-                    "--adminurl http://controller:35357/v2.0 --region regionOne")
-        else:
-            print blue("Endpoint for the 'keystone' service already created or error in list. Nothing done")
+        msg = "Create an endpoint for the 'keystone' service"
+        runCheck(msg, "keystone endpoint-create " + \
+                "--service-id $(keystone service-list | awk '/ identity / {print $2}') " + \
+                "--publicurl http://controller:5000/v2.0 --internalurl http://controller:5000/v2.0 " + \
+                "--adminurl http://controller:35357/v2.0 --region regionOne")
+
+
+@roles('controller')
+def installPackages():
+    msg = 'Remove old packages'
+    runCheck(msg, 'yum -y remove openstack-keystone python-keystoneclient',quiet=True)
+
+    msg = 'Install packages'
+    runCheck(msg, 'yum -y install openstack-keystone python-keystoneclient',quiet=True)
+
+    msg = "Start keystone service"
+    runCheck(msg, "systemctl start openstack-keystone.service",quiet=True)
 
  
 @roles('controller')
@@ -175,21 +152,18 @@ def setupKeystone():
 
     # get Keystone database creation scripts
     databaseCreation = createDatabaseScript('keystone',passwd['KEYSTONE_DBPASS'])
-    
+
     msg = "Create database for keystone"
     runCheck(msg, 'echo "' + databaseCreation + '" | mysql -u root')
+    
+    execute(installPackages)
   
     msg = "Generate an admin token"
     admin_token = runCheck(msg, 'openssl rand -hex 10')
 
-    msg = "Install keystone packages"
-    runCheck(msg, "yum -y install openstack-keystone python-keystoneclient")
-    
     setKeystoneConfigFile(admin_token,passwd['KEYSTONE_DBPASS'])
     
     createGenericCertificatesAndKeys()
-
-    createUsersRolesAndTenants(admin_token)
 
     msg = 'Populate the Identity service database'
     runCheck(msg, "su -s /bin/sh -c 'keystone-manage db_sync' keystone")
@@ -202,6 +176,7 @@ def setupKeystone():
 
     configureCronToPurgeExpiredTokens()
 
+    createUsersRolesAndTenants(admin_token)
 
 
 def deploy():

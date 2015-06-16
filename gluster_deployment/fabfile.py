@@ -15,7 +15,7 @@ from myLib import runCheck
 env.roledefs = env_config.roledefs
 PARTITION = '/dev/sda1'
 EX_VOLUME = 'vol0'
-GLANCE_VOLUME = 'exp1'
+GLANCE_VOLUME = 'glance_volume'
 
 ############################# GENERAL FUNCTIONS ############################
 
@@ -47,11 +47,13 @@ def setup_gluster():
     runCheck('Getting packages for gluster', 'wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     runCheck('Installing gluster packages', 'yum -y install glusterfs glusterfs-fuse glusterfs-server')
     runCheck('Starting glusterd', 'systemctl start glusterd')
-    # Make the file system (probably include this in partition function)
-    #sudo('mkfs.xfs {}'.format(PARTITION))
+    # If not already made, make the file system (include in partition function)
+    if run('mount | grep sda | grep xfs', warn_only=True).return_code:
+        sudo('mkfs.xfs -f {}'.format(PARTITION))
     # Mount the brick on the established partition
     sudo('mkdir -p /data/gluster/brick')
-    runCheck('Mounting brick on partition', 'mount {} /data/gluster'.format(PARTITION))
+    if run('mount | grep sda | grep /data/gluster', warn_only=True).return_code:
+        runCheck('Mounting brick on partition', 'mount {} /data/gluster'.format(PARTITION))
     # Setup the ports
     sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
     sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
@@ -86,15 +88,39 @@ def create_volume():
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
     node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/brick' for node in env_config.hosts])
-    runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(GLANCE_VOLUME, num_nodes, node_ips))
+    check_volume = run('gluster volume list', warn_only=True)
+    if check_volume != GLANCE_VOLUME:
+        runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(GLANCE_VOLUME, num_nodes, node_ips))
     #prevolume_start()
-    runCheck('Starting volume', 'gluster volume start {} force'.format(GLANCE_VOLUME))
+        runCheck('Starting volume', 'gluster volume start {} force'.format(GLANCE_VOLUME))
     runCheck('Restarting glusterd', '/bin/systemctl restart glusterd.service')
 
 @roles('controller', 'compute', 'network', 'storage')
 def mounter():
     runCheck('Making mount point', 'mkdir -p /mnt/gluster')
-    runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
+    if run('mount | grep glance_volume | grep /mnt/gluster', warn_only=True).return_code:
+        runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
+
+# This function exists for testing. Should be able to use this then deploy to
+# set up gluster on a prepartitioned section of the hard drive
+@roles('controller', 'compute', 'network', 'storage')
+def destroy_gluster():
+    runCheck('Unmounting gluster from /data/', 'umount /data/gluster')
+    runCheck('Removing glusterd from /var/lib/', 'rm -rf /var/lib/glusterd')
+    runCheck('Removing gluster from /data/', 'rm -rf /data/gluster')
+
+@roles('compute')
+def destroy_vol():
+    runCheck('Stopping gluster volume', 'yes | gluster volume stop {}'.format(GLANCE_VOLUME)) 
+    runCheck('Deleting gluster volume', 'yes | gluster volume delete {}'.format(GLANCE_VOLUME))
+
+@roles('controller', 'compute', 'network', 'storage')
+def destroy_mount():
+    runCheck('Unmounting gluster from /mnt/', 'umount /mnt/gluster') 
+    runCheck('Removing gluster from /mnt/', 'rm -rf /mnt/gluster')
+
+##################### Glance ###############################################
+
 
 @roles('controller', 'compute')
 def put_in_nova_line():
@@ -122,24 +148,6 @@ def setup_nova_paths():
     runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/instance/')
     runCheck('Restarting Nova', 'service openstack-nova-compute restart')
 
-# This function exists for testing. Should be able to use this then deploy to
-# set up gluster on a prepartitioned section of the hard drive
-@roles('controller', 'compute', 'network', 'storage')
-def destroy_gluster():
-    runCheck('Unmounting gluster from /data/', 'umount /data/gluster')
-    runCheck('Removing glusterd from /var/lib/', 'rm -rf /var/lib/glusterd')
-    runCheck('Removing gluster from /data/', 'rm -rf /data/gluster')
-
-@roles('compute')
-def destroy_vol():
-    runCheck('Stopping gluster volume', 'yes | gluster volume stop {}'.format(GLANCE_VOLUME)) 
-    runCheck('Deleting gluster volume', 'yes | gluster volume delete {}'.format(GLANCE_VOLUME))
-
-@roles('controller', 'compute', 'network', 'storage')
-def destroy_mount():
-    runCheck('Unmounting gluster from /mnt/', 'umount /mnt/gluster') 
-    runCheck('Removing gluster from /mnt/', 'rm -rf /mnt/gluster')
-
 @roles('controller')
 def destroy_backup():
     runCheck('Removing glance from gluster', 'rm -rf /mnt/gluster/glance')
@@ -150,8 +158,6 @@ def destroy_backup():
 def destroy_nova_paths():
     runCheck('Removing instance from gluster', 'rm -rf /mnt/gluster/instance/')
     runCheck('Restarting nova', 'service openstack-nova-compute restart')
-
-##################### Glance ###############################################
 
 def deploy_glance():
     execute(setup_gluster)
@@ -172,7 +178,7 @@ def undeploy_glance():
     execute(destroy_gluster) 
 
 
-################### Deployment #############################################
+################################ Deployment ##################################
 
 def deploy():
     execute(setup_gluster)
@@ -185,7 +191,7 @@ def undeploy():
     execute(destroy_vol)
     execute(destroy_gluster)
 
-######################################## TDD ###############################
+################################# TDD ########################################
 
 
 
