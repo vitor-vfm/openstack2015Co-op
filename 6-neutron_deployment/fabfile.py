@@ -462,10 +462,10 @@ def createExternalNetwork():
 def createInitialSubnet():
 
     # Change this IP schema before deployment
-    floatingIPStart = '192.168.122.10'
-    floatingIPEnd = '192.168.122.20'
-    ExternalNetworkGateway = '192.168.122.1'
-    ExternalNetworkCIDR = '192.168.122.0/24'
+    floatingIPStart = '192.168.100.10'
+    floatingIPEnd = '192.168.100.20'
+    ExternalNetworkGateway = '192.168.100.1'
+    ExternalNetworkCIDR = '192.168.100.0/24'
 
     if 'ext-subnet' in run('neutron subnet-list'):
         msg = 'ext-net already created'
@@ -535,35 +535,26 @@ def deploy():
     execute(controller_deploy)
     execute(network_deploy)
     execute(compute_deploy)
+    
 
 ######################################## TDD #########################################
 
 @roles('network', 'controller', 'compute')
-def createInitialNetworkTdd(schema="192.168.122"):
+def createInitialNetworkTdd(schema="192.168.100"):
 
     # this is repeated, need to translate into env_config
     floatingIPStart = '{}.10'.format(schema)
     floatingIPEnd = '{}.20'.format(schema)
     ExternalNetworkGateway = '{}.1'.format(schema)
     ExternalNetworkCIDR = '{}.0/24'.format(schema)
+    
 
-
-    # ping_ip(floatingIPStart, 
-
-# pings an ip address and see if it works
-def ping_ip(ip_address, host, role='', type_interface=''):
-    ping_command = 'ping -q -c 1 ' + ip_address
-
-    if type_interface:
-        msg = 'ping {}\'s {} interface ({}) from {}'.format(host,type_interface,ip_address,env.host)
+    if run("ping -c 1 {}".format(floatingIPStart)).return_code == 0:
+        align_y("{} able to ping the tenant router gateway".format(env.host))
     else:
-        msg = 'ping {} from {}'.format(ip_address,env.host)
-
-    if run(ping_command,quiet=True).return_code == 0:
-        res = align_y('Can ' + msg)
-    else:
-        res = align_y('CANNOT ' + msg)
-
+        align_n("{} NOT able to ping the tenant router gateway".format(env.host))
+        
+    
 
 
 @roles('controller')
@@ -659,5 +650,6 @@ def tdd():
         execute(controller_tdd)
         execute(network_tdd)
         execute(compute_tdd)
+        execute(createInitialNetworkTdd)
 
 
