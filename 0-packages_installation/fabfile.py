@@ -9,10 +9,10 @@ import string
 
 import sys, os
 sys.path.append('..')
-# from myLib import *
 import env_config
-# logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
+from myLib import *
+logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -60,25 +60,34 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
-@with_settings(warn_only=True)
+@roles('controller','compute','network')
 def install_packages():
-    
-    # Install EPEL (Extra Packages for Entreprise Linux)
-    run('yum -y install yum-plugin-priorities')
-    run('yum -y install epel-release')
+	# Install EPEL (Extra Packages for Entreprise Linux
+	print('installing yum-plugin-priorities and epel-release')
+	sudo('yum -y install yum-plugin-priorities')
+	sudo('yum -y install epel-release')
+	for item in ['yum-plugin-priorities','epel-release']:
+		var1=run('rpm -qa |grep %s ' %item)
+		printMessage("good", item +" is version "+ var1)
+		logging.info(item +" is version "+ var1)
 
-    # Install RDO repository for Juno
-    run('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+
+	# Install RDO repository for Juno
+	print('installing rdo-release-juno.')
+	sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+	printMessage("good", 'rdo-release-juno.rpm is installed')
+	logging.info( 'rdo-release-juno.rpm is installed')
 
     # Install GlusterFS
-    run('yum -y install glusterfs-fuse glusterfs')
+    #sudo_log('yum -y install glusterfs-fuse glusterfs')
 
     # Install Crudini
-    run("yum -y install crudini")
-
-    # Install wget
-    run("yum -y install wget")
-
+	print('installing crudini wget')
+	sudo("yum -y install crudini wget")
+	for item in ['crudini','wget']:
+		var1=run('rpm -qa |grep %s ' %item)
+		printMessage("good", item +" is version "+ var1)
+		logging.info(item +" is version "+ var1)
 
 
 @roles('controller')
@@ -171,13 +180,13 @@ def deploy():
 
 @roles('controller','compute','network')
 def tdd():
-	with settings(warn_only=True):
-		print('checking var/log/messages for chronyd output')
-		run('grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(chronyd)"')
-	logging.info( " TDD on " +env.host)
+	run('echo "Running TDD on hostname: $(hostname)" ')
+	logging.info( "Running TDD on " +env.host)
 	with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
 		var1=run('systemctl status chronyd.service |grep Active')
 		var2=run('date')
+	print(env.host +" Chrony is "+ var1)
+	print(env.host +" the date is "+ var2)
 	logging.info(env.host +" Chrony is "+ var1)
 	logging.info(env.host +" the date is "+ var2)
 
