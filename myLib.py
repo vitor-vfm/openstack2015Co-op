@@ -27,12 +27,36 @@ def grep(pattern,stream):
     """
     return [l for l in stream.splitlines() if pattern in l]
 
+def checkLog(time):
+    """
+    given a timestamp, outputs all error in the logs 
+    that happened after the timestamp
+    """
+
+    result = ""
+
+    for log in env_config.lslogs:
+        # Filter out all lines before the timestamp and grep for errors
+        error = run("sed '0,/{}/d' {} | egrep -i '(error|warning|critical)'".format(time,log),warn_only=True)
+
+        if error:
+            result += red("Found error on log " + log + "\n")
+            result += error
+            result += "\n"
+
+    return result
+        
+
+
+
 def runCheck(msg,command):
     """
     Runs a fabric command and reports
     results, logging them in necessary
     """
+    time = run('date +"%b %d %R"')
     out = run(command,warn_only=True)
+
     if out.return_code == 0:
         result = 'good'
         logging.debug('Success on: ' + msg)
@@ -41,6 +65,8 @@ def runCheck(msg,command):
         errormsg = 'Failure on: ' + msg
         logging.error(errormsg)
         logging.error(out)
+        print checkLog(time)
+
     printMessage(result,msg)
     return out
 
