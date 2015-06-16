@@ -29,8 +29,8 @@ def grep(pattern,stream):
 
 def checkLog(time):
     """
-    given a timestamp, outputs all error in the logs 
-    that happened after the timestamp
+    Given a timestamp, outputs everything in the logs 
+    that was added after the timestamp
     """
 
     result = ""

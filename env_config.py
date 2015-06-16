@@ -7,7 +7,7 @@ from fabric.api import *
 
 ######################### Global variables ######################
 
-lslogs = ['/var/log/nova/nova-manage.log', '/var/log/nova/nova-api.log', '/var/log/heat/heat-manage.log', '/var/log/glance/api.log', '/var/log/nova/nova-novncproxy.log', '/var/log/nova/nova-consoleauth.log', '/var/log/nova/nova-api.log', '/var/log/keystone/keystone.log', '/var/log/heat/heat-api-cfn.log', '/var/log/heat/heat-api.log', '/var/log/neutron/server.log', '/var/log/nova/nova-conductor.log', '/var/log/heat/heat-manage.log', '/var/log/nova/nova-scheduler.log', '/var/log/rabbitmq/rabbit@localhost.log', '/tmp/test.log', '/var/log/heat/heat-engine.log', '/var/log/mariadb/server.log', '/var/log/rabbitmq/rabbit@localhost-sasl.log', '/var/log/nova/nova-cert.log', '/var/log/glance/api.log', '/var/log/rabbitmq/rabbit@localhost.log', '/var/log/keystone/keystone-tokenflush.log', '/var/log/glance/registry.log','/var/log/glusterfs/etc-glusterfs-glusterd.vol.log']
+lslogs = ['/var/log/nova/nova-manage.log', '/var/log/nova/nova-api.log', '/var/log/heat/heat-manage.log', '/var/log/glance/api.log', '/var/log/nova/nova-novncproxy.log', '/var/log/nova/nova-consoleauth.log', '/var/log/nova/nova-api.log', '/var/log/keystone/keystone.log', '/var/log/heat/heat-api-cfn.log', '/var/log/heat/heat-api.log', '/var/log/neutron/server.log', '/var/log/nova/nova-conductor.log', '/var/log/heat/heat-manage.log', '/var/log/nova/nova-scheduler.log', '/var/log/rabbitmq/rabbit@localhost.log', '/tmp/test.log', '/var/log/heat/heat-engine.log', '/var/log/mariadb/server.log', '/var/log/rabbitmq/rabbit@localhost-sasl.log', '/var/log/nova/nova-cert.log', '/var/log/rabbitmq/rabbit@localhost.log', '/var/log/keystone/keystone-tokenflush.log', '/var/log/glance/registry.log','/var/log/glusterfs/etc-glusterfs-glusterd.vol.log']
 
 ##############################################################################
 
@@ -235,6 +235,7 @@ else:
     ##############################################################################
 
     glanceGlusterBrick = '/mnt/gluster/glance/images'
+    novaGlusterBrick = '/mnt/gluster/instance'
 
 
 
