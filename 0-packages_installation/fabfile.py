@@ -9,7 +9,6 @@ import string
 
 import sys, os
 sys.path.append('..')
-<<<<<<< HEAD
 import env_config
 
 from myLib import *
@@ -63,7 +62,6 @@ def installConfigureChrony():
 # General function to install packages that should be in all or several nodes
 @roles('controller','compute','network')
 def install_packages():
-<<<<<<< HEAD
 	# Install EPEL (Extra Packages for Entreprise Linux
 	print('installing yum-plugin-priorities and epel-release')
 	sudo('yum -y install yum-plugin-priorities')
