@@ -159,8 +159,6 @@ def setup_GlusterFS():
 
 def install_packages():
     # Install packages
-    msg = "Remove OpenStack Glance packages"
-    runCheck(msg, "yum remove -y openstack-glance python-glanceclient",quiet=True)
     msg = "Install OpenStack Glance packages"
     runCheck(msg, "yum install -y openstack-glance python-glanceclient",quiet=True)
    

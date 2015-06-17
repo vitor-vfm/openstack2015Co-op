@@ -130,9 +130,6 @@ def createUsersRolesAndTenants(admin_token):
 
 @roles('controller')
 def installPackages():
-    msg = 'Remove old packages'
-    runCheck(msg, 'yum -y remove openstack-keystone python-keystoneclient',quiet=True)
-
     msg = 'Install packages'
     runCheck(msg, 'yum -y install openstack-keystone python-keystoneclient',quiet=True)
 
