@@ -9,9 +9,10 @@ import string
 
 import sys, os
 sys.path.append('..')
-# from myLib import *
 import env_config
-# logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
+
+from myLib import *
+logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
 
 ############################ Config ########################################
 
@@ -20,6 +21,10 @@ env.roledefs = env_config.roledefs
 mode = 'normal'
 if output['debug']:
     mode = 'debug'
+
+# Logging config
+
+log_file = 'basic-network.log'
 
 ########################## Deployment ########################################
 @roles('controller','compute','network')
@@ -32,7 +37,7 @@ def renameHost():
 
 @roles('controller','compute','network')
 def installConfigureChrony():
-	msg='installing chrony'
+	msg='installing chrony on %s'% env.host
 	sudo('yum -y install chrony')
 	var1=run('rpm -qa |grep chrony ')
 	printMessage("good", msg)
@@ -60,36 +65,44 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
-@with_settings(warn_only=True)
+@roles('controller','compute','network')
 def install_packages():
-    
-    # Install EPEL (Extra Packages for Entreprise Linux
-    run('yum -y install yum-plugin-priorities')
-    run('yum -y install epel-release')
+	# Install EPEL (Extra Packages for Entreprise Linux
+	print('installing yum-plugin-priorities and epel-release')
+	sudo('yum -y install yum-plugin-priorities')
+	sudo('yum -y install epel-release')
+	for item in ['yum-plugin-priorities','epel-release']:
+		var1=run('rpm -qa |grep %s ' %item)
+		printMessage("good", item +" is version "+ var1)
+		logging.info(item +" is version "+ var1)
 
-    # Install RDO repository for Juno
-    run('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+
+	# Install RDO repository for Juno
+	print('installing yum-plugin-priorities and epel-release')
+	with settings(warn_only=True):
+		sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+	printMessage("good", 'rdo-release-juno.rpm is installed')
+	logging.info( 'rdo-release-juno.rpm is installed')
 
     # Install GlusterFS
-    run('yum -y install glusterfs-fuse glusterfs')
+    #sudo_log('yum -y install glusterfs-fuse glusterfs')
 
     # Install Crudini
-    run("yum -y install crudini")
+	print('installing crudini wget')
+	sudo("yum -y install crudini wget")
+	for item in ['crudini','wget']:
+		var1=run('rpm -qa |grep %s ' %item)
+		printMessage("good", item +" is version "+ var1)
+		logging.info(item +" is version "+ var1)
 
-    # Install wget
-    run("yum -y install wget")
 
-
-
-@roles('controller')
 def installMariaDB():
-    """
-    Install MariaDB and set its conf files
-    """
+    # Install MariaDB
+    # Only on controller node(s)
     
     if env.host_string in env.roledefs['controller']:
 	    # get packages
-        run('yum -y install mariadb mariadb-server MySQL-python')
+        sudo_log('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
         # NB: crudini was not used because of unexpected parsing 1) without equal sign 2) ! include dir  
@@ -100,7 +113,7 @@ def installMariaDB():
             confFile = 'my.cnf'
 
             # make a backup
-            run("cp {} {}.back12".format(confFile,confFile))
+            sudo_log("cp {} {}.back12".format(confFile,confFile))
             if mode == 'debug':
                 # change only backup file
                 confFile += '.back12'
@@ -115,7 +128,7 @@ def installMariaDB():
                         pattern_to_find = line[:line.index('=')]
                     else:
                         pattern_to_find = line
-                    run('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
+                    sudo_log('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
                     # append new line with the new value under the header
                     sudo("sed -i '/{}/ a\{}' {}".format(section_header,line,confFile))
 
@@ -132,22 +145,21 @@ def installMariaDB():
                 new_line = "bind-address = " + bind_address
                 sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
             else:
-                run("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
+                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
 
             if mode == 'debug':
                 print "Here is the final my.cnf file:"
-                print blue(run("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
+                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
 
         # enable MariaDB
-        run('systemctl enable mariadb.service')
-        run('systemctl start mariadb.service')
+        sudo_log('systemctl enable mariadb.service')
+        sudo_log('systemctl start mariadb.service')
         
-
     # Upgrade to implement changes
-    run('yum -y upgrade')
+    sudo_log('yum -y upgrade')
 
 def ask_for_reboot():
-    run('wall Everybody please reboot')
+    sudo_log('wall Everybody please reboot')
 
 
 #@roles('controller','compute','network','storage')
@@ -167,7 +179,9 @@ def test():
 #@roles('controller','compute','network','storage')
 @roles('controller','compute','network')
 def deploy():
-    execute(install_packages)
+	execute(renameHost)
+	execute(installConfigureChrony)
+	execute(install_packages)
 
 @roles('controller','compute','network')
 def tdd():

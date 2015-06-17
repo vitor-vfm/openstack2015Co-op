@@ -109,36 +109,63 @@ def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
 def populate_database():
     msg = "Populate database"
     runCheck(msg, "su -s /bin/sh -c 'glance-manage db_sync' glance")
-
+    
 def start_glance_services():
     msg = "Enable glance services"
     runCheck(msg, "systemctl enable openstack-glance-api.service openstack-glance-registry.service")
     msg = "Start glance services"
-    runCheck(msg, "systemctl start openstack-glance-api.service openstack-glance-registry.service")
+    runCheck(msg, "systemctl restart openstack-glance-api.service openstack-glance-registry.service")
 
 
 @roles('controller')
-def setup_GlusterFS_controller():
+def setup_GlusterFS_Glance():
+    """
+    Configure the file path for the Glance Gluster volume
+    """
+
     # change the path that Glance uses for its file system
     msg = 'Configure Glance to use Gluster'
     glusterBrick = env_config.glanceGlusterBrick
-    runCheck(msg, 'crudini --set /etc/glance/glance-api.conf '' \
-            filesystem_store_datadir {}'.format(glusterBrick))
+    runCheck(msg, "crudini --set /etc/glance/glance-api.conf glance_store " + \
+            "filesystem_store_datadir {}".format(glusterBrick))
 
-    runCheck(msg, 'mkdir -p {}/images'.format(glusterBrick))
+    msg = 'Create local directory for the brick'
+    runCheck(msg, 'mkdir -p {}'.format(glusterBrick))
+
+    msg = 'Set ownership of the brick'
     runCheck(msg, 'chown -R glance:glance {}'.format(glusterBrick))
 
-def setup_GlusterFS():
-    # configure Glance to use a gluster FS volume
-    execute(setup_GlusterFS_controller)
+@roles('controller')
+def setup_GlusterFS_Nova():
+    """
+    Configure the file path for the Nova Gluster volume
+    """
 
+    # change the path that Glance uses for its file system
+    msg = 'Configure Nova to use Gluster'
+    glusterBrick = env_config.novaGlusterBrick
+
+    msg = 'Create local directory for the brick'
+    runCheck(msg, 'mkdir -p {}'.format(glusterBrick))
+
+    msg = 'Set ownership of the brick'
+    runCheck(msg, 'chown -R nova:nova {}'.format(glusterBrick))
+
+def setup_GlusterFS():
+    execute(setup_GlusterFS_Glance)
+    execute(setup_GlusterFS_Nova)
+    execute(start_glance_services,roles=['controller'])
+
+
+def install_packages():
+    # Install packages
+    msg = "Install OpenStack Glance packages"
+    runCheck(msg, "yum install -y openstack-glance python-glanceclient",quiet=True)
    
 @roles('controller')
 def setup_glance():
-
-    # Install packages
-    msg = "Install OpenStack Glance packages"
-    runCheck(msg, "yum install -y openstack-glance python-glanceclient")
+    
+    install_packages()
 
     setup_glance_database(passwd['GLANCE_DBPASS'])
     
@@ -150,37 +177,45 @@ def setup_glance():
 
     start_glance_services()
         
-################### Deployment ########################################
+################################## Deployment ########################################
 
 def deploy():
     execute(setup_glance)
-    setup_GlusterFS()
+    execute(setup_GlusterFS)
 
 ######################################## TDD #########################################
 
 
 
 @roles('controller')
-def glance_tdd():
+def imageCreationTDD():
 
+    msg = 'Retrieve instance image from the cirros website'
     run_v("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
-    run("wget -P /tmp/images " + url)
+    runCheck(msg, "wget -P /tmp/images " + url)
+
     with prefix(env_config.admin_openrc):
-        run("glance image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
-        output = run("glance image-list")
+    # with prefix(env_config.demo_openrc):
+
+        msg = 'Create glance image'
+        runCheck(msg, "glance -d image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
+
+        msg = 'List images'
+        output = runCheck(msg, "glance image-list")
 
     if 'cirros-0.3.3-x86_64' in output:
         print(align_y("Successfully installed cirros image"))
     else:
         print(align_n("Couldn't install cirros image"))
         
+    msg = 'Clear local files'
     run("rm -r /tmp/images")
 
     
-    database_check('glance')
-    keystone_check('glance')
 
 def tdd():
     with settings(warn_only=True):
-        execute(glance_tdd)
+        execute(imageCreationTDD)
+        execute(database_check,'glance',roles=['controller'])
+        execute(keystone_check,'glance',roles=['controller'])

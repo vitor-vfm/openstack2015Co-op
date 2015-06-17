@@ -7,6 +7,8 @@ configure glusterFS on node cfgNodeGlusterFS
 . . .  to be completed
 
 Deploy in the following order:
+0. packages Installation
+
 1. network
 2. messaging
 3. keystone

@@ -7,7 +7,7 @@ from fabric.api import *
 
 ######################### Global variables ######################
 
-lslogs = ['/var/log/nova/nova-manage.log', '/var/log/nova/nova-api.log', '/var/log/heat/heat-manage.log', '/var/log/glance/api.log', '/var/log/nova/nova-novncproxy.log', '/var/log/nova/nova-consoleauth.log', '/var/log/nova/nova-api.log', '/var/log/keystone/keystone.log', '/var/log/heat/heat-api-cfn.log', '/var/log/heat/heat-api.log', '/var/log/neutron/server.log', '/var/log/nova/nova-conductor.log', '/var/log/heat/heat-manage.log', '/var/log/nova/nova-scheduler.log', '/var/log/rabbitmq/rabbit@localhost.log', '/tmp/test.log', '/var/log/heat/heat-engine.log', '/var/log/mariadb/server.log', '/var/log/rabbitmq/rabbit@localhost-sasl.log', '/var/log/nova/nova-cert.log', '/var/log/glance/api.log', '/var/log/rabbitmq/rabbit@localhost.log', '/var/log/keystone/keystone-tokenflush.log', '/var/log/glance/registry.log','/var/log/glusterfs/etc-glusterfs-glusterd.vol.log']
+lslogs = ['/var/log/nova/nova-manage.log', '/var/log/nova/nova-api.log', '/var/log/heat/heat-manage.log', '/var/log/glance/api.log', '/var/log/nova/nova-novncproxy.log', '/var/log/nova/nova-consoleauth.log', '/var/log/nova/nova-api.log', '/var/log/keystone/keystone.log', '/var/log/heat/heat-api-cfn.log', '/var/log/heat/heat-api.log', '/var/log/neutron/server.log', '/var/log/nova/nova-conductor.log', '/var/log/heat/heat-manage.log', '/var/log/nova/nova-scheduler.log', '/var/log/rabbitmq/rabbit@localhost.log', '/tmp/test.log', '/var/log/heat/heat-engine.log', '/var/log/mariadb/server.log', '/var/log/rabbitmq/rabbit@localhost-sasl.log', '/var/log/nova/nova-cert.log', '/var/log/rabbitmq/rabbit@localhost.log', '/var/log/keystone/keystone-tokenflush.log', '/var/log/glance/registry.log','/var/log/glusterfs/etc-glusterfs-glusterd.vol.log']
 
 ##############################################################################
 
@@ -31,6 +31,56 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                  'controller' : ['root@controller']}
 	logfilename='/opt/coop2015/coop2015/fabric.log'
 
+	my_cnf="""
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+# Settings user and group are ignored when systemd is used.
+# If you need to run mysqld under a different user or group,
+# customize your systemd unit file for mariadb according to the
+# instructions in http://fedoraproject.org/wiki/Systemd
+bind-address = 192.168.1.11
+default-storage-engine = innodb
+innodb_file_per_table
+collation-server = utf8_general_ci
+init-connect = 'SET NAMES utf8'
+character-set-server = utf8
+
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+#
+# include all files from the config directory
+#
+!includedir /etc/my.cnf.d
+"""
+    # passwords
+	passwd = { 'METADATA_SECRET' : '34m3t$3c43',
+               'ROOT_SECRET' : '34root43',
+               'RABBIT_PASS' : '34RabbGuest43',
+               'NOVA_DBPASS' : '34nova_db43',
+               'NEUTRON_DBPASS' : '34neu43',
+               'HEAT_DBPASS' : '34heat_db43',
+               'GLANCE_DBPASS' : '34glance_db43',
+               'SAHARA_DBPASS' : '34sahara_db43',
+               'CINDER_DBPASS' : '34cinder_db43',
+               'ADMIN_PASS' : '34adm43',
+               'DEMO_PASS' : '34demo43',
+               'KEYSTONE_DBPASS' : '34keydb43',
+               'NOVA_PASS' : '34nova_ks43',
+               'NEUTRON_PASS' : '34neu43',
+               'HEAT_PASS' : '34heat_ks43',
+               'GLANCE_PASS' : '34glance_ks43',
+               'SAHARA_PASS' : '34sahara_ks43',
+               'CINDER_PASS' : '34cinder_ks43',
+               'SWIFT_PASS' : '34$w1f43',
+               'TROVE_PASS' : '34Tr0v343',
+               'TROVE_DBPASS' : '34Tr0v3db4s343'}
+
+
 ##############################################################################
 
 ########  ######## ##     ## 
@@ -50,14 +100,32 @@ else:
     logfilename = '/tmp/test.log'
 
 
-    global_config_location =  '../global_config_files/'
+    my_cnf="""
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+# Settings user and group are ignored when systemd is used.
+# If you need to run mysqld under a different user or group,
+# customize your systemd unit file for mariadb according to the
+# instructions in http://fedoraproject.org/wiki/Systemd
+bind-address = 192.168.1.11
+default-storage-engine = innodb
+innodb_file_per_table
+collation-server = utf8_general_ci
+init-connect = 'SET NAMES utf8'
+character-set-server = utf8
 
-    # mariadb
-    mariaDBmysqldSpecs = ['default-storage-engine=innodb',
-                          'innodb_file_per_table',
-                          'collation-server=utf8_general_ci',
-                          'init-connect=SET NAMES utf8',
-                          'character-set-server=utf8']
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+#
+# include all files from the config directory
+#
+!includedir /etc/my.cnf.d
+"""
     # for the env dictionary
     roledefs = { 'compute' : ['root@computeVM'],
                  'network' : ['root@networkVM'],
@@ -72,6 +140,7 @@ else:
 
     # passwords
     passwd = { 'METADATA_SECRET' : '34m3t$3c43',
+               'ROOT_SECRET' : '34root43',
                'RABBIT_PASS' : '34RabbGuest43',
                'NOVA_DBPASS' : '34nova_db43',
                'NEUTRON_DBPASS' : '34neu43',
@@ -123,7 +192,6 @@ else:
     networkExternal = { 'DEVICE' : 'eth3',
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
-                        # 'BOOTPROTO' : '"dhcp"'}
                         'BOOTPROTO' : '"none"',
                         'IPADDR' : '192.168.3.21'}
 
@@ -140,19 +208,30 @@ else:
                             'NETMASK' : '255.255.255.0'}
 
     hosts = { controllerManagement['IPADDR'] : 'controller',
-              networkManagement['IPADDR'] : 'network',
-              storageManagement['IPADDR'] : 'storage'}
+              networkManagement['IPADDR'] : 'network'}
 
-    # add the compute nodes to hosts config
+    # add the compute nodes to hosts config,
+    # as compute1, compute2, etc.
     baseIP = computeManagement['IPADDR']
     for i, computeNode in enumerate(roledefs['compute']):
-        # increment base ip
-        baseIPListOfInts = [int(octet) for octet in baseIP.split('.')]
-        baseIPListOfInts[-1] += i
-        IP = "".join([str(octet)+'.' for octet in baseIPListOfInts])
-        IP = IP[:-1] # remove last dot
+        octets = baseIP.split('.')
+        # increment last octet
+        octets[-1] = str( int(octets[-1]) + i )
+        IP = ".".join(octets)
 
         hosts[IP] = 'compute' + str(i+1)
+
+    # add the storage nodes to hosts config,
+    # as storage1, storage2, etc.
+    baseIP = storageManagement['IPADDR']
+    for i, storageNode in enumerate(roledefs['storage']):
+        octets = baseIP.split('.')
+        # increment last octet
+        octets[-1] = str( int(octets[-1]) + i )
+        IP = ".".join(octets)
+
+        hosts[IP] = 'storage' + str(i+1)
+
 
     ##############################################################################
 
@@ -235,6 +314,7 @@ else:
     ##############################################################################
 
     glanceGlusterBrick = '/mnt/gluster/glance/images'
+    novaGlusterBrick = '/mnt/gluster/instance'
 
 
 
