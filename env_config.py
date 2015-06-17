@@ -192,7 +192,6 @@ pid-file=/var/run/mariadb/mariadb.pid
     networkExternal = { 'DEVICE' : 'eth3',
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
-                        # 'BOOTPROTO' : '"dhcp"'}
                         'BOOTPROTO' : '"none"',
                         'IPADDR' : '192.168.3.21'}
 
@@ -209,19 +208,30 @@ pid-file=/var/run/mariadb/mariadb.pid
                             'NETMASK' : '255.255.255.0'}
 
     hosts = { controllerManagement['IPADDR'] : 'controller',
-              networkManagement['IPADDR'] : 'network',
-              storageManagement['IPADDR'] : 'storage'}
+              networkManagement['IPADDR'] : 'network'}
 
-    # add the compute nodes to hosts config
+    # add the compute nodes to hosts config,
+    # as compute1, compute2, etc.
     baseIP = computeManagement['IPADDR']
     for i, computeNode in enumerate(roledefs['compute']):
-        # increment base ip
-        baseIPListOfInts = [int(octet) for octet in baseIP.split('.')]
-        baseIPListOfInts[-1] += i
-        IP = "".join([str(octet)+'.' for octet in baseIPListOfInts])
-        IP = IP[:-1] # remove last dot
+        octets = baseIP.split('.')
+        # increment last octet
+        octets[-1] = str( int(octets[-1]) + i )
+        IP = ".".join(octets)
 
         hosts[IP] = 'compute' + str(i+1)
+
+    # add the storage nodes to hosts config,
+    # as storage1, storage2, etc.
+    baseIP = storageManagement['IPADDR']
+    for i, storageNode in enumerate(roledefs['storage']):
+        octets = baseIP.split('.')
+        # increment last octet
+        octets[-1] = str( int(octets[-1]) + i )
+        IP = ".".join(octets)
+
+        hosts[IP] = 'storage' + str(i+1)
+
 
     ##############################################################################
 
