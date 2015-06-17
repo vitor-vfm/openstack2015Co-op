@@ -8,9 +8,9 @@ import logging
 import string
 
 import sys
-sys.path.append('../global_config_files')
+sys.path.append('../')#global_config_files')
 import env_config
-
+from myLib import runCheck
 
 
 # logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
@@ -19,44 +19,36 @@ import env_config
 
 env.roledefs = env_config.roledefs
 
-admin_openrc = "../global_config_files/admin-openrc.sh"
+#admin_openrc = "../global_config_files/admin-openrc.sh"
+admin_openrc = env_config.admin_openrc
+
+demo_openrc = env_config.demo_openrc
 
 etc_cinder_config_file = "/etc/cinder/cinder.conf"
 
 passwd = env_config.passwd
 
 
-# Logging config
-
-log_file = 'cinder_deployment.log'
-env_config.setupLoggingInFabfile(log_file)
-log_dict = {'host_string':'','role':''}
-
-# Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run)
-# Do a fabric sudo on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo)
-    
 ################### General functions ########################################
 
 def set_up_NIC_using_nmcli(ifname,ip):
     # Set up a new interface by using NetworkManager's 
     # command line interface
 
-    # ifname = sudo_log("crudini --get {} '' DEVICE".format(conf_file))
-    # ip = sudo_log("crudini --get {} '' IPADDR".format(conf_file))
+    # ifname = run("crudini --get {} '' DEVICE".format(conf_file))
+    # ip = run("crudini --get {} '' IPADDR".format(conf_file))
 
     command = "nmcli connection add type ethernet"
     command += " con-name " + ifname # connection name is the same as interface name
     command += " ifname " + ifname
     command += " ip4 " + ip
 
-    sudo_log(command)
+    run(command)
 
 
 def set_parameter(config_file, section, parameter, value):
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
-    sudo_log(crudini_command)
+    run(crudini_command)
 
 
 def setup_cinder_database_on_controller(CINDER_DBPASS):
@@ -66,34 +58,36 @@ def setup_cinder_database_on_controller(CINDER_DBPASS):
 
     
     print("mysql commands are: " + mysql_commands)
-    sudo_log('echo "{}" | mysql -u root'.format(mysql_commands))
+    runCheck('Create the database', 'echo "{}" | mysql -u root'.format(mysql_commands))
     
 
 
-#def setup_cinder_keystone_on_controller(CINDER_PASS):
-#    source_command = "source admin-openrc.sh"
-#    with prefix(source_command):
-#        sudo_log("keystone user-create --name cinder --pass {}".format(CINDER_PASS))
-#        sudo_log("keystone user-role-add --user cinder --tenant service --role admin")
-#        sudo_log("keystone service-create --name cinder --type volume --description 'OpenStack Block Storage'")
-#        sudo_log("keystone service-create --name cinderv2 --type volumev2 --description 'OpenStack Block Storage'")
-#        sudo_log("keystone endpoint-create \
-#        --service-id $(keystone service-list | awk '/ volume / {print $2}') \
-#        --publicurl http://controller:8776/v1/%\(tenant_id\)s \
-#        --internalurl http://controller:8776/v1/%\(tenant_id\)s \
-#        --adminurl http://controller:8776/v1/%\(tenant_id\)s \
-#        --region regionOne")
-#        sudo_log("keystone endpoint-create \
-#        --service-id $(keystone service-list | awk '/ volumev2 / {print $2}') \
-#        --publicurl http://controller:8776/v2/%\(tenant_id\)s \
-#        --internalurl http://controller:8776/v2/%\(tenant_id\)s \
-#        --adminurl http://controller:8776/v2/%\(tenant_id\)s \
-#        --region regionOne")
+def setup_cinder_keystone_on_controller(CINDER_PASS):
+    #source_command = "source admin-openrc.sh"
+    with prefix(admin_openrc):
+        runCheck('Create a cinder user', "keystone user-create --name cinder --pass {}".format(CINDER_PASS))
+        runCheck('Add the admin role to the cinder user', "keystone user-role-add --user cinder --tenant service --role admin")
+        runCheck('Create the cinder service entities', "keystone service-create --name cinder --type volume --description 'OpenStack Block Storage'")
+        runCheck('Create the cinder service entities', "keystone service-create --name cinderv2 --type volumev2 --description 'OpenStack Block Storage'")
+        runCheck('Create the Block Storage service API endpoints',
+        "keystone endpoint-create \
+        --service-id $(keystone service-list | awk '/ volume / {print $2}') \
+        --publicurl http://controller:8776/v1/%\(tenant_id\)s \
+        --internalurl http://controller:8776/v1/%\(tenant_id\)s \
+        --adminurl http://controller:8776/v1/%\(tenant_id\)s \
+        --region regionOne")
+        runCheck('Create the Block Storage service API endpoints',
+        "keystone endpoint-create \
+        --service-id $(keystone service-list | awk '/ volumev2 / {print $2}') \
+        --publicurl http://controller:8776/v2/%\(tenant_id\)s \
+        --internalurl http://controller:8776/v2/%\(tenant_id\)s \
+        --adminurl http://controller:8776/v2/%\(tenant_id\)s \
+        --region regionOne")
 
 def setup_cinder_config_files_on_controller(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP):
     installation_command = "yum install -y openstack-cinder python-cinderclient python-oslo-db"
 
-    sudo_log(installation_command)
+    runCheck('Install the packages', installation_command)
     
     set_parameter(etc_cinder_config_file, 'database', 'connection', 'mysql://cinder:{}@controller/cinder'.format(CINDER_DBPASS))
 
@@ -122,7 +116,7 @@ def setup_cinder_config_files_on_controller(CINDER_PASS, CINDER_DBPASS, RABBIT_P
 
 
 def populate_database_on_controller():
-    sudo_log("su -s /bin/sh -c 'cinder-manage db sync' cinder")
+    runCheck('Populate the Block Storage database', "su -s /bin/sh -c 'cinder-manage db sync' cinder")
 
 def start_cinder_services_on_controller():
     enable_all = "systemctl enable openstack-cinder-api.service openstack-cinder-scheduler.service"
@@ -131,18 +125,17 @@ def start_cinder_services_on_controller():
     start_all = "systemctl start openstack-cinder-api.service openstack-cinder-scheduler.service"
 
     
-    sudo_log(enable_all)
-    sudo_log(start_all)
+    runCheck('Enable Block Storage services to start when system boots', enable_all)
+    runCheck('Start the Block Storage services', start_all)
 
 
 @roles('controller')   
 def setup_cinder_on_controller():
     
-    put(admin_openrc)
     
     # setup cinder database
     setup_cinder_database_on_controller(passwd['CINDER_DBPASS'])
-    #setup_cinder_keystone_on_controller(passwd['CINDER_PASS'])
+    setup_cinder_keystone_on_controller(passwd['CINDER_PASS'])
 
 
     CONTROLLER_MANAGEMENT_IP =  env_config.controllerManagement['IPADDR']
@@ -158,7 +151,7 @@ def setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS
     
     install_command = "yum install -y openstack-cinder targetcli python-oslo-db MySQL-python"
 
-    sudo_log(install_command)
+    runCheck('Install packages on storage node', install_command)
 
     set_parameter(etc_cinder_config_file, 'database', 'connection', 'mysql://cinder:{}@controller/cinder'.format(CINDER_DBPASS))    
 
@@ -190,13 +183,12 @@ def start_services_on_storage():
     enable_services = "systemctl enable openstack-cinder-volume.service target.service"
     start_services = "systemctl start openstack-cinder-volume.service target.service"
     restart_services = "systemctl restart openstack-cinder-volume.service target.service"
-    sudo_log(enable_services)
-    sudo_log(start_services)
-    sudo_log(restart_services)
+    runCheck('Enable services on storage', enable_services)
+    runCheck('Start services on storage', start_services)
+    runCheck('Restart services on storage', restart_services)
 
 @roles('storage')
 def setup_cinder_on_storage():
-    put(admin_openrc)
 
 
     # create management interface
@@ -209,24 +201,24 @@ def setup_cinder_on_storage():
     #     sudo('echo -e "{}" >ifcfg-{}'.format(file_content, DEVICE))
 
     # sudo("ifdown {}; ifup {}".format(DEVICE,DEVICE))
-    set_up_NIC_using_nmcli('eth1','192.168.0.41')
+    #set_up_NIC_using_nmcli('eth1','192.168.0.41')
 
-    sudo_log("systemctl restart NetworkManager")
+    #run("systemctl restart NetworkManager")
 
     # set hostname
-    sudo("hostnamectl set-hostname block1")
+    #sudo("hostnamectl set-hostname block1")
 
 
     # install package and start
-    sudo("yum install -y lvm2")
-    sudo("systemctl enable lvm2-lvmetad.service")
-    sudo("systemctl start lvm2-lvmetad.service")
+    runCheck('Install lvm', "yum install -y lvm2")
+    runCheck('Enable lvm', "systemctl enable lvm2-lvmetad.service")
+    runCheck('Start lvm', "systemctl start lvm2-lvmetad.service")
 
-    # creat volume
+    # create volume
     
     device_name = "vdb"
 
-    if device_name in sudo_log("ls /dev/"):
+    if device_name in run("ls /dev/"):
         sudo("pvcreate /dev/"+device_name)
         sudo("vgcreate cinder-volumes /dev/"+device_name)
 
@@ -252,9 +244,17 @@ def deploy():
 
 ######################################## TDD #########################################
 
-
+@roles('controller')
 def verify():
-    pass
+    with prefix(admin_openrc):
+        runCheck('List service components', 'cinder service-list')
+    runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
+    with prefix(demo_openrc):    
+        runCheck('Create a 1 GB volume', 'cinder create --display-name demo-volume1 1')
+        runCheck('Verify creation and availability of volume', 'cinder list')
+        runCheck('Delete test volume', 'cinder delete demo-volume1')
+        #runCheck('Check if cinder is running', 'cinder service-list')
+
 def tdd():
     with settings(warn_only=True):
         # to be done on the controller node
