@@ -111,6 +111,9 @@ def start_nova_services_on_controller():
     msg = "Start nova services on controller"
     runCheck(msg, "systemctl start " + nova_services)
 
+    msg = "Restart nova services on controller"
+    runCheck(msg, "systemctl restart " + nova_services)
+
 def hardware_accel_check():
     """
     Determine whether compute node supports hardware acceleration for VMs
@@ -161,11 +164,15 @@ def start_services_on_compute():
     runCheck(msg, "systemctl enable libvirtd.service")
     msg = "Start libvirt daemon"
     runCheck(msg, "systemctl start libvirtd.service")
+    msg = "Restart libvirt daemon"
+    runCheck(msg, "systemctl restart libvirtd.service")
 
     msg = "Enable Nova service"
     runCheck(msg, "systemctl enable openstack-nova-compute.service")
     msg = "Start Nova service"
     runCheck(msg, "systemctl start openstack-nova-compute.service")
+    msg = "Restart Nova service"
+    runCheck(msg, "systemctl restart openstack-nova-compute.service")
 
 @roles('compute')
 def setup_nova_on_compute():
