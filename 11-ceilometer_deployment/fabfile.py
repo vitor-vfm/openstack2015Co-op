@@ -181,7 +181,13 @@ def configure_image_service():
    
 @roles('controller')
 def setup_ceilometer_controller():
-    pass
+    setup_mongo(env_config.controllerManagement['IPADDR'])
+    create_mongo_ceilometer_db(env_config.passwd['CEILOMETER_PASS'])
+    
+    metering_secret = setup_ceilometer_keystone(passwd['CEILOMETER_PASS'])
+    setup_ceilometer_config_files(passwd['CEILOMETER_PASS'], passwd['CEILOMETER_DBPASS'])
+    start_ceilometer_services()
+
 def install_and_configure_ceilometer(metering_secret, RABBIT_PASS, CEILOMETER_PASS):
 
     set_parameter(ceilometer_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
