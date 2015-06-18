@@ -165,6 +165,32 @@ def start_ceilometer_services():
 @roles('controller')
 def setup_ceilometer_controller():
     pass
+def install_and_configure_ceilometer(metering_secret, RABBIT_PASS, CEILOMETER_PASS):
+
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'rabbit_host', 'controller')
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
+
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'identity_uri', 'http://controller:35357') 
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'admin_user', 'ceilometer')   
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'admin_password', CEILOMETER_PASS)   
+
+
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_auth_url', 'http://controller:5000/v2.0')
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_username', 'ceilometer')
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_tenant_name', 'service')
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_password', CEILOMETER_PASS)   
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_endpoint_type', 'internalURL')
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_region_name', 'regionOne')
+
+
+    set_parameter(ceilometer_config_file, 'publisher', 'metering_secret', metering_secret)
+
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'verbose', 'True')
+
+
 
 ################################## Deployment ########################################
 
