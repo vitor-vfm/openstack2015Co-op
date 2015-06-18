@@ -33,18 +33,16 @@ def generate_ip(ip_address,nodes_in_role,node):
 	# generate an IP address based on a base ip, a node, and a role list
 	# will be used for setting up interfaces and for testing
 
-	last_octet = int(ip_address.split('.')[3])
-	# first node will have last_octet + 0 as last octet; second node 
-	# will have last_octet + 1, etc   
-	last_octet += nodes_in_role.index(node)
-	# turn it into a list of octets, with the old last octet removed
-	octets = ip_address.split('.')[0:3]
-	# add the dots to the octets
-	octets = [octet + '.' for octet in octets]
-	# append the last octet
-        octets.append(str(last_octet))
+        # split the IP into its four octets
+        octets = ip_address.split('.')
+        
+	# increment last octet according to the node's index in the 
+        # nodes_in_role list; 
+	index = nodes_in_role.index(node)
+        octets[-1] = str( int(octets[-1]) + index )
+
 	# turn it back into a single string
-	ip_address = "".join(octets)
+	ip_address = ".".join(octets)
 	return ip_address
 
 
