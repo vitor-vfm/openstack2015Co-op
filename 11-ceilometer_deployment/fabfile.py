@@ -62,6 +62,48 @@ def setup_ceilometer_keystone(CEILOMETER_PASS):
                     "--region regionOne")
         else:
             print blue("Endpoint for service ceilometer already created. Do nothing")
+    
+def setup_ceilometer_config_files(CEILOMETER_PASS, CEILOMETER_DBPASS):
+
+    install_command = "yum install openstack-ceilometer-api openstack-ceilometer-collector " + \
+        "openstack-ceilometer-notification openstack-ceilometer-central openstack-ceilometer-alarm " + \
+        "python-ceilometerclient"
+    
+    run(install_command)
+    
+    metering_secret = run("openssl rand -hex 10")
+    
+    set_parameter(ceilometer_config_file, 'database', 'connection', 'mongodb://ceilometer:{}@controller:27017/ceilometer'.format(CEILOMETER_DBPASS))
+
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'rabbit_host', 'controller')
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
+
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'auth_strategy', 'keystone')
+
+
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'identity_uri', 'http://controller:35357') 
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'admin_user', 'ceilometer')   
+    set_parameter(ceilometer_config_file, 'keystone_authtoken', 'admin_password', CEILOMETER_PASS)   
+
+
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_auth_url', 'http://controller:5000/v2.0')
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_username', 'ceilometer')
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_tenant_name', 'service')
+    set_parameter(ceilometer_config_file, 'service_credentials', 'os_password', CEILOMETER_PASS)   
+
+
+    set_parameter(ceilometer_config_file, 'publisher', 'metering_secret', metering_secret)
+
+    set_parameter(ceilometer_config_file, 'DEFAULT', 'verbose', 'True')
+
+
+
+
+
+    return metering_secret
    
 @roles('controller')
 def setup_ceilometer_controller():
