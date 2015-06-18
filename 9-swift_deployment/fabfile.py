@@ -135,7 +135,7 @@ def localStorage():
     localConfFile = 'rsyncd.conf'
 
     # Previously created physical partitions
-    partitions = ['/dev/vdc','/dev/vdd']
+    partitions = ['/dev/sdd','/dev/sde']
 
     # Mount points for the partitions
     path = '/srv/node/'
@@ -286,7 +286,7 @@ def createInitialRings():
     """
 
     managementIP = env_config.storageManagement['IPADDR']
-    deviceName = env_config.storageManagement['DEVICE']
+    deviceName = "/dev/sdd"
     deviceWeight = '100'
 
     # create account ring
