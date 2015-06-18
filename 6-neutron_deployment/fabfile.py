@@ -161,16 +161,29 @@ def configure_nova_to_use_neutron():
     set_parameter(nova_conf,'neutron','admin_username','neutron')
     set_parameter(nova_conf,'neutron','admin_password',passwd['NEUTRON_PASS'])
 
+    # Restart nova
+    msg = "Restart Nova services"
+    runCheck(msg, 'systemctl restart openstack-nova-api.service openstack-nova-scheduler.service' + \
+              ' openstack-nova-conductor.service')
+
+
+@roles('controller')
+def installPackagesController():
+
+    msg = "Install Neutron packages on controller"
+    runCheck(msg, 'yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which')
+
+
+
 @roles('controller')
 def controller_deploy():
-    
+
     create_neutron_database()
 
     setup_keystone_controller()
 
-    msg = "Install the networking components of openstack"
-    runCheck(msg, 'yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which')
-
+    installPackagesController()
+    
     configure_networking_server_component()
 
     configure_ML2_plugin_general()
@@ -316,12 +329,15 @@ def configure_Open_vSwitch_service():
     else:
         print blue('br-ex already created. Do nothing')
 
-    
+@roles('network')
+def installPackagesNetwork():
 
+    msg = "Install Neutron packages on network"
+    runCheck(msg, "yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch",quiet=True)
 
 @roles('network')
 def network_deploy():
-    
+
     # edit sysctl.conf
     sysctl_conf = '/etc/sysctl.conf'
 
@@ -332,10 +348,8 @@ def network_deploy():
     msg = "Implement changes on sysctl"
     runCheck(msg, "sysctl -p")
 
-    # install networking components
-    msg = "Install Networking components"
-    runCheck(msg, "yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch")
-
+    installPackagesNetwork()
+    
     # configuration 
 
     configure_the_Networking_common_components()
@@ -395,6 +409,12 @@ def configure_ML2_plug_in_compute():
     set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
 @roles('compute')
+def installPackagesCompute():
+
+    msg = "Install Neutron packages on " + env.host
+    runCheck(msg, "yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch",quiet=True)
+
+@roles('compute')
 def compute_deploy():
     
     # edit sysctl.conf
@@ -406,8 +426,7 @@ def compute_deploy():
     msg = "Implement changes on sysctl on compute node " + env.host
     runCheck(msg, "sysctl -p")
 
-    msg = 'Install networking components'
-    runCheck(msg, "yum -y install openstack-neutron-ml2 openstack-neutron-openvswitch")
+    installPackagesCompute()
 
     # configuration
 

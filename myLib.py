@@ -384,6 +384,10 @@ def keystone_check(name, verbose=False):
             print align_y("Admin url correct")
         else:
             print align_n("Admin url incorrect")
+            print 'proper_admin_url' 
+            print proper_admin_url 
+            print 'admin_url_found'
+            print admin_url_found
 
         if (internal_url_found == proper_internal_url):
             print align_y("Internal url correct")

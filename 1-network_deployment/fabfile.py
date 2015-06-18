@@ -214,6 +214,16 @@ def deployInterface(interface,specs):
     role = getRole()
     set_up_network_interface(specs,role)
 
+def installChrony():
+    """
+    Install and Configure the Chrony NTP service
+    """
+
+    execute(configChrony,roles=['controller'])
+    execute(configChrony,roles=['network'])
+    execute(configChrony,roles=['compute'])
+    execute(configChrony,roles=['storage'])
+
 @roles('controller')
 def controller_network_deploy():
 
@@ -223,7 +233,6 @@ def controller_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host_string)
 
 @roles('network')
@@ -238,7 +247,6 @@ def network_node_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('compute')
@@ -250,7 +258,6 @@ def compute_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('storage')
@@ -260,7 +267,6 @@ def storage_network_deploy():
     
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 def deploy():
@@ -272,6 +278,7 @@ def deploy():
         execute(network_node_network_deploy)
         execute(compute_network_deploy)
         execute(storage_network_deploy)
+        # execute(installChrony)
 
 ######################################## TDD #########################################
 
