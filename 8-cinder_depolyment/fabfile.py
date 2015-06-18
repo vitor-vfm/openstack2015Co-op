@@ -209,22 +209,22 @@ def setup_cinder_on_storage():
     cinder_device_name = "sdc"
     cinder_partition_name = "sdc1"
 
-#    install_and_start_lvm()
+    install_and_start_lvm()
 
-#    setup_volume_using_cinder(cinder_partition_name)
+    setup_volume_using_cinder(cinder_partition_name)
 
     setup_lvm_config_file(cinder_device_name)
 
-#    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)     
+    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)     
 
-#    start_services_on_storage()
+    start_services_on_storage()
     
 
 
 ################### Deployment ########################################
 
 def deploy():
-#    execute(setup_cinder_on_controller)
+    execute(setup_cinder_on_controller)
     execute(setup_cinder_on_storage)
 
 ######################################## TDD #########################################
