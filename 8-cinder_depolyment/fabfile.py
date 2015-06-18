@@ -2,7 +2,7 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
-from fabric.colors import green, red
+from fabric.colors import green, red, blue
 from fabric.contrib.files import append
 import logging
 import string
@@ -10,10 +10,26 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck
+from myLib import runCheck, set_parameter
 
 
-# logging.basicConfig(filename='/tmp/juno2015.log',level=logging.DEBUG, format='%(asctime)s %(message)s')
+
+"""
+To use for other cases:
+
+- make sure node has management ip/nic setup according to env_config
+
+- change device_name to the partition name that cinder is using to hold
+and stuff
+
+- make sure time difference between node hosting cinder and controller
+node is less than 60 seconds
+
+- when creating a volume, make sure you have enough space in partition
+
+
+"""
+
 
 ############################ Config ########################################
 
@@ -29,27 +45,7 @@ etc_cinder_config_file = "/etc/cinder/cinder.conf"
 passwd = env_config.passwd
 
 
-################### General functions ########################################
-
-def set_up_NIC_using_nmcli(ifname,ip):
-    # Set up a new interface by using NetworkManager's 
-    # command line interface
-
-    # ifname = run("crudini --get {} '' DEVICE".format(conf_file))
-    # ip = run("crudini --get {} '' IPADDR".format(conf_file))
-
-    command = "nmcli connection add type ethernet"
-    command += " con-name " + ifname # connection name is the same as interface name
-    command += " ifname " + ifname
-    command += " ip4 " + ip
-
-    run(command)
-
-
-def set_parameter(config_file, section, parameter, value):
-    crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
-    run(crudini_command)
-
+################### General functions ######################################
 
 def setup_cinder_database_on_controller(CINDER_DBPASS):
     mysql_commands = "CREATE DATABASE IF NOT EXISTS cinder;"
@@ -185,7 +181,11 @@ def setup_volume_using_cinder(device_name):
 def setup_lvm_config_file():
     config_file = "/etc/lvm/lvm.conf"
     # replace line 107 with the filter line
-    run("""sed -i '107i\ \ \ \ filter = [ "a/sdc/","r/.*/" ]' """ + config_file)
+    filter_command = 'filter = [ "a/sdc/","r/.*/" ]'
+    if filter_command not in run("cat " + config_file, quiet=True):
+        runCheck('Appending filter command to lvm.conf',"""sed -i '107i\ \ \ \ filter = [ "a/sdc/","r/.*/" ]' """ + config_file)
+    else:
+        print(blue("lvm.conf already configured"))
 
 def install_and_start_lvm():
     # install package and start
@@ -200,7 +200,7 @@ def setup_cinder_on_storage():
     CINDER_DBPASS = passwd['CINDER_DBPASS']
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
-    NETWORK_MANAGEMENT_IP = env_config.networkManagement['IPADDR']
+    NETWORK_MANAGEMENT_IP = env_config.storageManagement['IPADDR']
     device_name = "sdc1"
 
     install_and_start_lvm()
@@ -209,7 +209,7 @@ def setup_cinder_on_storage():
 
     setup_lvm_config_file()
 
-    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, "192.168.1.31")        
+    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)     
 
     start_services_on_storage()
     
