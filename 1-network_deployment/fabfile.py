@@ -112,10 +112,8 @@ def set_up_network_interface(specs_dict,role):
         runCheck(msg, 'echo -e "{}" >{}'.format(config_file,config_file_name))
 
         if mode == 'debug':
-            print blue('This is the test config file: ')
-            print ''
-            print debug_str('cat ' + config_file_name)
-            print ''
+            print blue('This is the test config file: \n')
+            print debug_str('cat ' + config_file_name +'\n')
             print blue('These are the ifcfg files in the directory: ')
             print debug_str('ls | grep ifcfg')
             print 'Deleting test file'
