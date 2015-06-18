@@ -104,6 +104,41 @@ def setup_ceilometer_config_files(CEILOMETER_PASS, CEILOMETER_DBPASS):
 
 
     return metering_secret
+    
+
+def setup_mongo(CONTROLLER_IP):
+    run("yum install -y mongodb-server mongodb")
+    confFile = "/etc/mongod.conf"
+
+
+    sed_command = """sed -i 's/bind_ip = 127.0.0.1/bind_ip = {}/g' {}""".format(CONTROLLER_IP, confFile)
+
+    runCheck('set bind_ip',sed_command)
+
+#    bind_ip_in_conf = run("cat {} | grep bind_ip | awk '// {print $3}'".format(confFile), quiet=True)
+#    if CONTROLLER_IP == bind_ip_in_conf:
+    bind_ip_in_conf = run("cat {} | grep bind_ip".format(confFile), quiet=True)
+    if CONTROLLER_IP in bind_ip_in_conf:
+        print(blue("bind_ip setup to " + CONTROLLER_IP))
+    else:
+        print(red("weird cuz bind_ip is " + bind_ip_in_conf))
+
+    sed_command = """sed -i 's/#smallfiles = true/smallfiles = true/g' {}""".format(confFile)
+
+    runCheck('set smallfiles = true',sed_command)
+
+    smallfiles_in_conf = run("cat {} | grep smallfiles".format(confFile), quiet=True)
+    if "smallfiles = true" in smallfiles_in_conf:
+        print(blue("smallfiles setup to " + smallfiles_in_conf))
+    else:
+        print(red("weird cuz smallfiles is " + smallfiles_in_conf))
+        
+
+    runCheck('Enable mongo','systemctl enable mongod.service')
+    runCheck('Start mongo','systemctl start mongod.service')
+    runCheck('Restart mongo','systemctl restart mongod.service')
+    
+
    
 @roles('controller')
 def setup_ceilometer_controller():
