@@ -173,19 +173,21 @@ def start_services_on_storage():
     runCheck('Start services on storage', start_services)
     runCheck('Restart services on storage', restart_services)
 
-def setup_volume_using_cinder(device_name):
-    if device_name in run("ls /dev/"):
-        sudo("pvcreate /dev/" + device_name)
-        sudo("vgcreate cinder-volumes /dev/" + device_name)
+def setup_volume_using_cinder(partition_name):
+    if partition_name in run("ls /dev/"):
+        sudo("pvcreate /dev/" + partition_name)
+        sudo("vgcreate cinder-volumes /dev/" + partition_name)
         
-def setup_lvm_config_file():
+def setup_lvm_config_file(device_name):
     config_file = "/etc/lvm/lvm.conf"
     # replace line 107 with the filter line
-    filter_command = 'filter = [ "a/sdc/","r/.*/" ]'
-    if filter_command not in run("cat " + config_file, quiet=True):
-        runCheck('Appending filter command to lvm.conf',"""sed -i '107i\ \ \ \ filter = [ "a/sdc/","r/.*/" ]' """ + config_file)
+    filter_command = '\ \ \ \ filter = [ "a/'+device_name+'/","r/.*/" ]'
+    filter_line = 'filter = [ "a/'+device_name+'/","r/.*/" ]'
+    if filter_line not in run("cat " + config_file, quiet=True):
+        runCheck('Append filter command to lvm.conf',"""sed -i '107i""" + filter_command +  """' """ + config_file)
     else:
-        print(blue("lvm.conf already configured"))
+        print(blue("lvm.conf already configured, i.e"))
+        print(blue(filter_line + " already present in lvm.conf file"))
 
 def install_and_start_lvm():
     # install package and start
@@ -201,24 +203,25 @@ def setup_cinder_on_storage():
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
     NETWORK_MANAGEMENT_IP = env_config.storageManagement['IPADDR']
-    device_name = "sdc1"
+    cinder_device_name = "sdc"
+    cinder_partition_name = "sdc1"
 
-    install_and_start_lvm()
+#    install_and_start_lvm()
 
-    setup_volume_using_cinder(device_name)
+#    setup_volume_using_cinder(cinder_partition_name)
 
-    setup_lvm_config_file()
+    setup_lvm_config_file(cinder_device_name)
 
-    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)     
+#    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)     
 
-    start_services_on_storage()
+#    start_services_on_storage()
     
 
 
 ################### Deployment ########################################
 
 def deploy():
-    execute(setup_cinder_on_controller)
+#    execute(setup_cinder_on_controller)
     execute(setup_cinder_on_storage)
 
 ######################################## TDD #########################################
