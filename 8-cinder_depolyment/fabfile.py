@@ -8,7 +8,7 @@ import logging
 import string
 
 import sys
-sys.path.append('../')#global_config_files')
+sys.path.append('../')
 import env_config
 from myLib import runCheck
 
@@ -112,18 +112,13 @@ def setup_cinder_config_files_on_controller(CINDER_PASS, CINDER_DBPASS, RABBIT_P
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'verbose', 'True')
 
 
-
-
-
 def populate_database_on_controller():
     runCheck('Populate the Block Storage database', "su -s /bin/sh -c 'cinder-manage db sync' cinder")
 
 def start_cinder_services_on_controller():
     enable_all = "systemctl enable openstack-cinder-api.service openstack-cinder-scheduler.service"
 
-
     start_all = "systemctl start openstack-cinder-api.service openstack-cinder-scheduler.service"
-
     
     runCheck('Enable Block Storage services to start when system boots', enable_all)
     runCheck('Start the Block Storage services', start_all)
@@ -131,20 +126,18 @@ def start_cinder_services_on_controller():
 
 @roles('controller')   
 def setup_cinder_on_controller():
-    
+    CONTROLLER_MANAGEMENT_IP =  env_config.controllerManagement['IPADDR']
     
     # setup cinder database
     setup_cinder_database_on_controller(passwd['CINDER_DBPASS'])
+
     setup_cinder_keystone_on_controller(passwd['CINDER_PASS'])
 
-
-    CONTROLLER_MANAGEMENT_IP =  env_config.controllerManagement['IPADDR']
-
     setup_cinder_config_files_on_controller(passwd['CINDER_PASS'], passwd['CINDER_DBPASS'], passwd['RABBIT_PASS'], CONTROLLER_MANAGEMENT_IP)
+
     populate_database_on_controller()
+
     start_cinder_services_on_controller()
-
-
 
 
 def setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP):
@@ -158,7 +151,6 @@ def setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rabbit_host', 'controller')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
-
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'auth_strategy', 'keystone')
 
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
@@ -172,9 +164,7 @@ def setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS
     #
 
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', "192.168.0.41")
-
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'iscsi_helper', 'lioadm')
-
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glance_host', 'controller')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'verbose', 'True')
 
@@ -187,51 +177,40 @@ def start_services_on_storage():
     runCheck('Start services on storage', start_services)
     runCheck('Restart services on storage', restart_services)
 
+def setup_volume_using_cinder(device_name):
+    if device_name in run("ls /dev/"):
+        sudo("pvcreate /dev/" + device_name)
+        sudo("vgcreate cinder-volumes /dev/" + device_name)
+        
+def setup_lvm_config_file():
+    config_file = "/etc/lvm/lvm.conf"
+    # replace line 107 with the filter line
+    run("""sed -i '107i\ \ \ \ filter = [ "a/sdc/","r/.*/" ]' """ + config_file)
+
+def install_and_start_lvm():
+    # install package and start
+    runCheck('Install lvm2', "yum install -y lvm2")
+    runCheck('Enable lvm2', "systemctl enable lvm2-lvmetad.service")
+    runCheck('Start lvm2', "systemctl start lvm2-lvmetad.service")
+
+
 @roles('storage')
 def setup_cinder_on_storage():
-
-
-    # create management interface
-    # DEVICE = "eth0:0"
-    # NETMASK = "255.255.255.0"
-    # IPADDR = "192.168.0.41"
-    # file_content = "DEVICE={} \n NETMASK={} \n IPADDR={} \n".format(DEVICE, NETMASK, IPADDR)
-    # with cd('/etc/sysconfig/network-scripts'):
-    #     # create ifcfg file in the directory
-    #     sudo('echo -e "{}" >ifcfg-{}'.format(file_content, DEVICE))
-
-    # sudo("ifdown {}; ifup {}".format(DEVICE,DEVICE))
-    #set_up_NIC_using_nmcli('eth1','192.168.0.41')
-
-    #run("systemctl restart NetworkManager")
-
-    # set hostname
-    #sudo("hostnamectl set-hostname block1")
-
-
-    # install package and start
-    runCheck('Install lvm', "yum install -y lvm2")
-    runCheck('Enable lvm', "systemctl enable lvm2-lvmetad.service")
-    runCheck('Start lvm', "systemctl start lvm2-lvmetad.service")
-
-    # create volume
-    
-    device_name = "vdb"
-
-    if device_name in run("ls /dev/"):
-        sudo("pvcreate /dev/"+device_name)
-        sudo("vgcreate cinder-volumes /dev/"+device_name)
-
-
-    config_file = "/etc/lvm/lvm.conf"
-    # variable setup
 
     CINDER_DBPASS = passwd['CINDER_DBPASS']
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
     NETWORK_MANAGEMENT_IP = env_config.networkManagement['IPADDR']
+    device_name = "sdc1"
 
-    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)        
+    install_and_start_lvm()
+
+    setup_volume_using_cinder(device_name)
+
+    setup_lvm_config_file()
+
+    setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, "192.168.1.31")        
+
     start_services_on_storage()
     
 
