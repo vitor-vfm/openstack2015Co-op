@@ -161,6 +161,11 @@ def start_ceilometer_services():
     msg = "Restart ceilometer services"
     runCheck(msg, "systemctl restart " + ceilometer_services) 
 
+def install_packages():
+    # Install packages
+    msg = "Install OpenStack Ceilometer packages"
+    runCheck(msg, "yum install -y openstack-ceilometer python-ceilometerclient",quiet=True)
+
 
 @roles('controller')
 def configure_image_service():
