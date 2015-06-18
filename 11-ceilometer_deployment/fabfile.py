@@ -148,6 +148,19 @@ def create_mongo_ceilometer_db(CEILOMETER_PASS):
               """  roles: [ "readWrite", "dbAdmin" ]  """ + \
               """  })'  """ 
     runCheck('setup ceilometer db in mongo', command) 
+
+def start_ceilometer_services():
+    ceilometer_services = "openstack-ceilometer-api.service openstack-ceilometer-notification.service " + \
+                          "openstack-ceilometer-central.service openstack-ceilometer-collector.service " + \
+                          "openstack-ceilometer-alarm-evaluator.service openstack-ceilometer-alarm-notifier.service " 
+
+    msg = "Enable ceilometer services"
+    runCheck(msg, "systemctl enable " + ceilometer_services)
+    msg = "Start ceilometer services"
+    runCheck(msg, "systemctl start " + ceilometer_services)
+    msg = "Restart ceilometer services"
+    runCheck(msg, "systemctl restart " + ceilometer_services) 
+
    
 @roles('controller')
 def setup_ceilometer_controller():
