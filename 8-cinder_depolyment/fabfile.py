@@ -19,8 +19,11 @@ To use for other cases:
 
 - make sure node has management ip/nic setup according to env_config
 
-- change device_name to the partition name that cinder is using to hold
-and stuff
+- change device_name to the device name that cinder is using to hold stuff
+
+- change partition_name to the partition that has been formatted and 
+is designated to be used for cinder volumes.
+
 
 - make sure time difference between node hosting cinder and controller
 node is less than 60 seconds
