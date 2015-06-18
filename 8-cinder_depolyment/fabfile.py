@@ -248,7 +248,7 @@ def deploy():
 def verify():
     with prefix(admin_openrc):
         runCheck('List service components', 'cinder service-list')
-    runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
+    #runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
     with prefix(demo_openrc):    
         runCheck('Create a 1 GB volume', 'cinder create --display-name demo-volume1 1')
         runCheck('Verify creation and availability of volume', 'cinder list')
