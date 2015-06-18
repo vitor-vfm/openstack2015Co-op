@@ -192,6 +192,33 @@ def install_and_configure_ceilometer(metering_secret, RABBIT_PASS, CEILOMETER_PA
 
 
 
+def configure_notifications():
+    conf_file = "/etc/nova/nova.conf" 
+    
+    set_parameter(conf_file, 'DEFAULT','instance_usage_audit', 'True')
+    set_parameter(conf_file, 'DEFAULT','instance_usage_audit_period', 'hour')
+    set_parameter(conf_file, 'DEFAULT','notify_on_state_change', 'vm_and_task_state')
+    set_parameter(conf_file, 'DEFAULT','notification_driver', 'messagingv2')
+
+def start_telemetry():
+    run("enable telemetry","systemctl enable openstack-ceilometer-compute.service")
+    run("start telemetry","systemctl start openstack-ceilometer-compute.service")
+    run("restart telemetry","systemctl restart openstack-ceilometer-compute.service")
+
+def restart_nova():
+    run("systemctl restart openstack-nova-compute.service")
+
+@roles('compute')
+def setup_ceilometer_on_compute():
+    install_and_configure_ceilometer(metering_secret, passwd['RABBIT_PASS'], passwd['CEILOMETER_PASS'])
+    
+    configure_notifications()
+
+    start_telemetry()
+    
+    restart_nova()
+
+        
 ################################## Deployment ########################################
 
 def deploy():
