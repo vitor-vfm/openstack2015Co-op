@@ -139,6 +139,15 @@ def setup_mongo(CONTROLLER_IP):
     runCheck('Restart mongo','systemctl restart mongod.service')
     
 
+def create_mongo_ceilometer_db(CEILOMETER_PASS):
+    command = """ mongo --host controller --eval ' """ + \
+              """ db = db.getSiblingDB("ceilometer");  """ + \
+              """  db.addUser({  """ + \
+              """  user: "ceilometer",  """ + \
+              """  pwd: "%s",  """ % CEILOMETER_PASS + \
+              """  roles: [ "readWrite", "dbAdmin" ]  """ + \
+              """  })'  """ 
+    runCheck('setup ceilometer db in mongo', command) 
    
 @roles('controller')
 def setup_ceilometer_controller():
