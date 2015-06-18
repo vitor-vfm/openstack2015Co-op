@@ -13,6 +13,8 @@ import env_config
 from myLib import runCheck, createDatabaseScript, set_parameter
 from myLib import database_check, keystone_check, run_v, align_n, align_y
 
+
+
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -178,6 +180,18 @@ def configure_image_service():
         set_parameter(image_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
         
     run("systemctl restart openstack-glance-api.service openstack-glance-registry.service")
+
+@roles('controller', 'storage')
+def configure_block_storage():
+    block_config_file = '/etc/cinder/cinder.conf'
+    set_parameter(block_config_file, 'DEFAULT', 'control_exchange', 'cinder')
+    set_parameter(block_config_file, 'DEFAULT', 'notification_driver', 'messagingv2')
+        
+    run("systemctl restart openstack-cinder-api.service openstack-cinder-scheduler.service")
+
+    run("systemctl restart openstack-cinder-volume.service")
+
+
    
 @roles('controller')
 def setup_ceilometer_controller():
