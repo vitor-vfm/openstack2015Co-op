@@ -11,6 +11,7 @@ import sys
 sys.path.append('..')
 import env_config
 from myLib import runCheck, set_parameter, printMessage
+from myLib import database_check, keystone_check
 
 
 ############################ Config ########################################
@@ -43,17 +44,18 @@ def setKeystoneController():
         else:
             print blue('swift is already a service. Do nothing')
 
-        if '8080' not in sudo("keystone endpoint-list"):
+        if 'http://controller:8080/' not in sudo("keystone endpoint-list"):
             msg = "Create endpoint for service swift"
             command = "keystone endpoint-create " +\
                     "--service-id $(keystone service-list | awk '/ object-store / {print $2}') " +\
                     "--publicurl 'http://controller:8080/v1/AUTH_%(tenant_id)s' " +\
                     "--internalurl 'http://controller:8080/v1/AUTH_%(tenant_id)s' " +\
-                    "--adminurl http://controller:8080 " +\
+                    "--adminurl http://controller:8080/ " +\
                     "--region regionOne"
+            print 'command : ',command
             runCheck(msg, command)
         else:
-            print blue('8004 is already an endpoint. Do nothing')
+            print blue('8080 is already an endpoint. Do nothing')
 
 @roles('controller')
 def installPackagesController():
@@ -111,7 +113,7 @@ def startServicesController():
 @roles('controller')
 def controllerDeploy():
 
-    execute(installPackagesController)
+    # execute(installPackagesController)
     execute(setKeystoneController)
     execute(configureController)
     execute(startServicesController)
@@ -132,7 +134,6 @@ def localStorage():
     Set up Swift using local storage instead of Gluster.
     """
     confFile = '/etc/rsyncd.conf'
-    localConfFile = 'rsyncd.conf'
 
     # Previously created physical partitions
     partitions = ['/dev/sdd','/dev/sde']
@@ -363,12 +364,12 @@ def installPackagesStorage():
 @roles('storage')
 def storageDeploy():
 
-    execute(installPackagesStorage)
+    # execute(installPackagesStorage)
 
-    execute(localStorage)
+    # execute(localStorage)        
     # execute(setGluster)
 
-    execute(configureStorage)
+    execute(configureStorage)    
 
     execute(finalizeInstallation)
 
@@ -376,7 +377,7 @@ def storageDeploy():
 
 def deploy():
     execute(controllerDeploy)
-    execute(storageDeploy)
+    execute(storageDeploy)       
 
 ######################################## TDD #########################################
 
@@ -419,5 +420,7 @@ def checkStat():
 
 def tdd():
     with settings(warn_only=True):
+        execute(keystone_check,'swift',roles=['controller'])
+        return
         execute(checkStat)
         execute(testFile)

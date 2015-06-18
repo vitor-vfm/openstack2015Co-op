@@ -33,18 +33,16 @@ def generate_ip(ip_address,nodes_in_role,node):
 	# generate an IP address based on a base ip, a node, and a role list
 	# will be used for setting up interfaces and for testing
 
-	last_octet = int(ip_address.split('.')[3])
-	# first node will have last_octet + 0 as last octet; second node 
-	# will have last_octet + 1, etc   
-	last_octet += nodes_in_role.index(node)
-	# turn it into a list of octets, with the old last octet removed
-	octets = ip_address.split('.')[0:3]
-	# add the dots to the octets
-	octets = [octet + '.' for octet in octets]
-	# append the last octet
-        octets.append(str(last_octet))
+        # split the IP into its four octets
+        octets = ip_address.split('.')
+        
+	# increment last octet according to the node's index in the 
+        # nodes_in_role list; 
+	index = nodes_in_role.index(node)
+        octets[-1] = str( int(octets[-1]) + index )
+
 	# turn it back into a single string
-	ip_address = "".join(octets)
+	ip_address = ".".join(octets)
 	return ip_address
 
 
@@ -112,10 +110,8 @@ def set_up_network_interface(specs_dict,role):
         runCheck(msg, 'echo -e "{}" >{}'.format(config_file,config_file_name))
 
         if mode == 'debug':
-            print blue('This is the test config file: ')
-            print ''
-            print debug_str('cat ' + config_file_name)
-            print ''
+            print blue('This is the test config file: \n')
+            print debug_str('cat ' + config_file_name +'\n')
             print blue('These are the ifcfg files in the directory: ')
             print debug_str('ls | grep ifcfg')
             print 'Deleting test file'
@@ -214,6 +210,16 @@ def deployInterface(interface,specs):
     role = getRole()
     set_up_network_interface(specs,role)
 
+def installChrony():
+    """
+    Install and Configure the Chrony NTP service
+    """
+
+    execute(configChrony,roles=['controller'])
+    execute(configChrony,roles=['network'])
+    execute(configChrony,roles=['compute'])
+    execute(configChrony,roles=['storage'])
+
 @roles('controller')
 def controller_network_deploy():
 
@@ -223,7 +229,6 @@ def controller_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host_string)
 
 @roles('network')
@@ -238,7 +243,6 @@ def network_node_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('compute')
@@ -250,7 +254,6 @@ def compute_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('storage')
@@ -260,7 +263,6 @@ def storage_network_deploy():
     
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 def deploy():
@@ -272,6 +274,7 @@ def deploy():
         execute(network_node_network_deploy)
         execute(compute_network_deploy)
         execute(storage_network_deploy)
+        # execute(installChrony)
 
 ######################################## TDD #########################################
 
