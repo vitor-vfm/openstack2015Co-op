@@ -19,10 +19,6 @@ from myLib import database_check, keystone_check, run_v, align_n, align_y
 
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
-
-ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
-
-
 ######################## Deployment ########################################
 
 def setup_ceilometer_keystone(CEILOMETER_PASS):
@@ -67,6 +63,8 @@ def setup_ceilometer_keystone(CEILOMETER_PASS):
     
 def setup_ceilometer_config_files(CEILOMETER_PASS, CEILOMETER_DBPASS):
 
+    ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
+
     install_command = "yum install openstack-ceilometer-api openstack-ceilometer-collector " + \
         "openstack-ceilometer-notification openstack-ceilometer-central openstack-ceilometer-alarm " + \
         "python-ceilometerclient"
@@ -100,12 +98,6 @@ def setup_ceilometer_config_files(CEILOMETER_PASS, CEILOMETER_DBPASS):
     set_parameter(ceilometer_config_file, 'publisher', 'metering_secret', metering_secret)
 
     set_parameter(ceilometer_config_file, 'DEFAULT', 'verbose', 'True')
-
-
-
-
-
-    return metering_secret
     
 
 def setup_mongo(CONTROLLER_IP):
@@ -226,11 +218,13 @@ def setup_ceilometer_controller():
     setup_mongo(env_config.controllerManagement['IPADDR'])
     create_mongo_ceilometer_db(env_config.passwd['CEILOMETER_PASS'])
     
-    metering_secret = setup_ceilometer_keystone(passwd['CEILOMETER_PASS'])
+    setup_ceilometer_keystone(passwd['CEILOMETER_PASS'])
     setup_ceilometer_config_files(passwd['CEILOMETER_PASS'], passwd['CEILOMETER_DBPASS'])
     start_ceilometer_services()
 
 def install_and_configure_ceilometer(metering_secret, RABBIT_PASS, CEILOMETER_PASS):
+
+    ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
 
     set_parameter(ceilometer_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(ceilometer_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -275,6 +269,9 @@ def restart_nova():
 
 @roles('compute')
 def setup_ceilometer_on_compute():
+    runCheck('get ceilometer config file from controller',"scp root@controller:/etc/ceilometer/ceilometer.conf /root/")
+    metering_secret = runCheck('getting metering_secret from config file',"crudini --get ceilometer.conf publisher metering_secret")
+
     install_and_configure_ceilometer(metering_secret, passwd['RABBIT_PASS'], passwd['CEILOMETER_PASS'])
     
     configure_notifications()
@@ -282,6 +279,8 @@ def setup_ceilometer_on_compute():
     start_telemetry()
     
     restart_nova()
+
+
 
         
 ################################## Deployment ########################################
