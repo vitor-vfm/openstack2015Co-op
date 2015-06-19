@@ -122,7 +122,7 @@ def setup_mongo(CONTROLLER_IP):
     runCheck('set smallfiles = true',sed_command)
 
     smallfiles_in_conf = run("cat {} | grep smallfiles".format(confFile), quiet=True)
-    if "smallfiles = true" in smallfiles_in_conf:
+    if "smallfiles = true" in smallfiles_in_conf and "#smallfiles = true" not in smallfiles_in_conf:
         print(blue("smallfiles setup to " + smallfiles_in_conf))
     else:
         print(red("weird cuz smallfiles is " + smallfiles_in_conf))
@@ -290,7 +290,25 @@ def deploy():
 
 ######################################## TDD #########################################
 
+@roles("controller")
+def verify():
+    # get admin credentials to run the CLI commands
+    credentials = env_config.admin_openrc
+    print(blue('refer to manual for correct output'))
+    print(blue('will be updated once it is tested'))
+
+    
+
+    with prefix(credentials):
+        # before each creation, we check a list to avoid duplicates
+        run("ceilometer meter-list")
+        run('glance image-download "cirros-0.3.3-x86_64" > cirros.img')
+        run("ceilometer meter-list")
+        run('ceilometer statistics -m image.download -p 60')
+        
+    
 def tdd():
     with settings(warn_only=True):
         execute(database_check,'ceilometer',roles=['controller'])
         execute(keystone_check,'ceilometer',roles=['controller'])
+        execute(verify)
