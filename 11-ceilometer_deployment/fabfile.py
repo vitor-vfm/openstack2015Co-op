@@ -191,6 +191,34 @@ def configure_block_storage():
 
     run("systemctl restart openstack-cinder-volume.service")
 
+@roles('controller')
+def configure_object_storage():
+    object_config_file = '/etc/swift/proxy-server.conf'
+
+    # get admin credentials to run the CLI commands
+    credentials = env_config.admin_openrc
+
+    with prefix(credentials):
+        # before each creation, we check a list to avoid duplicates
+
+        if 'Reseller' in run("keystone role-list"):
+            print(blue("ResellerAdmin already set"))
+        else:
+            runCheck('','keystone role-create --name ResellerAdmin')
+            runCheck('Create and add ResellerAdmin to ',"keystone user-role-add --tenant service --user ceilometer " + \
+                     "--role $(keystone role-list | awk '/ResellerAdmin/ {print $2}')")
+
+
+    set_parameter(object_config_file, 'filter:keystoneauth', 'operator_roles', 'admin,_member_,ResellerAdmin')
+    set_parameter(object_config_file, 'pipeline:main', 'pipeline', 'authtoken cache healthcheck keystoneauth proxy-logging ceilometer proxy-server')
+    set_parameter(object_config_file, 'filter:ceilometer', 'use', 'egg:ceilometer#swift')
+    set_parameter(object_config_file, 'filter:ceilometer', 'log_level', 'WARN')
+        
+    runCheck('add swift to allow access to telemetry config files',"usermod -a -G ceilometer swift")
+
+    runCheckm('restart swift',"systemctl restart openstack-swift-proxy.service")
+    
+
 
    
 @roles('controller')
