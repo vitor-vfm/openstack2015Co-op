@@ -46,7 +46,7 @@ def generate_ip(ip_address,nodes_in_role,node):
 	return ip_address
 
 
-################### Deployment ########################################
+########################## Deployment ########################################
 
 def set_up_NIC_using_nmcli(specs_dict):
     # Set up a new interface by using NetworkManager's 
@@ -58,7 +58,7 @@ def set_up_NIC_using_nmcli(specs_dict):
     # ip = sudo("crudini --get {} '' IPADDR".format(conf_file))
 
     command = "nmcli connection add type ethernet"
-    command += " con-name " + ifname # connection name is the same as interface name
+    command += " con-name " + ifname # connection name == interface name
     command += " ifname " + ifname
     command += " ip4 " + ip
 
@@ -85,14 +85,15 @@ def set_up_network_interface(specs_dict,role):
 
     if 'IPADDR' in specs_dict:
 	# change the IP in the dict for the correct one
-	specs_dict['IPADDR'] = generate_ip(specs_dict['IPADDR'], env.roledefs[role], env.host_string)
+	specs_dict['IPADDR'] = generate_ip(specs_dict['IPADDR'], \
+                env.roledefs[role], env.host_string)
 	#IPs_in_network.append((ip_address, env.host_string))
 
 
     # create config file
     config_file = ''
     for shell_variable in specs_dict.keys():
-        config_file += shell_variable + '=' + specs_dict[shell_variable] + '\n' 
+        config_file += shell_variable + '=' + specs_dict[shell_variable] + '\n'
 
     # save file into directory
 
@@ -276,14 +277,15 @@ def deploy():
         execute(storage_network_deploy)
         # execute(installChrony)
 
-######################################## TDD #########################################
+################################ TDD #########################################
 
 # pings an ip address and see if it works
 def ping_ip(ip_address, host, role='', type_interface=''):
     ping_command = 'ping -q -c 1 ' + ip_address
 
     if type_interface:
-        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host,type_interface,ip_address,env.host)
+        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host, \
+                type_interface,ip_address,env.host)
     else:
         msg = 'Ping {} from {}'.format(ip_address,env.host)
 
@@ -299,7 +301,9 @@ def network_tdd_controller():
     nodes_in_role = env.roledefs['network']
     base_ip = env_config.networkManagement['IPADDR']
     # generate a list of tuples (IP,node) for each network node
-    management_network_interfaces = [( generate_ip(base_ip,nodes_in_role,node) ,node) for node in nodes_in_role]
+    management_network_interfaces = [ \
+            (generate_ip(base_ip,nodes_in_role,node),node) \
+            for node in nodes_in_role]
     # ping the management interfaces
     for interface_ip, network_node in management_network_interfaces:
         ping_ip(interface_ip, network_node, 'network', 'management')
@@ -315,13 +319,19 @@ def network_tdd_network():
 
     # management interfaces on controller
     specs_dict = env_config.controllerManagement
-    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['controller'], node), node) for node in env.roledefs['controller']]
+
+    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['controller'],\
+            node), node) for node in env.roledefs['controller']]
+
     for ip, host in ip_list:
         ping_ip(ip, host, 'controller', 'management')
 
     # instance tunnel interfaces on compute
     specs_dict = env_config.computeTunnels
-    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['compute'], node), node) for node in env.roledefs['compute']]
+
+    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['compute'],\
+            node), node) for node in env.roledefs['compute']]
+
     for ip, host in ip_list:
         ping_ip(ip, host, 'compute', 'instance tunnel')
 
@@ -335,7 +345,9 @@ def network_tdd_compute():
     nodes_in_role = env.roledefs['controller']
     base_ip = env_config.controllerManagement['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
-    management_controller_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
+    management_controller_interfaces = [\
+            (generate_ip(base_ip, nodes_in_role, node), node) \
+            for node in nodes_in_role]
     # ping the management interfaces
     for interface_ip, controller_node in management_controller_interfaces:
         ping_ip(interface_ip, controller_node, 'controller', 'management')
@@ -344,7 +356,9 @@ def network_tdd_compute():
     nodes_in_role = env.roledefs['network']
     base_ip = env_config.networkTunnels['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
-    network_tunnels_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
+    network_tunnels_interfaces = [\
+            (generate_ip(base_ip, nodes_in_role, node), node) \
+            for node in nodes_in_role]
     # ping the management interfaces
     for interface_ip, network_node in network_tunnels_interfaces:
         ping_ip(interface_ip, network_node, 'network', 'instance tunnel')
