@@ -139,7 +139,7 @@ else:
            # If you need to run mysqld under a different user or group,
            # customize your systemd unit file for mariadb according to the
            # instructions in http://fedoraproject.org/wiki/Systemd
-           bind-address = 192.168.1.11
+           bind-address = BIND_ADDRESS
            default-storage-engine = innodb
            innodb_file_per_table
            collation-server = utf8_general_ci
@@ -210,37 +210,60 @@ else:
   
     controllerManagement = { 'DEVICE' : 'eno1',
                              'IPADDR' : '192.168.1.11',
-                             'NETMASK' : '255.255.255.0'}
+                             'NETMASK' : '255.255.255.0',
+                             'GATEWAY' : '192.168.1.1',
+                             'DNS1' : '129.128.208.13',
+                             }
 
     controllerTunnels = { 'DEVICE' : 'enp2s10',
                           'IPADDR' : '192.168.2.11',
-                          'NETMASK' : '255.255.255.0'}
+                          'GATEWAY' : '192.168.1.1',
+                          'DNS1' : '129.128.208.13',
+                          'NETMASK' : '255.255.255.0',
+                          }
 
     networkManagement = { 'DEVICE' : 'eno1',
                           'IPADDR' : '192.168.1.21',
-                          'NETMASK' : '255.255.255.0'}
+                          'GATEWAY' : '192.168.1.1',
+                          'DNS1' : '129.128.208.13',
+                          'NETMASK' : '255.255.255.0',
+                          }
 
     networkTunnels = { 'DEVICE' : 'enp2s10',
                        'IPADDR' : '192.168.2.21',
-                       'NETMASK' : '255.255.255.0'}
+                       'GATEWAY' : '192.168.1.1',
+                       'DNS1' : '129.128.208.13',
+                       'NETMASK' : '255.255.255.0',
+                       }
 
     networkExternal = { 'DEVICE' : 'enp2s12',
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
                         'BOOTPROTO' : '"none"',
+                        'GATEWAY' : '192.168.1.1',
+                        'DNS1' : '129.128.208.13',
                         'IPADDR' : '192.168.3.21'}
 
     computeManagement = { 'DEVICE' : 'eno1',
                           'IPADDR' : '192.168.1.41',
-                          'NETMASK' : '255.255.255.0'}
+                          'GATEWAY' : '192.168.1.1',
+                          'DNS1' : '129.128.208.13',
+                          'NETMASK' : '255.255.255.0',
+                          }
 
     computeTunnels = { 'DEVICE' : 'enp2s10',
+                       'GATEWAY' : '192.168.1.1',
+                       'DNS1' : '129.128.208.13',
                        'IPADDR' : '192.168.2.41',
-                       'NETMASK' : '255.255.255.0'}
+                       'NETMASK' : '255.255.255.0',
+                       }
 
     storageManagement = {   'DEVICE' : 'enp0s25',
                             'IPADDR' : '192.168.1.31',
-                            'NETMASK' : '255.255.255.0'}
+                            'GATEWAY' : '192.168.1.1',
+                            'DNS1' : '129.128.208.13',
+                            'NETMASK' : '255.255.255.0',
+                            }
 
     hosts = { controllerManagement['IPADDR'] : 'controller',
               networkManagement['IPADDR'] : 'network'}

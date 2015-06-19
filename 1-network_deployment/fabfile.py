@@ -69,16 +69,9 @@ def set_up_NIC_using_nmcli(specs_dict):
 # General function to restart network
 def restart_network():
     # restarting network to implement changes 
-    # turn off NetworkManager and use regular network application to restart
-
-    # sudo('chkconfig NetworkManager off')
-    # sudo('service NetworkManager stop')
 
     msg = "Restart network service"
-    runCheck(msg, 'service network restart')
-
-    # sudo('service NetworkManager start')
-    # sudo("systemctl restart NetworkManager")
+    runCheck(msg, 'systemctl restart network')
 
 # General function to set a virtual NIC
 def set_up_network_interface(specs_dict,role):
@@ -162,11 +155,6 @@ def configChrony():
     # Install Chrony
     run('yum -y install chrony')
 
-    # enable Chrony
-    msg = 'Enable Chrony service'
-    runCheck(msg, 'systemctl enable chronyd.service')
-    msg = 'Start Chrony service'
-    runCheck(msg, 'systemctl start chronyd.service')
 
     chrony_conf = ''
     if getRole() == 'controller':
@@ -194,6 +182,12 @@ def configChrony():
 
         msg = 'Restart Chrony service'
         runCheck(msg, 'systemctl restart chronyd.service')
+
+    # enable Chrony
+    msg = 'Enable Chrony service'
+    runCheck(msg, 'systemctl enable chronyd.service')
+    msg = 'Start Chrony service'
+    runCheck(msg, 'systemctl start chronyd.service')
 
 def deployInterface(interface,specs):
     if mode == 'debug':
@@ -275,7 +269,6 @@ def deploy():
         execute(network_node_network_deploy)
         execute(compute_network_deploy)
         execute(storage_network_deploy)
-        # execute(installChrony)
 
 ################################ TDD #########################################
 
@@ -296,6 +289,7 @@ def network_tdd_controller():
 
     # ping a website
     ping_ip('www.google.ca','google.ca')
+    ping_ip('8.8.8.8', '8.8.8.8')
 
     # ping management interface on network nodes
     nodes_in_role = env.roledefs['network']
@@ -316,6 +310,7 @@ def network_tdd_network():
 
     # check for connection to internet
     ping_ip('google.ca', 'google.ca')
+    ping_ip('8.8.8.8', '8.8.8.8')
 
     # management interfaces on controller
     specs_dict = env_config.controllerManagement
@@ -340,6 +335,7 @@ def network_tdd_compute():
 
     # check for connection to internet
     ping_ip('google.ca', 'google.ca')
+    ping_ip('8.8.8.8', '8.8.8.8')
 
     # ping management interface on controller nodes
     nodes_in_role = env.roledefs['controller']
@@ -394,11 +390,11 @@ def chronyTDDOtherNodes():
     msg = 'Get chrony sources on ' + env.host
     sourcesTable = runCheck(msg, 'chronyc sources')
     if 'controller' in sourcesTable:
-        resultmsg = "controller is a source for chrony"
+        resultmsg = "Controller is a source for chrony on " + env.host
         print green(resultmsg)
         logging.debug(resultmsg)
     else:
-        resultmsg = "controller is not a source for chrony"
+        resultmsg = "Controller is NOT a source for chrony on " + env.host
         print red(resultmsg)
         logging.error(resultmsg)
 
