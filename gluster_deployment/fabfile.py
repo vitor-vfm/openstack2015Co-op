@@ -178,6 +178,24 @@ def undeploy_glance():
     execute(destroy_gluster) 
 
 
+################################ Cinder ######################################
+
+@roles('controller', 'storage')
+def installGluster():
+    runCheck('Install Gluster', 'yum -y install glusterfs-fuse')
+
+@roles('controller', 'storage')
+def configureCinder():
+    runCheck('Setup drivers', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT volume_driver cinder.volume.drivers.glusterfs.GlusterfsDriver')
+    runCheck('Setup shares', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_shares_config /etc/cinder/shares.conf')
+    runCheck('Setup mount points', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_mount_point_base /var/lib/cinder/volumes')
+
+
+@roles('controller', 'compute', 'network', 'storage')
+def forMySafety():
+    runCheck('Getting rid of Gluster', 'yum remove glusterfs-fuse')
+
+
 ################################ Deployment ##################################
 
 def deploy():
