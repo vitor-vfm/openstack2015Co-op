@@ -158,8 +158,8 @@ pid-file=/var/run/mariadb/mariadb.pid
     # for the env dictionary
     roledefs = { 'compute' : ['root@compute'],
                  'network' : ['root@network'],
-                 'storage' : ['root@storage'],
-                 'controller' : ['root@controller']}
+                 'storage' : ['root@storage1'],
+                 'controller' : ['root@controller1']}
 
     roles = roledefs.keys()
     hosts = roledefs.values()
