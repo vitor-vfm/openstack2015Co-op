@@ -6,12 +6,14 @@ from fabric.context_managers import cd
 from fabric.state import output
 from fabric.colors import green, red, blue
 import string
+import logging
 
 import sys, os
 sys.path.append('..')
 import env_config
 
-from myLib import *
+from myLib import printMessage, runCheck
+
 logging.info("################# "\
              + os.path.dirname(os.path.abspath(__file__)) + \
              " ########################")
@@ -19,16 +21,14 @@ logging.info("################# "\
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+print env.roledefs
 
 mode = 'normal'
 if output['debug']:
     mode = 'debug'
 
-# Logging config
-
-log_file = 'basic-network.log'
-
 ########################## Deployment ########################################
+
 @roles('controller','compute','network')
 def renameHost():
 	msg='Renaming host to %s' % env['host']
@@ -97,7 +97,7 @@ def install_packages():
 	logging.info( 'rdo-release-juno.rpm is installed')
 
     # Install GlusterFS
-    #sudo_log('yum -y install glusterfs-fuse glusterfs')
+    #run('yum -y install glusterfs-fuse glusterfs')
 
     # Install Crudini
 	print('installing crudini wget')
@@ -108,78 +108,48 @@ def install_packages():
 		logging.info(item +" is version "+ var1)
 
 
+@roles('controller')
 def installMariaDB():
     # Install MariaDB
-    # Only on controller node(s)
     
-    if env.host_string in env.roledefs['controller']:
-	    # get packages
-        sudo_log('yum -y install mariadb mariadb-server MySQL-python')
+    msg = 'Get packages'
+    runCheck(msg, 'yum -y install mariadb mariadb-server MySQL-python')
 
-        # set the config file
-        # NB: crudini was not used because of 
-        # unexpected parsing 1) without equal sign 2) ! include dir  
+    # set the config file
 
-        section_header = '\[mysqld\]'
+    with cd('/etc/'):
+        confFile = 'my.cnf'
+        fileContents = env_config.my_cnf
 
-        with cd('/etc/'):
-            confFile = 'my.cnf'
+        # set bind-address
+        fileContents = fileContents.replace('BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
 
-            # make a backup
-            sudo_log("cp {} {}.back12".format(confFile,confFile))
-            if mode == 'debug':
-                # change only backup file
-                confFile += '.back12'
+        # make a backup
+        run("cp {} {}.back12".format(confFile,confFile))
 
-            # check if the section is already in the file
-            out = run("grep '{}' {}".format(section_header,confFile))
-            if out.return_code == 0:
-                # do a search and replace for all the variables
-                specs = env_config.mariaDBmysqldSpecs
-                for line in specs:
-                    # delete old line in the file
-                    if ('=' in line):
-                        pattern_to_find = line[:line.index('=')]
-                    else:
-                        pattern_to_find = line
-                    sudo_log('sed -i "/{}/ d" {}'.format\
-                            (pattern_to_find,confFile))
-                    # append new line with the new value under the header
-                    sudo("sed -i '/{}/ a\{}' {}".format\
-                            (section_header,line,confFile))
+        if mode == 'debug':
+            # change only backup file
+            confFile += '.back12'
 
-            else:
-                # simply add the section
-                append(confFile,'\n' + section_header + '\n')
-                for line in specs:
-                    append(confFile,line)
-
-            # set bind-address (controller's management interface)
-            bind_address = env_config.controllerManagement['IPADDR']
-            out = sudo('grep bind-address {}'.format(confFile),warn_only=True)
-            if out.return_code != 0:
-                # simply add the new line
-                new_line = "bind-address = " + bind_address
-                sudo('sed -i "/{}/a {}" my.cnf'.format\
-                        (section_header,new_line))
-            else:
-                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format\
-                        (bind_address))
-
-            if mode == 'debug':
-                print "Here is the final my.cnf file:"
-                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),\
-                        quiet=True))
-
-        # enable MariaDB
-        sudo_log('systemctl enable mariadb.service')
-        sudo_log('systemctl start mariadb.service')
+        # Add new my.cnf file, clobbering if necessary
+        msg = 'Create my.cnf file'
+        runCheck(msg, "echo '{}' >{}".format(fileContents,confFile))
         
-    # Upgrade to implement changes
-    sudo_log('yum -y upgrade')
+        if mode == 'debug':
+            print "Here is the final my.cnf file:"
+            print blue(run("grep -vE '(^#|^$)' {}".format(confFile),\
+                    quiet=True))
+
+    msg = 'Enable mariadb service'
+    runCheck(msg, 'systemctl enable mariadb.service')
+    msg = 'Enable mariadb service'
+    runCheck(msg, 'systemctl start mariadb.service')
+        
+    msg = 'Upgrade to implement changes'
+    runCheck(msg, 'yum -y upgrade')
 
 def ask_for_reboot():
-    sudo_log('wall Everybody please reboot')
+    run('wall Everybody please reboot')
 
 
 #@roles('controller','compute','network','storage')
