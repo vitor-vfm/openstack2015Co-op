@@ -463,9 +463,9 @@ def compute_deploy():
     runCheck(msg, "systemctl restart openstack-nova-compute.service")
 
     msg = 'Enable Open vSwitch'
-    runCheck(msg, 'systemctl enable openvswitch.service')
+    runCheck(msg, 'systemctl enable neutron-openvswitch-agent.service')
     msg = 'Start Open vSwitch'
-    runCheck(msg, 'systemctl start openvswitch.service')
+    runCheck(msg, 'systemctl start neutron-openvswitch-agent.service')
 
 # INITIAL NETWORK
 
@@ -528,7 +528,8 @@ def createSetupRouter():
         runCheck(msg,'neutron router-gateway-set demo-router ext-net')
 
 
-@roles('network')
+#@roles('network')
+@roles('controller')
 def createInitialNetwork():
     # Creates a sample network for testing 
 
