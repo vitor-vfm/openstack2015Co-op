@@ -2,14 +2,16 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
-from fabric.colors import green, red
-from fabric.contrib.files import append
+from fabric.colors import green, red, blue
+from fabric.contrib.files import append, put
 import logging
 import string
 
 import sys
-sys.path.append('../global_config_files')
+sys.path.append('..')
 import env_config
+from myLib import runCheck, set_parameter, printMessage
+from myLib import database_check, keystone_check
 
 
 ############################ Config ########################################
@@ -17,188 +19,242 @@ import env_config
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
-admin_openrc = "../global_config_files/admin-openrc.sh"
-demo_openrc = "../global_config_files/demo-openrc.sh"
+######################## Deployment ########################################
 
-local_config = "config_files/"
-management_interface = local_config + "management_interface"
-hosts_file = local_config + "hosts_file"
+@roles('controller')
+def setKeystoneController():
+    """
+    Create user, roles and tenants for Swift
+    """
 
-# Logging
-log_file = 'swift_deployment.log'
-env_config.setupLoggingInFabfile(log_file)
-
-# Do a fabric run on the string 'command' and log results
-run_log = lambda command : env_config.fabricLog(command,run,log_dict)
-# Do a fabric run on the string 'command' and log results
-sudo_log = lambda command : env_config.fabricLog(command,sudo,log_dict)
-
-################### Deployment ########################################
-
-def setUpKeystoneCredentialsController():
-    exports = open(admin_openrc,'r').read()
-    with prefix(exports):
+    with prefix(env_config.admin_openrc):
 
         if 'swift' not in sudo("keystone user-list"):
-            sudo_log("keystone user-create --name swift --pass {}".format(passwd['SWIFT_PASS']))
-            sudo_log("keystone user-role-add --user swift --tenant service --role admin")
+            msg = "Create user swift"
+            runCheck(msg, "keystone user-create --name swift --pass {}".format(passwd['SWIFT_PASS']))
+
+            msg = "Add the role of admin to user swift"
+            runCheck(msg, "keystone user-role-add --user swift --tenant service --role admin")
         else:
-            logging.debug('swift is already a user. Do nothing',extra=log_dict)
+            print blue('swift is already a user. Do nothing')
 
         if 'swift' not in sudo("keystone service-list"):
-            sudo_log('keystone service-create --name swift --type object-store --description "OpenStack Object Storage"')
+            msg = "Create service swift"
+            runCheck(msg, 'keystone service-create --name swift --type object-store --description "OpenStack Object Storage"')
         else:
-            logging.debug('swift is already a service. Do nothing',extra=log_dict)
+            print blue('swift is already a service. Do nothing')
 
-        if '8080' not in sudo("keystone endpoint-list"):
-            command = "keystone endpoint-create \
-                      --service-id $(keystone service-list | awk '/ object-store / {print $2}') \
-                        --publicurl 'http://controller:8080/v1/AUTH_%(tenant_id)s' \
-                          --internalurl 'http://controller:8080/v1/AUTH_%(tenant_id)s' \
-                            --adminurl http://controller:8080 \
-                              --region regionOne"
-            sudo_log(command)
+        if 'http://controller:8080/' not in sudo("keystone endpoint-list"):
+            msg = "Create endpoint for service swift"
+            command = "keystone endpoint-create " +\
+                    "--service-id $(keystone service-list | awk '/ object-store / {print $2}') " +\
+                    "--publicurl 'http://controller:8080/v1/AUTH_%(tenant_id)s' " +\
+                    "--internalurl 'http://controller:8080/v1/AUTH_%(tenant_id)s' " +\
+                    "--adminurl http://controller:8080/ " +\
+                    "--region regionOne"
+            print 'command : ',command
+            runCheck(msg, command)
         else:
-            logging.debug('8004 is already an endpoint. Do nothing',extra=log_dict)
+            print blue('8080 is already an endpoint. Do nothing')
 
+@roles('controller')
 def installPackagesController():
-    sudo_log("yum -y install openstack-swift-proxy python-swiftclient python-keystone-auth-token \
+    msg = "Install Packages on controller"
+    runCheck(msg, "yum -y install openstack-swift-proxy python-swiftclient python-keystone-auth-token \
               python-keystonemiddleware memcached")
 
-def configureControllerNode():
+
+@roles('controller')
+def configureController():
 
     confFile = '/etc/swift/proxy-server.conf'
-    baseConfFile = open(local_config + 'proxy-server.conf').read()
+    localFile = 'proxy-server.conf'
 
-    # create base conf file
-    sudo_log("echo '{}' >{}".format(baseConfFile,confFile))
+    # proxyServerConf is a config file made based on this model: 
+    # https://raw.githubusercontent.com/openstack/swift/stable/juno/etc/proxy-server.conf-sample
+
+    msg = "Put base {} on controller".format(confFile)
+    out = put(localFile,confFile)
+    if out.succeeded:
+        printMessage('good',msg)
+    else:
+        printMessage('oops',msg)
 
     # set parameters
-    sudo_log("crudini --set {} DEFAULT bind_port 8080".format(confFile))
-    sudo_log("crudini --set {} DEFAULT user swift".format(confFile))
-    sudo_log("crudini --set {} DEFAULT swift_dir /etc/swift".format(confFile))
+    set_parameter(confFile,'DEFAULT','bind_port','8080')
+    set_parameter(confFile,'DEFAULT','user','swift')
+    set_parameter(confFile,'DEFAULT','swift_dir','/etc/swift')
 
 
-    sudo_log("crudini --set {} pipeline:main pipeline 'authtoken cache healthcheck keystoneauth proxy-logging proxy-server'".format(confFile))
-    sudo_log("crudini --set {} app:proxy-server allow_account_management true".format(confFile))
-    sudo_log("crudini --set {} app:proxy-server account_autocreate true".format(confFile))
+    set_parameter(confFile,'pipeline:main','pipeline','authtoken cache healthcheck keystoneauth proxy-logging proxy-server')
+    set_parameter(confFile,'app:proxy-server','allow_account_management','true')
+    set_parameter(confFile,'app:proxy-server','account_autocreate','true')
 
-    sudo_log("crudini --set {} filter:keystoneauth use egg:swift#keystoneauth".format(confFile))
-    sudo_log("crudini --set {} filter:keystoneauth operator_roles admin,_member_".format(confFile))
+    set_parameter(confFile,'filter:keystoneauth','use','egg:swift#keystoneauth')
+    set_parameter(confFile,'filter:keystoneauth','operator_roles','admin,_member_')
 
-    sudo_log("crudini --set {} filter:authtoken paste.filter_factory keystonemiddleware.auth_token:filter_factory".format(confFile))
-    sudo_log("crudini --set {} filter:authtoken auth_uri http://controller:5000/v2.0".format(confFile))
-    sudo_log("crudini --set {} filter:authtoken identity_uri http://controller:35357".format(confFile))
-    sudo_log("crudini --set {} filter:authtoken admin_tenant_name service".format(confFile))
-    sudo_log("crudini --set {} filter:authtoken admin_user swift".format(confFile))
-    sudo_log("crudini --set {} filter:authtoken admin_password {}".format(confFile,passwd['SWIFT_PASS']))
-    sudo_log("crudini --set {} filter:authtoken delay_auth_decision true".format(confFile))
+    set_parameter(confFile,'filter:authtoken','paste.filter_factory','keystonemiddleware.auth_token:filter_factory')
+    set_parameter(confFile,'filter:authtoken','auth_uri','http://controller:5000/v2.0')
+    set_parameter(confFile,'filter:authtoken','identity_uri','http://controller:35357')
+    set_parameter(confFile,'filter:authtoken','admin_tenant_name','service')
+    set_parameter(confFile,'filter:authtoken','admin_user','swift')
+    set_parameter(confFile,'filter:authtoken','admin_password',passwd['SWIFT_PASS'])
+    set_parameter(confFile,'filter:authtoken','delay_auth_decision','true')
 
-    sudo_log("crudini --set {} filter:cache memcache_servers 127.0.0.1:11211".format(confFile))
+    set_parameter(confFile,'filter:cache','memcache_servers','127.0.0.1:11211')
+
+@roles('controller')
+def startServicesController():
+    msg = 'Start the Object Storage proxy service on the controller node'
+    runCheck(msg, "systemctl enable openstack-swift-proxy.service memcached.service")
+    msg = 'Enable the Object Storage proxy service on the controller node'
+    runCheck(msg, "systemctl start openstack-swift-proxy.service memcached.service")
 
 @roles('controller')
 def controllerDeploy():
 
-    # set up logging format dictionary
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
-
-    setUpKeystoneCredentialsController()
-    configureControllerNode()
+    # execute(installPackagesController)
+    execute(setKeystoneController)
+    execute(configureController)
+    execute(startServicesController)
 
 # STORAGE NODE
 
-def setUpNIC(managementInterfaceNetworkScript,hostsFile):
+@roles('storage')
+def setGluster():
+    """
+    Set the storage nodes to use the Gluster brick
+    """
+    # brick = env_config.
+    pass
 
-    # put management interface script on host
-    script = open(managementInterfaceNetworkScript,'r').read()
+@roles('storage')
+def localStorage():
+    """
+    Set up Swift using local storage instead of Gluster.
+    """
+    confFile = '/etc/rsyncd.conf'
 
-    deviceName = local("crudini --get {} '' DEVICE".format(managementInterfaceNetworkScript),capture=True)
-    logging.debug("Grabbing device name for NIC : " + deviceName,extra=log_dict)
+    # Previously created physical partitions
+    partitions = ['/dev/sdd','/dev/sde']
 
-    remoteScript = '/etc/sysconfig/network-scripts/ifcfg-' + deviceName
+    # Mount points for the partitions
+    path = '/srv/node/'
+    mntpoints = ['/srv/node/sdb1','/srv/node/sdc1']
 
-    sudo_log("echo '{}' >{}".format(script,remoteScript))
+    msg = "Install XFS utilities"
+    runCheck(msg, "yum -y install xfsprogs rsync")
 
-    # put an alias on hosts file
-    aliases = open(hostsFile,'r'),readlines()
-    remoteFile = '/etc/hosts'
-    # make backup
-    sudo_log("cp {} {}.back12".format(remoteFile))
+    for p in partitions:
+        msg = "Format {} as XFS".format(p)
+        runCheck(msg, "mkfs.xfs " + p)
 
-    for alias in aliases:
-        # check if alias is already on file
-        # if not, add it
-        if alias in sudo_log("cat " + remoteFile):
-            sudo_log("echo '{}' >>{}".format(alias, remoteFile))
+    for m in mntpoints:
+        msg = "Create mount point " + m
+        runCheck(msg, "mkdir -p " + m)
 
-    # restart networks
-    sudo_log("service network stop")
-    sudo_log("systemctl NetworkManager restart")
-    sudo_log("service network start")
+    # edit fstab
+    for p, m in zip(partitions, mntpoints):
+        msg = "Set up device {} on fstab".format(m)
 
-def installPackagesOnStorageNode():
-    sudo_log("yum -y install openstack-swift-account openstack-swift-container openstack-swift-object")
+        newline = "{} {} xfs noatime,nodiratime,nobarrier,logbufs=8 0 2".format(p,m)
+        out = append('/etc/fstab',newline)
+        
+        if out and out.return_code != 0:
+            printMessage('oops',msg)
+        else:
+            printMessage('good',msg)
 
-def configureStorageNode():
+    # mount devices
+    for m in mntpoints:
+        msg = "Mount device " + m
+        runCheck(msg, "mount " + m)
+
+    # set rsyncd conf file
+    set_parameter(confFile,"''",'uid','swift' )
+    set_parameter(confFile,"''",'gid','swift')
+    set_parameter(confFile,"''",'log file','/var/log/rsyncd.log' )
+    set_parameter(confFile,"''",'pid file','/var/run/rsyncd.pid')
+    set_parameter(confFile,"''",'address',env_config.storageManagement['IPADDR'])
+
+    set_parameter(confFile,'account',"'max connections'",'2')
+    set_parameter(confFile,'account','path',path)
+    set_parameter(confFile,'account',"'read only'",'false')
+    set_parameter(confFile,'account',"'lock file'",'/var/lock/account.lock')
+
+    set_parameter(confFile,'container',"'max connections'",'2')
+    set_parameter(confFile,'container','path',path) 
+    set_parameter(confFile,'container',"'read only'",'false')
+    set_parameter(confFile,'container',"'lock file'",'/var/lock/container.lock')
+
+    set_parameter(confFile,'object',"'max connections'",'2')
+    set_parameter(confFile,'object','path',path)
+    set_parameter(confFile,'object',"'read only'",'false')
+    set_parameter(confFile,'object',"'lock file'",'/var/lock/object.lock')
+
+    msg = 'Enable rsyncd service'
+    runCheck(msg, 'systemctl enable rsyncd.service')
+    msg = 'Start rsyncd service'
+    runCheck(msg, 'systemctl start rsyncd.service')
+
+
+@roles('storage')
+def configureStorage():
+    """
+    Set the account-, container-, and object-server conf files
+    """
 
     serverConfFiles = ['account-server.conf','container-server.conf','object-server.conf']
-
-    managementInterfaceCfg = management_interface
-    managementInterfaceIPAddress = local("crudini --get {} '' IPADDRESS".format(managementInterfaceCfg),capture=True)
+    ip = env_config.storageManagement['IPADDR']
+    devicepath = '/srv/node'
 
     # save base files into the host
     for fil in serverConfFiles:
-        localFile = local_config + fil
-        remoteFile = '/etc/swift/' + fil
-        sudo_log("echo '{}' >{}".format(localFile,remoteFile))
+        remotefile = '/etc/swift/' + fil
+        out = put(fil,remotefile)
+        msg = "Save file {} on host {}".format(fil,env.host)
+        if out.succeeded:
+            printMessage('good', msg)
+        else:
+            printMessage('oops', msg)
 
-    # configure account-server.conf
+    # set variables that are the same in all conf files
+    for confFile in serverConfFiles:
+        set_parameter(confFile,'DEFAULT','bind_ip',ip)
+        set_parameter(confFile,'DEFAULT','user','swift')
+        set_parameter(confFile,'DEFAULT','swift_dir','/etc/swift')
+        set_parameter(confFile,'DEFAULT','devices',devicepath)
+
+        set_parameter(confFile,'filter:recon','recon_cache_path','/var/cache/swift')
+
+
+    # Edit the account-server.conf file
     confFile = '/etc/swift/' + serverConfFiles[0]
 
-    sudo_log("crudini --set {} DEFAULT bind_ip {}".format(confFile,managementInterfaceIPAddress))
-    sudo_log("crudini --set {} DEFAULT bind_port 6002".format(confFile))
-    sudo_log("crudini --set {} DEFAULT user swift".format(confFile))
-    sudo_log("crudini --set {} DEFAULT swift_dir /etc/swift".format(confFile))
-    sudo_log("crudini --set {} DEFAULT devices /srv/node".format(confFile))
-
-    sudo_log("crudini --set {} pipeline:main pipeline healthcheck recon account-server".format(confFile))
-
-    sudo_log("crudini --set {} filter:recon recon_cache_path = /var/cache/swift".format(confFile))
+    set_parameter(confFile,'DEFAULT','bind_port','6002')
+    set_parameter(confFile,'pipeline:main','pipeline',"'healthcheck recon account-server'")
 
     # Edit the /etc/swift/container-server.conf file
     confFile = '/etc/swift/' + serverConfFiles[1]
 
-    sudo_log("crudini --set {} DEFAULT bind_ip {}".format(confFile,managementInterfaceIPAddress))
-    sudo_log("crudini --set {} DEFAULT bind_port 6001".format(confFile))
-    sudo_log("crudini --set {} DEFAULT user swift".format(confFile))
-    sudo_log("crudini --set {} DEFAULT swift_dir /etc/swift".format(confFile))
-    sudo_log("crudini --set {} DEFAULT devices /srv/node".format(confFile))
-
-    sudo_log("crudini --set {} pipeline:main pipeline healthcheck recon container-server".format(confFile))
-
-    sudo_log("crudini --set {} filter:recon recon_cache_path /var/cache/swift".format(confFile))
+    set_parameter(confFile,'DEFAULT','bind_port','6001')
+    set_parameter(confFile,'pipeline:main','pipeline',"'healthcheck recon container-server'")
 
     # Edit the /etc/swift/object-server.conf
     confFile = '/etc/swift/' + serverConfFiles[2]
 
-    sudo_log("crudini --set {} DEFAULT bind_ip {}".format(confFile,managementInterfaceIPAddress))
-    sudo_log("crudini --set {} DEFAULT bind_port 6000".format(confFile))
-    sudo_log("crudini --set {} DEFAULT user swift".format(confFile))
-    sudo_log("crudini --set {} DEFAULT swift_dir /etc/swift".format(confFile))
-    sudo_log("crudini --set {} DEFAULT devices /srv/node".format(confFile))
-
-    sudo_log("crudini --set {} pipeline:main pipeline healthcheck recon object-server".format(confFile))
-
-    sudo_log("crudini --set {} filter:recon recon_cache_path = /var/cache/swift".format(confFile))
+    set_parameter(confFile,'DEFAULT','bind_port','6000')
+    set_parameter(confFile,'pipeline:main','pipeline',"'healthcheck recon object-server'")
 
 
-    # Ensure proper ownership of the mount point directory structure
-    sudo_log("chown -R swift:swift /srv/node")
 
-    # Create the recon directory and ensure proper ownership of it
-    sudo_log("mkdir -p /var/cache/swift")
-    sudo_log(" chown -R swift:swift /var/cache/swift")
+    msg = 'Ensure proper ownership of the mount point directory structure'
+    runCheck(msg, "chown -R swift:swift {}".format(devicepath))
+
+    msg = 'Create the recon directory'
+    runCheck(msg, "mkdir -p /var/cache/swift")
+    msg = 'Ensure proper ownership of recon directory'
+    runCheck(msg, " chown -R swift:swift /var/cache/swift")
 
 def createRing(typeRing,port,IP,deviceName,deviceWeight):
     # ASSUMES A SINGLE DEVICE ON STORAGE NODE
@@ -207,25 +263,31 @@ def createRing(typeRing,port,IP,deviceName,deviceWeight):
 
     with cd('/etc/swift/'):
         # verify if ring is already there
-        ringContents = sudo_log("swift-ring-builder {}.builder".format(typeRing)).splitlines()
-        linesWithTheSpecs =  [l for l in ringContents if (IP in l and deviceName in l)]
-
-        if not linesWithTheSpecs:
+        out = run("swift-ring-builder {}.builder".format(typeRing),quiet=True)
+        if 'does not exist' in out:
             # ring is not created yet
 
             # Create the base *.builder file
-            sudo_log("swift-ring-builder {}.builder create 10 3 1".format(typeRing))
+            run("swift-ring-builder {}.builder create 10 3 1".format(typeRing))
 
             # Add node to the ring
-            sudo_log("swift-ring-builder {}.builder add r1z1-{}:{}/{} {}".format(typeRing,IP,port,deviceName,deviceWeight))
+            run("swift-ring-builder {}.builder add r1z1-{}:{}/{} {}".format(typeRing,IP,port,deviceName,deviceWeight))
 
             # rebalance ring
-            sudo_log("swift-ring-builder {}.builder rebalance")
+            run("swift-ring-builder {}.builder rebalance".format(typeRing))
+        else:
+            print blue("Ring {} already exists. Nothing done".format(typeRing))
 
+        run("ls")
+
+@roles('storage')
 def createInitialRings():
+    """
+    Create 3 initial rings as a test
+    """
 
-    managementIP = local("crudini --get {} '' IPADDR".format(management_interface),capture=True)
-    deviceName = local("crudini --get {} '' DEVICE".format(management_interface),capture=True)
+    managementIP = env_config.storageManagement['IPADDR']
+    deviceName = "/dev/sdd"
     deviceWeight = '100'
 
     # create account ring
@@ -238,97 +300,127 @@ def createInitialRings():
     createRing('object',6000,managementIP,deviceName,deviceWeight)
 
 
+@roles('storage')
 def finalizeInstallation():
+    """
+    Final steps of the installation, such as setting swift.conf and restarting services
+    """
 
-    baseFile = local_config + 'swift.conf'
     confFile = '/etc/swift/swift.conf'
+    localFile = 'swift.conf'
 
-    # put base config file on node
-    putResult = put(baseFile,confFile)
-    logging.debug(putResult,extra=log_dict)
+    msg = 'Put base config file on node'
+    out = put(localFile,confFile)
+    if out.succeeded:
+        printMessage('good',msg)
+    else:
+        printMessage('oops',msg)
+
 
     # In the [swift-hash] section, configure the hash path prefix and suffix for your environment
-    hashPathPrefix = local("crudini --get {} '' HASH_PATH_PREFIX".format(swift_hash_values))
-    hashPathSuffix = local("crudini --get {} '' HASH_PATH_SUFFIX".format(swift_hash_values))
-    sudo_log("crudini --set {} swift-hash swift_hash_path_prefix {}".format(confFile,hashPathPrefix))
-    sudo_log("crudini --set {} swift-hash swift_hash_path_suffix {}".format(confFile,hashPathSuffix))
+    set_parameter(confFile,'swift-hash','swift_hash_path_prefix',env_config.hashPathPrefix)
+    set_parameter(confFile,'swift-hash','swift_hash_path_suffix',env_config.hashPathSuffix)
 
     # In the [storage-policy:0] section, configure the default storage policy
-    sudo_log("crudini --set {} storage-policy:0 name Policy-0".format(confFile))
-    sudo_log("crudini --set {} storage-policy:0 default yes".format(confFile))
+    set_parameter(confFile,'storage-policy:0','name','Policy-0')
+    set_parameter(confFile,'storage-policy:0','default','yes')
 
-    # ensure proper ownership of the configuration directory 
-    sudo_log("chown -R swift:swift /etc/swift")
+    msg = 'Change ownership of the configuration directory to swift'
+    run("chown -R swift:swift /etc/swift")
 
-    startOnController()
+    # restart proxy service on controller node
+    execute(startServicesController)
 
     # start the Object Storage services and configure them to start when the system boots
-    sudo_log("systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service \
+    msg = 'Enable account services'
+    runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service \
               openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
-    sudo_log("systemctl start openstack-swift-account.service openstack-swift-account-auditor.service \
+    msg = 'Start account services'
+    runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service \
             openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
-    sudo_log("systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service \
+
+    msg = 'Enable container services'
+    runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service \
             openstack-swift-container-replicator.service openstack-swift-container-updater.service")
-    sudo_log("systemctl start openstack-swift-container.service openstack-swift-container-auditor.service \
+    msg = 'Start container services'
+    runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service \
             openstack-swift-container-replicator.service openstack-swift-container-updater.service")
-    sudo_log("systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service \
+
+    msg = 'Enable object services'
+    runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service \
             openstack-swift-object-replicator.service openstack-swift-object-updater.service")
-    sudo_log("systemctl start openstack-swift-object.service openstack-swift-object-auditor.service \
+    msg = 'Start object services'
+    runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service \
             openstack-swift-object-replicator.service openstack-swift-object-updater.service")
 
-@roles('controller')
-def startOnController():
-    # start the Object Storage proxy service on the controller node
-    sudo_log("systemctl enable openstack-swift-proxy.service memcached.service")
-    sudo_log("systemctl start openstack-swift-proxy.service memcached.service")
+
+
+@roles('storage')
+def installPackagesStorage():
+    msg = 'Install packages on host ' + env.host
+    runCheck(msg, "yum -y install openstack-swift-account openstack-swift-container openstack-swift-object")
 
 
 @roles('storage')
 def storageDeploy():
 
-    # set up logging format dictionary
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
+    # execute(installPackagesStorage)
 
-    installPackagesOnStorageNode()
+    # execute(localStorage)        
+    # execute(setGluster)
 
-    configureStorageNode()
+    execute(configureStorage)    
 
-    createInitialRings()
-
-    finalizeInstallation()
+    execute(finalizeInstallation)
 
 # GENERAL DEPLOYMENT
 
 def deploy():
     execute(controllerDeploy)
-    execute(storageDeploy)
+    execute(storageDeploy)       
 
 ######################################## TDD #########################################
 
+@roles('controller')
+def testFile():
+    """
+    TDD: Upload and download back a test file
+    """
+    testcontainer = 'demo-container1'
+    testfile = 'FILE'
+
+    # get creadentials for demo user
+    with prefix(env_config.demo_openrc):
+
+        msg = "Create local test file"
+        out = runCheck(msg, "echo 'Test file for Swift TDD\nline1\nline2\nline3' >" + testfile)
+
+        msg = 'Upload test file'
+        runCheck(msg, "swift upload {} {}".format(testcontainer,testfile))
+
+        msg = 'See new container'
+        runCheck(msg, "swift list | grep " + testcontainer)
+
+        msg = 'Download test file'
+        runCheck(msg, "swift download {} {}".format(testcontainer,testfile))
+
+        msg = 'Remove test file'
+        runCheck(msg, 'rm ' + testfile)
 
 @roles('controller')
-def create_stack():
+def checkStat():
+    """
+    TDD: run 'swift stat' and check results
+    """
+    with prefix(env_config.demo_openrc):
+        msg = 'Check the status'
+        print blue(runCheck(msg, 'swift stat'))
 
-    # set up logging format dictionary
-    global log_dict
-    log_dict = {'host_string':env.host_string, 'role':'controller'}
 
-    # upload admin-openrc.sh to set variables in host machine
-    put(admin_openrc)
-    put(heat_test_file)
-    source_command = "source admin-openrc.sh"
-    with prefix(source_command):
-        sudo("NET_ID=$(nova net-list | awk '/ demo-net / { print $2 }')")
-        sudo("""heat stack-create -f test-stack.yml -P "ImageID=cirros-0.3.3-x86_64;NetID=$NET_ID" testStack""")
-        output = sudo("heat stack-list")
 
-    if "testStack" in output:
-        print(green("Stack created succesfully"))
-    else:
-        print(green("Stack NOT created"))
-        
-        
 def tdd():
     with settings(warn_only=True):
-        execute(create_stack)
+        execute(keystone_check,'swift',roles=['controller'])
+        return
+        execute(checkStat)
+        execute(testFile)

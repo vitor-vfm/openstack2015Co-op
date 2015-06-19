@@ -13,14 +13,7 @@ sys.path.append('..')
 from myLib import runCheck
 import env_config
 
-@roles('compute')
-def if_error():
-        sudo('if [[ $? -ne 0 ]]; then # check return code passed to function' + '\n'
-        'print "$1 TIME:$TIME" | tee -a /var/log # if rc > 0 then print error msg and quit' + '\n'
-        'exit $?' + '\n'
-        'fi')
-
-############################ Config ########################################
+############################### Config ########################################
 
 # set mode
 mode = 'normal'
@@ -30,16 +23,7 @@ if output['debug']:
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
-######################### General functions ################################
-
-def get_value(config_file, section, parameter):
-    crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
-    return local(crudini_command, capture=True)
-
-def set_value(config_file, section, parameter, value):
-    run("crudini --set {} {} {} {}".format(config_file, section, parameter, value))
-
-########################### Deployment #####################################
+############################## Deployment #####################################
 
 @roles('controller')
 def installRabbitMQ():
@@ -48,7 +32,8 @@ def installRabbitMQ():
     runCheck(msg, 'yum -y install rabbitmq-server')
 
     msg = "Set NODENAME on rabbit-env.conf"
-    runCheck(msg, 'echo "NODENAME=rabbit@localhost" > /etc/rabbitmq/rabbitmq-env.conf')
+    runCheck(msg, 'echo "NODENAME=rabbit@localhost" '
+            '> /etc/rabbitmq/rabbitmq-env.conf')
 
     msg = "Enable rabbitmq service"
     runCheck(msg, 'systemctl enable rabbitmq-server.service')
@@ -76,7 +61,7 @@ def deploy():
     execute(installRabbitMQ)
     execute(setGuestPassword)
 
-######################################## TDD #########################################
+################################# TDD #########################################
 
 def runAndRecordTime(command,timestamps):
     """
@@ -117,7 +102,8 @@ def installRabbitMQtdd():
     command = 'systemctl restart rabbitmq-server.service'
     runAndRecordTime(command,timestamps)
 
-    command = 'rabbitmqctl change_password guest {}'.format(passwd['RABBIT_PASS'])
+    command = 'rabbitmqctl change_password guest {}'.format\
+            (passwd['RABBIT_PASS'])
     runAndRecordTime(command,timestamps)
 
     return timestamps
@@ -133,16 +119,22 @@ def check_log(timestamps):
 
     with settings(quiet=True):
         for command, time in timestamps:
-            # Grep for message levels "ERROR", "WARNING", and "CRITICAL" and for the timestamp
-            error = run("cat /var/log/messages | egrep -i '(error|warning|critical)' | grep '{}'".format(time))
+            # Grep for message levels "ERROR", "WARNING", and "CRITICAL"
+            # and for the timestamp
+            error = run("cat /var/log/messages "
+                        "| egrep -i '(error|warning|critical)' "
+                        "| grep '{}'".format\
+                                (time))
 
             if error:
-                print red("/var/log/messages shows an error when the following command was run")
+                print red("/var/log/messages shows an error "
+                        "when the following command was run")
                 print red("Command: " + command)
                 print red("Log error message: ")
                 print red(error)
             else:
-                print(green("No error when the command '{}' was run".format(command)))
+                print(green("No error when the command '{}' was run".format\
+                        (command)))
 
 @roles('controller')
 def tdd():

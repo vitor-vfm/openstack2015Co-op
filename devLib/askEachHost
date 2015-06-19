@@ -2,7 +2,7 @@
 QUESTION="$1"
 
 function b {
-	for host in controller network compute1 compute2 compute3 compute4;
+        for host in $(cat hostlist);
 	do 
 		echo "####### asking $host"
 		ssh root@$host "$1"

@@ -33,22 +33,20 @@ def generate_ip(ip_address,nodes_in_role,node):
 	# generate an IP address based on a base ip, a node, and a role list
 	# will be used for setting up interfaces and for testing
 
-	last_octet = int(ip_address.split('.')[3])
-	# first node will have last_octet + 0 as last octet; second node 
-	# will have last_octet + 1, etc   
-	last_octet += nodes_in_role.index(node)
-	# turn it into a list of octets, with the old last octet removed
-	octets = ip_address.split('.')[0:3]
-	# add the dots to the octets
-	octets = [octet + '.' for octet in octets]
-	# append the last octet
-        octets.append(str(last_octet))
+        # split the IP into its four octets
+        octets = ip_address.split('.')
+        
+	# increment last octet according to the node's index in the 
+        # nodes_in_role list; 
+	index = nodes_in_role.index(node)
+        octets[-1] = str( int(octets[-1]) + index )
+
 	# turn it back into a single string
-	ip_address = "".join(octets)
+	ip_address = ".".join(octets)
 	return ip_address
 
 
-################### Deployment ########################################
+########################## Deployment ########################################
 
 def set_up_NIC_using_nmcli(specs_dict):
     # Set up a new interface by using NetworkManager's 
@@ -60,7 +58,7 @@ def set_up_NIC_using_nmcli(specs_dict):
     # ip = sudo("crudini --get {} '' IPADDR".format(conf_file))
 
     command = "nmcli connection add type ethernet"
-    command += " con-name " + ifname # connection name is the same as interface name
+    command += " con-name " + ifname # connection name == interface name
     command += " ifname " + ifname
     command += " ip4 " + ip
 
@@ -71,30 +69,24 @@ def set_up_NIC_using_nmcli(specs_dict):
 # General function to restart network
 def restart_network():
     # restarting network to implement changes 
-    # turn off NetworkManager and use regular network application to restart
-
-    # sudo('chkconfig NetworkManager off')
-    # sudo('service NetworkManager stop')
 
     msg = "Restart network service"
-    runCheck(msg, 'service network restart')
-
-    # sudo('service NetworkManager start')
-    # sudo("systemctl restart NetworkManager")
+    runCheck(msg, 'systemctl restart network')
 
 # General function to set a virtual NIC
 def set_up_network_interface(specs_dict,role):
 
     if 'IPADDR' in specs_dict:
 	# change the IP in the dict for the correct one
-	specs_dict['IPADDR'] = generate_ip(specs_dict['IPADDR'], env.roledefs[role], env.host_string)
+	specs_dict['IPADDR'] = generate_ip(specs_dict['IPADDR'], \
+                env.roledefs[role], env.host_string)
 	#IPs_in_network.append((ip_address, env.host_string))
 
 
     # create config file
     config_file = ''
     for shell_variable in specs_dict.keys():
-        config_file += shell_variable + '=' + specs_dict[shell_variable] + '\n' 
+        config_file += shell_variable + '=' + specs_dict[shell_variable] + '\n'
 
     # save file into directory
 
@@ -112,10 +104,8 @@ def set_up_network_interface(specs_dict,role):
         runCheck(msg, 'echo -e "{}" >{}'.format(config_file,config_file_name))
 
         if mode == 'debug':
-            print blue('This is the test config file: ')
-            print ''
-            print debug_str('cat ' + config_file_name)
-            print ''
+            print blue('This is the test config file: \n')
+            print debug_str('cat ' + config_file_name +'\n')
             print blue('These are the ifcfg files in the directory: ')
             print debug_str('ls | grep ifcfg')
             print 'Deleting test file'
@@ -165,11 +155,6 @@ def configChrony():
     # Install Chrony
     run('yum -y install chrony')
 
-    # enable Chrony
-    msg = 'Enable Chrony service'
-    runCheck(msg, 'systemctl enable chronyd.service')
-    msg = 'Start Chrony service'
-    runCheck(msg, 'systemctl start chronyd.service')
 
     chrony_conf = ''
     if getRole() == 'controller':
@@ -198,6 +183,12 @@ def configChrony():
         msg = 'Restart Chrony service'
         runCheck(msg, 'systemctl restart chronyd.service')
 
+    # enable Chrony
+    msg = 'Enable Chrony service'
+    runCheck(msg, 'systemctl enable chronyd.service')
+    msg = 'Start Chrony service'
+    runCheck(msg, 'systemctl start chronyd.service')
+
 def deployInterface(interface,specs):
     if mode == 'debug':
         print ''
@@ -214,6 +205,16 @@ def deployInterface(interface,specs):
     role = getRole()
     set_up_network_interface(specs,role)
 
+def installChrony():
+    """
+    Install and Configure the Chrony NTP service
+    """
+
+    execute(configChrony,roles=['controller'])
+    execute(configChrony,roles=['network'])
+    execute(configChrony,roles=['compute'])
+    execute(configChrony,roles=['storage'])
+
 @roles('controller')
 def controller_network_deploy():
 
@@ -223,7 +224,6 @@ def controller_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host_string)
 
 @roles('network')
@@ -238,7 +238,6 @@ def network_node_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('compute')
@@ -250,7 +249,6 @@ def compute_network_deploy():
 
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('storage')
@@ -260,7 +258,6 @@ def storage_network_deploy():
     
     restart_network()
     set_hosts()
-    configChrony()
     logging.debug('Deployment done on host' + env.host)
 
 def deploy():
@@ -273,14 +270,15 @@ def deploy():
         execute(compute_network_deploy)
         execute(storage_network_deploy)
 
-######################################## TDD #########################################
+################################ TDD #########################################
 
 # pings an ip address and see if it works
 def ping_ip(ip_address, host, role='', type_interface=''):
     ping_command = 'ping -q -c 1 ' + ip_address
 
     if type_interface:
-        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host,type_interface,ip_address,env.host)
+        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host, \
+                type_interface,ip_address,env.host)
     else:
         msg = 'Ping {} from {}'.format(ip_address,env.host)
 
@@ -291,12 +289,15 @@ def network_tdd_controller():
 
     # ping a website
     ping_ip('www.google.ca','google.ca')
+    ping_ip('8.8.8.8', '8.8.8.8')
 
     # ping management interface on network nodes
     nodes_in_role = env.roledefs['network']
     base_ip = env_config.networkManagement['IPADDR']
     # generate a list of tuples (IP,node) for each network node
-    management_network_interfaces = [( generate_ip(base_ip,nodes_in_role,node) ,node) for node in nodes_in_role]
+    management_network_interfaces = [ \
+            (generate_ip(base_ip,nodes_in_role,node),node) \
+            for node in nodes_in_role]
     # ping the management interfaces
     for interface_ip, network_node in management_network_interfaces:
         ping_ip(interface_ip, network_node, 'network', 'management')
@@ -309,16 +310,23 @@ def network_tdd_network():
 
     # check for connection to internet
     ping_ip('google.ca', 'google.ca')
+    ping_ip('8.8.8.8', '8.8.8.8')
 
     # management interfaces on controller
     specs_dict = env_config.controllerManagement
-    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['controller'], node), node) for node in env.roledefs['controller']]
+
+    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['controller'],\
+            node), node) for node in env.roledefs['controller']]
+
     for ip, host in ip_list:
         ping_ip(ip, host, 'controller', 'management')
 
     # instance tunnel interfaces on compute
     specs_dict = env_config.computeTunnels
-    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['compute'], node), node) for node in env.roledefs['compute']]
+
+    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['compute'],\
+            node), node) for node in env.roledefs['compute']]
+
     for ip, host in ip_list:
         ping_ip(ip, host, 'compute', 'instance tunnel')
 
@@ -327,12 +335,15 @@ def network_tdd_compute():
 
     # check for connection to internet
     ping_ip('google.ca', 'google.ca')
+    ping_ip('8.8.8.8', '8.8.8.8')
 
     # ping management interface on controller nodes
     nodes_in_role = env.roledefs['controller']
     base_ip = env_config.controllerManagement['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
-    management_controller_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
+    management_controller_interfaces = [\
+            (generate_ip(base_ip, nodes_in_role, node), node) \
+            for node in nodes_in_role]
     # ping the management interfaces
     for interface_ip, controller_node in management_controller_interfaces:
         ping_ip(interface_ip, controller_node, 'controller', 'management')
@@ -341,7 +352,9 @@ def network_tdd_compute():
     nodes_in_role = env.roledefs['network']
     base_ip = env_config.networkTunnels['IPADDR']
     # generage a list of tuples (IP,node) for each controller node
-    network_tunnels_interfaces = [(generate_ip(base_ip, nodes_in_role, node), node) for node in nodes_in_role]
+    network_tunnels_interfaces = [\
+            (generate_ip(base_ip, nodes_in_role, node), node) \
+            for node in nodes_in_role]
     # ping the management interfaces
     for interface_ip, network_node in network_tunnels_interfaces:
         ping_ip(interface_ip, network_node, 'network', 'instance tunnel')
@@ -377,11 +390,11 @@ def chronyTDDOtherNodes():
     msg = 'Get chrony sources on ' + env.host
     sourcesTable = runCheck(msg, 'chronyc sources')
     if 'controller' in sourcesTable:
-        resultmsg = "controller is a source for chrony"
+        resultmsg = "Controller is a source for chrony on " + env.host
         print green(resultmsg)
         logging.debug(resultmsg)
     else:
-        resultmsg = "controller is not a source for chrony"
+        resultmsg = "Controller is NOT a source for chrony on " + env.host
         print red(resultmsg)
         logging.error(resultmsg)
 

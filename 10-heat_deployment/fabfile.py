@@ -126,12 +126,6 @@ def start_heat_services():
     runCheck(msg, "systemctl enable openstack-heat-api.service openstack-heat-api-cfn.service openstack-heat-engine.service")
     msg = 'Start heat services'
     runCheck(msg, "systemctl start openstack-heat-api.service openstack-heat-api-cfn.service openstack-heat-engine.service")
-
-
-def download_packages():
-    # make sure we have crudini
-    msg = 'Install crudini'
-    runCheck(msg, 'yum install -y crudini')
    
 @roles('controller')
 def setup_heat():
@@ -167,8 +161,7 @@ def create_stack():
 
         # Create a test stack based on the test file
         msg = "Create a test stack"
-        runCheck(msg, """heat stack-create -f test-stack.yml -P "ImageID=cirros-0.3.3-x86_64; NetID={}" testStack"""\
-                .format(netid))
+        runCheck(msg, """heat stack-create -f test-stack.yml -P "ImageID=cirros-0.3.3-x86_64; NetID={}" testStack""".format(netid))
         output = run("heat stack-list",quiet=True)
 
     if "testStack" in output:
