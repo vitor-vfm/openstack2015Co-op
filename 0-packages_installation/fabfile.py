@@ -12,7 +12,9 @@ sys.path.append('..')
 import env_config
 
 from myLib import *
-logging.info("################# " + os.path.dirname(os.path.abspath(__file__)) + " ########################")
+logging.info("################# "\
+             + os.path.dirname(os.path.abspath(__file__)) + \
+             " ########################")
 
 ############################ Config ########################################
 
@@ -43,10 +45,18 @@ def installConfigureChrony():
 	printMessage("good", msg)
 	logging.info(msg +" version "+ var1)
 	if env.host == 'controller':
-		sed ('/etc/chrony.conf','server 0.centos.pool.ntp.org iburst','server time1.srv.ualberta.ca iburst')
-		sed ('/etc/chrony.conf','server 1.centos.pool.ntp.org iburst','server time2.srv.ualberta.ca iburst')
-		sed ('/etc/chrony.conf','server 2.centos.pool.ntp.org iburst','server time3.srv.ualberta.ca iburst')
-		sed ('/etc/chrony.conf','server 3.centos.pool.ntp.org iburst','')
+		sed ('/etc/chrony.conf',
+                     'server 0.centos.pool.ntp.org iburst',
+                     'server time1.srv.ualberta.ca iburst')
+		sed ('/etc/chrony.conf',
+                     'server 1.centos.pool.ntp.org iburst',
+                     'server time2.srv.ualberta.ca iburst')
+		sed ('/etc/chrony.conf',
+                     'server 2.centos.pool.ntp.org iburst',
+                     'server time3.srv.ualberta.ca iburst')
+		sed ('/etc/chrony.conf',
+                     'server 3.centos.pool.ntp.org iburst',
+                     '')
 	else:
 		run('echo "server controller iburst" > /etc/chrony.conf')
 
@@ -80,7 +90,9 @@ def install_packages():
 	# Install RDO repository for Juno
 	print('installing yum-plugin-priorities and epel-release')
 	with settings(warn_only=True):
-		sudo('yum -y install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm')
+		sudo('yum -y install '
+                     'http://rdo.fedorapeople.org/openstack-juno/'
+                     'rdo-release-jun.rpm')
 	printMessage("good", 'rdo-release-juno.rpm is installed')
 	logging.info( 'rdo-release-juno.rpm is installed')
 
@@ -105,7 +117,8 @@ def installMariaDB():
         sudo_log('yum -y install mariadb mariadb-server MySQL-python')
 
         # set the config file
-        # NB: crudini was not used because of unexpected parsing 1) without equal sign 2) ! include dir  
+        # NB: crudini was not used because of 
+        # unexpected parsing 1) without equal sign 2) ! include dir  
 
         section_header = '\[mysqld\]'
 
@@ -119,7 +132,8 @@ def installMariaDB():
                 confFile += '.back12'
 
             # check if the section is already in the file
-            if run("grep '{}' {}".format(section_header,confFile)).return_code == 0:
+            out = run("grep '{}' {}".format(section_header,confFile))
+            if out.return_code == 0:
                 # do a search and replace for all the variables
                 specs = env_config.mariaDBmysqldSpecs
                 for line in specs:
@@ -128,9 +142,11 @@ def installMariaDB():
                         pattern_to_find = line[:line.index('=')]
                     else:
                         pattern_to_find = line
-                    sudo_log('sed -i "/{}/ d" {}'.format(pattern_to_find,confFile))
+                    sudo_log('sed -i "/{}/ d" {}'.format\
+                            (pattern_to_find,confFile))
                     # append new line with the new value under the header
-                    sudo("sed -i '/{}/ a\{}' {}".format(section_header,line,confFile))
+                    sudo("sed -i '/{}/ a\{}' {}".format\
+                            (section_header,line,confFile))
 
             else:
                 # simply add the section
@@ -140,16 +156,20 @@ def installMariaDB():
 
             # set bind-address (controller's management interface)
             bind_address = env_config.controllerManagement['IPADDR']
-            if sudo('grep bind-address {}'.format(confFile),warn_only=True).return_code != 0:
+            out = sudo('grep bind-address {}'.format(confFile),warn_only=True)
+            if out.return_code != 0:
                 # simply add the new line
                 new_line = "bind-address = " + bind_address
-                sudo('sed -i "/{}/a {}" my.cnf'.format(section_header,new_line))
+                sudo('sed -i "/{}/a {}" my.cnf'.format\
+                        (section_header,new_line))
             else:
-                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format(bind_address))
+                sudo_log("sed -i '/bind-address/ s/=.*/= {}/' my.cnf".format\
+                        (bind_address))
 
             if mode == 'debug':
                 print "Here is the final my.cnf file:"
-                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),quiet=True))
+                print blue(sudo_log("grep -vE '(^#|^$)' {}".format(confFile),\
+                        quiet=True))
 
         # enable MariaDB
         sudo_log('systemctl enable mariadb.service')
@@ -187,9 +207,13 @@ def deploy():
 def tdd():
 	with settings(warn_only=True):
 		print('checking var/log/messages for chronyd output')
-		run('grep "$(date +"%b %d %H")" /var/log/messages| grep -Ei "(chronyd)"')
+		run('grep "$(date +"%b %d %H")" /var/log/messages | '
+                    'grep -Ei "(chronyd)"')
+
 	logging.info( " TDD on " +env.host)
-	with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
+	with settings(hide('warnings', 'running', 'stdout', 'stderr'),
+                warn_only=True):
+
 		var1=run('systemctl status chronyd.service |grep Active')
 		var2=run('date')
 	logging.info(env.host +" Chrony is "+ var1)
