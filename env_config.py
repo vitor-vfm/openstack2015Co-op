@@ -156,10 +156,10 @@ pid-file=/var/run/mariadb/mariadb.pid
 !includedir /etc/my.cnf.d
 """
     # for the env dictionary
-    roledefs = { 'compute' : ['root@computeVM'],
-                 'network' : ['root@networkVM'],
-                 'storage' : ['root@storageVM'],
-                 'controller' : ['root@controllerVM']}
+    roledefs = { 'compute' : ['root@compute'],
+                 'network' : ['root@network'],
+                 'storage' : ['root@storage'],
+                 'controller' : ['root@controller']}
 
     roles = roledefs.keys()
     hosts = roledefs.values()
@@ -196,7 +196,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                'CEILOMETER_PASS' : '34ceilometer_ks43',
                }
 
-    ##############################################################################
+    ###########################################################################
 
     ##    ## ######## ######## ##      ##  #######  ########  ##    ## 
     ###   ## ##          ##    ##  ##  ## ##     ## ##     ## ##   ##  
@@ -206,39 +206,39 @@ pid-file=/var/run/mariadb/mariadb.pid
     ##   ### ##          ##    ##  ##  ## ##     ## ##    ##  ##   ##  
     ##    ## ########    ##     ###  ###   #######  ##     ## ##    ## 
 
-    ##############################################################################
+    ###########################################################################
   
-    controllerManagement = { 'DEVICE' : 'eth1',
+    controllerManagement = { 'DEVICE' : 'eno1',
                              'IPADDR' : '192.168.1.11',
                              'NETMASK' : '255.255.255.0'}
 
-    controllerTunnels = { 'DEVICE' : 'eth2',
+    controllerTunnels = { 'DEVICE' : 'enp2s10',
                           'IPADDR' : '192.168.2.11',
                           'NETMASK' : '255.255.255.0'}
 
-    networkManagement = { 'DEVICE' : 'eth1',
+    networkManagement = { 'DEVICE' : 'eno1',
                           'IPADDR' : '192.168.1.21',
                           'NETMASK' : '255.255.255.0'}
 
-    networkTunnels = { 'DEVICE' : 'eth2',
+    networkTunnels = { 'DEVICE' : 'enp2s10',
                        'IPADDR' : '192.168.2.21',
                        'NETMASK' : '255.255.255.0'}
 
-    networkExternal = { 'DEVICE' : 'eth3',
+    networkExternal = { 'DEVICE' : 'enp2s12',
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
                         'BOOTPROTO' : '"none"',
                         'IPADDR' : '192.168.3.21'}
 
-    computeManagement = { 'DEVICE' : 'eth1',
+    computeManagement = { 'DEVICE' : 'eno1',
                           'IPADDR' : '192.168.1.41',
                           'NETMASK' : '255.255.255.0'}
 
-    computeTunnels = { 'DEVICE' : 'eth2',
+    computeTunnels = { 'DEVICE' : 'enp2s10',
                        'IPADDR' : '192.168.2.41',
                        'NETMASK' : '255.255.255.0'}
 
-    storageManagement = {   'DEVICE' : 'eth1',
+    storageManagement = {   'DEVICE' : 'enp0s25',
                             'IPADDR' : '192.168.1.31',
                             'NETMASK' : '255.255.255.0'}
 
