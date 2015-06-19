@@ -23,17 +23,6 @@ if output['debug']:
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
-############################ General functions ################################
-
-def get_value(config_file, section, parameter):
-    crudini_command = "crudini --get {} {} {}".format\
-            (config_file, section, parameter)
-    return local(crudini_command, capture=True)
-
-def set_value(config_file, section, parameter, value):
-    run("crudini --set {} {} {} {}".format\
-            (config_file, section, parameter, value))
-
 ############################## Deployment #####################################
 
 @roles('controller')

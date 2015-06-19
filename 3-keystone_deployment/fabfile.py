@@ -14,6 +14,7 @@ from myLib import runCheck, createDatabaseScript,
 from myLib import keystone_check, database_check, align_y, align_n
 
 ######################## Configuring Environment ##############################
+
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
