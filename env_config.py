@@ -335,8 +335,8 @@ else:
 
     ###########################################################################
 
-    partition = {   'size_reduction_of_home' : '3.5G',
-                    'partition_size' : '500M' }
+    partition = {   'size_reduction_of_home' : '40G',
+                    'partition_size' : '10G',        }
 
 
 
