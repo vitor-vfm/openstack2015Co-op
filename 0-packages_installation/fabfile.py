@@ -21,7 +21,6 @@ logging.info("################# "\
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
-print env.roledefs
 
 mode = 'normal'
 if output['debug']:
@@ -79,22 +78,21 @@ def installConfigureChrony():
 def install_packages():
 	# Install EPEL (Extra Packages for Entreprise Linux
 	print('installing yum-plugin-priorities and epel-release')
-	sudo('yum -y install yum-plugin-priorities')
-	sudo('yum -y install epel-release')
+        msg = 'Install EPEL packages'
+	runCheck(msg, 'yum -y install yum-plugin-priorities')
+	runCheck(msg, 'yum -y install epel-release')
 	for item in ['yum-plugin-priorities','epel-release']:
 		var1=run('rpm -qa |grep %s ' %item)
-		printMessage("good", item +" is version "+ var1)
+		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
 
 
 	# Install RDO repository for Juno
 	print('installing yum-plugin-priorities and epel-release')
-	with settings(warn_only=True):
-		sudo('yum -y install '
-                     'http://rdo.fedorapeople.org/openstack-juno/'
-                     'rdo-release-jun.rpm')
-	printMessage("good", 'rdo-release-juno.rpm is installed')
-	logging.info( 'rdo-release-juno.rpm is installed')
+        msg = 'Install rdo-release-juno.rpm'
+        runCheck(msg, 'yum -y install '
+                'http://rdo.fedorapeople.org/openstack-juno/'
+                'rdo-release-juno.rpm')
 
     # Install GlusterFS
     #run('yum -y install glusterfs-fuse glusterfs')
@@ -104,7 +102,7 @@ def install_packages():
 	sudo("yum -y install crudini wget")
 	for item in ['crudini','wget']:
 		var1=run('rpm -qa |grep %s ' %item)
-		printMessage("good", item +" is version "+ var1)
+		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
 
 
