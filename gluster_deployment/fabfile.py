@@ -13,7 +13,7 @@ from myLib import runCheck
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
-PARTITION = '/dev/sda1'
+PARTITION = 'strFile'
 EX_VOLUME = 'vol0'
 GLANCE_VOLUME = 'glance_volume'
 
@@ -23,47 +23,50 @@ def get_parameter(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
     return local(crudini_command, capture=True)
 
-@roles('controller', 'compute', 'network', 'storage')
+@roles('controller')#, 'compute', 'network', 'storage')
 def shrinkHome():
-    run('umount /rootfs')
-    run('lvresize -L -{} /dev/mapper/centos-root'.format(env_config.partition['size_reduction_of_home']))
-    run('mkfs -t xfs -f /dev/centos/root')
-    run('mount /rootfs')
+    home_dir = run("lvs | awk '/home/ {print $2}'")
+    run('umount /home')
+    run('lvresize -L -{} /dev/mapper/{}-home'.format(env_config.partition['size_reduction_of_home'], home_dir))
+    run('mkfs -t xfs -f /dev/{}/home'.format(home_dir))
+    run('mount /home')
 
 @roles('controller', 'network', 'compute', 'storage')
 def prepGlusterFS():
+    home_dir = run("lvs | awk '/home/ {print $2}'")
     run('lvs')
-    run('lvcreate -i 1 -I 8 -L {} centos'.format(env_config.partition['partition_size']))
-    run('lvrename /dev/centos/lvol0 strFile')
-    run('lvcreate -i 1 -I 8 -L {} centos'.format(env_config.partition['partition_size']))
-    run('lvrename /dev/centos/lvol0 strObj')
-    run('lvcreate -i 1 -I 8 -L {} centos'.format(env_config.partition['partition_size']))
-    run('lvrename /dev/centos/lvol0 strBlk')
+    run('lvcreate -i 1 -I 8 -L {} {}'.format(env_config.partition['partition_size'], home_dir))
+    run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
+    run('lvcreate -i 1 -I 8 -L {} {}'.format(env_config.partition['partition_size'], home_dir))
+    run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
+    run('lvcreate -i 1 -I 8 -L {} {}'.format(env_config.partition['partition_size'], home_dir))
+    run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
     run('lvs')
 
 @roles('controller', 'compute', 'network', 'storage')
 def setup_gluster():
     # Get and install gluster
+    home_dir = run("lvs | awk '/home/ {print $2}'")
     runCheck('Getting packages for gluster', 'wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     runCheck('Installing gluster packages', 'yum -y install glusterfs glusterfs-fuse glusterfs-server')
     runCheck('Starting glusterd', 'systemctl start glusterd')
     # If not already made, make the file system (include in partition function)
-    if run('mount | grep sda | grep xfs', warn_only=True).return_code:
-        sudo('mkfs.xfs -f {}'.format(PARTITION))
+    if something = run('mount | grep strFile | grep xfs', warn_only=True).return_code:
+        sudo('mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
     # Mount the brick on the established partition
     sudo('mkdir -p /data/gluster/brick')
-    if run('mount | grep sda | grep /data/gluster', warn_only=True).return_code:
-        runCheck('Mounting brick on partition', 'mount {} /data/gluster'.format(PARTITION))
+    if run('mount | grep strFile | grep /data/gluster', warn_only=True).return_code:
+        runCheck('Mounting brick on partition', 'mount /dev/{}/{} /data/gluster'.format(home_dir, PARTITION))
     # Setup the ports
-    # sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
-    # sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
-    # sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 2049        -j ACCEPT')
-    # sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 24007       -j ACCEPT')
-    # sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 38465:38469 -j ACCEPT')
-    # sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
+    #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
+    #sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
+    #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 2049        -j ACCEPT')
+    #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 24007       -j ACCEPT')
+    #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 38465:38469 -j ACCEPT')
+    #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
     # Ensure the nodes can probe each other
     runCheck('Restarting glusterd', 'service glusterd restart')
-    sudo('iptables -F')
+    #sudo('iptables -F')
 
 @roles('controller', 'compute', 'network', 'storage')
 def probe():
@@ -176,6 +179,24 @@ def undeploy_glance():
     execute(destroy_mount)
     execute(destroy_vol)
     execute(destroy_gluster) 
+
+
+################################ Cinder ######################################
+
+@roles('controller', 'storage')
+def installGluster():
+    runCheck('Install Gluster', 'yum -y install glusterfs-fuse')
+
+@roles('controller', 'storage')
+def configureCinder():
+    runCheck('Setup drivers', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT volume_driver cinder.volume.drivers.glusterfs.GlusterfsDriver')
+    runCheck('Setup shares', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_shares_config /etc/cinder/shares.conf')
+    runCheck('Setup mount points', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_mount_point_base /var/lib/cinder/volumes')
+
+
+@roles('controller', 'compute', 'network', 'storage')
+def forMySafety():
+    runCheck('Getting rid of Gluster', 'yum remove glusterfs-fuse')
 
 
 ################################ Deployment ##################################

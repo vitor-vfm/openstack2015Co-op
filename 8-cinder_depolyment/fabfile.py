@@ -206,12 +206,12 @@ def setup_cinder_on_storage():
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
     NETWORK_MANAGEMENT_IP = env_config.storageManagement['IPADDR']
-    cinder_device_name = "sdc"
-    cinder_partition_name = "sdc1"
+    cinder_device_name = "sda"
+    cinder_partition_name = "sda1"
 
     install_and_start_lvm()
 
-    setup_volume_using_cinder(cinder_partition_name)
+    #setup_volume_using_cinder(cinder_partition_name)
 
     setup_lvm_config_file(cinder_device_name)
 
@@ -233,7 +233,7 @@ def deploy():
 def verify():
     with prefix(admin_openrc):
         runCheck('List service components', 'cinder service-list')
-    runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
+    #runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
     with prefix(demo_openrc):    
         runCheck('Create a 1 GB volume', 'cinder create --display-name demo-volume1 1')
         runCheck('Verify creation and availability of volume', 'cinder list')
