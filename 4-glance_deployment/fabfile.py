@@ -24,7 +24,10 @@ glance_registry_config_file = "/etc/glance/glance-registry.conf"
 ######################## Deployment ########################################
 
 
-def setup_glance_database(GLANCE_DBPASS):
+@roles('controller')
+def setup_glance_database():
+
+    GLANCE_DBPASS=passwd['GLANCE_DBPASS']
 
     mysql_commands = createDatabaseScript('glance',GLANCE_DBPASS)
     
@@ -33,7 +36,8 @@ def setup_glance_database(GLANCE_DBPASS):
     
 
 
-def setup_glance_keystone(GLANCE_PASS):
+@roles('controller')
+def setup_glance_keystone():
     """
     Set up Keystone credentials for Glance
 
@@ -41,6 +45,7 @@ def setup_glance_keystone(GLANCE_PASS):
     (b) an endpoint for the 'glance' service
     """
 
+    GLANCE_PASS = passwd['GLANCE_PASS']
     # get admin credentials to run the CLI commands
     credentials = env_config.admin_openrc
 
@@ -49,72 +54,111 @@ def setup_glance_keystone(GLANCE_PASS):
 
         if 'glance' not in run("keystone user-list"):
             msg = "Create user glance"
-            runCheck(msg, "keystone user-create --name glance --pass {}".format(GLANCE_PASS))
+            runCheck(msg, "keystone user-create --name glance --pass {}"\
+                    .format(GLANCE_PASS))
 
             msg = "Give the user 'glance the role of admin"
-            runCheck(msg, "keystone user-role-add --user glance --tenant service --role admin")
+            runCheck(msg, "keystone user-role-add --user glance "
+                    "--tenant service --role admin")
         else:
             print blue("User glance already created. Do nothing")
 
         if 'glance' not in run("keystone service-list"):
             msg = "Create service glance"
-            runCheck(msg, "keystone service-create --name glance --type image --description 'OpenStack Image Service'")
+            runCheck(msg, "keystone service-create --name glance --type image "
+                    "--description 'OpenStack Image Service'")
         else:
             print blue("Service glance already created. Do nothing")
 
         if 'http://controller:9292' not in run("keystone endpoint-list"):
             msg = "Create endpoint for service glance"
-            runCheck(msg, "keystone endpoint-create " + \
-                    "--service-id $(keystone service-list | awk '/ image / {print $2}') " +\
-                    "--publicurl http://controller:9292 " + \
-                    "--internalurl http://controller:9292 " + \
-                    "--adminurl http://controller:9292 " + \
+            runCheck(msg, "keystone endpoint-create "
+                    "--service-id $(keystone service-list "
+                    "| awk '/ image / {print $2}') "
+                    "--publicurl http://controller:9292 "
+                    "--internalurl http://controller:9292 "
+                    "--adminurl http://controller:9292 "
                     "--region regionOne")
         else:
-            print blue("Enpoint for service glance already created. Do nothing")
+            print blue("Enpoint for service glance already created. "
+                    "Nothing done")
+
+@roles('controller')
+def setup_glance_config_files():
+
+    GLANCE_DBPASS = passwd['GLANCE_DBPASS']
+    GLANCE_PASS = passwd['GLANCE_PASS']
     
-def setup_glance_config_files(GLANCE_PASS, GLANCE_DBPASS):
-    
-    set_parameter(glance_api_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
-    set_parameter(glance_api_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
-    set_parameter(glance_api_config_file, 'keystone_authtoken', 'identity_uri', 'http://controller:35357') 
+    set_parameter(glance_api_config_file, 'database', 'connection', \
+            'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
+
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'auth_uri', \
+            'http://controller:5000/v2.0')
+
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'identity_uri', \
+            'http://controller:35357') 
+
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
+
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_user', 'glance')   
+
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS)   
+
     set_parameter(glance_api_config_file, 'paste_deploy', 'flavor', 'keystone')
 
     set_parameter(glance_api_config_file, 'glance_store', 'default_store', 'file')
-    set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', '/var/lib/glance/images/')
+
+    # this line sets up the default filesystem. This will be overwritten by the Gluster setup
+    set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', \
+            '/var/lib/glance/images/')
+
     set_parameter(glance_api_config_file, 'DEFAULT', 'notification_driver', 'noop')
+
     set_parameter(glance_api_config_file, 'DEFAULT', 'verbose', 'True')
 
 
 
-    set_parameter(glance_registry_config_file, 'database', 'connection', 'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
+    set_parameter(glance_registry_config_file, 'database', 'connection', \
+            'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
 
 
-    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'auth_uri', 'http://controller:5000/v2.0')
-    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'identity_uri', 'http://controller:35357') 
-    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
-    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_user', 'glance')   
-    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS)   
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'auth_uri', \
+            'http://controller:5000/v2.0')
+
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'identity_uri', \
+            'http://controller:35357') 
+
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_tenant_name', \
+            'service') 
+
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_user', \
+            'glance')   
+
+    set_parameter(glance_registry_config_file, 'keystone_authtoken', 'admin_password', \
+            GLANCE_PASS)   
+
     set_parameter(glance_registry_config_file, 'paste_deploy', 'flavor', 'keystone')
 
     set_parameter(glance_registry_config_file, 'DEFAULT', 'notification_driver', 'noop')
+
     set_parameter(glance_registry_config_file, 'DEFAULT', 'verbose', 'True')
     
 
 
 
+@roles('controller')
 def populate_database():
     msg = "Populate database"
     runCheck(msg, "su -s /bin/sh -c 'glance-manage db_sync' glance")
     
+@roles('controller')
 def start_glance_services():
     msg = "Enable glance services"
-    runCheck(msg, "systemctl enable openstack-glance-api.service openstack-glance-registry.service")
+    runCheck(msg, "systemctl enable openstack-glance-api.service "
+            "openstack-glance-registry.service")
     msg = "Start glance services"
-    runCheck(msg, "systemctl restart openstack-glance-api.service openstack-glance-registry.service")
+    runCheck(msg, "systemctl enable openstack-glance-api.service "
+            "openstack-glance-registry.service")
 
 
 @roles('controller')
@@ -154,36 +198,32 @@ def setup_GlusterFS_Nova():
 def setup_GlusterFS():
     execute(setup_GlusterFS_Glance)
     execute(setup_GlusterFS_Nova)
-    execute(start_glance_services,roles=['controller'])
+    execute(start_glance_services)
 
 
+@roles('controller')
 def install_packages():
     # Install packages
     msg = "Install OpenStack Glance packages"
-    runCheck(msg, "yum install -y openstack-glance python-glanceclient",quiet=True)
+    runCheck(msg, "yum install -y openstack-glance python-glanceclient")
    
 @roles('controller')
 def setup_glance():
     
-    install_packages()
-
-    setup_glance_database(passwd['GLANCE_DBPASS'])
-    
-    setup_glance_keystone(passwd['GLANCE_PASS'])
-
-    setup_glance_config_files(passwd['GLANCE_PASS'], passwd['GLANCE_DBPASS'])
-
-    populate_database()
-
-    start_glance_services()
+    execute(install_packages)
+    execute(setup_glance_database)
+    execute(setup_glance_keystone)
+    execute(setup_glance_config_files)
+    execute(populate_database)
+    execute(start_glance_services)
         
-################################## Deployment ########################################
+############################## Deployment #####################################
 
 def deploy():
     execute(setup_glance)
     execute(setup_GlusterFS)
 
-######################################## TDD #########################################
+################################# TDD #########################################
 
 
 
