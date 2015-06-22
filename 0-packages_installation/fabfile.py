@@ -28,7 +28,7 @@ if output['debug']:
 
 ########################## Deployment ########################################
 
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def renameHost():
 	msg='Renaming host to %s' % env['host']
 	run('hostnamectl set-hostname %s' % env['host'])
@@ -36,7 +36,7 @@ def renameHost():
 	logging.info(msg)
 
 
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def installConfigureChrony():
 	msg='installing chrony on %s'% env.host
 	sudo('yum -y install chrony')
@@ -74,7 +74,7 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def install_packages():
 	# Install EPEL (Extra Packages for Entreprise Linux
 	print('installing yum-plugin-priorities and epel-release')
@@ -120,7 +120,8 @@ def installMariaDB():
         fileContents = env_config.my_cnf
 
         # set bind-address
-        fileContents = fileContents.replace('BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
+        fileContents = fileContents.replace(\
+                'BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
 
         # make a backup
         run("cp {} {}.back12".format(confFile,confFile))
@@ -150,8 +151,8 @@ def ask_for_reboot():
     run('wall Everybody please reboot')
 
 
-#@roles('controller','compute','network','storage')
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
+# @roles('controller','compute','network')
 @with_settings(warn_only=True)
 def test():
 	result=run('systemctl status chronyd.service')
@@ -164,14 +165,15 @@ def test():
 
 
 
-#@roles('controller','compute','network','storage')
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
+# @roles('controller','compute','network')
 def deploy():
 	execute(renameHost)
 	execute(installConfigureChrony)
 	execute(install_packages)
 
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
+# @roles('controller','compute','network')
 def tdd():
 	with settings(warn_only=True):
 		print('checking var/log/messages for chronyd output')
