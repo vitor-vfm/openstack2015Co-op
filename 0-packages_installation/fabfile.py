@@ -21,7 +21,6 @@ logging.info("################# "\
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
-print env.roledefs
 
 mode = 'normal'
 if output['debug']:
@@ -29,7 +28,7 @@ if output['debug']:
 
 ########################## Deployment ########################################
 
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def renameHost():
 	msg='Renaming host to %s' % env['host']
 	run('hostnamectl set-hostname %s' % env['host'])
@@ -37,7 +36,7 @@ def renameHost():
 	logging.info(msg)
 
 
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def installConfigureChrony():
 	msg='installing chrony on %s'% env.host
 	sudo('yum -y install chrony')
@@ -75,26 +74,25 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def install_packages():
 	# Install EPEL (Extra Packages for Entreprise Linux
 	print('installing yum-plugin-priorities and epel-release')
-	sudo('yum -y install yum-plugin-priorities')
-	sudo('yum -y install epel-release')
+        msg = 'Install EPEL packages'
+	runCheck(msg, 'yum -y install yum-plugin-priorities')
+	runCheck(msg, 'yum -y install epel-release')
 	for item in ['yum-plugin-priorities','epel-release']:
 		var1=run('rpm -qa |grep %s ' %item)
-		printMessage("good", item +" is version "+ var1)
+		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
 
 
 	# Install RDO repository for Juno
 	print('installing yum-plugin-priorities and epel-release')
-	with settings(warn_only=True):
-		sudo('yum -y install '
-                     'http://rdo.fedorapeople.org/openstack-juno/'
-                     'rdo-release-jun.rpm')
-	printMessage("good", 'rdo-release-juno.rpm is installed')
-	logging.info( 'rdo-release-juno.rpm is installed')
+        msg = 'Install rdo-release-juno.rpm'
+        runCheck(msg, 'yum -y install '
+                'http://rdo.fedorapeople.org/openstack-juno/'
+                'rdo-release-juno.rpm')
 
     # Install GlusterFS
     #run('yum -y install glusterfs-fuse glusterfs')
@@ -104,7 +102,7 @@ def install_packages():
 	sudo("yum -y install crudini wget")
 	for item in ['crudini','wget']:
 		var1=run('rpm -qa |grep %s ' %item)
-		printMessage("good", item +" is version "+ var1)
+		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
 
 
@@ -122,7 +120,8 @@ def installMariaDB():
         fileContents = env_config.my_cnf
 
         # set bind-address
-        fileContents = fileContents.replace('BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
+        fileContents = fileContents.replace(\
+                'BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
 
         # make a backup
         run("cp {} {}.back12".format(confFile,confFile))
@@ -152,8 +151,8 @@ def ask_for_reboot():
     run('wall Everybody please reboot')
 
 
-#@roles('controller','compute','network','storage')
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
+# @roles('controller','compute','network')
 @with_settings(warn_only=True)
 def test():
 	result=run('systemctl status chronyd.service')
@@ -166,14 +165,15 @@ def test():
 
 
 
-#@roles('controller','compute','network','storage')
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
+# @roles('controller','compute','network')
 def deploy():
 	execute(renameHost)
 	execute(installConfigureChrony)
 	execute(install_packages)
 
-@roles('controller','compute','network')
+@roles('controller','compute','network','storage')
+# @roles('controller','compute','network')
 def tdd():
 	with settings(warn_only=True):
 		print('checking var/log/messages for chronyd output')
