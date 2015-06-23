@@ -144,6 +144,13 @@ def configure_ML2_plugin_general():
     set_parameter(ml2_conf_file,'securitygroup','firewall_driver',\
             'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver')
 
+def restart_nova_controller():
+    # Restart nova
+    msg = "Restart Nova services"
+    runCheck(msg, 'systemctl restart openstack-nova-api.service openstack-nova-scheduler.service' + \
+              ' openstack-nova-conductor.service')
+
+
 
 def configure_nova_to_use_neutron():
 
@@ -160,12 +167,6 @@ def configure_nova_to_use_neutron():
     set_parameter(nova_conf,'neutron','admin_tenant_name','service')
     set_parameter(nova_conf,'neutron','admin_username','neutron')
     set_parameter(nova_conf,'neutron','admin_password',passwd['NEUTRON_PASS'])
-
-    # Restart nova
-    msg = "Restart Nova services"
-    runCheck(msg, 'systemctl restart openstack-nova-api.service openstack-nova-scheduler.service' + \
-              ' openstack-nova-conductor.service')
-
 
 @roles('controller')
 def installPackagesController():
@@ -189,6 +190,8 @@ def controller_deploy():
     configure_ML2_plugin_general()
 
     configure_nova_to_use_neutron()
+
+    restart_nova_controller()
 
     # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini 
     # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
@@ -670,6 +673,6 @@ def tdd():
         execute(controller_tdd)
         execute(network_tdd)
         execute(compute_tdd)
-        execute(createInitialNetworkTdd)
+        # execute(createInitialNetworkTdd)
 
 
