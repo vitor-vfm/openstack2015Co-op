@@ -217,8 +217,6 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     controllerTunnels = { 'DEVICE' : 'enp2s10',
                           'IPADDR' : '192.168.2.11',
-                          'GATEWAY' : '192.168.1.1',
-                          'DNS1' : '129.128.208.13',
                           'NETMASK' : '255.255.255.0',
                           }
 
@@ -231,8 +229,6 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     networkTunnels = { 'DEVICE' : 'enp2s10',
                        'IPADDR' : '192.168.2.21',
-                       'GATEWAY' : '192.168.1.1',
-                       'DNS1' : '129.128.208.13',
                        'NETMASK' : '255.255.255.0',
                        }
 
@@ -240,8 +236,6 @@ pid-file=/var/run/mariadb/mariadb.pid
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
                         'BOOTPROTO' : '"none"',
-                        'GATEWAY' : '192.168.1.1',
-                        'DNS1' : '129.128.208.13',
                         'IPADDR' : '192.168.3.21'}
 
     computeManagement = { 'DEVICE' : 'eno1',
@@ -252,8 +246,6 @@ pid-file=/var/run/mariadb/mariadb.pid
                           }
 
     computeTunnels = { 'DEVICE' : 'enp2s10',
-                       'GATEWAY' : '192.168.1.1',
-                       'DNS1' : '129.128.208.13',
                        'IPADDR' : '192.168.2.41',
                        'NETMASK' : '255.255.255.0',
                        }
