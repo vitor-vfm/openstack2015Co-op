@@ -237,9 +237,6 @@ def deploy():
 @roles('controller')
 def verify():
 
-    database_check('nova')
-    keystone_check('nova')
-    
     nova_services = ['nova-conductor','nova-consoleauth','nova-scheduler', 'nova-cert']
     
     with prefix(env_config.admin_openrc):
@@ -282,28 +279,6 @@ def verify():
             print align_n("{} does NOT exist in nova service list".format(service)) 
             logging.error("{} does NOT exist in nova service list".format(service)) 
 
-                
-                # if (run("cat service-list | awk '/{}/ {print $6}'".format(service)) == 'controller'):
-                #     print align_y("{} host is controller".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT controller".format(service)) 
-
-                # if (run("cat service-list | awk '/{}/ {print $8}'".format(service)) == 'internal'):
-                #     print align_y("{} host is internal".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT internal".format(service)) 
-
-                # if (run("cat service-list | awk '/{}/ {print $10}'".format(service)) == 'enabled'):
-                #     print align_y("{} host is enabled".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT enabled".format(service)) 
-
-                # if (run("cat service-list | awk '/{}/ {print $12}'".format(service)) == 'up'):
-                #     print align_y("{} host is controller".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT controller".format(service)) 
-
-
         # checks all statuses to make sure all images are ACTIVE
         statuses = run("cat image-list | awk '// {print $6}' ",quiet=True)
     
@@ -326,3 +301,5 @@ def tdd():
     with settings(warn_only=True):
         # to be done on the controller node
         execute(verify)
+        execute(database_check,'nova',roles=['controller'])
+        execute(keystone_check,'nova',roles=['controller'])
