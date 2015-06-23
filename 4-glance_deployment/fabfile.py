@@ -57,7 +57,7 @@ def setup_glance_keystone():
             runCheck(msg, "keystone user-create --name glance --pass {}"\
                     .format(GLANCE_PASS))
 
-            msg = "Give the user 'glance the role of admin"
+            msg = "Give the user glance the role of admin"
             runCheck(msg, "keystone user-role-add --user glance "
                     "--tenant service --role admin")
         else:
@@ -157,7 +157,7 @@ def start_glance_services():
     runCheck(msg, "systemctl enable openstack-glance-api.service "
             "openstack-glance-registry.service")
     msg = "Start glance services"
-    runCheck(msg, "systemctl enable openstack-glance-api.service "
+    runCheck(msg, "systemctl start openstack-glance-api.service "
             "openstack-glance-registry.service")
 
 
@@ -221,7 +221,7 @@ def setup_glance():
 
 def deploy():
     execute(setup_glance)
-    execute(setup_GlusterFS)
+    # execute(setup_GlusterFS)
 
 ################################# TDD #########################################
 
@@ -236,18 +236,25 @@ def imageCreationTDD():
     runCheck(msg, "wget -P /tmp/images " + url)
 
     with prefix(env_config.admin_openrc):
-    # with prefix(env_config.demo_openrc):
+
+        run('keystone user-list')
 
         msg = 'Create glance image'
-        runCheck(msg, "glance -d image-create --name 'cirros-0.3.3-x86_64' --file /tmp/images/cirros-0.3.3-x86_64-disk.img --disk-format qcow2 --container-format bare --is-public True --progress")
+        runCheck(msg, "glance -d image-create --name 'cirros-0.3.3-x86_64' "
+                "--file /tmp/images/cirros-0.3.3-x86_64-disk.img "
+                "--disk-format qcow2 "
+                "--container-format bare "
+                "--is-public True "
+                # "--progress"
+                )
 
         msg = 'List images'
         output = runCheck(msg, "glance image-list")
 
-    if 'cirros-0.3.3-x86_64' in output:
-        print(align_y("Successfully installed cirros image"))
-    else:
-        print(align_n("Couldn't install cirros image"))
+        if 'cirros-0.3.3-x86_64' in output:
+            print(align_y("Successfully installed cirros image"))
+        else:
+            print(align_n("Couldn't install cirros image"))
         
     msg = 'Clear local files'
     run("rm -r /tmp/images")
