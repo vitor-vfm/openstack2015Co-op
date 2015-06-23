@@ -35,6 +35,19 @@ def renameHost():
 	printMessage("good", msg)
 	logging.info(msg)
 
+@roles(env_config.roles)
+def disableFirewall():
+    
+    msg = 'Disable firewalld on ' + env.host
+    runCheck(msg, 'systemctl disable firewalld')
+    msg = 'Stop firewalld on ' + env.host
+    runCheck(msg, 'systemctl stop firewalld')
+
+@roles(env_config.roles)
+def disableSELinux():
+
+    set_parameter('/etc/selinux/config', '', 'SELINUX', 'disabled')
+
 
 @roles('controller','compute','network','storage')
 def installConfigureChrony():
@@ -103,8 +116,8 @@ def install_packages():
 		logging.info(item +" is version "+ var1)
 
         # save credentials in the host
-        put('../admin_openrc.sh')
-        put('../demo_openrc.sh')
+        # put('../admin_openrc.sh')
+        # put('../demo_openrc.sh')
 
 
 @roles('controller')
@@ -173,6 +186,13 @@ def deploy():
 	execute(installConfigureChrony)
 	execute(install_packages)
 	execute(installMariaDB)
+	execute(disableFirewall)
+	execute(disableSELinux)
+
+        # reboot the machine
+        with settings(warn_only=True):
+            run('reboot')
+
 
 @roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
