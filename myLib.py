@@ -127,6 +127,8 @@ def createDatabaseScript(databaseName,password):
             "CREATE DATABASE {}; ".format(databaseName) + \
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'localhost' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}'; ".format(password) +\
+            "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'controller' ".format(databaseName,databaseName) + \
+            "IDENTIFIED BY '{}'; ".format(password) +\
             "GRANT ALL PRIVILEGES ON {}.* TO '{}'@'%' ".format(databaseName,databaseName) + \
             "IDENTIFIED BY '{}';".format(password)
 
