@@ -94,16 +94,17 @@ def install_packages():
                 'http://rdo.fedorapeople.org/openstack-juno/'
                 'rdo-release-juno.rpm')
 
-    # Install GlusterFS
-    #run('yum -y install glusterfs-fuse glusterfs')
-
-    # Install Crudini
-	print('installing crudini wget')
+        # Install Crudini and wget
+        print('installing crudini wget')
 	sudo("yum -y install crudini wget")
 	for item in ['crudini','wget']:
 		var1=run('rpm -qa |grep %s ' %item)
 		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
+
+        # save credentials in the host
+        put('../admin_openrc.sh')
+        put('../demo_openrc.sh')
 
 
 @roles('controller')
@@ -171,6 +172,7 @@ def deploy():
 	execute(renameHost)
 	execute(installConfigureChrony)
 	execute(install_packages)
+	execute(installMariaDB)
 
 @roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
