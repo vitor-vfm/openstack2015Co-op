@@ -1,8 +1,15 @@
 #!/bin/bash
 QUESTION="$1"
 
+# Choose hostlist file (production or development)
+if $(hostname | grep ipmi5); then
+    hostlist=hostlist_prod;
+else
+    hostlist=hostlist_dev;
+fi
+
 function b {
-        for host in $(cat hostlist);
+        for host in $(cat $hostlist);
 	do 
 		echo "####### asking $host"
 		ssh root@$host "$1"
