@@ -46,7 +46,7 @@ def disableFirewall():
 @roles(env_config.roles)
 def disableSELinux():
 
-    set_parameter('/etc/selinux/config', '', 'SELINUX', 'disabled')
+    set_parameter('/etc/selinux/config', '""', 'SELINUX', 'disabled')
 
 
 @roles('controller','compute','network','storage')
