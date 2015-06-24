@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from fabric.api import *
-from fabric.contrib.files import append, exists, sed
+from fabric.contrib.files import append, exists, sed, put
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
 from fabric.state import output
@@ -116,8 +116,15 @@ def install_packages():
 		logging.info(item +" is version "+ var1)
 
         # save credentials in the host
-        # put('../admin_openrc.sh')
-        # put('../demo_openrc.sh')
+        contents = env_config.admin_openrc
+        msg = 'Put admin_openrc.sh in '+env.host
+        runCheck(msg, "echo '{}' >/root/admin_openrc.sh".format(contents))
+
+        contents = env_config.demo_openrc
+        msg = 'Put demo_openrc.sh in '+env.host
+        runCheck(msg, "echo '{}' >/root/demo_openrc.sh".format(contents))
+
+
 
         msg = 'Upgrade to implement changes'
         runCheck(msg, 'yum -y upgrade')
