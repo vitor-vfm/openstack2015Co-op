@@ -221,7 +221,7 @@ def setup_glance():
 
 def deploy():
     execute(setup_glance)
-    # execute(setup_GlusterFS)
+    execute(setup_GlusterFS)
 
 ################################# TDD #########################################
 
@@ -245,7 +245,7 @@ def imageCreationTDD():
                 "--disk-format qcow2 "
                 "--container-format bare "
                 "--is-public True "
-                # "--progress"
+                "--progress"
                 )
 
         msg = 'List images'
