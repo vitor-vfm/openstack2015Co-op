@@ -119,6 +119,10 @@ def install_packages():
         # put('../admin_openrc.sh')
         # put('../demo_openrc.sh')
 
+        msg = 'Upgrade to implement changes'
+        runCheck(msg, 'yum -y upgrade')
+
+
 
 @roles('controller')
 def installMariaDB():
