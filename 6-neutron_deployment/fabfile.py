@@ -477,85 +477,118 @@ def compute_deploy():
 
 # INITIAL NETWORK
 
-def createExternalNetwork():
-    if 'ext-net' in run('neutron net-list'):
-        msg = 'Ext-net already created'
-        print msg
-    else:
-        msg = 'create external network on network node'
-        runCheck(msg,'neutron net-create ext-net --router:external True '+\
-                '--provider:physical_network external --provider:network_type flat')
+@roles('controller')
+def createExtNet():
+    
+    with prefix(env_config.admin_openrc):
 
-def createInitialSubnet():
+        if 'ext-net' in run('neutron net-list'):
+            msg = 'Ext-net already created'
+            print msg
+        else:
+            msg = 'create external network on network node'
+            runCheck(msg,
+                    'neutron net-create ext-net '
+                    '--router:external True '
+                    '--provider:physical_network external '
+                    '--provider:network_type flat'
+                    )
 
-    # Change this IP schema before deployment
-    floatingIPStart = '192.168.100.10'
-    floatingIPEnd = '192.168.100.20'
-    ExternalNetworkGateway = '192.168.100.1'
-    ExternalNetworkCIDR = '192.168.100.0/24'
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
 
-    if 'ext-subnet' in run('neutron subnet-list'):
-        msg = 'ext-net already created'
-        print msg
-    else:
-        msg = 'create initial subnet on external net on network node'
-        runCheck(msg,'neutron subnet-create ext-net --name ext-subnet --allocation-pool start={},end={} --disable-dhcp --gateway {} {}'\
-                  .format(floatingIPStart,floatingIPEnd,ExternalNetworkGateway,ExternalNetworkCIDR))
+@roles('controller')
+def createExtSubnet():
 
-def createDemoTenantNetwork():
-    gateway = '10.0.0.1'
-    cidr = '10.0.0.0/8'
+    start = env_config.ext_subnet['start']
+    end = env_config.ext_subnet['end']
+    gateway = env_config.ext_subnet['gateway']
+    cidr = env_config.ext_subnet['cidr']
+
+    with prefix(env_config.admin_openrc):
+        if 'ext-subnet' in run('neutron subnet-list'):
+            msg = 'ext-subnet already created'
+            print msg
+        else:
+            msg = 'create initial subnet on external net on network node'
+            runCheck(msg,
+                    'neutron subnet-create ext-net '
+                    '--name ext-subnet '
+                    '--allocation-pool start={},end={} '.format(start,end)+\
+                    '--disable-dhcp '
+                    '--gateway {} {}'.format(gateway,cidr)
+                    )
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
+
+@roles('controller')
+def createDemoNet():
+
+    with prefix(env_config.admin_openrc):
+        if 'demo-net' in run('neutron net-list'):
+            msg = 'Demo-net already created'
+            print msg
+        else:
+            msg = 'create initial demo tenant network on network node'
+            runCheck(msg, 'neutron net-create demo-net')
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
+
+@roles('controller')
+def createDemoSubnet():
+
+    gateway = env_config.demo_subnet['gateway']
+    cidr = env_config.demo_subnet['cidr']
+
+    with prefix(env_config.admin_openrc):
+        if 'demo-subnet' in run('neutron subnet-list'):
+            msg = 'Demo-subnet already created'
+            print msg
+        else:
+            msg = 'create subnet on demo-net'
+            runCheck(msg,
+                    'neutron subnet-create demo-net '
+                    '--name demo-subnet '
+                    '--gateway {} {}'.format(gateway,cidr)
+                    )
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
+
+@roles('controller')
+def createDemoRouter():
+    
+    with prefix(env_config.admin_openrc):
+        if 'demo-router' in run('neutron router-list'):
+            msg = 'Demo-router already created'
+            print msg
+        else:
+            msg = 'create the demo router'
+            runCheck(msg,'neutron router-create demo-router')
+
+            msg = 'attach the demo router to the demo subnet'
+            runCheck(msg,
+                    'neutron router-interface-add demo-router demo-subnet')
+
+            msg = 'attach the router to the external network '
+            'by setting it as the gateway'
+            runCheck(msg,'neutron router-gateway-set demo-router ext-net')
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
 
 
-    if 'demo-net' in run('neutron net-list'):
-        msg = 'Demo-net already created'
-        print msg
-    else:
-        msg = 'create initial demo tenant network on network node'
-        runCheck(msg, 'neutron net-create demo-net')
-
-    if 'demo-subnet' in run('neutron subnet-list'):
-        msg = 'Demo-subnet already created'
-        print msg
-    else:
-        msg = 'create subnet on demo-net'
-        runCheck(msg,'neutron subnet-create demo-net --name demo-subnet --gateway {} {}'.format(gateway,cidr))
-
-def createSetupRouter():
-    if 'demo-router' in run('neutron router-list'):
-        msg = 'Demo-router already created'
-        print msg
-    else:
-        msg = 'create the demo router'
-        runCheck(msg,'neutron router-create demo-router')
-
-        msg = 'attach the demo router to the demo subnet'
-        runCheck(msg,'neutron router-interface-add demo-router demo-subnet')
-
-        msg = 'attach the router to the external network by setting it as the gateway'
-        runCheck(msg,'neutron router-gateway-set demo-router ext-net')
-
-
-#@roles('network')
 @roles('controller')
 def createInitialNetwork():
     # Creates a sample network for testing 
 
-    # get admin credentials
-    adminCred = env_config.admin_openrc
-    demoCred = env_config.demo_openrc
-
-    with prefix(adminCred):
-        createExternalNetwork()
-        createInitialSubnet()
-
-    with prefix(demoCred):
-        createDemoTenantNetwork()
-        createSetupRouter()
-
-
-
-
+    execute(createExtNet)
+    execute(createExtSubnet)
+    execute(createDemoNet)
+    execute(createDemoSubnet)
+    execute(createDemoRouter)
 
 def deploy():
 
@@ -568,22 +601,13 @@ def deploy():
 ######################################## TDD #########################################
 
 @roles('network', 'controller', 'compute')
-def createInitialNetworkTdd(schema="192.168.100"):
+def createInitialNetworkTdd():
 
     # this is repeated, need to translate into env_config
-    floatingIPStart = '{}.10'.format(schema)
-    floatingIPEnd = '{}.20'.format(schema)
-    ExternalNetworkGateway = '{}.1'.format(schema)
-    ExternalNetworkCIDR = '{}.0/24'.format(schema)
-    
+    floatingIPStart = env_config.ext_subnet['start']
 
-    if run("ping -c 1 {}".format(floatingIPStart)).return_code == 0:
-        align_y("{} able to ping the tenant router gateway".format(env.host))
-    else:
-        align_n("{} NOT able to ping the tenant router gateway".format(env.host))
-        
-    
-
+    msg = "Ping the tenant router gateway from {}".format(env.host)
+    runCheck(msg, "ping -c 1 {}".format(floatingIPStart))
 
 @roles('controller')
 def controller_tdd():
