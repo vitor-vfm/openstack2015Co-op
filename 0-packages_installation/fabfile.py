@@ -12,7 +12,7 @@ import sys, os
 sys.path.append('..')
 import env_config
 
-from myLib import printMessage, runCheck
+from myLib import printMessage, runCheck, set_parameter
 
 logging.info("################# "\
              + os.path.dirname(os.path.abspath(__file__)) + \
