@@ -23,16 +23,26 @@ etc_nova_config_file = "/etc/nova/nova.conf"
     
 ######################## Deployment ########################################
 
-def setup_nova_database_on_controller(NOVA_DBPASS):
+@roles('controller')
+def install_packages_controller():
+    msg = 'Install Nova packages on controller node(s)'
+    installation_command = "yum install -y openstack-nova-api openstack-nova-cert " + \
+                           "openstack-nova-conductor openstack-nova-console openstack-nova-novncproxy " + \
+                           "openstack-nova-scheduler python-novaclient"
+    runCheck(msg, installation_command)
+
+@roles('controller')
+def setup_nova_database_on_controller():
+
+    NOVA_DBPASS = passwd['NOVA_DBPASS']
 
     mysql_commands = createDatabaseScript('nova',NOVA_DBPASS)
     
     msg = "Create database for Nova"
     runCheck(msg, 'echo "' + mysql_commands + '" | mysql -u root')
     
-
-
-def setup_nova_keystone_on_controller(NOVA_PASS):
+@roles('controller')
+def setup_nova_keystone_on_controller():
     """
     Set up Keystone credentials for Nova
 
@@ -40,10 +50,10 @@ def setup_nova_keystone_on_controller(NOVA_PASS):
     (b) an endpoint for the 'nova' service
     """
 
-    # get admin credentials to run the CLI commands
-    credentials = env_config.admin_openrc
+    NOVA_PASS = passwd['NOVA_PASS']
 
-    with prefix(credentials):
+    # get admin credentials to run the CLI commands
+    with prefix(env_config.admin_openrc):
         # before each creation, we check a list to avoid duplicates
 
         if 'nova' not in run("keystone user-list"):
@@ -57,7 +67,8 @@ def setup_nova_keystone_on_controller(NOVA_PASS):
 
         if 'nova' not in run("keystone service-list"):
             msg = "Create service nova"
-            runCheck(msg, "keystone service-create --name nova --type compute --description 'OpenStack Compute'")
+            runCheck(msg, "keystone service-create --name nova --type compute " + \
+                    "--description 'OpenStack Compute'")
         else:
             print blue("Service nova already created. Do nothing")
 
@@ -72,9 +83,16 @@ def setup_nova_keystone_on_controller(NOVA_PASS):
         else:
             print blue("Enpoint for service nova already created. Do nothing")
     
-def setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, CONTROLLER_MANAGEMENT_IP):
+@roles('controller')
+def setup_nova_config_files_on_controller():
 
-    set_parameter(etc_nova_config_file, 'database', 'connection', 'mysql://nova:{}@controller/nova'.format(NOVA_DBPASS))
+    NOVA_PASS = passwd['NOVA_PASS']
+    NOVA_DBPASS = passwd['NOVA_DBPASS']
+    RABBIT_PASS = passwd['RABBIT_PASS']
+    CONTROLLER_MANAGEMENT_IP = env_config.controllerManagement['IPADDR']
+
+    set_parameter(etc_nova_config_file, 'database', 'connection', \
+            'mysql://nova:{}@controller/nova'.format(NOVA_DBPASS))
 
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -96,14 +114,16 @@ def setup_nova_config_files_on_controller(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, C
     set_parameter(etc_nova_config_file, 'DEFAULT', 'verbose', 'True')
 
 
+@roles('controller')
 def populate_database_on_controller():
     msg = "Populate database on controller node"
     runCheck(msg, "su -s /bin/sh -c 'nova-manage db sync' nova")
 
+@roles('controller')
 def start_nova_services_on_controller():
-    nova_services = "openstack-nova-api.service openstack-nova-cert.service \
-            openstack-nova-consoleauth.service openstack-nova-scheduler.service \
-            openstack-nova-conductor.service openstack-nova-novncproxy.service"
+    nova_services = "openstack-nova-api.service openstack-nova-cert.service " + \
+                    "openstack-nova-consoleauth.service openstack-nova-scheduler.service " + \
+                    "openstack-nova-conductor.service openstack-nova-novncproxy.service"
     
     msg = "Enable nova services on controller"
     runCheck(msg, "systemctl enable " + nova_services)
@@ -114,6 +134,13 @@ def start_nova_services_on_controller():
     msg = "Restart nova services on controller"
     runCheck(msg, "systemctl restart " + nova_services)
 
+@roles('compute')
+def install_packages_compute():
+
+    msg = 'Install Nova packages'
+    installation_command = 'yum install -y openstack-nova-compute sysfsutils'
+    runCheck(msg, installation_command)
+    
 def hardware_accel_check():
     """
     Determine whether compute node supports hardware acceleration for VMs
@@ -127,11 +154,16 @@ def hardware_accel_check():
         set_parameter(etc_nova_config_file, 'libvirt', 'virt_type', 'qemu')
 
 
-def setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP):
+@roles('compute')
+def setup_nova_config_files_on_compute():
     """
     Set up variables on several config files on the compute node
     """
 
+    NOVA_PASS = passwd['NOVA_PASS']
+    NOVA_DBPASS = passwd['NOVA_DBPASS']
+    RABBIT_PASS = passwd['RABBIT_PASS']
+    NETWORK_MANAGEMENT_IP = env_config.networkManagement['IPADDR']
     
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -159,6 +191,7 @@ def setup_nova_config_files_on_compute(NOVA_PASS, NOVA_DBPASS, RABBIT_PASS, NETW
     hardware_accel_check()
 
 
+@roles('compute')
 def start_services_on_compute():
     msg = "Enable libvirt daemon"
     runCheck(msg, "systemctl enable libvirtd.service")
@@ -176,35 +209,22 @@ def start_services_on_compute():
 
 @roles('compute')
 def setup_nova_on_compute():
-    msg = 'Install Nova packages'
-    installation_command = 'yum install -y openstack-nova-compute sysfsutils'
-    runCheck(msg, installation_command)
-    
 
-    NETWORK_MANAGEMENT_IP = env_config.networkManagement['IPADDR']
-    setup_nova_config_files_on_compute(passwd['NOVA_PASS'], passwd['NOVA_DBPASS'], passwd['RABBIT_PASS'], NETWORK_MANAGEMENT_IP)        
-
-    start_services_on_compute()
-    
+    execute(install_packages_compute)
+    execute(setup_nova_config_files_on_compute)        
+    execute(start_services_on_compute)
 
 @roles('controller')   
 def setup_nova_on_controller():
-    msg = 'Install Nova packages'
-    installation_command = "yum install -y openstack-nova-api openstack-nova-cert " +\
-            "openstack-nova-conductor openstack-nova-console openstack-nova-novncproxy " + \
-            "openstack-nova-scheduler python-novaclient"
-    runCheck(msg, installation_command)
 
-    CONTROLLER_MANAGEMENT_IP = env_config.controllerManagement['IPADDR']
+    execute(install_packages_controller)
+    execute(setup_nova_database_on_controller)
+    execute(setup_nova_keystone_on_controller)
+    execute(setup_nova_config_files_on_controller)
+    execute(populate_database_on_controller)
+    execute(start_nova_services_on_controller)
 
-    setup_nova_database_on_controller(passwd['NOVA_DBPASS'])
-    setup_nova_keystone_on_controller(passwd['NOVA_PASS'])
-
-    setup_nova_config_files_on_controller(passwd['NOVA_PASS'], passwd['NOVA_DBPASS'], passwd['RABBIT_PASS'], CONTROLLER_MANAGEMENT_IP)
-    populate_database_on_controller()
-    start_nova_services_on_controller()
-
-################### Deployment ########################################
+################################## Deployment ########################################
 
 def deploy():
     execute(setup_nova_on_controller)
@@ -217,9 +237,6 @@ def deploy():
 @roles('controller')
 def verify():
 
-    database_check('nova')
-    keystone_check('nova')
-    
     nova_services = ['nova-conductor','nova-consoleauth','nova-scheduler', 'nova-cert']
     
     with prefix(env_config.admin_openrc):
@@ -262,28 +279,6 @@ def verify():
             print align_n("{} does NOT exist in nova service list".format(service)) 
             logging.error("{} does NOT exist in nova service list".format(service)) 
 
-                
-                # if (run("cat service-list | awk '/{}/ {print $6}'".format(service)) == 'controller'):
-                #     print align_y("{} host is controller".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT controller".format(service)) 
-
-                # if (run("cat service-list | awk '/{}/ {print $8}'".format(service)) == 'internal'):
-                #     print align_y("{} host is internal".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT internal".format(service)) 
-
-                # if (run("cat service-list | awk '/{}/ {print $10}'".format(service)) == 'enabled'):
-                #     print align_y("{} host is enabled".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT enabled".format(service)) 
-
-                # if (run("cat service-list | awk '/{}/ {print $12}'".format(service)) == 'up'):
-                #     print align_y("{} host is controller".format(service)) 
-                # else:
-                #     print align_n("{} host is NOT controller".format(service)) 
-
-
         # checks all statuses to make sure all images are ACTIVE
         statuses = run("cat image-list | awk '// {print $6}' ",quiet=True)
     
@@ -306,3 +301,5 @@ def tdd():
     with settings(warn_only=True):
         # to be done on the controller node
         execute(verify)
+        execute(database_check,'nova',roles=['controller'])
+        execute(keystone_check,'nova',roles=['controller'])

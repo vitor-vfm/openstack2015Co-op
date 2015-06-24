@@ -174,9 +174,9 @@ pid-file=/var/run/mariadb/mariadb.pid
     passwd = { 'METADATA_SECRET' : '34m3t$3c43',
                'ROOT_SECRET' : '34root43',
                'RABBIT_PASS' : '34RabbGuest43',
-               'NOVA_DBPASS' : '34nova_db43',
                'NEUTRON_DBPASS' : '34neu43',
                'HEAT_DBPASS' : '34heat_db43',
+               'GLANCE_PASS' : '34glance_ks43',
                'GLANCE_DBPASS' : '34glance_db43',
                'SAHARA_DBPASS' : '34sahara_db43',
                'CINDER_DBPASS' : '34cinder_db43',
@@ -184,9 +184,9 @@ pid-file=/var/run/mariadb/mariadb.pid
                'DEMO_PASS' : '34demo43',
                'KEYSTONE_DBPASS' : '34keydb43',
                'NOVA_PASS' : '34nova_ks43',
+               'NOVA_DBPASS' : '34nova_db43',
                'NEUTRON_PASS' : '34neu43',
                'HEAT_PASS' : '34heat_ks43',
-               'GLANCE_PASS' : '34glance_ks43',
                'SAHARA_PASS' : '34sahara_ks43',
                'CINDER_PASS' : '34cinder_ks43',
                'SWIFT_PASS' : '34$w1f43',
@@ -217,8 +217,6 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     controllerTunnels = { 'DEVICE' : 'enp2s10',
                           'IPADDR' : '192.168.2.11',
-                          'GATEWAY' : '192.168.1.1',
-                          'DNS1' : '129.128.208.13',
                           'NETMASK' : '255.255.255.0',
                           }
 
@@ -231,8 +229,6 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     networkTunnels = { 'DEVICE' : 'enp2s10',
                        'IPADDR' : '192.168.2.21',
-                       'GATEWAY' : '192.168.1.1',
-                       'DNS1' : '129.128.208.13',
                        'NETMASK' : '255.255.255.0',
                        }
 
@@ -240,8 +236,6 @@ pid-file=/var/run/mariadb/mariadb.pid
                         'TYPE' : 'Ethernet',
                         'ONBOOT' : '"yes"',
                         'BOOTPROTO' : '"none"',
-                        'GATEWAY' : '192.168.1.1',
-                        'DNS1' : '129.128.208.13',
                         'IPADDR' : '192.168.3.21'}
 
     computeManagement = { 'DEVICE' : 'eno1',
@@ -252,8 +246,6 @@ pid-file=/var/run/mariadb/mariadb.pid
                           }
 
     computeTunnels = { 'DEVICE' : 'enp2s10',
-                       'GATEWAY' : '192.168.1.1',
-                       'DNS1' : '129.128.208.13',
                        'IPADDR' : '192.168.2.41',
                        'NETMASK' : '255.255.255.0',
                        }
@@ -290,6 +282,24 @@ pid-file=/var/run/mariadb/mariadb.pid
 
         hosts[IP] = 'storage' + str(i+1)
 
+    """
+    admin-openrc and demo-openrc
+    
+    These scripts set up credentials for the keystone users
+    admin and demo respectively. They export system variables that 
+    allow the user to execute certain keystone CLI commands. They 
+    are necessary every time the deployment scripts use keystone.
+    """
+
+    admin_openrc = "export OS_TENANT_NAME=admin; " +\
+            "export OS_USERNAME=admin; " + \
+            "export OS_PASSWORD={}; ".format(passwd['ADMIN_PASS']) + \
+            "export OS_AUTH_URL=http://controller:35357/v2.0"
+
+    demo_openrc = "export OS_TENANT_NAME=demo; " +\
+            "export OS_USERNAME=demo; " + \
+            "export OS_PASSWORD={}; ".format(passwd['DEMO_PASS']) + \
+            "export OS_AUTH_URL=http://controller:5000/v2.0"
 
     ###########################################################################
 
@@ -320,6 +330,19 @@ pid-file=/var/run/mariadb/mariadb.pid
     ##    ## ########  #######     ##    ##     ##  #######  ##    ## 
     ############################################################################
 
+    # Specifications for the initial networks
+
+    ext_subnet = {
+            'start' : '192.168.1.100',
+            'end' : '192.168.1.150',
+            'gateway' : '192.168.1.1',
+            'cidr' : '192.168.1.0/24',
+            }
+
+    demo_subnet = {
+            'gateway' : '10.0.0.1', 
+            'cidr' : '10.0.0.0/8', 
+            }
 
 
 
@@ -341,24 +364,6 @@ pid-file=/var/run/mariadb/mariadb.pid
 
 
 
-    """
-    admin-openrc and demo-openrc
-    
-    These scripts set up credentials for the keystone users
-    admin and demo respectively. They export system variables that 
-    allow the user to execute certain keystone CLI commands. They 
-    are necessary every time the deployment scripts use keystone.
-    """
-
-    admin_openrc = "export OS_TENANT_NAME=admin; " +\
-            "export OS_USERNAME=admin; " + \
-            "export OS_PASSWORD={}; ".format(passwd['ADMIN_PASS']) + \
-            "export OS_AUTH_URL=http://controller:35357/v2.0"
-
-    demo_openrc = "export OS_TENANT_NAME=demo; " +\
-            "export OS_USERNAME=demo; " + \
-            "export OS_PASSWORD={}; ".format(passwd['DEMO_PASS']) + \
-            "export OS_AUTH_URL=http://controller:5000/v2.0"
 
     ##################################################################
 

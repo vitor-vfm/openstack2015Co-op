@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from fabric.api import *
-from fabric.contrib.files import append, exists, sed
+from fabric.contrib.files import append, exists, sed, put
 from fabric.decorators import with_settings
 from fabric.context_managers import cd
 from fabric.state import output
@@ -12,7 +12,7 @@ import sys, os
 sys.path.append('..')
 import env_config
 
-from myLib import printMessage, runCheck
+from myLib import printMessage, runCheck, set_parameter
 
 logging.info("################# "\
              + os.path.dirname(os.path.abspath(__file__)) + \
@@ -34,6 +34,19 @@ def renameHost():
 	run('hostnamectl set-hostname %s' % env['host'])
 	printMessage("good", msg)
 	logging.info(msg)
+
+@roles(env_config.roles)
+def disableFirewall():
+    
+    msg = 'Disable firewalld on ' + env.host
+    runCheck(msg, 'systemctl disable firewalld')
+    msg = 'Stop firewalld on ' + env.host
+    runCheck(msg, 'systemctl stop firewalld')
+
+@roles(env_config.roles)
+def disableSELinux():
+
+    set_parameter('/etc/selinux/config', '""', 'SELINUX', 'disabled')
 
 
 @roles('controller','compute','network','storage')
@@ -94,16 +107,28 @@ def install_packages():
                 'http://rdo.fedorapeople.org/openstack-juno/'
                 'rdo-release-juno.rpm')
 
-    # Install GlusterFS
-    #run('yum -y install glusterfs-fuse glusterfs')
-
-    # Install Crudini
-	print('installing crudini wget')
+        # Install Crudini and wget
+        print('installing crudini wget')
 	sudo("yum -y install crudini wget")
 	for item in ['crudini','wget']:
 		var1=run('rpm -qa |grep %s ' %item)
 		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
+
+        # save credentials in the host
+        contents = env_config.admin_openrc
+        msg = 'Put admin_openrc.sh in '+env.host
+        runCheck(msg, "echo '{}' >/root/admin_openrc.sh".format(contents))
+
+        contents = env_config.demo_openrc
+        msg = 'Put demo_openrc.sh in '+env.host
+        runCheck(msg, "echo '{}' >/root/demo_openrc.sh".format(contents))
+
+
+
+        msg = 'Upgrade to implement changes'
+        runCheck(msg, 'yum -y upgrade')
+
 
 
 @roles('controller')
@@ -171,6 +196,14 @@ def deploy():
 	execute(renameHost)
 	execute(installConfigureChrony)
 	execute(install_packages)
+	execute(installMariaDB)
+	execute(disableFirewall)
+	execute(disableSELinux)
+
+        # reboot the machine
+        with settings(warn_only=True):
+            run('reboot')
+
 
 @roles('controller','compute','network','storage')
 # @roles('controller','compute','network')

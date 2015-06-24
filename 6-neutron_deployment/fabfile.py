@@ -144,6 +144,13 @@ def configure_ML2_plugin_general():
     set_parameter(ml2_conf_file,'securitygroup','firewall_driver',\
             'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver')
 
+def restart_nova_controller():
+    # Restart nova
+    msg = "Restart Nova services"
+    runCheck(msg, 'systemctl restart openstack-nova-api.service openstack-nova-scheduler.service' + \
+              ' openstack-nova-conductor.service')
+
+
 
 def configure_nova_to_use_neutron():
 
@@ -160,12 +167,6 @@ def configure_nova_to_use_neutron():
     set_parameter(nova_conf,'neutron','admin_tenant_name','service')
     set_parameter(nova_conf,'neutron','admin_username','neutron')
     set_parameter(nova_conf,'neutron','admin_password',passwd['NEUTRON_PASS'])
-
-    # Restart nova
-    msg = "Restart Nova services"
-    runCheck(msg, 'systemctl restart openstack-nova-api.service openstack-nova-scheduler.service' + \
-              ' openstack-nova-conductor.service')
-
 
 @roles('controller')
 def installPackagesController():
@@ -189,6 +190,8 @@ def controller_deploy():
     configure_ML2_plugin_general()
 
     configure_nova_to_use_neutron()
+
+    restart_nova_controller()
 
     # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini 
     # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
@@ -412,7 +415,10 @@ def configure_ML2_plug_in_compute():
 def installPackagesCompute():
 
     msg = "Install Neutron packages on " + env.host
-    runCheck(msg, "yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch",quiet=True)
+    runCheck(msg, "yum -y install "
+            "openstack-neutron-ml2 "
+            "openstack-neutron-openvswitch"
+            ,quiet=True)
 
 @roles('compute')
 def compute_deploy():
@@ -436,10 +442,10 @@ def compute_deploy():
 
     configure_nova_to_use_neutron()
 
-    # msg = 'Enable Open vSwitch'
-    # runCheck(msg, 'systemctl enable openvswitch.service')
-    # msg = 'Start Open vSwitch'
-    # runCheck(msg, 'systemctl start openvswitch.service')
+    msg = 'Enable Open vSwitch'
+    runCheck(msg, 'systemctl enable openvswitch.service')
+    msg = 'Start Open vSwitch'
+    runCheck(msg, 'systemctl start openvswitch.service')
 
     # finalize installation
 
@@ -466,88 +472,123 @@ def compute_deploy():
     runCheck(msg, 'systemctl enable neutron-openvswitch-agent.service')
     msg = 'Start Open vSwitch'
     runCheck(msg, 'systemctl start neutron-openvswitch-agent.service')
+    msg = 'Restart Open vSwitch'
+    runCheck(msg, 'systemctl restart neutron-openvswitch-agent.service')
 
 # INITIAL NETWORK
 
-def createExternalNetwork():
-    if 'ext-net' in run('neutron net-list'):
-        msg = 'Ext-net already created'
-        print msg
-    else:
-        msg = 'create external network on network node'
-        runCheck(msg,'neutron net-create ext-net --router:external True '+\
-                '--provider:physical_network external --provider:network_type flat')
+@roles('controller')
+def createExtNet():
+    
+    with prefix(env_config.admin_openrc):
 
-def createInitialSubnet():
+        if 'ext-net' in run('neutron net-list'):
+            msg = 'Ext-net already created'
+            print msg
+        else:
+            msg = 'create external network on network node'
+            runCheck(msg,
+                    'neutron net-create ext-net '
+                    '--router:external True '
+                    '--provider:physical_network external '
+                    '--provider:network_type flat'
+                    )
 
-    # Change this IP schema before deployment
-    floatingIPStart = '192.168.100.10'
-    floatingIPEnd = '192.168.100.20'
-    ExternalNetworkGateway = '192.168.100.1'
-    ExternalNetworkCIDR = '192.168.100.0/24'
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
 
-    if 'ext-subnet' in run('neutron subnet-list'):
-        msg = 'ext-net already created'
-        print msg
-    else:
-        msg = 'create initial subnet on external net on network node'
-        runCheck(msg,'neutron subnet-create ext-net --name ext-subnet --allocation-pool start={},end={} --disable-dhcp --gateway {} {}'\
-                  .format(floatingIPStart,floatingIPEnd,ExternalNetworkGateway,ExternalNetworkCIDR))
+@roles('controller')
+def createExtSubnet():
 
-def createDemoTenantNetwork():
-    gateway = '10.0.0.1'
-    cidr = '10.0.0.0/8'
+    start = env_config.ext_subnet['start']
+    end = env_config.ext_subnet['end']
+    gateway = env_config.ext_subnet['gateway']
+    cidr = env_config.ext_subnet['cidr']
+
+    with prefix(env_config.admin_openrc):
+        if 'ext-subnet' in run('neutron subnet-list'):
+            msg = 'ext-subnet already created'
+            print msg
+        else:
+            msg = 'create initial subnet on external net on network node'
+            runCheck(msg,
+                    'neutron subnet-create ext-net '
+                    '--name ext-subnet '
+                    '--allocation-pool start={},end={} '.format(start,end)+\
+                    '--disable-dhcp '
+                    '--gateway {} {}'.format(gateway,cidr)
+                    )
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
+
+@roles('controller')
+def createDemoNet():
+
+    with prefix(env_config.admin_openrc):
+        if 'demo-net' in run('neutron net-list'):
+            msg = 'Demo-net already created'
+            print msg
+        else:
+            msg = 'create initial demo tenant network on network node'
+            runCheck(msg, 'neutron net-create demo-net')
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
+
+@roles('controller')
+def createDemoSubnet():
+
+    gateway = env_config.demo_subnet['gateway']
+    cidr = env_config.demo_subnet['cidr']
+
+    with prefix(env_config.admin_openrc):
+        if 'demo-subnet' in run('neutron subnet-list'):
+            msg = 'Demo-subnet already created'
+            print msg
+        else:
+            msg = 'create subnet on demo-net'
+            runCheck(msg,
+                    'neutron subnet-create demo-net '
+                    '--name demo-subnet '
+                    '--gateway {} {}'.format(gateway,cidr)
+                    )
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
+
+@roles('controller')
+def createDemoRouter():
+    
+    with prefix(env_config.admin_openrc):
+        if 'demo-router' in run('neutron router-list'):
+            msg = 'Demo-router already created'
+            print msg
+        else:
+            msg = 'create the demo router'
+            runCheck(msg,'neutron router-create demo-router')
+
+            msg = 'attach the demo router to the demo subnet'
+            runCheck(msg,
+                    'neutron router-interface-add demo-router demo-subnet')
+
+            msg = 'attach the router to the external network '
+            'by setting it as the gateway'
+            runCheck(msg,'neutron router-gateway-set demo-router ext-net')
+
+        msg = 'Restart Neutron service'
+        runCheck(msg, 'systemctl restart neutron-server.service')
 
 
-    if 'demo-net' in run('neutron net-list'):
-        msg = 'Demo-net already created'
-        print msg
-    else:
-        msg = 'create initial demo tenant network on network node'
-        runCheck(msg, 'neutron net-create demo-net')
-
-    if 'demo-subnet' in run('neutron subnet-list'):
-        msg = 'Demo-subnet already created'
-        print msg
-    else:
-        msg = 'create subnet on demo-net'
-        runCheck(msg,'neutron subnet-create demo-net --name demo-subnet --gateway {} {}'.format(gateway,cidr))
-
-def createSetupRouter():
-    if 'demo-router' in run('neutron router-list'):
-        msg = 'Demo-router already created'
-        print msg
-    else:
-        msg = 'create the demo router'
-        runCheck(msg,'neutron router-create demo-router')
-
-        msg = 'attach the demo router to the demo subnet'
-        runCheck(msg,'neutron router-interface-add demo-router demo-subnet')
-
-        msg = 'attach the router to the external network by setting it as the gateway'
-        runCheck(msg,'neutron router-gateway-set demo-router ext-net')
-
-
-#@roles('network')
 @roles('controller')
 def createInitialNetwork():
     # Creates a sample network for testing 
 
-    # get admin credentials
-    adminCred = env_config.admin_openrc
-    demoCred = env_config.demo_openrc
-
-    with prefix(adminCred):
-        createExternalNetwork()
-        createInitialSubnet()
-
-    with prefix(demoCred):
-        createDemoTenantNetwork()
-        createSetupRouter()
-
-
-
-
+    execute(createExtNet)
+    execute(createExtSubnet)
+    execute(createDemoNet)
+    execute(createDemoSubnet)
+    execute(createDemoRouter)
 
 def deploy():
 
@@ -560,44 +601,35 @@ def deploy():
 ######################################## TDD #########################################
 
 @roles('network', 'controller', 'compute')
-def createInitialNetworkTdd(schema="192.168.100"):
+def createInitialNetworkTdd():
 
     # this is repeated, need to translate into env_config
-    floatingIPStart = '{}.10'.format(schema)
-    floatingIPEnd = '{}.20'.format(schema)
-    ExternalNetworkGateway = '{}.1'.format(schema)
-    ExternalNetworkCIDR = '{}.0/24'.format(schema)
-    
+    floatingIPStart = env_config.ext_subnet['start']
 
-    if run("ping -c 1 {}".format(floatingIPStart)).return_code == 0:
-        align_y("{} able to ping the tenant router gateway".format(env.host))
-    else:
-        align_n("{} NOT able to ping the tenant router gateway".format(env.host))
-        
-    
-
+    msg = "Ping the tenant router gateway from {}".format(env.host)
+    runCheck(msg, "ping -c 1 {}".format(floatingIPStart))
 
 @roles('controller')
 def controller_tdd():
 
     # Check loaded extensions to verify launch of neutron
-    alias_name_pairs = list()
-    alias_name_pairs.append(('security-group','security-group'))
-    alias_name_pairs.append(('l3_agent_scheduler','L3 Agent Scheduler'))
-    alias_name_pairs.append(('ext-gw-mode','Neutron L3 Configurable external gateway mode'))
-    alias_name_pairs.append(('binding','Port Binding'))
-    alias_name_pairs.append(('provider','Provider Network'))
-    alias_name_pairs.append(('agent','agent'))
-    alias_name_pairs.append(('quotas','Quota management support'))
-    alias_name_pairs.append(('dhcp_agent_scheduler','DHCP Agent Scheduler'))
-    alias_name_pairs.append(('l3-ha','HA Router extension'))
-    alias_name_pairs.append(('multi-provider','Multi Provider Network'))
-    alias_name_pairs.append(('external-net','Neutron external network'))
-    alias_name_pairs.append(('router','Neutron L3 Router'))
-    alias_name_pairs.append(('allowed-address-pairs','Allowed Address Pairs'))
-    alias_name_pairs.append(('extraroute','Neutron Extra Route'))
-    alias_name_pairs.append(('extra_dhcp_opt','Neutron Extra DHCP opts'))
-    alias_name_pairs.append(('dvr','Distributed Virtual Router'))
+    alias_name_pairs = [('security-group','security-group'),
+                        ('l3_agent_scheduler','L3 Agent Scheduler'),
+                        ('ext-gw-mode','Neutron L3 Configurable external gateway mode'),
+                        ('binding','Port Binding'),
+                        ('provider','Provider Network'),
+                        ('agent','agent'),
+                        ('quotas','Quota management support'),
+                        ('dhcp_agent_scheduler','DHCP Agent Scheduler'),
+                        ('l3-ha','HA Router extension'),
+                        ('multi-provider','Multi Provider Network'),
+                        ('external-net','Neutron external network'),
+                        ('router','Neutron L3 Router'),
+                        ('allowed-address-pairs','Allowed Address Pairs'),
+                        ('extraroute','Neutron Extra Route'),
+                        ('extra_dhcp_opt','Neutron Extra DHCP opts'),
+                        ('dvr','Distributed Virtual Router'),
+                        ]
 
     print 'Checking loaded extensions'
     
@@ -670,6 +702,6 @@ def tdd():
         execute(controller_tdd)
         execute(network_tdd)
         execute(compute_tdd)
-        execute(createInitialNetworkTdd)
+        # execute(createInitialNetworkTdd)
 
 
