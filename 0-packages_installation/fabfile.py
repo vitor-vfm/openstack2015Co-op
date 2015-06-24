@@ -12,7 +12,7 @@ import sys, os
 sys.path.append('..')
 import env_config
 
-from myLib import printMessage, runCheck
+from myLib import printMessage, runCheck, set_parameter
 
 logging.info("################# "\
              + os.path.dirname(os.path.abspath(__file__)) + \
@@ -46,7 +46,7 @@ def disableFirewall():
 @roles(env_config.roles)
 def disableSELinux():
 
-    set_parameter('/etc/selinux/config', '', 'SELINUX', 'disabled')
+    set_parameter('/etc/selinux/config', '""', 'SELINUX', 'disabled')
 
 
 @roles('controller','compute','network','storage')

@@ -472,6 +472,8 @@ def compute_deploy():
     runCheck(msg, 'systemctl enable neutron-openvswitch-agent.service')
     msg = 'Start Open vSwitch'
     runCheck(msg, 'systemctl start neutron-openvswitch-agent.service')
+    msg = 'Restart Open vSwitch'
+    runCheck(msg, 'systemctl restart neutron-openvswitch-agent.service')
 
 # INITIAL NETWORK
 
