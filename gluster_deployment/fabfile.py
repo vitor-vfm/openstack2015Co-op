@@ -16,6 +16,7 @@ env.roledefs = env_config.roledefs
 PARTITION = 'strFile'
 EX_VOLUME = 'vol0'
 GLANCE_VOLUME = 'glance_volume'
+STRIPE_NUMBER = 1
 
 ############################# GENERAL FUNCTIONS ############################
 
@@ -23,7 +24,7 @@ def get_parameter(config_file, section, parameter):
     crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
     return local(crudini_command, capture=True)
 
-@roles('controller')#, 'compute', 'network', 'storage')
+@roles('controller' 'compute', 'network', 'storage')
 def shrinkHome():
     home_dir = run("lvs | awk '/home/ {print $2}'")
     run('umount /home')
@@ -35,11 +36,11 @@ def shrinkHome():
 def prepGlusterFS():
     home_dir = run("lvs | awk '/home/ {print $2}'")
     run('lvs')
-    run('lvcreate -i 1 -I 8 -L {} {}'.format(env_config.partition['partition_size'], home_dir))
+    run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
     run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-    run('lvcreate -i 1 -I 8 -L {} {}'.format(env_config.partition['partition_size'], home_dir))
+    run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
     run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-    run('lvcreate -i 1 -I 8 -L {} {}'.format(env_config.partition['partition_size'], home_dir))
+    run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
     run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
     run('lvs')
 
@@ -51,8 +52,8 @@ def setup_gluster():
     runCheck('Installing gluster packages', 'yum -y install glusterfs glusterfs-fuse glusterfs-server')
     runCheck('Starting glusterd', 'systemctl start glusterd')
     # If not already made, make the file system (include in partition function)
-    if something = run('mount | grep strFile | grep xfs', warn_only=True).return_code:
-        sudo('mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
+    if run('mount | grep strFile | grep xfs', warn_only=True).return_code:
+        runCheck('Making file system', 'mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
     # Mount the brick on the established partition
     sudo('mkdir -p /data/gluster/brick')
     if run('mount | grep strFile | grep /data/gluster', warn_only=True).return_code:
@@ -104,7 +105,7 @@ def mounter():
     if run('mount | grep glance_volume | grep /mnt/gluster', warn_only=True).return_code:
         runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
 
-# This function exists for testing. Should be able to use this then deploy to
+# This function eists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
 @roles('controller', 'compute', 'network', 'storage')
 def destroy_gluster():
@@ -193,6 +194,16 @@ def configureCinder():
     runCheck('Setup shares', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_shares_config /etc/cinder/shares.conf')
     runCheck('Setup mount points', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_mount_point_base /var/lib/cinder/volumes')
 
+@roles('controller', 'compute')
+def restartCinder():
+    runCheck('Restart Cinder services', 'for i in api scheduler volume; do sudo service openstack-cinder-${i} start; done')
+    runCheck("tail -50 /var/log/cinder/volume.log | egrep -i '(ERROR|WARNING|CRITICAL)'")
+
+@roles('controller', 'compute')
+def cinderVolumeCreate():
+    runCheck('Create a Cinder volume', 'cinder create --display_name myvol 10')
+    if runCheck('Check to see if volume is created', 'cinder list | grep -i available').return_code:
+        print(green('Volume created'))
 
 @roles('controller', 'compute', 'network', 'storage')
 def forMySafety():
@@ -245,7 +256,7 @@ def check_log(time):
                 print(green("Success, whatever this is"))
             run('rm time')
 
-@roles('controller', 'compute', 'network')
+@roles('controller', 'compute', 'network', 'storage')
 def check_for_file():
     if sudo('ls /mnt/gluster/'):
         print(green('Gluster is set up on {}'.format(env.user)))
