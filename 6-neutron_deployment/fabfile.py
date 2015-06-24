@@ -415,7 +415,10 @@ def configure_ML2_plug_in_compute():
 def installPackagesCompute():
 
     msg = "Install Neutron packages on " + env.host
-    runCheck(msg, "yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch",quiet=True)
+    runCheck(msg, "yum -y install "
+            "openstack-neutron-ml2 "
+            "openstack-neutron-openvswitch"
+            ,quiet=True)
 
 @roles('compute')
 def compute_deploy():
@@ -439,10 +442,10 @@ def compute_deploy():
 
     configure_nova_to_use_neutron()
 
-    # msg = 'Enable Open vSwitch'
-    # runCheck(msg, 'systemctl enable openvswitch.service')
-    # msg = 'Start Open vSwitch'
-    # runCheck(msg, 'systemctl start openvswitch.service')
+    msg = 'Enable Open vSwitch'
+    runCheck(msg, 'systemctl enable openvswitch.service')
+    msg = 'Start Open vSwitch'
+    runCheck(msg, 'systemctl start openvswitch.service')
 
     # finalize installation
 
@@ -584,23 +587,23 @@ def createInitialNetworkTdd(schema="192.168.100"):
 def controller_tdd():
 
     # Check loaded extensions to verify launch of neutron
-    alias_name_pairs = list()
-    alias_name_pairs.append(('security-group','security-group'))
-    alias_name_pairs.append(('l3_agent_scheduler','L3 Agent Scheduler'))
-    alias_name_pairs.append(('ext-gw-mode','Neutron L3 Configurable external gateway mode'))
-    alias_name_pairs.append(('binding','Port Binding'))
-    alias_name_pairs.append(('provider','Provider Network'))
-    alias_name_pairs.append(('agent','agent'))
-    alias_name_pairs.append(('quotas','Quota management support'))
-    alias_name_pairs.append(('dhcp_agent_scheduler','DHCP Agent Scheduler'))
-    alias_name_pairs.append(('l3-ha','HA Router extension'))
-    alias_name_pairs.append(('multi-provider','Multi Provider Network'))
-    alias_name_pairs.append(('external-net','Neutron external network'))
-    alias_name_pairs.append(('router','Neutron L3 Router'))
-    alias_name_pairs.append(('allowed-address-pairs','Allowed Address Pairs'))
-    alias_name_pairs.append(('extraroute','Neutron Extra Route'))
-    alias_name_pairs.append(('extra_dhcp_opt','Neutron Extra DHCP opts'))
-    alias_name_pairs.append(('dvr','Distributed Virtual Router'))
+    alias_name_pairs = [('security-group','security-group'),
+                        ('l3_agent_scheduler','L3 Agent Scheduler'),
+                        ('ext-gw-mode','Neutron L3 Configurable external gateway mode'),
+                        ('binding','Port Binding'),
+                        ('provider','Provider Network'),
+                        ('agent','agent'),
+                        ('quotas','Quota management support'),
+                        ('dhcp_agent_scheduler','DHCP Agent Scheduler'),
+                        ('l3-ha','HA Router extension'),
+                        ('multi-provider','Multi Provider Network'),
+                        ('external-net','Neutron external network'),
+                        ('router','Neutron L3 Router'),
+                        ('allowed-address-pairs','Allowed Address Pairs'),
+                        ('extraroute','Neutron Extra Route'),
+                        ('extra_dhcp_opt','Neutron Extra DHCP opts'),
+                        ('dvr','Distributed Virtual Router'),
+                        ]
 
     print 'Checking loaded extensions'
     
