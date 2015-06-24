@@ -13,6 +13,9 @@ case "$#" in
         ;;
 esac
         
+# log results
+touch deploy_log
+
 for d in $dir; do
     echo -e "\nNow on $d\n"
 
@@ -22,5 +25,5 @@ for d in $dir; do
         cd ../$d;
     fi
 
-    fab deploy tdd
+    fab deploy tdd | tee -a ../deploy_log
 done
