@@ -12,7 +12,7 @@ import sys, os
 sys.path.append('..')
 import env_config
 
-from myLib import printMessage, runCheck, set_parameter
+from myLib import printMessage, runCheck, set_parameter, align_n, align_y
 
 logging.info("################# "\
              + os.path.dirname(os.path.abspath(__file__)) + \
@@ -205,9 +205,27 @@ def deploy():
             run('reboot')
 
 
+def check_firewall():
+    output = run("systemctl status firewalld | awk '/Active/ {print $2,$3}'", quiet=True)
+    if any(status in output for status in ["inactive", "(dead)"]):
+        print align_y("Firewall is: " + output)
+    else:
+        print align_n("Firewall is not dead. Show status:")
+        run("systemctl status firewalld")
+        
+def check_selinux():
+    output = run("crudini --get /etc/selinux/config '' SELINUX", quiet=True)
+    if "disabled" in output:
+        print align_y("SELINUX is " + output)
+    else:            
+        print align_n("Oh no! SELINUX is " + output)
+        
 @roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 def tdd():
+        check_firewall()
+        check_selinux()
+
 	with settings(warn_only=True):
 		print('checking var/log/messages for chronyd output')
 		run('grep "$(date +"%b %d %H")" /var/log/messages | '
@@ -221,4 +239,3 @@ def tdd():
 		var2=run('date')
 	logging.info(env.host +" Chrony is "+ var1)
 	logging.info(env.host +" the date is "+ var2)
-
