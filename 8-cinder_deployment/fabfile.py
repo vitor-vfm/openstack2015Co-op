@@ -10,7 +10,7 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck, set_parameter
+from myLib import runCheck, set_parameter, createDatabaseScript, printMessage
 
 
 
@@ -55,7 +55,7 @@ def setup_cinder_database_on_controller(CINDER_DBPASS):
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'localhost' IDENTIFIED BY '{}';".format(CINDER_DBPASS)
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'%' IDENTIFIED BY '{}';".format(CINDER_DBPASS)
 
-    
+    mysql_commands = createDatabaseScript("cinder",CINDER_DBPASS)    
     print("mysql commands are: " + mysql_commands)
     runCheck('Create the database', 'echo "{}" | mysql -u root'.format(mysql_commands))
     
@@ -130,7 +130,7 @@ def setup_cinder_on_controller():
     # setup cinder database
     setup_cinder_database_on_controller(passwd['CINDER_DBPASS'])
 
-    setup_cinder_keystone_on_controller(passwd['CINDER_PASS'])
+    #setup_cinder_keystone_on_controller(passwd['CINDER_PASS'])
 
     setup_cinder_config_files_on_controller(passwd['CINDER_PASS'], passwd['CINDER_DBPASS'], passwd['RABBIT_PASS'], CONTROLLER_MANAGEMENT_IP)
 
@@ -206,14 +206,14 @@ def setup_cinder_on_storage():
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
     NETWORK_MANAGEMENT_IP = env_config.storageManagement['IPADDR']
-    cinder_device_name = "sda"
-    cinder_partition_name = "sda1"
+    cinder_device_name = ""
+    cinder_partition_name = "/dev/centos/strBlk"
 
-    install_and_start_lvm()
+    #install_and_start_lvm()
 
     #setup_volume_using_cinder(cinder_partition_name)
 
-    setup_lvm_config_file(cinder_device_name)
+    #setup_lvm_config_file(cinder_device_name)
 
     setup_cinder_config_files_on_storage(CINDER_PASS, CINDER_DBPASS, RABBIT_PASS, NETWORK_MANAGEMENT_IP)     
 
@@ -221,13 +221,13 @@ def setup_cinder_on_storage():
     
 
 
-################### Deployment ########################################
+########################### Deployment ########################################
 
 def deploy():
     execute(setup_cinder_on_controller)
     execute(setup_cinder_on_storage)
 
-######################################## TDD #########################################
+################################# TDD #########################################
 
 @roles('controller')
 def verify():
@@ -235,8 +235,17 @@ def verify():
         runCheck('List service components', 'cinder service-list')
     #runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
     with prefix(demo_openrc):    
-        runCheck('Create a 1 GB volume', 'cinder create --display-name demo-volume1 1')
-        runCheck('Verify creation and availability of volume', 'cinder list')
+        runCheck('Create a 1 GB volume', 
+                'cinder create --display-name demo-volume1 1')
+
+        msg = 'Verify creation and availability of volume'
+        run('cinder list')
+        status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
+        if (status != '') and (status != 'error'):
+            printMessage('good', msg)
+        else:
+            printMessage('oops', msg)
+
         runCheck('Delete test volume', 'cinder delete demo-volume1')
         #runCheck('Check if cinder is running', 'cinder service-list')
 

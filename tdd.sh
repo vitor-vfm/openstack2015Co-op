@@ -14,5 +14,5 @@ for d in $dir; do
         cd ../$d;
     fi
 
-    fab deploy tdd
+    fab tdd
 done

@@ -150,8 +150,11 @@ def deploy():
 
 @roles('controller')
 def create_stack():
+    """
+    Create a stack on the demo-net (assuming it exists)
+    """
 
-    with prefix(env_config.admin_openrc):
+    with prefix(env_config.demo_openrc):
 
         # Upload the test file to the host
         put(heat_test_file)
@@ -161,13 +164,14 @@ def create_stack():
 
         # Create a test stack based on the test file
         msg = "Create a test stack"
-        runCheck(msg, """heat stack-create -f test-stack.yml -P "ImageID=cirros-0.3.3-x86_64; NetID={}" testStack""".format(netid))
-        output = run("heat stack-list",quiet=True)
+        runCheck(msg, "heat stack-create -f test-stack.yml "
+                '-P "ImageID=cirros-0.3.3-x86_64;NetID={}" testStack'.format(netid))
+        output = run("heat stack-list")
 
     if "testStack" in output:
         print(green("Stack created succesfully"))
     else:
-        print(green("Stack NOT created"))
+        print(red("Stack NOT created"))
         
         
 def tdd():
