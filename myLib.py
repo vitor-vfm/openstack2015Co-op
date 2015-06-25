@@ -41,18 +41,17 @@ def checkLog(time):
     time = time[:-1]
 
     for log in lslogs:
-        # Filter out all lines before the timestamp and grep for errors
-        error = run("if [ -e {} ]; then ".format(log) +\
+        # Filter out all lines before the timestamp
+        newLines = run("if [ -e {} ]; then ".format(log) +\
                 "sed '0,/{}/d' {}; fi".format(time,log)\
-                # "sed -n '/{}/,/{}/p' {}; fi".format(before,after,log)\
                 ,quiet=True)
 
-        if error:
+        if newLines:
 
             # avoid too many lines
             error = run("echo '{}' | tail -{}".format(error,maxLines),quiet=True)
                 
-            result += red("Found error on log " + log + "\n")
+            result += blue("Found something on log " + log + "\n")
             result += error
             result += "\n"
 
