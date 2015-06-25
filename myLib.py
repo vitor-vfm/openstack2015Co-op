@@ -49,10 +49,10 @@ def checkLog(time):
         if newLines:
 
             # avoid too many lines
-            error = run("echo '{}' | tail -{}".format(error,maxLines),quiet=True)
+            newLines = run("echo '{}' | tail -{}".format(newLines,maxLines),quiet=True)
                 
-            result += blue("Found something on log " + log + "\n")
-            result += error
+            result += red("Found something on log " + log + "\n")
+            result += newLines
             result += "\n"
 
     return result
@@ -63,7 +63,7 @@ def checkLog(time):
 def runCheck(msg,command,quiet=False):
     """
     Runs a fabric command and reports
-    results, logging them in necessary
+    results, logging them if necessary
     """
     # time = run('date +"%Y-%m-%d %H:%M"')
     time = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)

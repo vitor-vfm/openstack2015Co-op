@@ -10,7 +10,7 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck, set_parameter, createDatabaseScript
+from myLib import runCheck, set_parameter, createDatabaseScript, printMessage
 
 
 
@@ -239,7 +239,8 @@ def verify():
                 'cinder create --display-name demo-volume1 1')
 
         msg = 'Verify creation and availability of volume'
-        status = run("cinder list | awk '/demo-volume1/ {print $4}'")
+        run('cinder list')
+        status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
         if (status != '') and (status != 'error'):
             printMessage('good', msg)
         else:
