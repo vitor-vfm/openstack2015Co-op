@@ -9,6 +9,7 @@ import sys
 sys.path.append('../')#global_config_files')
 import env_config
 from myLib import runCheck
+from myLib import align_n, align_y
 
 ############################ Config ########################################
 
@@ -249,24 +250,6 @@ def undeploy():
 
 ################################# TDD ########################################
 
-
-
-#        print(green("GOOD"))
- #   else:
-  #      print(red("BAD")) 
-   #sudo("rm -r /tmp/images")
-
-
-
-#def tdd():
-#    with settings(warn_only=True):
-        # Following command lists errors. Find out how to get it to find 
-        # specific errors or a certain number of them based on time.
-        #sudo cat messages | egrep '(error|warning)'
- #       time = installRabbitMQtdd()
-  #      check_log(time)
-        
-
 @roles('compute', 'controller', 'network')
 def check_log(time):
     with settings(quiet=True):
@@ -295,7 +278,48 @@ def tdd():
         sudo('rm /mnt/gluster/testfile')
 
 
+@roles('controller')
+def checkPerm(brick,rightOwner):
+    """
+    TDD: Check if permissions for a brick are setup correctly
+    """
+
+    with settings(warn_only=True):
+        # check if brick exists
+        out = run('[ -e {} ]'.format(brick),quiet=True)
+        if out.return_code == 0:
+            print align_y('Brick {} exists'.format(brick))
+        else:
+            print align_n('Brick {} does not exist'.format(brick))
+
+        # check the permissions for the brick
+        with cd(brick):
+
+            brickOwner = run("""ls -la | awk '$9 == "." {print $3}' """,
+                    quiet=True)
+
+            if brickOwner == rightOwner:
+                print align_y('Brick owner is '+rightOwner)
+            else:
+                print align_n('Brick owner is not {}; it\'s {}'.format(
+                    rightOwner,brickOwner))
+
+@roles('controller')
+def glanceCheckPerm():
+    """
+    TDD: Check if permissions for Glance are setup correctly
+    """
+
+    brick = '/mnt/gluster/glance/'
+    images = brick + 'images'
+
+    execute(checkPerm,brick,'glance')
+    execute(checkPerm,images,'glance')
+
+
 def glance_tdd():
-    with settings(hide('warnings', 'running', 'stdout', 'stderr')):
+    # with settings(hide('warnings', 'running', 'stdout', 'stderr')):
+    with settings(warn_only=True):
         execute(deploy_glance)
         execute(tdd)    
+        execute(glanceCheckPerm)
