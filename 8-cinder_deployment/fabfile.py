@@ -10,7 +10,7 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck, set_parameter, createDatabaseScript
+from myLib import runCheck, set_parameter, createDatabaseScript, printMessage
 
 
 
