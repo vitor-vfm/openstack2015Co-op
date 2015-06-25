@@ -221,13 +221,13 @@ def setup_cinder_on_storage():
     
 
 
-################### Deployment ########################################
+########################### Deployment ########################################
 
 def deploy():
     execute(setup_cinder_on_controller)
     execute(setup_cinder_on_storage)
 
-######################################## TDD #########################################
+################################# TDD #########################################
 
 @roles('controller')
 def verify():
@@ -235,8 +235,16 @@ def verify():
         runCheck('List service components', 'cinder service-list')
     #runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
     with prefix(demo_openrc):    
-        runCheck('Create a 1 GB volume', 'cinder create --display-name demo-volume1 1')
-        runCheck('Verify creation and availability of volume', 'cinder list')
+        runCheck('Create a 1 GB volume', 
+                'cinder create --display-name demo-volume1 1')
+
+        msg = 'Verify creation and availability of volume'
+        status = run("cinder list | awk '/demo-volume1/ {print $4}'")
+        if (status != '') and (status != 'error'):
+            printMessage('good', msg)
+        else:
+            printMessage('oops', msg)
+
         runCheck('Delete test volume', 'cinder delete demo-volume1')
         #runCheck('Check if cinder is running', 'cinder service-list')
 
