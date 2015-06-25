@@ -1,5 +1,6 @@
 from fabric.colors import green, red
 from fabric.api import run
+from fabric.operations import get
 from env_config import *
 
 def printMessage(status, msg):
@@ -26,6 +27,33 @@ def grep(pattern,stream):
     that contain the pattern
     """
     return [l for l in stream.splitlines() if pattern in l]
+
+def saveConfigFile(filepath,status):
+    """
+    Retrieve config file from the host and save it locally
+
+    Input: The remote filepath and a status ('good' or 'bad')
+    Output: None
+    Effects: The file is saved in a local directory
+    """
+    localLocation = '../local_copies_config_files/'
+
+    # get just the name of the file (not its path) 
+    fil = filepath.split('/')[-1] 
+
+    # example filename: network_chrony.conf_good
+    filename = env.host + '_' + fil + '_' + status
+
+    localpath = localLocation + filename
+
+    # get the file
+    get(local_path=localpath,remote_path=filepath)
+
+    # add a comment with the original file path to beginning of file
+    comment = "# Original path : {}\n\n".format(filepath)
+    local('echo -e "{}$(cat {})" >{}'.format(comment,localpath,localpath))
+
+
 
 def checkLog(time):
     """
