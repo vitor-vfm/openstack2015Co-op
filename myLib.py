@@ -52,7 +52,7 @@ def checkLog(time):
             # avoid too many lines
             error = run("echo '{}' | tail -{}".format(error,maxLines),quiet=True)
                 
-            result += red("Found error on log " + log + "\n")
+            result += red("Found something on log " + log + "\n")
             result += error
             result += "\n"
 

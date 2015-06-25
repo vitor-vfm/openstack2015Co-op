@@ -194,21 +194,45 @@ def configureCinder():
     runCheck('Setup shares', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_shares_config /etc/cinder/shares.conf')
     runCheck('Setup mount points', 'openstack-config --set /etc/cinder/cinder.conf DEFAULT glusterfs_mount_point_base /var/lib/cinder/volumes')
 
-@roles('controller', 'compute')
+@roles('controller', 'storage')
+def createGlusterVolumeList():
+    runCheck('Create cinder file', 'touch /etc/cinder/shares.conf')
+    runCheck('Entering info', 'echo -e "192.168.1.11:/mnt/gluster/cinder\n192.168.1.31:/mnt/gluster/cinder" > /etc/cinder/shares.conf')
+
+@roles('controller')
 def restartCinder():
     runCheck('Restart Cinder services', 'for i in api scheduler volume; do sudo service openstack-cinder-${i} start; done')
-    runCheck("tail -50 /var/log/cinder/volume.log | egrep -i '(ERROR|WARNING|CRITICAL)'")
+    runCheck('Check logs', "tail -50 /var/log/cinder/volume.log | egrep -i '(ERROR|WARNING|CRITICAL)'")
 
-@roles('controller', 'compute')
+@roles('controller')
 def cinderVolumeCreate():
-    runCheck('Create a Cinder volume', 'cinder create --display_name myvol 10')
-    if runCheck('Check to see if volume is created', 'cinder list | grep -i available').return_code:
-        print(green('Volume created'))
+    with prefix(env_config.admin_openrc):
+        runCheck('Create a Cinder volume', 'cinder create --display_name myvol 10')
+        #with settings(warn_only=True):
+        if runCheck('Check to see if volume is created', 'cinder list | grep -i available'):
+            print(green('Volume created'))
 
-@roles('controller', 'compute', 'network', 'storage')
-def forMySafety():
-    runCheck('Getting rid of Gluster', 'yum remove glusterfs-fuse')
+def deploy_cinder():
+    execute(installGluster)
+    execute(configureCinder)
+    execute(createGlusterVolumeList)
+    execute(restartCinder)
+    execute(cinderVolumeCreate)
 
+@roles('controller')
+def destroy_cinder_volume():
+    with prefix(env_config.admin_openrc):
+        runCheck('Delete volume', 'cinder delete myvol')
+    runCheck('Stop cinder', 'for i in api scheduler volume; do sudo service openstack-cinder-${i} stop; done')
+
+@roles('controller', 'storage')
+def destroy_cinder():
+    runCheck('Delete cinder file', 'rm /etc/cinder/shares.conf')
+    runCheck('Getting rid of Gluster', 'yum remove -y glusterfs-fuse')
+
+def undeploy_cinder():
+    execute(destroy_cinder_volume)
+    execute(destroy_cinder)
 
 ################################ Deployment ##################################
 
