@@ -13,6 +13,7 @@ sys.path.append('..')
 import env_config
 
 from myLib import printMessage, runCheck, set_parameter
+from myLib import align_n, align_y, saveConfigFile
 
 logging.info("################# "\
              + os.path.dirname(os.path.abspath(__file__)) + \
@@ -205,9 +206,23 @@ def deploy():
             run('reboot')
 
 
-@roles('controller','compute','network','storage')
-# @roles('controller','compute','network')
-def tdd():
+def check_firewall():
+    output = run("systemctl status firewalld | awk '/Active/ {print $2,$3}'", quiet=True)
+    if any(status in output for status in ["inactive", "(dead)"]):
+        print align_y("Firewall is: " + output)
+    else:
+        print align_n("Firewall is not dead. Show status:")
+        run("systemctl status firewalld")
+        
+def check_selinux():
+    output = run("crudini --get /etc/selinux/config '' SELINUX", quiet=True)
+    if "disabled" in output:
+        print align_y("SELINUX is " + output)
+    else:            
+        print align_n("Oh no! SELINUX is " + output)
+
+def chronytdd():
+
 	with settings(warn_only=True):
 		print('checking var/log/messages for chronyd output')
 		run('grep "$(date +"%b %d %H")" /var/log/messages | '
@@ -217,8 +232,21 @@ def tdd():
 	with settings(hide('warnings', 'running', 'stdout', 'stderr'),
                 warn_only=True):
 
-		var1=run('systemctl status chronyd.service |grep Active')
-		var2=run('date')
-	logging.info(env.host +" Chrony is "+ var1)
-	logging.info(env.host +" the date is "+ var2)
+		servstatus = run('systemctl status chronyd.service |grep Active')
+		date = run('date')
+	logging.info(env.host +" Chrony is "+ servstatus)
+	logging.info(env.host +" the date is "+ date)
+
+        confFile = '/etc/chrony.conf'
+        if servstatus.return_code == 0:
+            saveConfigFile(confFile,'good')
+        else:
+            saveConfigFile(confFile,'bad')
+
+@roles('controller','compute','network','storage')
+# @roles('controller','compute','network')
+def tdd():
+        check_firewall()
+        check_selinux()
+        chronytdd()
 

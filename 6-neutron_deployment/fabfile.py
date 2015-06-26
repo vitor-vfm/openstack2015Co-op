@@ -11,7 +11,7 @@ import sys
 sys.path.append('..')
 import env_config
 from myLib import runCheck, createDatabaseScript, set_parameter
-from myLib import align_y, align_n
+from myLib import align_y, align_n, keystone_check, database_check, saveConfigFile
 
 
 ############################ Config ########################################
@@ -21,9 +21,18 @@ passwd = env_config.passwd
 
 # define host config file locations
 neutron_conf = '/etc/neutron/neutron.conf'
+ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
+nova_conf = '/etc/nova/nova.conf'
+l3_agent_file = '/etc/neutron/l3_agent.ini'
+dhcp_agent_file = '/etc/neutron/dhcp_agent.ini' 
+metadata_agent_file = '/etc/neutron/metadata_agent.ini'
+sysctl_conf = '/etc/sysctl.conf'
 
 # get database script
 database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
+
+# global variable to be used in the TDD functions
+status = str()
 
 ######################### Deployment ########################################
 
@@ -131,7 +140,6 @@ def configure_ML2_plugin_general():
     # networking framework for instances. However, the controller node does not need the OVS 
     # components because it does not handle instance network traffic.
 
-    ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
 
     set_parameter(ml2_conf_file,'ml2','type_drivers','flat,gre')
     set_parameter(ml2_conf_file,'ml2','tenant_network_types','gre')
@@ -154,8 +162,6 @@ def restart_nova_controller():
 
 def configure_nova_to_use_neutron():
 
-    nova_conf = '/etc/nova/nova.conf'
-
     set_parameter(nova_conf,'DEFAULT','network_api_class','nova.network.neutronv2.api.API')
     set_parameter(nova_conf,'DEFAULT','security_group_api','neutron')
     set_parameter(nova_conf,'DEFAULT','linuxnet_interface_driver','nova.network.linux_net.LinuxOVSInterfaceDriver')
@@ -172,7 +178,12 @@ def configure_nova_to_use_neutron():
 def installPackagesController():
 
     msg = "Install Neutron packages on controller"
-    runCheck(msg, 'yum -y install openstack-neutron openstack-neutron-ml2 python-neutronclient which')
+    runCheck(msg, 
+            'yum -y install '
+            'openstack-neutron '
+            'openstack-neutron-ml2 '
+            'python-neutronclient '
+            'which')
 
 
 
@@ -245,8 +256,6 @@ def configure_the_Networking_common_components():
 
 def configure_ML2_plug_in_network():
     
-    ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
-
     # most of the configuration is the same as the controller
     configure_ML2_plugin_general()
 
@@ -264,8 +273,6 @@ def configure_ML2_plug_in_network():
 
 def configure_Layer3_agent():
 
-    l3_agent_file = '/etc/neutron/l3_agent.ini'
-
     set_parameter(l3_agent_file,"DEFAULT","interface_driver","neutron.agent.linux.interface.OVSInterfaceDriver")
     set_parameter(l3_agent_file,"DEFAULT","use_namespaces","True")
     set_parameter(l3_agent_file,"DEFAULT","external_network_bridge","br-ex")
@@ -273,8 +280,6 @@ def configure_Layer3_agent():
     set_parameter(l3_agent_file,"DEFAULT","verbose","True")
 
 def configure_DHCP_agent():
-
-    dhcp_agent_file = '/etc/neutron/dhcp_agent.ini' 
 
     set_parameter(dhcp_agent_file,"DEFAULT","interface_driver","neutron.agent.linux.interface.OVSInterfaceDriver")
     set_parameter(dhcp_agent_file,"DEFAULT","dhcp_driver","neutron.agent.linux.dhcp.Dnsmasq")
@@ -287,18 +292,14 @@ def configure_metadata_proxy_on_controller():
     # to configure the metadata agent, some changes need to be made
     # on the controller node
 
-    conf = '/etc/nova/nova.conf'
-
-    set_parameter(conf,'neutron','service_metadata_proxy','True')
-    set_parameter(conf,'neutron','metadata_proxy_shared_secret',passwd['METADATA_SECRET'])
+    set_parameter(nova_conf,'neutron','service_metadata_proxy','True')
+    set_parameter(nova_conf,'neutron','metadata_proxy_shared_secret',passwd['METADATA_SECRET'])
 
     msg = "Restart Nova service"
     runCheck(msg, "systemctl restart openstack-nova-api.service")
 
 
 def configure_metadata_agent():
-
-    metadata_agent_file = '/etc/neutron/metadata_agent.ini'
 
     set_parameter(metadata_agent_file,'DEFAULT','auth_url','http://controller:5000/v2.0')
     set_parameter(metadata_agent_file,'DEFAULT','auth_region','regionOne')
@@ -336,13 +337,17 @@ def configure_Open_vSwitch_service():
 def installPackagesNetwork():
 
     msg = "Install Neutron packages on network"
-    runCheck(msg, "yum -y install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch",quiet=True)
+    runCheck(msg, 
+            "yum -y install "
+            "openstack-neutron "
+            "openstack-neutron-ml2 "
+            "openstack-neutron-openvswitch",
+            quiet=True)
 
 @roles('network')
 def network_deploy():
 
     # edit sysctl.conf
-    sysctl_conf = '/etc/sysctl.conf'
 
     set_parameter(sysctl_conf,"''",'net.ipv4.ip_forward','1')
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.all.rp_filter','0')
@@ -398,8 +403,6 @@ def network_deploy():
 
 def configure_ML2_plug_in_compute():
     
-    ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
-
     # most of the configuration is the same as the controller
     configure_ML2_plugin_general()
 
@@ -424,7 +427,6 @@ def installPackagesCompute():
 def compute_deploy():
     
     # edit sysctl.conf
-    sysctl_conf = '/etc/sysctl.conf'
 
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.all.rp_filter','0')
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.default.rp_filter','0')
@@ -639,13 +641,14 @@ def controller_tdd():
 
         if ext_list.return_code != 0:
             print red('Could not run ext-list')
-            return
+            return 'FAIL'
 
         for pair in alias_name_pairs:
             alias = pair[0]
             name = run("cat ext-list | grep ' {} ' | cut -d\| -f3".format(alias),quiet=True)
             if pair[1] not in name:
                 print align_n("Alias {} should be {}, is {}".format(alias,pair[1],name.strip()))
+                status = 'bad'
             else:
                 print align_y("Alias {} is {}, as expected".format(alias,name.strip()))
 
@@ -653,8 +656,9 @@ def controller_tdd():
 
 @roles('controller')
 def verify_neutron_agents(neutron_agents,hostname):
-
-    # verify successful launch of the neutron agents
+    """
+    TDD: verify successful launch of the neutron agents
+    """
 
     with prefix(env_config.admin_openrc):
 
@@ -665,6 +669,7 @@ def verify_neutron_agents(neutron_agents,hostname):
             agent_line = run("cat agent-list | grep '%s' | grep '%s'" % (agent,hostname),quiet=True)
             if agent_line.return_code != 0:
                 print align_n("Neutron agent {} not found in agent-list".format(agent))
+                status = 'bad'
             else:
                 n_lines = len(agent_line.splitlines())
 
@@ -672,19 +677,20 @@ def verify_neutron_agents(neutron_agents,hostname):
                     print align_n('There\'s more than one agent called ' + agent)
                 elif hostname not in agent_line:
                     print align_n('Host for agent %s is not %s' % (agent,hostname))
+                    status = 'bad'
                 elif ':-)' not in agent_line:
                     print align_n("Status for %s agent is not ':-)'" % agent)
+                    status = 'bad'
                 else:
                     print align_y("Neutron agent {} OK!".format(agent))
 
         # remove local file
         run("rm agent-list",quiet=True)
 
-
 @roles('network')
 def network_tdd():
     agents = ['Metadata','Open vSwitch','L3','DHCP']
-    execute(verify_neutron_agents,neutron_agents=agents,hostname='network')
+    return execute(verify_neutron_agents,neutron_agents=agents,hostname='network')
 
 @roles('compute')
 def compute_tdd():
@@ -695,13 +701,68 @@ def compute_tdd():
             if 'compute' in hostname]
 
     for host in list_of_compute_hostnames:
-        execute(verify_neutron_agents,neutron_agents=agents,hostname=host)
+        res = verify_neutron_agents(neutron_agents=agents,hostname=host)
+        if res != 'OK':
+            status = 'bad'
+
+@roles('controller')
+def saveConfigController(status):
+    """
+    Save locally the config files that exist in the controller node
+    """
+    saveConfigFile(neutron_conf,status)
+    saveConfigFile(ml2_conf_file,status)
+    saveConfigFile(nova_conf,status)
+
+@roles('network')
+def saveConfigNetwork(status):
+    """
+    Save locally the config files that exist in the network node
+    """
+    saveConfigFile(sysctl_conf,status)
+    saveConfigFile(neutron_conf,status)
+    saveConfigFile(ml2_conf_file,status)
+    saveConfigFile(l3_agent_file,status)
+    saveConfigFile(dhcp_agent_file,status)
+    saveConfigFile(metadata_agent_file,status)
+
+@roles('compute')
+def saveConfigCompute(status):
+    """
+    Save locally the config files that exist in the compute nodes
+    """
+    saveConfigFile(sysctl_conf,status)
+    saveConfigFile(neutron_conf,status)
+    saveConfigFile(nova_conf,status)
 
 def tdd():
+
+    # status is initialized as 'good'
+    # if any of the tdd functions gets an error,
+    # it changes the value to 'bad'
+    status = 'good'
+
     with settings(warn_only=True):
+
+        res = execute(keystone_check,'neutron',roles=['controller'])
+        if res.values()[0] == 'FAIL':
+            status = 'bad'
+
+        res = execute(database_check,'neutron',roles=['controller'])
+        if res.values()[0] == 'FAIL':
+            status = 'bad'
+
         execute(controller_tdd)
+
         execute(network_tdd)
+
         execute(compute_tdd)
+
         # execute(createInitialNetworkTdd)
+
+        # save config files
+        execute(saveConfigController,status)
+        execute(saveConfigNetwork,status)
+        execute(saveConfigCompute,status)
 
 

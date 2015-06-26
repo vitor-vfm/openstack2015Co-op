@@ -11,7 +11,8 @@ import sys
 sys.path.append('..')
 import env_config
 from myLib import runCheck, createDatabaseScript, set_parameter
-from myLib import align_n, align_y, database_check, keystone_check, run_v
+from myLib import database_check, keystone_check
+from myLib import align_n, align_y, run_v, saveConfigFile
 
 
 ############################ Config ########################################
@@ -237,6 +238,7 @@ def deploy():
 @roles('controller')
 def verify():
 
+    result = 'OK'
     nova_services = ['nova-conductor','nova-consoleauth','nova-scheduler', 'nova-cert']
     
     with prefix(env_config.admin_openrc):
@@ -255,10 +257,12 @@ def verify():
                         print align_y("{} host is {}".format(service, correct_value)) 
                     else:
                         print align_n("{} host is NOT {}".format(service, correct_value))  
+                        result = 'FAIL'
                         logging.error("Expected service {}\'s status to be {}, got {}"\
                                 .format(service,correct_value,current_value))
             else:
                 print align_n("{} does NOT exist in nova service list".format(service)) 
+                result = 'FAIL'
                 logging.error("{} does NOT exist in nova service list".format(service)) 
 
         # separate check for nova-compute as it has different values
@@ -273,10 +277,12 @@ def verify():
                     print align_y("{} host is {}".format(service, correct_value)) 
                 else:
                     print align_n("{} host is NOT {}".format(service, correct_value))  
+                    result = 'FAIL'
                     logging.error("Expected service {}\'s status to be {}, got {}"\
                             .format(service,correct_value,current_value))
         else:
             print align_n("{} does NOT exist in nova service list".format(service)) 
+            result = 'FAIL'
             logging.error("{} does NOT exist in nova service list".format(service)) 
 
         # checks all statuses to make sure all images are ACTIVE
@@ -290,16 +296,37 @@ def verify():
                 print align_y("Image: {}, ID: {} is {}".format(image_name, image_id, "ACTIVE"))
             else:
                 print align_n("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
+                result = 'FAIL'
                 logging.error("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
 
         # run the lists and save them in local files
         run('rm service-list',quiet=True)
         run('rm image-list',quiet=True)
+
+        return result
     
 
+@roles('controller')
 def tdd():
     with settings(warn_only=True):
-        # to be done on the controller node
-        execute(verify)
-        execute(database_check,'nova',roles=['controller'])
-        execute(keystone_check,'nova',roles=['controller'])
+        # save results of the tdds in a list
+        results = list()
+
+        res = database_check('nova')
+        results.append(res)
+
+        res = keystone_check('nova')
+        results.append(res)
+
+        res = verify()
+        results.append(res)
+
+        # check if any of the functions failed
+        # and set status accordingly
+        if any([r == 'FAIL' for r in results]):
+            status = 'bad'
+        else:
+            status = 'good'
+
+        # save config file
+        saveConfigFile(etc_nova_config_file, status)
