@@ -1,6 +1,5 @@
 #! /bin/bash
 
-
 case "$1" in 
     0)
 	servicesComp="chronyd"
@@ -76,3 +75,46 @@ case "$1" in
 	;;
 esac
 
+
+function run_command {
+    node=$3
+    red=`tput setaf 1`
+    green=`tput setaf 2`
+    reset=`tput sgr0`
+
+    for service in $1;
+    do 
+	echo -e "\n\n"
+
+	
+	# run specified command
+	echo "###############################################################################"
+	echo "${green}running $action on $service ${reset}"
+	echo "###############################################################################"
+
+
+	ssh root@controller "systemctl $2 $service"
+
+	# echo out status after specified command is run
+
+	echo "###############################################################################"
+	
+	state=$(ssh root@controller "systemctl status $service | awk '/Active/ {print \$2,\$3}'")
+	if [[ "$state" =~ "active"  ]] || [[ "$state" =~ "running"  ]]
+	then
+	    echo "$service status on $node is now: ${green} $state ${reset}"
+	    
+	elif [[ "$state" =~ "inactive"  ]] || [[ "$state" =~ "dead"  ]]
+	then
+	    echo "$service status on $node is now: ${red} $state ${reset}"
+
+	else
+	    echo "$service status on $node is now: $state (neither active nor inactive)"
+	    
+	fi
+
+	echo "###############################################################################"
+
+    done
+    
+}
