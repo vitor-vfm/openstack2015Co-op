@@ -1,13 +1,23 @@
 #! /bin/bash
 
-first=$1
-last=$2
-command=$3
+# Given two numbers and a fab command,
+# executes the fab command on the deployments
+# in the interval, inclusive
+
+# e.g.: allfabs 3 6 tdd
+#       runs fab tdd on the the deployments
+#       from Keystone (3) to Neutron (6)
+
 
 case "$#" in
-    2) dir=$(ls | egrep ^$first-)
+    2)  first=$1
+        command=$2
+        dir=$(ls | egrep ^$first-)
         ;;
-    3) dir=$(ls | egrep ^[0-9] | sort -g | awk "/^$first-/,/^$last-/")
+    3)  first=$1 
+        last=$2
+        command=$3
+        dir=$(ls | egrep ^[0-9] | sort -g | awk "/^$first-/,/^$last-/")
         ;;
     *) echo "Invalid number of parameters"
         exit
