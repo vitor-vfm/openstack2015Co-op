@@ -1,4 +1,4 @@
-from fabric.colors import green, red
+from fabric.colors import green, red, blue
 from fabric.api import run
 from fabric.operations import get
 from env_config import *
@@ -59,6 +59,8 @@ def saveConfigFile(filepath,status):
         # add a comment with the original file path to beginning of file
         comment = "# Original path : {}\n\n".format(filepath)
         local('echo -e "{}$(cat {})" >{}'.format(comment,localpath,localpath),capture=True)
+        
+        print blue('Saving local file '+filename)
 
 
 
