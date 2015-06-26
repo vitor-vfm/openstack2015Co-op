@@ -10,7 +10,7 @@ import logging
 import sys
 sys.path.append('..')
 import env_config
-from myLib import runCheck, align_y, align_n
+from myLib import runCheck, align_y, align_n, saveConfigFile
 
 
 ############################ Config ########################################
@@ -89,14 +89,14 @@ def setup_horizon():
     finalize_installation()
     start_horizon_services()
 
-################### Deployment ########################################
+################################## Deployment ########################################
 
 @roles('controller')
 def deploy():
 
     setup_horizon()
 
-######################################## TDD #########################################
+##################################### TDD ############################################
 
 
 def reach_dashboard():
@@ -108,16 +108,18 @@ def reach_dashboard():
         print align_y('Can access Dashboard frontpage')
     else:
         print align_n('Cannot access Dashboard frontpage')
+        status = 'bad'
 
-
-    # output = runCheck(msg, "wget --tries=1 http://controller/dashboard")
-
-    # if 'connected' in output:
-    #     print(green("Can connect to dashboard"))
-    # else:
-    #     print(green("CANT connect to dashboard"))
-        
 @roles('controller')
 def tdd():
+
+    # status is initialized as 'good'
+    # if any of the tdd functions gets an error,
+    # it changes the value to 'bad'
+    status = 'good'
+
     with settings(warn_only=True):
         reach_dashboard()
+
+        # save config file
+        saveConfigFile(etc_horizon_config_file, status)
