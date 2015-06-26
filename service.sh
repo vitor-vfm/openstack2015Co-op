@@ -136,13 +136,13 @@ function action_on_services {
 	    echo "###############################################################################"
 
 
-	    ssh root@controller "systemctl $2 $service"
+	    ssh root@$node "systemctl $2 $service"
 
 	    # echo out status after specified command is run
 
 	    echo "###############################################################################"
 	    
-	    state=$(ssh root@controller "systemctl status $service | awk '/Active/ {print \$2,\$3}'")
+	    state=$(ssh root@$node "systemctl status $service | awk '/Active/ {print \$2,\$3}'")
 	    if [[ "$state" =~ "^active"  ]] || [[ "$state" =~ "running"  ]]
 	    then
 		echo "$service status on $node is now: ${green} $state ${reset}"
@@ -182,7 +182,7 @@ function action_on_services {
 	echo "###############################################################################"
 	#    ssh root@compute1 "systemctl $action $servicesComp"
 
-	run_command "$servicesComp" $action "compute"
+	run_command "$servicesComp" $action "compute1"
     fi
 
     if ! [ -z "$servicesNetw" ] 
@@ -201,7 +201,7 @@ function action_on_services {
 	echo "running $action on services for $component that run on the Storage"
 	echo "###############################################################################"
 	#    ssh root@storage1 "systemctl $action $servicesStor"
-	run_command "$servicesStor" $action "storage"
+	run_command "$servicesStor" $action "storage1"
 
     fi
 
