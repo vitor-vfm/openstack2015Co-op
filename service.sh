@@ -1,7 +1,37 @@
 #! /bin/bash
 
-component=$1
-action=$2
+<<EOF
+
+Performs specified action on the services for the openstack component specified by the user
+
+Usage:
+
+requires (in order):
+
+Action = the action to be performed on the services. (status|restart|disable|enable|stop|...) and anyother action that systemctl supports
+
+Range - is specified using the start and end variables
+start = the number corresponding to the openstack component you wish to start with
+end = the number corresponding to the openstack component you wish to end with
+
+ 
+syntax:
+
+- to get the status for all services specified in components 1 through 3, the syntax is as follows:
+
+./service.sh status 1 3
+
+- to restart all services for components 5, the syntax is:
+
+./service.sh restart 5
+
+
+EOF
+
+
+action=$1
+start=$2
+end=$3
 
 servicesComp=""
 servicesCont=""
@@ -9,143 +39,201 @@ servicesNetw=""
 servicesStor=""
 
 
-case "$1" in 
-    0)
-	servicesComp="chronyd"
-	servicesCont="chronyd mariadb"
-	servicesNetw="chronyd"
-	servicesStor="chronyd"
-	;;
-    1)
-	servicesComp="network chronyd "  
-	servicesCont="network chronyd "
-	servicesNetw="network chronyd "
-	servicesStor="network chronyd "
-	;;
-    2)
-	servicesComp=""
-	servicesCont="rabbitmq-server"
-	servicesNetw=""
-	servicesStor=""
-	;;
-    3)
-	servicesComp=""
-	servicesCont="openstack-keystone"
-	servicesNetw=""
-	servicesStor=""
-	;;
-    4)
-	servicesComp=""
-	servicesCont="openstack-glance-api"
-	servicesNetw=""
-	servicesStor=""
-	;;
-    5)
-	servicesComp="libvirtd openstack-nova-compute"
-	servicesCont="openstack-nova-api openstack-nova-cert openstack-nova-consoleauth openstack-nova-scheduler openstack-nova-conductor openstack-nova-novncproxy"
-	servicesNetw=""
-	servicesStor=""
-	;;
-    6)
-	servicesComp="openvswitch neutron-openvswitch-agent openstack-nova-compute"
-	servicesCont="openstack-nova-api openstack-nova-scheduler openstack-nova-conductor neutron-server"
-	servicesNetw="openvswitch neutron-openvswitch-agent neutron-l3-agent neutron-dhcp-agent neutron-metadata-agent neutron-ovs-cleanup"
-	servicesStor=""
-	;;
-    7)
-	servicesComp=""
-	servicesCont="httpd memcached"
-	servicesNetw=""
-	servicesStor=""
-	;;
-    8)
-	servicesComp=""
-	servicesCont="openstack-cinder-api openstack-cinder-scheduler.servic"
-	servicesNetw=""
-	servicesStor="openstack-cinder-volume target"
-	;;
-    9)
-	servicesComp=""
-	servicesCont="openstack-swift-proxy memcached"
-	servicesNetw=""
-	servicesStor="rsyncd openstack-swift-account openstack-swift-account-auditor openstack-swift-account-reaper openstack-swift-account-replicator systemctl start openstack-swift-container openstack-swift-container-auditor openstack-swift-container-replicator openstack-swift-container-updater openstack-swift-object openstack-swift-object-auditor openstack-swift-object-replicator openstack-swift-object-updater"
-	;;
-    10)
-	servicesComp=""
-	servicesCont="openstack-heat-api openstack-heat-api-cfn openstack-heat-engine"
-	servicesNetw=""
-	servicesStor=""
-	;;
-    11)
-	servicesComp="openstack-ceilometer-compute openstack-nova-compute"
-	servicesCont="openstack-ceilometer-api openstack-ceilometer-notification openstack-ceilometer-central openstack-ceilometer-collector openstack-ceilometer-alarm-evaluator openstack-ceilometer-alarm-notifier mongod"
-	servicesNetw=""
-	servicesStor=""
-	;;
-esac
+function action_on_services {
+    component=$1
+    action=$2
+
+    case "$1" in 
+	0)
+	    servicesComp="chronyd"
+	    servicesCont="chronyd mariadb"
+	    servicesNetw="chronyd"
+	    servicesStor="chronyd"
+	    ;;
+	1)
+	    servicesComp="network chronyd "  
+	    servicesCont="network chronyd "
+	    servicesNetw="network chronyd "
+	    servicesStor="network chronyd "
+	    ;;
+	2)
+	    servicesComp=""
+	    servicesCont="rabbitmq-server"
+	    servicesNetw=""
+	    servicesStor=""
+	    ;;
+	3)
+	    servicesComp=""
+	    servicesCont="openstack-keystone"
+	    servicesNetw=""
+	    servicesStor=""
+	    ;;
+	4)
+	    servicesComp=""
+	    servicesCont="openstack-glance-api"
+	    servicesNetw=""
+	    servicesStor=""
+	    ;;
+	5)
+	    servicesComp="libvirtd openstack-nova-compute"
+	    servicesCont="openstack-nova-api openstack-nova-cert openstack-nova-consoleauth openstack-nova-scheduler openstack-nova-conductor openstack-nova-novncproxy"
+	    servicesNetw=""
+	    servicesStor=""
+	    ;;
+	6)
+	    servicesComp="openvswitch neutron-openvswitch-agent openstack-nova-compute"
+	    servicesCont="openstack-nova-api openstack-nova-scheduler openstack-nova-conductor neutron-server"
+	    servicesNetw="openvswitch neutron-openvswitch-agent neutron-l3-agent neutron-dhcp-agent neutron-metadata-agent neutron-ovs-cleanup"
+	    servicesStor=""
+	    ;;
+	7)
+	    servicesComp=""
+	    servicesCont="httpd memcached"
+	    servicesNetw=""
+	    servicesStor=""
+	    ;;
+	8)
+	    servicesComp=""
+	    servicesCont="openstack-cinder-api openstack-cinder-scheduler.servic"
+	    servicesNetw=""
+	    servicesStor="openstack-cinder-volume target"
+	    ;;
+	9)
+	    servicesComp=""
+	    servicesCont="openstack-swift-proxy memcached"
+	    servicesNetw=""
+	    servicesStor="rsyncd openstack-swift-account openstack-swift-account-auditor openstack-swift-account-reaper openstack-swift-account-replicator systemctl start openstack-swift-container openstack-swift-container-auditor openstack-swift-container-replicator openstack-swift-container-updater openstack-swift-object openstack-swift-object-auditor openstack-swift-object-replicator openstack-swift-object-updater"
+	    ;;
+	10)
+	    servicesComp=""
+	    servicesCont="openstack-heat-api openstack-heat-api-cfn openstack-heat-engine"
+	    servicesNetw=""
+	    servicesStor=""
+	    ;;
+	11)
+	    servicesComp="openstack-ceilometer-compute openstack-nova-compute"
+	    servicesCont="openstack-ceilometer-api openstack-ceilometer-notification openstack-ceilometer-central openstack-ceilometer-collector openstack-ceilometer-alarm-evaluator openstack-ceilometer-alarm-notifier mongod"
+	    servicesNetw=""
+	    servicesStor=""
+	    ;;
+    esac
 
 
-function run_command {
+    function run_command {
+	node=$3
+	red=`tput setaf 1`
+	green=`tput setaf 2`
+	reset=`tput sgr0`
 
-    for service in $1;
-    do 
-	echo -e "\n\n\n\n\n"
+	for service in $1;
+	do 
+	    echo -e "\n\n"
 
-    
-	# run specified command
+	    
+	    # run specified command
+	    echo "###############################################################################"
+	    echo "${green}running $action on $service ${reset}"
+	    echo "###############################################################################"
+
+
+	    ssh root@$node "systemctl $2 $service"
+
+	    # echo out status after specified command is run
+
+	    echo "###############################################################################"
+	    
+	    state=$(ssh root@$node "systemctl status $service | awk '/Active/ {print \$2,\$3}'")
+	    if [[ "$state" =~ ^active  ]] || [[ "$state" =~ running  ]]
+	    then
+		echo "$service status on $node is now: ${green} $state ${reset}"
+		
+	    elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]]
+	    then
+		echo "$service status on $node is now: ${red} $state ${reset}"
+
+	    else
+		echo "$service status on $node is now: $state (neither active nor inactive)"
+		
+	    fi
+
+	    echo "###############################################################################"
+
+	done
+	
+
+    }
+
+
+    if ! [ -z "$servicesCont" ] 
+    then
+	echo -e "\n\n"
+	echo "running $action on services for $component that run on the Controller"
 	echo "###############################################################################"
-	echo "running $action on $service "
+	#    ssh root@controller "systemctl $action $servicesCont"
+
+	run_command "$servicesCont" $action "controller"
+	
+    fi
+
+    if ! [ -z "$servicesComp" ] 
+    then
+	echo -e "\n\n"
+	echo "running $action on services for $component that run on the Compute"
 	echo "###############################################################################"
+	#    ssh root@compute1 "systemctl $action $servicesComp"
 
+	run_command "$servicesComp" $action "compute1"
+    fi
 
-	ssh root@controller "systemctl $2 $service"
-
-	# echo out status after specified command is run
-
+    if ! [ -z "$servicesNetw" ] 
+    then
+	echo -e "\n\n"
+	echo "running $action on services for $component that run on the Network"
 	echo "###############################################################################"
-	echo "$service status is now:" $(ssh root@controller "systemctl status $service | awk '/Active/ {print \$2,\$3}'")
-	echo "###############################################################################"
+	#    ssh root@network "systemctl $action $servicesNetw"
+	run_command "$servicesNetw" $action "network"
 
-    done
-    
+    fi
+
+    if ! [ -z "$servicesStor" ] 
+    then
+	echo -e "\n\n"
+	echo "running $action on services for $component that run on the Storage"
+	echo "###############################################################################"
+	#    ssh root@storage1 "systemctl $action $servicesStor"
+	run_command "$servicesStor" $action "storage1"
+
+    fi
+
+
+
+
 
 }
 
-
-if ! [ -z "$servicesCont" ] 
+if ! [ -z "$end"  ]
 then
-    echo "running $action on controller services for $component"
-
-#    ssh root@controller "systemctl $action $servicesCont"
-
-    run_command "$servicesCont" $action
+    for i in $(seq $start $end); 
+    do
+	action_on_services $i $action
+	
+    done
+else
+    # to handle the case when a single 
+    # digit is specified in the range
+    action_on_services $start $action
     
 fi
 
-if ! [ -z "$servicesComp" ] 
-then
-    echo "running $action on compute services for $component"
-#    ssh root@compute1 "systemctl $action $servicesComp"
-
-    run_command $servicesComp $action
-fi
-
-if ! [ -z "$servicesNetw" ] 
-then
-    echo "running $action on Network services for $component"
-#    ssh root@network "systemctl $action $servicesNetw"
-    run_command $servicesNetw $action
-
-fi
-
-if ! [ -z "$servicesStor" ] 
-then
-    echo "running $action on storage services for $component"
-#    ssh root@storage1 "systemctl $action $servicesStor"
-    run_command $servicesStor $action
-
-fi
 
 
 
 
+<<EOF
+
+ref:
+
+colors:
+http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
+
+EOF
