@@ -70,9 +70,9 @@ function check_port {
     do
 
 	echo -e '\n\n'
-	echo '##################'
+	echo '#########################################'
 	echo 'Checking port ' $port ' in component ' $1
-	echo '##################'
+	echo '#########################################'
 	for node in $nodes;
 	do
 	    output=$(ssh root@$node "ss -nltp | grep $port")
