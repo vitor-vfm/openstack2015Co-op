@@ -1,0 +1,50 @@
+0-packages_installation/fabfile.py:		run('systemctl start chronyd.service')
+0-packages_installation/fabfile.py:    runCheck(msg, 'systemctl start mariadb.service')
+0-packages_installation/fabfile.py:		run('systemctl start chronyd.service')
+Binary file 0-packages_installation/fabfile.pyc matches
+Binary file 10-heat_deployment/fabfile.pyc matches
+10-heat_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-heat-api.service openstack-heat-api-cfn.service openstack-heat-engine.service")
+11-ceilometer_deployment/fabfile.py:    runCheck('Start mongo','systemctl start mongod.service')
+11-ceilometer_deployment/fabfile.py:    runCheck(msg, "systemctl start " + ceilometer_services)
+11-ceilometer_deployment/fabfile.py:    run("start telemetry","systemctl start openstack-ceilometer-compute.service")
+12-trove_deployment/fabfile.py:    sudo("systemctl start openstack-trove-api.service openstack-trove-taskmanager.service  openstack-trove-conductor.service")
+13-sahara_deployment/fabfile.py:    sudo_log("systemctl start openstack-sahara-all")
+14-instance_launch/fabfile.py~:    runCheck(msg, "systemctl start openstack-glance-api.service openstack-glance-registry.service")
+1-network_deployment/fabfile.py:    runCheck(msg, 'systemctl start chronyd.service')
+Binary file 1-network_deployment/fabfile.pyc matches
+2-messaging_deployment/fabfile.py:    runCheck(msg, 'systemctl start rabbitmq-server.service')
+2-messaging_deployment/fabfile.py:    command = 'systemctl start rabbitmq-server.service'
+Binary file 2-messaging_deployment/fabfile.pyc matches
+3-keystone_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-keystone.service",quiet=True)
+3-keystone_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-keystone.service")
+Binary file 3-keystone_deployment/fabfile.pyc matches
+4-glance_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-glance-api.service "
+Binary file 4-glance_deployment/fabfile.pyc matches
+5-nova_deployment/fabfile.py:    runCheck(msg, "systemctl start " + nova_services)
+5-nova_deployment/fabfile.py:    runCheck(msg, "systemctl start libvirtd.service")
+5-nova_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-nova-compute.service")
+Binary file 5-nova_deployment/fabfile.pyc matches
+6-neutron_deployment/fabfile.py:    runCheck(msg, 'systemctl start neutron-server.service')
+6-neutron_deployment/fabfile.py:    runCheck(msg, "systemctl start openvswitch.service")
+6-neutron_deployment/fabfile.py:    run("systemctl start neutron-openvswitch-agent.service neutron-l3-agent.service " + \
+6-neutron_deployment/fabfile.py:    runCheck(msg, 'systemctl start openvswitch.service')
+6-neutron_deployment/fabfile.py:    runCheck(msg, 'systemctl start neutron-openvswitch-agent.service')
+Binary file 6-neutron_deployment/fabfile.pyc matches
+7-horizon_deployment/fabfile.py:    runCheck(msg, "systemctl start httpd.service memcached.service")
+Binary file 7-horizon_deployment/fabfile.pyc matches
+8-cinder_deployment/fabfile.py:    start_all = "systemctl start openstack-cinder-api.service openstack-cinder-scheduler.service"
+8-cinder_deployment/fabfile.py:    start_services = "systemctl start openstack-cinder-volume.service target.service"
+8-cinder_deployment/fabfile.py:    runCheck('Start lvm2', "systemctl start lvm2-lvmetad.service")
+Binary file 8-cinder_depolyment/fabfile.pyc matches
+Binary file 9-swift_deployment/fabfile.pyc matches
+9-swift_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-swift-proxy.service memcached.service")
+9-swift_deployment/fabfile.py:    runCheck(msg, 'systemctl start rsyncd.service')
+9-swift_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service \
+9-swift_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service \
+9-swift_deployment/fabfile.py:    runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service \
+deploy_log:[root@controller] run: systemctl start rabbitmq-server.service
+deploy_log:[root@controller] run: systemctl start rabbitmq-server.service
+deploy_log:[root@controller] run: systemctl start rabbitmq-server.service
+deploy_log:[31mCommand: systemctl start rabbitmq-server.service[0m
+Binary file gluster_deployment/fabfile.pyc matches
+gluster_deployment/fabfile.py:    runCheck('Starting glusterd', 'systemctl start glusterd')
