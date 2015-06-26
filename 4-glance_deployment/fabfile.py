@@ -243,7 +243,7 @@ def imageCreationTDD():
         run('keystone user-list')
 
         msg = 'Create glance image'
-        runCheck(msg, "glance -d image-create --name 'cirros-0.3.3-x86_64' "
+        runCheck(msg, "glance image-create --name 'cirros-0.3.3-x86_64' "
                 "--file /tmp/images/cirros-0.3.3-x86_64-disk.img "
                 "--disk-format qcow2 "
                 "--container-format bare "
@@ -256,6 +256,8 @@ def imageCreationTDD():
 
         if 'cirros-0.3.3-x86_64' in output:
             print(align_y("Successfully installed cirros image"))
+            msg = 'Remove new image'
+            runCheck(msg, "glance image-delete 'cirros-0.3.3-x86_64'",quiet=True)
         else:
             print(align_n("Couldn't install cirros image"))
             result = 'FAIL'
@@ -274,13 +276,13 @@ def tdd():
         # save results of the tdds in a list
         results = list()
 
-        res = execute(database_check,'glance',roles=['controller'])
+        res = database_check('glance')
         results.append(res)
 
-        res = execute(keystone_check,'glance',roles=['controller'])
+        res = keystone_check('glance')
         results.append(res)
 
-        res = execute(imageCreationTDD)
+        res = imageCreationTDD()
         results.append(res)
 
         # check if any of the functions failed
