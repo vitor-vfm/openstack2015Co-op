@@ -66,39 +66,52 @@ def setup_cinder_keystone_on_controller():
     CINDER_PASS = passwd['CINDER_PASS']
 
     with prefix(admin_openrc):
-        runCheck('Create a cinder user',
-                "keystone user-create --name cinder --pass {}".format(CINDER_PASS))
 
-        runCheck('Add the admin role to the cinder user',
-                "keystone user-role-add "
-                "--user cinder --tenant service --role admin")
+        if 'cinder' not in run("keystone user-list"):
+            runCheck('Create a cinder user',
+                    "keystone user-create --name cinder --pass {}".format(CINDER_PASS))
+            runCheck('Add the admin role to the cinder user',
+                    "keystone user-role-add "
+                    "--user cinder --tenant service --role admin")
+        else:
+            print blue('User cinder already created')
 
-        runCheck('Create the cinder service entities', 
-                "keystone service-create "
-                "--name cinder "
-                "--type volume "
-                "--description 'OpenStack Block Storage'")
+        if 'cinder' not in run("keystone service-list"):
+            runCheck('Create the cinder service entities', 
+                    "keystone service-create "
+                    "--name cinder "
+                    "--type volume "
+                    "--description 'OpenStack Block Storage'")
+        else:
+            print blue('Service cinder already created')
 
-        runCheck('Create the cinder service entities', 
-                "keystone service-create "
-                "--name cinderv2 "
-                "--type volumev2 "
-                "--description 'OpenStack Block Storage'")
 
-        runCheck('Create the Block Storage service API endpoints',
-        "keystone endpoint-create \
-        --service-id $(keystone service-list | awk '/ volume / {print $2}') \
-        --publicurl http://controller:8776/v1/%\(tenant_id\)s \
-        --internalurl http://controller:8776/v1/%\(tenant_id\)s \
-        --adminurl http://controller:8776/v1/%\(tenant_id\)s \
-        --region regionOne")
-        runCheck('Create the Block Storage service API endpoints',
-        "keystone endpoint-create \
-        --service-id $(keystone service-list | awk '/ volumev2 / {print $2}') \
-        --publicurl http://controller:8776/v2/%\(tenant_id\)s \
-        --internalurl http://controller:8776/v2/%\(tenant_id\)s \
-        --adminurl http://controller:8776/v2/%\(tenant_id\)s \
-        --region regionOne")
+        if 'cinderv2' not in run("keystone service-list"):
+            runCheck('Create the cinder service entities', 
+                    "keystone service-create "
+                    "--name cinderv2 "
+                    "--type volumev2 "
+                    "--description 'OpenStack Block Storage'")
+        else:
+            print blue('Service cinderv2 already created')
+
+        if '8776' not in run("keystone endpoint-list"):
+            runCheck('Create the Block Storage service API endpoints',
+            "keystone endpoint-create \
+            --service-id $(keystone service-list | awk '/ volume / {print $2}') \
+            --publicurl http://controller:8776/v1/%\(tenant_id\)s \
+            --internalurl http://controller:8776/v1/%\(tenant_id\)s \
+            --adminurl http://controller:8776/v1/%\(tenant_id\)s \
+            --region regionOne")
+            runCheck('Create the Block Storage service API endpoints',
+            "keystone endpoint-create \
+            --service-id $(keystone service-list | awk '/ volumev2 / {print $2}') \
+            --publicurl http://controller:8776/v2/%\(tenant_id\)s \
+            --internalurl http://controller:8776/v2/%\(tenant_id\)s \
+            --adminurl http://controller:8776/v2/%\(tenant_id\)s \
+            --region regionOne")
+        else:
+            print blue('Endpoints for port 8776 already created')
 
 @roles('controller')
 def setup_cinder_config_files_on_controller():
