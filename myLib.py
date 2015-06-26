@@ -310,17 +310,17 @@ def keystone_check(name, verbose=False):
     Also checks to make sure admin url, internal url and public url
     of the endpoint match the ones given in the manual
 
-
     Tested on:
     - glance
     - keystone
     - nova
     - neutron
 
-    TODO:
-    - quiet and verbose modes (DONE)
+    Returns a string containing the result ('OK' or 'FAIL')
 
     """
+    result = 'OK'
+
     def tenant_check():
         tenants = ['admin', 'demo', 'service']
 
@@ -332,9 +332,11 @@ def keystone_check(name, verbose=False):
                     print align_y(tenant + " tenant enabled")
                 else:
                     print align_n(tenant + "  tenant disabled")
+                    result = 'FAIL'
 
             else:
                 print align_n(tenant + " tenant absent")
+                result = 'FAIL'
 
     def user_check():
         users = ['admin', 'demo']
@@ -347,9 +349,11 @@ def keystone_check(name, verbose=False):
                     print align_y(user + " user enabled")
                 else:
                     print align_n(user + " user disabled")
+                    result = 'FAIL'
 
             else:
                 print align_n(user + " user absent")
+                result = 'FAIL'
 
 
         
@@ -359,18 +363,21 @@ def keystone_check(name, verbose=False):
             print align_y(name + ' user exists')
         else:
             print align_n(name + " user absent")
+            result = 'FAIL'
             
     def user_enabled(name):
         if "True" == run_v("cat user-list | awk '/" + name + "/ {print $6}'"):
             print align_y(name + " user enabled")
         else:
             print align_n(name + " user disabled")
+            result = 'FAIL'
 
     def service_exists(name):
         if name in run_v("cat service-list | awk '// {print$4}'"):
             print align_y(name + 'service exists')
         else:
             print align_n(name + 'service absent')
+            result = 'FAIL'
     
     def endpoint_check(name):
         ref_d = {
@@ -416,6 +423,7 @@ def keystone_check(name, verbose=False):
             print align_y("Admin url correct")
         else:
             print align_n("Admin url incorrect")
+            result = 'FAIL'
             print 'proper_admin_url' 
             print proper_admin_url 
             print 'admin_url_found'
@@ -425,11 +433,13 @@ def keystone_check(name, verbose=False):
             print align_y("Internal url correct")
         else:
             print align_n("Internal url incorrect")
+            result = 'FAIL'
 
         if (public_url_found == proper_public_url):
             print align_y("Public url correct")
         else:
             print align_n("Public url incorrect")
+            result = 'FAIL'
     # call all functions 
 
     with prefix(admin_openrc):
@@ -455,22 +465,35 @@ def keystone_check(name, verbose=False):
         run("rm endpoint-list",quiet=True)
 
 
-# General database check that will be used in several TDDs
+    return result
+
+
 def database_check(db,verbose=False):
+    """
+    General database check that will be used in several TDDs
 
+    Returns a string containing the result ('OK' or 'FAIL')
+    """
 
-
+    result = 'OK'
 
     def db_exists(db):
-        command = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{}';".format(db)
-        if db in run_v("""echo "{}" | mysql -u root""".format(command)):
-            return True
-        else:
-            return False
+        command = "SELECT SCHEMA_NAME "+\
+        "FROM INFORMATION_SCHEMA.SCHEMATA "+\
+        "WHERE SCHEMA_NAME = '{}';".format(db)
+
+        print command
+        return (db in run_v("""echo "{}" | mysql -u root""".format(command)))
         
     def table_count(db):
-        command = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{}';".format(db) 
-        output = run_v("""echo "{}" | mysql -u root | grep -v "COUNT" """.format(command))
+        command = "SELECT COUNT(*) "+\
+        "FROM information_schema.tables "+\
+        "WHERE table_schema = '{}';".format(db) 
+
+        print command
+        output = run('echo "{}" | mysql -u root '.format(command)+\
+                '| grep -v "COUNT" ')
+        print output
         return int(output)
 
     if db_exists(db):
@@ -481,6 +504,7 @@ def database_check(db,verbose=False):
         message = "DB " + db + " does not exist"
         print align_n(message)
         logging.debug(message)
+        result = 'FAIL'
 
     nbr = table_count(db)
     if nbr > 0:
@@ -491,3 +515,6 @@ def database_check(db,verbose=False):
         message = "table for " + db + " is empty. Nbr of entries : " + str(nbr)
         print align_n(message)
         logging.debug(message)
+        result = 'FAIL'
+
+    return result
