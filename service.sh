@@ -1,5 +1,34 @@
 #! /bin/bash
 
+<<EOF
+
+Performs specified action on the services for the openstack component specified by the user
+
+Usage:
+
+requires (in order):
+
+Action = the action to be performed on the services. (status|restart|disable|enable|stop|...) and anyother action that systemctl supports
+
+Range - is specified using the start and end variables
+start = the number corresponding to the openstack component you wish to start with
+end = the number corresponding to the openstack component you wish to end with
+
+ 
+syntax:
+
+- to get the status for all services specified in components 1 through 3, the syntax is as follows:
+
+./service.sh status 1 3
+
+- to restart all services for components 5, the syntax is:
+
+./service.sh restart 5
+
+
+EOF
+
+
 action=$1
 start=$2
 end=$3
@@ -182,12 +211,20 @@ function action_on_services {
 
 }
 
-
-for i in $(seq $start $end); 
-do
-    action_on_services $i $action
+if ! [ -z "$end"  ]
+then
+    for i in $(seq $start $end); 
+    do
+	action_on_services $i $action
+	
+    done
+else
+    # to handle the case when a single 
+    # digit is specified in the range
+    action_on_services $start $action
     
-done
+fi
+
 
 
 
