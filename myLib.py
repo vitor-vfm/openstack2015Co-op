@@ -36,28 +36,29 @@ def saveConfigFile(filepath,status):
     Output: None
     Effects: The file is saved in a local directory
     """
-    if not filepath:
-        raise ValueError('No filepath given')
-    elif not status:
-        raise ValueError('No status given')
+    with settings(hide('warnings', 'running', 'stdout', 'stderr')):
 
-    localLocation = '../local_copies_config_files/'
-    print 'env host : ',env.host
+        if not filepath:
+            raise ValueError('No filepath given')
+        elif not status:
+            raise ValueError('No status given')
 
-    # get just the name of the file (not its path) 
-    fil = filepath.split('/')[-1] 
+        localLocation = '../local_copies_config_files/'
 
-    # example filename: network_chrony.conf_good
-    filename = env.host + '_' + fil + '_' + status
+        # get just the name of the file (not its path) 
+        fil = filepath.split('/')[-1] 
 
-    localpath = localLocation + filename
+        # example filename: network_chrony.conf_good
+        filename = env.host + '_' + fil + '_' + status
 
-    # get the file
-    get(local_path=localpath,remote_path=filepath)
+        localpath = localLocation + filename
 
-    # add a comment with the original file path to beginning of file
-    comment = "# Original path : {}\n\n".format(filepath)
-    local('echo -e "{}$(cat {})" >{}'.format(comment,localpath,localpath))
+        # get the file
+        get(local_path=localpath,remote_path=filepath)
+
+        # add a comment with the original file path to beginning of file
+        comment = "# Original path : {}\n\n".format(filepath)
+        local('echo -e "{}$(cat {})" >{}'.format(comment,localpath,localpath),capture=True)
 
 
 
