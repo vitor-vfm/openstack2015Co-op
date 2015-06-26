@@ -10,7 +10,8 @@ import logging
 import sys
 sys.path.append('..')
 import env_config
-from myLib import runCheck, createDatabaseScript, keystone_check, database_check, align_y, align_n
+from myLib import runCheck, createDatabaseScript
+from myLib import keystone_check, database_check, align_y, align_n, saveConfigFile
 
 ########################## Configuring Environment ########################################
 env.roledefs = env_config.roledefs
@@ -186,8 +187,13 @@ def keystone_tdd():
 
     with settings(warn_only=True):
 
-        keystone_check('keystone')
-        database_check('keystone')
+        status = 'good'
+
+        resk = keystone_check('keystone')
+        resd = database_check('keystone')
+
+        if (resk == 'FAIL') or (resd == 'FAIL'):
+            status = 'bad'
 
         # Check if 'admin' and 'demo' are users
         user_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
@@ -197,11 +203,13 @@ def keystone_tdd():
             print align_y('Admin was found in user list')
         else:
             print align_n('admin not a user')
+            status = 'bad'
 
         if 'demo' in user_list_output:
             print align_y('Demo was found in user list')
         else:
             print align_n('demo not a user')
+            status = 'bad'
 
         # Check if 'admin', 'service' and 'demo' are tenants
         tenant_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
@@ -212,6 +220,7 @@ def keystone_tdd():
                 print align_y('{} was found in tenant list'.format(name))
             else:
                 print align_n('{} not a tenant'.format(name))
+                status = 'bad'
 
         # Check if '_member_' and 'admin' are roles
         role_list_output = run("keystone --os-tenant-name admin --os-username admin " + \
@@ -221,11 +230,13 @@ def keystone_tdd():
             print align_y('_member_ is a role')
         else:
             print align_n('_member_ not a role')
+            status = 'bad'
 
         if 'admin' in role_list_output:
             print align_y('admin is a role')
         else:
             print align_n('admin not a role')
+            status = 'bad'
 
         # Check if non-admin user is forbidden to perform admin tasks
         user_list_output = run("keystone --os-tenant-name demo --os-username demo " + \
@@ -235,6 +246,10 @@ def keystone_tdd():
             print align_y('demo was not allowed to run user-list')
         else:
             print align_n('demo was allowed to run user-list')
+            status = 'bad'
+
+        confFile= '/etc/keystone/keystone.conf'
+        saveConfigFile(confFile,status)
 
 def tdd():
     print blue('Starting TDD function')

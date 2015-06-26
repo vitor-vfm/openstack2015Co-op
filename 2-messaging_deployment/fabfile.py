@@ -10,7 +10,7 @@ import paramiko
 import logging
 import sys
 sys.path.append('..')
-from myLib import runCheck
+from myLib import runCheck, saveConfigFile
 import env_config
 
 ############################### Config ########################################
@@ -117,6 +117,8 @@ def check_log(timestamps):
     Print results
     """
 
+    
+    status = 'good'
     with settings(quiet=True):
         for command, time in timestamps:
             # Grep for message levels "ERROR", "WARNING", and "CRITICAL"
@@ -132,9 +134,12 @@ def check_log(timestamps):
                 print red("Command: " + command)
                 print red("Log error message: ")
                 print red(error)
+                status = 'bad'
             else:
                 print(green("No error when the command '{}' was run".format\
                         (command)))
+
+    saveConfigFile('/etc/rabbitmq/rabbitmq-env.conf',status)
 
 @roles('controller')
 def tdd():

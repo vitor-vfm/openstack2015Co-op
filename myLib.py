@@ -36,7 +36,13 @@ def saveConfigFile(filepath,status):
     Output: None
     Effects: The file is saved in a local directory
     """
+    if not filepath:
+        raise ValueError('No filepath given')
+    elif not status:
+        raise ValueError('No status given')
+
     localLocation = '../local_copies_config_files/'
+    print 'env host : ',env.host
 
     # get just the name of the file (not its path) 
     fil = filepath.split('/')[-1] 
@@ -482,7 +488,6 @@ def database_check(db,verbose=False):
         "FROM INFORMATION_SCHEMA.SCHEMATA "+\
         "WHERE SCHEMA_NAME = '{}';".format(db)
 
-        print command
         return (db in run_v("""echo "{}" | mysql -u root""".format(command)))
         
     def table_count(db):
@@ -490,10 +495,8 @@ def database_check(db,verbose=False):
         "FROM information_schema.tables "+\
         "WHERE table_schema = '{}';".format(db) 
 
-        print command
-        output = run('echo "{}" | mysql -u root '.format(command)+\
+        output = run_v('echo "{}" | mysql -u root '.format(command)+\
                 '| grep -v "COUNT" ')
-        print output
         return int(output)
 
     if db_exists(db):

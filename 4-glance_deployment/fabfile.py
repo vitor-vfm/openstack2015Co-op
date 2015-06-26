@@ -11,7 +11,8 @@ import sys
 sys.path.append('..')
 import env_config
 from myLib import runCheck, createDatabaseScript, set_parameter
-from myLib import database_check, keystone_check, run_v, align_n, align_y
+from myLib import database_check, keystone_check
+from myLib import run_v, align_n, align_y, saveConfigFile
 
 ############################ Config ########################################
 
@@ -230,6 +231,8 @@ def deploy():
 @roles('controller')
 def imageCreationTDD():
 
+    result = 'OK'
+    
     msg = 'Retrieve instance image from the cirros website'
     run_v("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
@@ -255,14 +258,41 @@ def imageCreationTDD():
             print(align_y("Successfully installed cirros image"))
         else:
             print(align_n("Couldn't install cirros image"))
+            result = 'FAIL'
         
     msg = 'Clear local files'
     run("rm -r /tmp/images")
 
+    return result
+
     
 
+@roles('controller')
 def tdd():
     with settings(warn_only=True):
-        execute(imageCreationTDD)
-        execute(database_check,'glance',roles=['controller'])
-        execute(keystone_check,'glance',roles=['controller'])
+
+        # save results of the tdds in a list
+        results = list()
+
+        res = execute(database_check,'glance',roles=['controller'])
+        results.append(res)
+
+        res = execute(keystone_check,'glance',roles=['controller'])
+        results.append(res)
+
+        res = execute(imageCreationTDD)
+        results.append(res)
+
+        # check if any of the functions failed
+        # and set status accordingly
+        if any([r == 'FAIL' for r in results]):
+            status = 'bad'
+        else:
+            status = 'good'
+
+        # save config files
+        confFile = "/etc/glance/glance-api.conf"
+        saveConfigFile(confFile, status)
+        confFile = "/etc/glance/glance-registry.conf"
+        saveConfigFile(confFile, status)
+
