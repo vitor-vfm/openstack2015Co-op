@@ -14,9 +14,9 @@ from myLib import runCheck
 
 env.roledefs = env_config.roledefs
 PARTITION = 'strFile'
-EX_VOLUME = 'vol0'
-GLANCE_VOLUME = 'glance_volume'
+VOLUME = 'glance_volume'
 STRIPE_NUMBER = 1
+BRICK = 'glance_brick'
 
 ############################# GENERAL FUNCTIONS ############################
 
@@ -46,18 +46,22 @@ def prepGlusterFS():
 
 @roles('controller', 'compute', 'network', 'storage')
 def setup_gluster():
-    # Get and install gluster
+    # Get name of directory partitions are in 
     home_dir = run("lvs | awk '/home/ {print $2}'")
+    # Get and install gluster
     runCheck('Getting packages for gluster', 'wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     runCheck('Installing gluster packages', 'yum -y install glusterfs glusterfs-fuse glusterfs-server')
     runCheck('Starting glusterd', 'systemctl start glusterd')
     # If not already made, make the file system (include in partition function)
-    if run('mount | grep strFile | grep xfs', warn_only=True).return_code:
+    #out = run('df -T | grep {}'.format(PARTITION), warn_only=True)
+    out = run('file -sL /dev/centos/{} | grep -i xfs'.format(PARTITION))
+    if out == '':
         runCheck('Making file system', 'mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
     # Mount the brick on the established partition
-    sudo('mkdir -p /data/gluster/brick')
-    if run('mount | grep strFile | grep /data/gluster', warn_only=True).return_code:
-        runCheck('Mounting brick on partition', 'mount /dev/{}/{} /data/gluster'.format(home_dir, PARTITION))
+    run('mkdir -p /data/gluster/{}'.format(BRICK))
+    out = run('mount | grep {} | grep /data/gluster/{}'.format(PARTITION, BRICK), warn_only=True)
+    if out == '':
+        runCheck('Mounting brick on partition', 'mount /dev/{}/{} /data/gluster/{}'.format(home_dir, PARTITION, BRICK))
     # Setup the ports
     #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
     #sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
@@ -67,7 +71,7 @@ def setup_gluster():
     #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 49152       -j ACCEPT')
     # Ensure the nodes can probe each other
     runCheck('Restarting glusterd', 'service glusterd restart')
-    #sudo('iptables -F')
+    #run('iptables -F')
 
 @roles('controller', 'compute', 'network', 'storage')
 def probe():
@@ -83,7 +87,7 @@ def probe():
     
 @roles('controller', 'compute', 'network', 'storage')
 def prevolume_start():
-    runCheck('Setting conditions so a volume can be made', 'setfattr -x trusted.glusterfs.volume-id /data/gluster/brick')
+    runCheck('Setting conditions so a volume can be made', 'setfattr -x trusted.glusterfs.volume-id /data/gluster/{}'.format(BRICK))
     runCheck('Restarting glusterd', 'service glusterd restart')
 
 @roles('compute')
@@ -91,37 +95,44 @@ def create_volume():
     num_nodes = len(env_config.hosts)
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
-    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/brick' for node in env_config.hosts])
+    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/{}'.format(BRICK) for node in env_config.hosts])
     check_volume = run('gluster volume list', warn_only=True)
-    if check_volume != GLANCE_VOLUME:
-        runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(GLANCE_VOLUME, num_nodes, node_ips))
+    if check_volume != VOLUME:
+        runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
     #prevolume_start()
-        runCheck('Starting volume', 'gluster volume start {} force'.format(GLANCE_VOLUME))
+        runCheck('Starting volume', 'gluster volume start {} force'.format(VOLUME))
     runCheck('Restarting glusterd', '/bin/systemctl restart glusterd.service')
 
 @roles('controller', 'compute', 'network', 'storage')
 def mounter():
     runCheck('Making mount point', 'mkdir -p /mnt/gluster')
-    if run('mount | grep glance_volume | grep /mnt/gluster', warn_only=True).return_code:
-        runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, GLANCE_VOLUME))
+    if run('mount | grep {} | grep /mnt/gluster'.format(VOLUME), warn_only=True).return_code:
+        runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, VOLUME))
 
 # This function eists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
 @roles('controller', 'compute', 'network', 'storage')
 def destroy_gluster():
-    runCheck('Unmounting gluster from /data/', 'umount /data/gluster')
+    runCheck('Unmounting gluster from /data/', 'umount -l /data/gluster/{}'.format(BRICK))
     runCheck('Removing glusterd from /var/lib/', 'rm -rf /var/lib/glusterd')
-    runCheck('Removing gluster from /data/', 'rm -rf /data/gluster')
+    runCheck('Removing gluster from /data/', 'rm -rf /data/gluster/{}'.format(BRICK))
 
 @roles('compute')
 def destroy_vol():
-    runCheck('Stopping gluster volume', 'yes | gluster volume stop {}'.format(GLANCE_VOLUME)) 
-    runCheck('Deleting gluster volume', 'yes | gluster volume delete {}'.format(GLANCE_VOLUME))
+    runCheck('Stopping gluster volume', 'yes | gluster volume stop {}'.format(VOLUME)) 
+    runCheck('Deleting gluster volume', 'yes | gluster volume delete {}'.format(VOLUME))
 
 @roles('controller', 'compute', 'network', 'storage')
 def destroy_mount():
-    runCheck('Unmounting gluster from /mnt/', 'umount /mnt/gluster') 
+    runCheck('Unmounting gluster from /mnt/', 'umount -l /mnt/gluster') 
     runCheck('Removing gluster from /mnt/', 'rm -rf /mnt/gluster')
+
+@roles('controller', 'compute', 'network', 'storage')
+def nuke_probes():
+    with settings(warn_only=True):
+        run('rm -f /var/lib/glusterd/glusterd.info')
+        run('rm -f /var/lib/glusterd/peers/*')
+        run('service glusterd stop')
 
 ##################### Glance ###############################################
 
@@ -164,6 +175,9 @@ def destroy_nova_paths():
     runCheck('Restarting nova', 'service openstack-nova-compute restart')
 
 def deploy_glance():
+    PARTITION = 'strFile'
+    VOLUME = 'glance_volume'
+    BRICK = 'glance_brick'
     execute(setup_gluster)
     execute(probe)
     execute(create_volume)
@@ -175,6 +189,9 @@ def deploy_glance():
     execute(setup_nova_paths)
 
 def undeploy_glance():
+    PARTITION = 'strFile'
+    VOLUME = 'glance_volume'
+    BRICK = 'glance_brick'
     execute(destroy_nova_paths)
     execute(destroy_backup)
     execute(destroy_mount)
@@ -243,9 +260,10 @@ def deploy():
     execute(mounter)
 
 def undeploy():
-    execute(destroy_mount)
-    execute(destroy_vol)
-    execute(destroy_gluster)
+    with settings(warn_only=True):
+        execute(destroy_mount)
+        execute(destroy_vol)
+        execute(destroy_gluster)
 
 ################################# TDD ########################################
 
@@ -282,7 +300,7 @@ def check_log(time):
 
 @roles('controller', 'compute', 'network', 'storage')
 def check_for_file():
-    if sudo('ls /mnt/gluster/'):
+    if run('ls /mnt/gluster/'):
         print(green('Gluster is set up on {}'.format(env.user)))
     else:
         print(red('No matter what was said before, Gluster isn\'t correctly set up on any'))
@@ -290,11 +308,11 @@ def check_for_file():
 @roles('compute')
 def tdd():
     with settings(warn_only=True):
-        sudo('touch /mnt/gluster/testfile')
+        run('touch /mnt/gluster/testfile')
         execute(check_for_file)
-        sudo('rm /mnt/gluster/testfile')
+        run('rm /mnt/gluster/testfile')
 
-
+# Edit this. Check for permissions and who owns the brick.
 def glance_tdd():
     with settings(hide('warnings', 'running', 'stdout', 'stderr')):
         execute(deploy_glance)
