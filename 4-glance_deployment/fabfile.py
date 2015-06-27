@@ -14,6 +14,9 @@ from myLib import runCheck, createDatabaseScript, set_parameter
 from myLib import database_check, keystone_check
 from myLib import run_v, align_n, align_y, saveConfigFile
 
+from glusterLib import setup_gluster, probe, create_volume, put_in_nova_line
+from glusterLib import mounter, set_nova_conf_gluster_glance
+
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
@@ -197,9 +200,24 @@ def setup_GlusterFS_Nova():
     runCheck(msg, 'chown -R nova:nova {}'.format(glusterBrick))
 
 def setup_GlusterFS():
-    execute(setup_GlusterFS_Glance)
-    execute(setup_GlusterFS_Nova)
-    execute(start_glance_services)
+
+    partition = 'strFile'
+    volume = 'glance_volume'
+    brick = 'glance_brick'
+
+    # execute(setup_gluster,partition,brick)
+    # execute(probe)
+    execute(create_volume, brick, volume)
+    execute(put_in_nova_line)
+    execute(mounter,volume)
+    execute(set_nova_conf_gluster_glance)
+    # execute(backup_glance_with_gluster)
+    # execute(put_in_other_nova_line)
+    # execute(setup_nova_paths)
+
+    # execute(setup_GlusterFS_Glance)
+    # execute(setup_GlusterFS_Nova)
+    # execute(start_glance_services)
 
 
 @roles('controller')
@@ -240,10 +258,8 @@ def imageCreationTDD():
 
     with prefix(env_config.admin_openrc):
 
-        run('keystone user-list')
-
         msg = 'Create glance image'
-        runCheck(msg, "glance image-create --name 'cirros-0.3.3-x86_64' "
+        runCheck(msg, "glance image-create --name 'cirros-test' "
                 "--file /tmp/images/cirros-0.3.3-x86_64-disk.img "
                 "--disk-format qcow2 "
                 "--container-format bare "
@@ -257,13 +273,13 @@ def imageCreationTDD():
         if 'cirros-0.3.3-x86_64' in output:
             print(align_y("Successfully installed cirros image"))
             msg = 'Remove new image'
-            runCheck(msg, "glance image-delete 'cirros-0.3.3-x86_64'",quiet=True)
+            runCheck(msg, "glance image-delete 'cirros-test'",quiet=True)
         else:
             print(align_n("Couldn't install cirros image"))
             result = 'FAIL'
         
     msg = 'Clear local files'
-    run("rm -r /tmp/images")
+    runCheck(msg, "rm -r /tmp/images")
 
     return result
 

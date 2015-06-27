@@ -20,10 +20,6 @@ BRICK = 'glance_brick'
 
 ############################# GENERAL FUNCTIONS ############################
 
-def get_parameter(config_file, section, parameter):
-    crudini_command = "crudini --get {} {} {}".format(config_file, section, parameter)
-    return local(crudini_command, capture=True)
-
 @roles('controller' 'compute', 'network', 'storage')
 def shrinkHome():
     home_dir = run("lvs | awk '/home/ {print $2}'")
@@ -109,7 +105,7 @@ def mounter():
     if run('mount | grep {} | grep /mnt/gluster'.format(VOLUME), warn_only=True).return_code:
         runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, VOLUME))
 
-# This function eists for testing. Should be able to use this then deploy to
+# This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
 @roles('controller', 'compute', 'network', 'storage')
 def destroy_gluster():
