@@ -65,7 +65,7 @@ def create_volume(brick, volume):
 
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
-    node_ips = string.join([
+    node_ips = "".join([
         node.split('@', 1)[-1]+':/data/gluster/{}'.format(brick)
         for node in env_config.hosts
         ])
