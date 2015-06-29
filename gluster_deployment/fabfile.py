@@ -247,24 +247,41 @@ def olddestroy_cinder():
     runCheck('Getting rid of Gluster', 'yum remove -y glusterfs-fuse')
 
 def oldundeploy_cinder():
-    PARTITION = 'strBlk'
-    VOLUME = 'cinder_volume'
-    BRICK = 'cinder_brick'
-    execute(destroy_cinder_volume)
-    execute(destroy_cinder)
+    #PARTITION = 'strBlk'
+    #VOLUME = 'cinder_volume'
+    #BRICK = 'cinder_brick'
+    execute(olddestroy_cinder_volume)
+    execute(olddestroy_cinder)
 
 ################################ New Cinder ##################################
+
+@roles('controller', 'storage')
+def change_cinder_files():
+    runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'volume_driver' 'cinder.volume.drivers.glusterfs.GlusterfsDriver'")
+    runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'glusterfs_shares_config' '/etc/cinder/shares.conf'")
+
+@roles('controller', 'storage')
+def restart_cinder():
+    runCheck('Restart cinder services', 'for i in api scheduler volume; do service openstack-cinder-${i} restart; done')
 
 def deploy_cinder():
     PARTITION = 'strBlk'
     VOLUME = 'cinder_volume'
     BRICK = 'cinder_brick'
-    execute(setup_gluster)
- 
+    execute(setup_gluster, hosts=['root@controller', 'root@storage1'])
+    execute(probe, hosts=['root@controller', 'root@storage1'])
+    execute(create_volume, hosts=['root@controller', 'root@storage1'])
+    execute(mounter, hosts=['root@controller', 'root@storage1'])
+    execute(change_cinder_files)
+    execute(restart_cinder) 
+
 def undeploy_cinder():
     PARTITION = 'strBlk'
     VOLUME = 'cinder_volume'
     BRICK = 'cinder_brick'
+    execute(destroy_mount, hosts=['controller', 'storage'])
+    execute(destroy_vol, hosts=['controller', 'storage'])
+    execute(destroy_gluster, hosts=['controller', 'storage'])
  
 ################################ Deployment ##################################
 
