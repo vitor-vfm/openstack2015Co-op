@@ -283,13 +283,18 @@ def imageCreationTDD():
         msg = 'List images'
         output = runCheck(msg, "glance image-list")
 
-        if 'cirros-0.3.3-x86_64' in output:
+        if 'cirros-test' in output:
             print(align_y("Successfully installed cirros image"))
-            msg = 'Remove new image'
-            runCheck(msg, "glance image-delete 'cirros-test'",quiet=True)
         else:
             print(align_n("Couldn't install cirros image"))
             result = 'FAIL'
+
+        # grab all IDs for images in a list
+        imageIDs = [l.split()[1] for l in output.splitlines() if 'cirros-test' in l]
+        for ID in imageIDs:
+            msg = 'Remove image ' + ID
+            runCheck(msg, "glance image-delete {}".format(ID),quiet=True)
+        
         
     msg = 'Clear local files'
     runCheck(msg, "rm -r /tmp/images")
