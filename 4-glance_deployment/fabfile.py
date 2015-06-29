@@ -270,7 +270,7 @@ def imageCreationTDD():
     msg = 'Retrieve instance image from the cirros website'
     run_v("mkdir /tmp/images")
     url = "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
-    runCheck(msg, "wget -P /tmp/images " + url)
+    runCheck(msg, "wget -qP /tmp/images " + url)
 
     with prefix(env_config.admin_openrc):
 
@@ -280,7 +280,6 @@ def imageCreationTDD():
                 "--disk-format qcow2 "
                 "--container-format bare "
                 "--is-public True "
-                "--progress"
                 )
 
         msg = 'List images'
