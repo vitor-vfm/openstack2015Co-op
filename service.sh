@@ -142,12 +142,12 @@ function action_on_services {
 
 	    echo "###############################################################################"
 	    
-	    state=$(ssh root@$node "systemctl status $service | awk '/Active/ {print \$2,\$3}'")
+	    state=$(ssh root@$node "systemctl status $service | awk '/Active/ {\$1=\"\"; print \$0}'")
 	    if [[ "$state" =~ ^active  ]] || [[ "$state" =~ running  ]]
 	    then
 		echo "$service status on $node is now: ${green} $state ${reset}"
 		
-	    elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]]
+	    elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
 	    then
 		echo "$service status on $node is now: ${red} $state ${reset}"
 
