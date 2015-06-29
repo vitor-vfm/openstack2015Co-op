@@ -1,0 +1,43 @@
+#! /usr/bin/python
+
+import sys
+from fabric.colors import green, red, blue
+from subprocess import call
+
+directories = {
+        0 : packagesDeploy,
+        }
+
+def run(command):
+    return call(command,shell=True)
+
+def fab(number,task,directories):
+
+    direc = directories[number]
+
+    # change to directory
+    run("cd " + direc)
+    print blue("\n\t\tNow on directory {}\n".format(direc)
+
+    # run the task
+    command = "fab {}".format(task)
+    print blue("Running task " + task)
+    run(command)
+
+
+if __name__=="__main__":
+
+    if '-' in sys.argv[1]:
+        # options
+        pass
+    else:
+        first = int(sys.argv[1])
+        last = int(sys.argv[2])
+        task = 'deploy'
+
+    for i in range(first, last+1):
+    fab(
+
+
+
+
