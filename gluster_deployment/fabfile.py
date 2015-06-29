@@ -22,42 +22,55 @@ BRICK = 'glance_brick'
 
 @roles('controller' 'compute', 'network', 'storage')
 def shrinkHome():
-    home_dir = run("lvs | awk '/home/ {print $2}'")
-    run('umount /home')
-    run('lvresize -L -{} /dev/mapper/{}-home'.format(env_config.partition['size_reduction_of_home'], home_dir))
-    run('mkfs -t xfs -f /dev/{}/home'.format(home_dir))
-    run('mount /home')
+    #home_dir = run("lvs | awk '/home/ {print $2}'")
+    runCheck('Unmount home', 'umount /home')
+    #run('lvresize -L -{} /dev/mapper/{}-home'.format(env_config.partition['size_reduction_of_home'], home_dir))
+    runCheck('Resize home', 'lvresize -L -{} /dev/mapper/centos-home'.format(env_config.partition['size_reduction_of_home']))
+    #run('mkfs -t xfs -f /dev/{}/home'.format(home_dir))
+    runCheck('Remake home', 'mkfs -t xfs -f /dev/centos/home')
+    runCheck('Remount home', 'mount /home')
 
 @roles('controller', 'network', 'compute', 'storage')
 def prepGlusterFS():
-    home_dir = run("lvs | awk '/home/ {print $2}'")
-    run('lvs')
-    run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-    run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-    run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-    run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-    run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-    run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-    run('lvs')
+    #home_dir = run("lvs | awk '/home/ {print $2}'")
+    runCheck('List original logical volume info', 'lvs')
+    #run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+    #run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
+    #run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+    #run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
+    #run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+    #run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
+    runCheck('Create strFile partition', 'lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size']))
+    runCheck('Name partition strFile', 'lvrename /dev/{}/lvol0 strFile')
+    runCheck('Create strObj partition', 'lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size']))
+    runCheck('Name partition strObj', 'lvrename /dev/{}/lvol0 strObj')
+    runCheck('Create partition strBlk', 'lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size']))
+    runCheck('Name partition strBlk', 'lvrename /dev/{}/lvol0 strBlk')
+    runCheck('List final partition info', 'lvs')
 
 @roles('controller', 'compute', 'network', 'storage')
 def setup_gluster():
     # Get name of directory partitions are in 
-    home_dir = run("lvs | awk '/home/ {print $2}'")
+    # Following commented out line is for when /dev/centos isn't called /dev/centos. Put it instead of 
+    # the /centos part of '/dev/centos' if there are troubles
+    #home_dir = run("lvs | awk '/home/ {print $2}'")
     # Get and install gluster
     runCheck('Getting packages for gluster', 'wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     runCheck('Installing gluster packages', 'yum -y install glusterfs glusterfs-fuse glusterfs-server')
     runCheck('Starting glusterd', 'systemctl start glusterd')
     # If not already made, make the file system (include in partition function)
     #out = run('df -T | grep {}'.format(PARTITION), warn_only=True)
-    out = run('file -sL /dev/centos/{} | grep -i xfs'.format(PARTITION))
+    #out = run('file -sL /dev/{}/{} | grep -i xfs'.format(home_dir, PARTITION), warn_only = True)
+    out = run('file -sL /dev/centos/{} | grep -i xfs'.format(PARTITION), warn_only = True)
     if out == '':
-        runCheck('Making file system', 'mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
+        #runCheck('Making file system', 'mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
+        runCheck('Making file system', 'mkfs.xfs -f /dev/centos/{}'.format(PARTITION))
     # Mount the brick on the established partition
     run('mkdir -p /data/gluster/{}'.format(BRICK))
     out = run('mount | grep {} | grep /data/gluster/{}'.format(PARTITION, BRICK), warn_only=True)
     if out == '':
-        runCheck('Mounting brick on partition', 'mount /dev/{}/{} /data/gluster/{}'.format(home_dir, PARTITION, BRICK))
+        #runCheck('Mounting brick on partition', 'mount /dev/{}/{} /data/gluster/{}'.format(home_dir, PARTITION, BRICK))
+        runCheck('Mounting brick on partition', 'mount /dev/centos/{} /data/gluster/{}'.format(PARTITION, BRICK))
     # Setup the ports
     #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
     #sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
@@ -70,10 +83,10 @@ def setup_gluster():
     #run('iptables -F')
 
 @roles('controller', 'compute', 'network', 'storage')
-def probe():
+def probe(all_hosts):
     with settings(warn_only=True):
         # peer probe the ip addresses of all the nodes
-        for node in env_config.hosts:
+        for node in all_hosts:
             if node != env.host_string:
                 node_ip = node.split('@', 1)[-1]
                 if sudo('gluster peer probe {}'.format(node_ip)).return_code:
@@ -87,11 +100,11 @@ def prevolume_start():
     runCheck('Restarting glusterd', 'service glusterd restart')
 
 @roles('compute')
-def create_volume():
-    num_nodes = len(env_config.hosts)
+def create_volume(hosts):
+    num_nodes = len(hosts)
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
-    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/{}'.format(BRICK) for node in env_config.hosts])
+    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/{}'.format(BRICK) for node in hosts])
     check_volume = run('gluster volume list', warn_only=True)
     if check_volume != VOLUME:
         runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
@@ -171,12 +184,15 @@ def destroy_nova_paths():
     runCheck('Restarting nova', 'service openstack-nova-compute restart')
 
 def deploy_glance():
+    global PARTITION
     PARTITION = 'strFile'
+    global VOLUME
     VOLUME = 'glance_volume'
+    global BRICK
     BRICK = 'glance_brick'
     execute(setup_gluster)
-    execute(probe)
-    execute(create_volume)
+    execute(probe, env_config.hosts)
+    execute(create_volume, env_config.hosts)
     execute(put_in_nova_line)
     execute(mounter)
     execute(put_in_glance_line)
@@ -185,8 +201,11 @@ def deploy_glance():
     execute(setup_nova_paths)
 
 def undeploy_glance():
+    global PARTITION
     PARTITION = 'strFile'
+    global VOLUME
     VOLUME = 'glance_volume'
+    global BRICK
     BRICK = 'glance_brick'
     execute(destroy_nova_paths)
     execute(destroy_backup)
@@ -265,30 +284,39 @@ def restart_cinder():
     runCheck('Restart cinder services', 'for i in api scheduler volume; do service openstack-cinder-${i} restart; done')
 
 def deploy_cinder():
+    #with settings(host_string = {'controller':['root@controller'], 'storage':['root@storage1']}):
+    global PARTITION
     PARTITION = 'strBlk'
+    global VOLUME
     VOLUME = 'cinder_volume'
+    global BRICK
     BRICK = 'cinder_brick'
-    execute(setup_gluster, hosts=['root@controller', 'root@storage1'])
-    execute(probe, hosts=['root@controller', 'root@storage1'])
-    execute(create_volume, hosts=['root@controller', 'root@storage1'])
-    execute(mounter, hosts=['root@controller', 'root@storage1'])
+    #global [env_config.hosts] 
+    #env_config.hosts = {'192.168.1.11': 'controller', '192.168.1.31': 'storage1'}
+    execute(setup_gluster, roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
+    execute(probe, {'192.168.1.11':'controller', '192.168.1.31':'storage1'}, roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
+    execute(create_volume, {'192.168.1.11':'controller', '192.168.1.31':'storage1'}, roles=['controller'])
+    execute(mounter, roles=['controller', 'storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(change_cinder_files)
     execute(restart_cinder) 
 
 def undeploy_cinder():
+    global PARTITION
     PARTITION = 'strBlk'
+    global VOLUME
     VOLUME = 'cinder_volume'
+    global BRICK
     BRICK = 'cinder_brick'
-    execute(destroy_mount, hosts=['controller', 'storage'])
-    execute(destroy_vol, hosts=['controller', 'storage'])
-    execute(destroy_gluster, hosts=['controller', 'storage'])
+    execute(destroy_mount, roles=['controller', 'storage'])
+    execute(destroy_vol, roles=['controller'])
+    execute(destroy_gluster, roles=['controller', 'storage'])
  
 ################################ Deployment ##################################
 
 def deploy():
     execute(setup_gluster)
-    execute(probe)
-    execute(create_volume)
+    execute(probe, env_config.hosts)
+    execute(create_volume, env_config.hosts)
     execute(mounter)
 
 def undeploy():
