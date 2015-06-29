@@ -102,11 +102,12 @@ def install_packages():
 
 
 	# Install RDO repository for Juno
-	print('installing yum-plugin-priorities and epel-release')
-        msg = 'Install rdo-release-juno.rpm'
-        runCheck(msg, 'yum -y install '
-                'http://rdo.fedorapeople.org/openstack-juno/'
-                'rdo-release-juno.rpm')
+        with settings(warn_only=True):
+            print('installing yum-plugin-priorities and epel-release')
+            msg = 'Install rdo-release-juno.rpm'
+            runCheck(msg, 'yum -y install '
+                    'http://rdo.fedorapeople.org/openstack-juno/'
+                    'rdo-release-juno.rpm')
 
         # Install Crudini and wget
         print('installing crudini wget')
