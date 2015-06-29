@@ -66,16 +66,16 @@ chmod 777 Build-Assets/tmp/
 
 cp -a $kickstart_file Build-Assets/tmp/ks.cfg
 
-cp -a /mnt/myIso/ Build-Assets/tmp/
-chmod 777 Build-Assets/tmp/isolinux/
-chmod 777 Build-Assets/tmp/isolinux/isolinux.cfg
-chmod 777 Build-Assets/tmp/isolinux/isolinux.bin
+cp -a /mnt/myIso/ Build-Assets/tmp/myIso/
+chmod 777 Build-Assets/tmp/myIso/isolinux/
+chmod 777 Build-Assets/tmp/myIso/isolinux/isolinux.cfg
+chmod 777 Build-Assets/tmp/myIso/isolinux/isolinux.bin
 
-#cp -a isolinux.cfg Build-Assets/tmp/isolinux/
+#cp -a isolinux.cfg Build-Assets/tmp/myIso/isolinux/
 
 umount /mnt/myIso
 rm /mnt/myIso
-cd Build-Assets/tmp/
+cd Build-Assets/tmp/myIso/
 ###step 2 ####### rename output file after "-o"
 mkisofs -o ../$new_iso_file_name -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T .
 cd -
