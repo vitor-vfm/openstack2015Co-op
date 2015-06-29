@@ -147,7 +147,7 @@ function action_on_services {
 	    then
 		echo "$service status on $node is now: ${green} $state ${reset}"
 		
-	    elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]]
+	    elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
 	    then
 		echo "$service status on $node is now: ${red} $state ${reset}"
 
