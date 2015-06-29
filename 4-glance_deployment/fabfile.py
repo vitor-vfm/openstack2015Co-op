@@ -14,8 +14,7 @@ from myLib import runCheck, createDatabaseScript, set_parameter
 from myLib import database_check, keystone_check
 from myLib import run_v, align_n, align_y, saveConfigFile
 
-from glusterLib import setup_gluster, probe, create_volume, put_in_nova_line
-from glusterLib import mounter, set_nova_conf_gluster_glance
+import glusterLib
 
 ############################ Config ########################################
 
@@ -183,6 +182,9 @@ def setup_GlusterFS_Glance():
     msg = 'Set ownership of the brick'
     runCheck(msg, 'chown -R glance:glance {}'.format(glusterBrick))
 
+    msg = 'Restart Glance'
+    runCheck(msg, 'systemctl restart openstack-glance-api') 
+
 @roles('controller')
 def setup_GlusterFS_Nova():
     """
@@ -199,25 +201,36 @@ def setup_GlusterFS_Nova():
     msg = 'Set ownership of the brick'
     runCheck(msg, 'chown -R nova:nova {}'.format(glusterBrick))
 
+@roles('controller', 'compute')
+def setup_nova_conf_file():
+    confFile = '/etc/nova/nova.conf'     
+    set_parameter(confFile, 'glance', 'libvirt_type', 'qemu')
+    set_parameter(confFile, 'DEFAULT', 'instances_path', 
+            env_config.novaGlusterBrick)
+
+@roles('controller')
+def setup_glance_api_conf_file():
+    confFile = '/etc/glance/glance-api.conf' 
+    set_parameter(confFile, 'glance_store', 'filesystem_store_datadir', 
+            env_config.glanceGlusterBrick)
+
 def setup_GlusterFS():
+    "Create a Gluster volume for Glance and configure it"
 
     partition = 'strFile'
     volume = 'glance_volume'
     brick = 'glance_brick'
 
-    # execute(setup_gluster,partition,brick)
-    # execute(probe)
-    execute(create_volume, brick, volume)
-    execute(put_in_nova_line)
-    execute(mounter,volume)
-    execute(set_nova_conf_gluster_glance)
-    # execute(backup_glance_with_gluster)
-    # execute(put_in_other_nova_line)
-    # execute(setup_nova_paths)
-
-    # execute(setup_GlusterFS_Glance)
-    # execute(setup_GlusterFS_Nova)
-    # execute(start_glance_services)
+    execute(glusterLib.setup_gluster, partition, brick)
+    execute(glusterLib.probe)
+    execute(glusterLib.create_volume, brick, volume)
+    execute(glusterLib.mount, volume)
+    
+    execute(setup_nova_conf_file)
+    execute(set_glance_api_conf_file)
+    execute(setup_GlusterFS_Glance)
+    execute(setup_GlusterFS_Nova)
+    execute(start_glance_services)
 
 
 @roles('controller')

@@ -18,7 +18,8 @@ def setup_gluster(partition,brick):
 
     runCheck('Get packages for gluster', 
             'wget -P /etc/yum.repos.d '
-            'http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
+            'http://download.gluster.org/pub/'
+            'gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
 
     runCheck('Install gluster packages', 
             'yum -y install glusterfs glusterfs-fuse glusterfs-server')
@@ -28,14 +29,17 @@ def setup_gluster(partition,brick):
     # If not already made, make the file system (include in partition function)
     out = run('file -sL /dev/centos/{} | grep -i xfs'.format(partition))
     if out == '':
-        runCheck('Make file system', 'mkfs.xfs -f /dev/{}/{}'.format(home_dir, partition))
+        runCheck('Make file system', 'mkfs.xfs -f /dev/{}/{}'.format(
+            home_dir, partition))
 
     # Mount the brick on the established partition
     run('mkdir -p /data/gluster/{}'.format(brick))
-    out = run('mount | grep {} | grep /data/gluster/{}'.format(partition, brick), warn_only=True)
+    out = run("mount | grep '{}' | grep '/data/gluster/{}'".format(
+        partition, brick), warn_only=True)
     if out == '':
         runCheck('Mount brick on partition', 
-                'mount /dev/{}/{} /data/gluster/{}'.format(home_dir, partition, brick))
+                'mount /dev/{}/{} /data/gluster/{}'.format(
+                    home_dir, partition, brick))
     
     # Ensure the nodes can probe each other
     runCheck('Restart glusterd', 'service glusterd restart')
@@ -49,9 +53,11 @@ def probe():
             if node != env.host_string:
                 node_ip = node.split('@', 1)[-1]
                 if sudo('gluster peer probe {}'.format(node_ip)).return_code:
-                    print(red('{} cannot probe {}'.format(env.host, node.split('@', 1)[0])))
+                    print(red('{} cannot probe {}'.format(
+                        env.host, node.split('@', 1)[0])))
                 else:
-                    print(green('{} can probe {}'.format(env.host, node.split('@', 1)[0])))
+                    print(green('{} can probe {}'.format(
+                        env.host, node.split('@', 1)[0])))
 
 @roles('compute')
 def create_volume(brick, volume):
@@ -60,7 +66,8 @@ def create_volume(brick, volume):
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
     node_ips = string.join([
-        node.split('@', 1)[-1]+':/data/gluster/{}'.format(brick) for node in env_config.hosts
+        node.split('@', 1)[-1]+':/data/gluster/{}'.format(brick)
+        for node in env_config.hosts
         ])
 
     check_volume = run('gluster volume list', warn_only=True)
@@ -69,24 +76,17 @@ def create_volume(brick, volume):
                 'gluster volume create {} rep {} transport tcp {} force'.format(
                     volume, num_nodes, node_ips))
 
-        runCheck('Start volume', 'gluster volume start {} force'.format(volume))
+        runCheck('Start volume', 'gluster volume start {} force'.format(
+            volume))
 
     runCheck('Restart glusterd', '/bin/systemctl restart glusterd.service')
 
 
 @roles('controller', 'compute', 'network', 'storage')
-def mounter(volume):
+def mount(volume):
     runCheck('Make mount point', 'mkdir -p /mnt/gluster')
-    if run('mount | grep {} | grep /mnt/gluster'.format(volume), warn_only=True).return_code:
+    if run("mount | grep '{}' | grep /mnt/gluster".format(volume), 
+            warn_only=True).return_code:
         runCheck('Mount mount point', 
-                'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, volume))
-
-@roles('controller', 'compute')
-def set_nova_conf_gluster_glance():
-    confFile = '/etc/nova/nova.conf'     
-    set_parameter(confFile, 'glance', 'libvirt_type', 'qemu')
-    set_parameter(confFile, 'DEFAULT', 'instances_path', '/mnt/gluster/instance')
-
-@roles('controller')
-def put_in_glance_line():
-    runCheck('Putting line into glance-api.conf', "crudini --set '/etc/glance/glance-api.conf' 'glance_store' 'filesystem_store_datadir' '/mnt/gluster/glance/images'")
+                'mount -t glusterfs {}:/{} /mnt/gluster/'.format(
+                    env.host, volume))
