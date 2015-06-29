@@ -102,11 +102,12 @@ def install_packages():
 
 
 	# Install RDO repository for Juno
-	print('installing yum-plugin-priorities and epel-release')
-        msg = 'Install rdo-release-juno.rpm'
-        runCheck(msg, 'yum -y install '
-                'http://rdo.fedorapeople.org/openstack-juno/'
-                'rdo-release-juno.rpm')
+        with settings(warn_only=True):
+            print('installing yum-plugin-priorities and epel-release')
+            msg = 'Install rdo-release-juno.rpm'
+            runCheck(msg, 'yum -y install '
+                    'http://rdo.fedorapeople.org/openstack-juno/'
+                    'rdo-release-juno.rpm')
 
         # Install Crudini and wget
         print('installing crudini wget')
@@ -189,7 +190,46 @@ def test():
 		printMessage("good",result)
 	var1=run('systemctl status chronyd.service |grep Active')
 
+@roles('controller', 'compute', 'network', 'storage')
+def shrinkHome():
+    # check if partitions already exist
+    if 'str' in run("lvs"):
+        print blue('Partitions already created. Nothing done on '+env.host)
+    else:
+        home_dir = run("lvs | awk '/home/ {print $2}'")
+        run('umount /home')
+        run('lvresize -L -{} /dev/mapper/{}-home'.format(
+            env_config.partition['size_reduction_of_home'], home_dir))
+        run('mkfs -t xfs -f /dev/{}/home'.format(home_dir))
+        run('mount /home')
 
+@roles('controller', 'network', 'compute', 'storage')
+def prepGlusterFS():
+
+    # check if partitions already exist
+    if 'str' in run("lvs"):
+        print blue('Partitions already created. Nothing done on '+env.host)
+    else:
+        STRIPE_NUMBER = env_config.partition['stripe_number']
+
+        home_dir = run("lvs | awk '/home/ {print $2}'")
+
+        run('lvcreate -i {} -I 8 -L {} {}'.format(
+            STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+
+        run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
+
+        run('lvcreate -i {} -I 8 -L {} {}'.format(
+            STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+
+        run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
+
+        run('lvcreate -i {} -I 8 -L {} {}'.format(
+            STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+
+        run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
+
+        run('lvs')
 
 @roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
@@ -200,6 +240,9 @@ def deploy():
 	execute(installMariaDB)
 	execute(disableFirewall)
 	execute(disableSELinux)
+
+        execute(shrinkHome)
+        execute(prepGlusterFS)
 
         # reboot the machine
         with settings(warn_only=True):

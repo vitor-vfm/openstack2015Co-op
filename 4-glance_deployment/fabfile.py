@@ -14,8 +14,7 @@ from myLib import runCheck, createDatabaseScript, set_parameter
 from myLib import database_check, keystone_check
 from myLib import run_v, align_n, align_y, saveConfigFile
 
-from glusterLib import setup_gluster, probe, create_volume, put_in_nova_line
-from glusterLib import mounter, set_nova_conf_gluster_glance
+import glusterLib
 
 ############################ Config ########################################
 
@@ -183,6 +182,9 @@ def setup_GlusterFS_Glance():
     msg = 'Set ownership of the brick'
     runCheck(msg, 'chown -R glance:glance {}'.format(glusterBrick))
 
+    msg = 'Restart Glance'
+    runCheck(msg, 'systemctl restart openstack-glance-api') 
+
 @roles('controller')
 def setup_GlusterFS_Nova():
     """
@@ -199,25 +201,36 @@ def setup_GlusterFS_Nova():
     msg = 'Set ownership of the brick'
     runCheck(msg, 'chown -R nova:nova {}'.format(glusterBrick))
 
+@roles('controller', 'compute')
+def setup_nova_conf_file():
+    confFile = '/etc/nova/nova.conf'     
+    set_parameter(confFile, 'glance', 'libvirt_type', 'qemu')
+    set_parameter(confFile, 'DEFAULT', 'instances_path', 
+            env_config.novaGlusterBrick)
+
+@roles('controller')
+def setup_glance_api_conf_file():
+    confFile = '/etc/glance/glance-api.conf' 
+    set_parameter(confFile, 'glance_store', 'filesystem_store_datadir', 
+            env_config.glanceGlusterBrick)
+
 def setup_GlusterFS():
+    "Create a Gluster volume for Glance and configure it"
 
     partition = 'strFile'
     volume = 'glance_volume'
     brick = 'glance_brick'
 
-    # execute(setup_gluster,partition,brick)
-    # execute(probe)
-    execute(create_volume, brick, volume)
-    execute(put_in_nova_line)
-    execute(mounter,volume)
-    execute(set_nova_conf_gluster_glance)
-    # execute(backup_glance_with_gluster)
-    # execute(put_in_other_nova_line)
-    # execute(setup_nova_paths)
-
-    # execute(setup_GlusterFS_Glance)
-    # execute(setup_GlusterFS_Nova)
-    # execute(start_glance_services)
+    execute(glusterLib.setup_gluster, partition, brick)
+    execute(glusterLib.probe)
+    execute(glusterLib.create_volume, brick, volume)
+    execute(glusterLib.mount, volume)
+    
+    execute(setup_nova_conf_file)
+    execute(setup_glance_api_conf_file)
+    execute(setup_GlusterFS_Glance)
+    execute(setup_GlusterFS_Nova)
+    execute(start_glance_services)
 
 
 @roles('controller')
@@ -248,6 +261,9 @@ def deploy():
 
 @roles('controller')
 def imageCreationTDD():
+    """
+    TDD: Try to create an image and see if it shows up in all hosts
+    """
 
     result = 'OK'
     
@@ -268,22 +284,82 @@ def imageCreationTDD():
                 )
 
         msg = 'List images'
-        output = runCheck(msg, "glance image-list")
+        output = runCheck(msg, "glance image-list | grep 'cirros-test'")
+        # imageIDs = [l.split()[1] for l in output.splitlines() if 'cirros-test' in l]
+        imageID = run("glance image-list | grep 'cirros-test' | awk '{print $2}'") 
+        
+        if len(output.splitlines()) > 1:
+            align_n("There seems to be more than one 'cirros-test'!")
+            return 'FAIL'
 
-        if 'cirros-0.3.3-x86_64' in output:
+        if output:
             print(align_y("Successfully installed cirros image"))
-            msg = 'Remove new image'
-            runCheck(msg, "glance image-delete 'cirros-test'",quiet=True)
         else:
             print(align_n("Couldn't install cirros image"))
+            return 'FAIL'
+
+    # check the hosts and see if the image file
+    # was distributed among all of them
+
+    results = execute(glusterTDD,imageID).values()
+    for r in results:
+        if r == 'FAIL':
             result = 'FAIL'
-        
+
     msg = 'Clear local files'
     runCheck(msg, "rm -r /tmp/images")
 
+    # remove the test image(s)
+    execute(removeTestImage, imageID)
+
     return result
 
+@roles(env_config.roles)
+def glusterTDD(imageID):
+    """
+    TDD: Check the bricks and see if the image is there
+    """
+    result = 'OK'
+
+    imageBrick = env_config.glanceGlusterBrick
+
+    if run("[ -e {} ]".format(imageBrick)).return_code != 0:
+        print red("Brick {} does not exist in host {}!".format(
+            imageBrick, env.host))
+        return 'FAIL'
+
+
+    imagesInBrick = runCheck("See inside brick", "ls " + imageBrick)
+
+    if not imagesInBrick:
+        print align_n('Brick seems to be empty in host' + env.host)
+        result = 'FAIL'
+    elif imageID not in imagesInBrick:
+        print align_n('The image requested '
+                'is not in the glance brick in host ' + env.host)
+        print 'Image requested: ', blue(imageID)
+        print 'Contents of brick: ', red(imagesInBrick)
+        result = 'FAIL'
+    else:
+        print align_y('Can see the image in host ' + env.host)
+
+    return result
+
+@roles('controller')
+def removeTestImage(ID):
+    """
+    TDD: Remove an image created by the TDD functions
+    """
+
+    result = 'OK'
     
+    with prefix(env_config.admin_openrc):
+        msg = 'Remove image ' + ID
+        out = runCheck(msg, "glance image-delete {}".format(ID))
+        if out.return_code != 0:
+            result = 'FAIL'
+
+    return result
 
 @roles('controller')
 def tdd():

@@ -359,7 +359,9 @@ pid-file=/var/run/mariadb/mariadb.pid
     ###########################################################################
 
     partition = {   'size_reduction_of_home' : '300G',
-                    'partition_size' : '100G',        }
+                    'partition_size' : '100G',        
+                    'stripe_number' : 1, 
+                    }
 
 
 

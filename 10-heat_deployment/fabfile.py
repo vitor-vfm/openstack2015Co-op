@@ -11,6 +11,7 @@ import sys
 sys.path.append('..')
 import env_config
 from myLib import runCheck, createDatabaseScript, set_parameter
+from myLib import database_check, keystone_check, saveConfigFile
 
 
 ############################ Config ########################################
@@ -20,6 +21,9 @@ passwd = env_config.passwd
 
 etc_heat_config_file = "/etc/heat/heat.conf"
 heat_test_file = "test_file/test-stack.yml"
+
+# global variable to be used in the TDD functions
+status = str()
 
 ################### General functions ########################################
 
@@ -172,8 +176,29 @@ def create_stack():
         print(green("Stack created succesfully"))
     else:
         print(red("Stack NOT created"))
+        status = 'bad'
         
         
+@roles('controller')
 def tdd():
+
+    # status is initialized as 'good'
+    # if any of the tdd functions gets an error,
+    # it changes the value to 'bad'
+    status = 'good'
+
     with settings(warn_only=True):
-        execute(create_stack)
+        
+        res = keystone_check('heat')
+        if res != 'OK':
+            status = 'bad'
+
+        res = database_check('heat')
+        if res != 'OK':
+            status = 'bad'
+
+        create_stack()
+
+        # save config file
+        saveConfigFile(etc_heat_config_file, status)
+
