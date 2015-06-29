@@ -19,6 +19,8 @@ EOF
 start=$1
 end=$2
 
+source dictionary.sh
+
 function check_port {
     nodes="controller compute1 network storage1"
     case "$1" in 
@@ -71,17 +73,16 @@ function check_port {
 
 	echo -e '\n\n'
 	echo '#########################################'
-	echo 'Checking port ' $port ' in component ' $1
+	echo 'Checking port ' $port ' in component ' ${component_dictionary[$1]}
 	echo '#########################################'
 	for node in $nodes;
 	do
 	    output=$(ssh root@$node "ss -nltp | grep $port")
 	    if [[ "$output" =~ ^LISTEN ]]
 	    then
-		echo "${green}LISTENER on $node ${reset}"	    
-		
+		echo "${green}LISTENER found on $node ${reset}: "$output
 	    else
-		echo "${red}No LISTENER on $node ${reset}"	    
+		echo "${red}No LISTENER found on $node ${reset}"	    
 		
 	    fi
 	done
