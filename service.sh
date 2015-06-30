@@ -30,6 +30,8 @@
 OPTIND=1
 verbosity=0
 
+source dictionary.sh
+
 while getopts "vs:e:a:" OPTION
 do
 
@@ -203,7 +205,7 @@ function action_on_services {
 	if [ $verbosity -ge 1 ]
 	then
 	    echo -e "\n"
-	    echo "running $action on services for $component that run on the Controller"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Controller"
 	fi
 
 	run_command "$servicesCont" $action "controller"
@@ -215,7 +217,7 @@ function action_on_services {
 	if [ $verbosity -ge 1 ]
 	then
 	    echo -e "\n"
-	    echo "running $action on services for $component that run on the Compute"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Compute"
 	fi
 
 	run_command "$servicesComp" $action "compute1"
@@ -226,7 +228,7 @@ function action_on_services {
 	if [ $verbosity -ge 1 ]
 	then
 	    echo -e "\n"
-	    echo "running $action on services for $component that run on the Network"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Network"
 	fi
 	run_command "$servicesNetw" $action "network"
 
@@ -237,7 +239,7 @@ function action_on_services {
 	if [ $verbosity -ge 1 ]
 	then
 	    echo -e "\n"
-	    echo "running $action on services for $component that run on the Storage"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Storage"
 	fi
 	run_command "$servicesStor" $action "storage1"
 
