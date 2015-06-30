@@ -182,6 +182,8 @@ def secureDB():
 
 @roles('controller')       
 def tdd_DB():
+	if (env.host != "controller"):
+		return
 	with settings(hide('everything'),warn_only=True):
 		msg=" talk to database engine"
 		result = run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])
@@ -214,7 +216,8 @@ def shrinkHome():
 @roles('controller', 'compute', 'network', 'storage')
 def tdd_lvs():
 	msg = "TDD LVS Free space"
-	runCheck(msg,"vgs | awk '/centos/ {print $7}'")
+	lvsFree=run("vgs | awk '/centos/ {print $7}'")
+	printMessage("good", msg +' '+ lvsFree)
 
 
 @roles('controller', 'network', 'compute', 'storage')
@@ -242,7 +245,8 @@ def prepGlusterFS():
 
 		run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
 
-		run('lvs')
+		run('fdisk -l|grep str')
+
 
 @roles('controller','compute','network')
 # @roles('controller','compute','network')
@@ -280,9 +284,10 @@ def chronytdd():
 @roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 def tdd():
-        check_firewall()
-        check_selinux()
-        chronytdd()
-        tdd_DB()
-        tdd_lvs()
+	check_firewall()
+	check_selinux()
+	chronytdd()
+	tdd_DB()
+	tdd_lvs()
+	run('fdisk -l|grep str')
 
