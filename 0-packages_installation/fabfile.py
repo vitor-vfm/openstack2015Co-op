@@ -7,7 +7,7 @@ from fabric.state import output
 from fabric.colors import green, red, blue
 import string
 import logging
-
+import datetime
 import sys, os
 sys.path.append('..')
 import env_config
@@ -26,10 +26,9 @@ env.roledefs = env_config.roledefs
 mode = 'normal'
 if output['debug']:
     mode = 'debug'
-
 ########################## Deployment ########################################
 
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def mustDoOnHost():
 	selinuxStatus=run("grep -w ^SELINUX /etc/selinux/config")
 	if( "enforcing"  in  selinuxStatus):
@@ -52,7 +51,7 @@ def mustDoOnHost():
 			runCheck(msg,"echo '%s' >> /etc/hosts" % env_config.etc_hosts)
 
 
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def installConfigureChrony():
 	msg='installing chrony on %s'% env.host
 	sudo('yum -y install chrony')
@@ -108,9 +107,9 @@ def install_packages():
 	with settings(warn_only=True):
 		print('installing yum-plugin-priorities and epel-release')
 		msg = 'Install rdo-release-juno.rpm'
-		runCheck(msg, 'yum -y install '
-                    'http://rdo.fedorapeople.org/openstack-juno/'
-                    'rdo-release-juno.rpm')
+		runCheck(msg, 'yum -y localinstall https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm')
+		logging.info(msg)
+
 
 	# Install Crudini and wget
 	print('installing crudini wget')
@@ -124,8 +123,9 @@ def install_packages():
 def installMariaDB():
 	# Install MariaDB
 
-	msg = 'Get packages'
+	msg = 'Get packages for MariaDB'
 	runCheck(msg, 'yum -y install mariadb mariadb-server MySQL-python')
+	logging.info(msg)
 
 	# set the config file
 
@@ -166,6 +166,7 @@ def secureDB():
 	run('/usr/bin/mysqladmin -u root -p%s -f drop test'%  env_config.passwd['ROOT_SECRET'])
 	run('/usr/bin/mysqladmin -u root -p%s flush-privilege'%  env_config.passwd['ROOT_SECRET'])
 	printMessage("good","********** MySQL is installed, configured and secured *************")
+	logging.info("********** MySQL is installed, configured and secured *************")
 
 @roles('controller')       
 def tdd_DB():
@@ -188,7 +189,7 @@ def test():
 	run('chronyc sources -v ')
 
 
-@roles('controller', 'compute', 'network', 'storage')
+@roles('controller', 'compute', 'network')
 def shrinkHome():
 	# check if partitions already exist
 	if 'str' in run("lvs"):
@@ -196,7 +197,7 @@ def shrinkHome():
 	else:
 		home_dir = run("mount | grep home|cut -d' ' -f1")
 		run('umount /home')
-		run('lvresize -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
+		run('lvresize -f -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
 		run('mkfs -t xfs -f {}'.format(home_dir))
 		run('mount /home')
 
@@ -207,37 +208,29 @@ def tdd_lvs():
 	printMessage("good", msg +' '+ lvsFree)
 
 
-@roles('controller', 'network', 'compute', 'storage')
+@roles('controller', 'network', 'compute')
 def prepGlusterFS():
 # check if partitions already exist
 	if 'str' in run("lvs"):
 		print blue('Partitions already created. Nothing done on '+env.host)
 	else:
 		STRIPE_NUMBER = env_config.partition['stripe_number']
-
 		home_dir = run("lvs | awk '/home/ {print $2}'")
-
 		run('lvcreate -i {} -I 8 -L {} {}'.format(
 			STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-
 		run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-
 		run('lvcreate -i {} -I 8 -L {} {}'.format(
 			STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-
 		run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-
 		run('lvcreate -i {} -I 8 -L {} {}'.format(
 			STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-
 		run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-
 		run('fdisk -l|grep str')
 
 
 @roles('controller','compute','network')
-# @roles('controller','compute','network')
 def deploy():
+	logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
 	execute(mustDoOnHost)
 	execute(installConfigureChrony)
 	execute(install_packages)
@@ -245,9 +238,11 @@ def deploy():
 	execute(secureDB)
 	execute(shrinkHome)
 	execute(prepGlusterFS)
+	logging.info("Deploy ended at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
+	abort('Yeah we are done')
 
 
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def check_firewall():
 	with settings(warn_only=True):
 		fwdstatus=run("systemctl is-active firewalld")
@@ -255,7 +250,7 @@ def check_firewall():
 			msg="Verify firewall is down "
 			printMessage("good",msg)
         
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def check_selinux():
     output = run("getenforce")
     if "Disabled" in output:
@@ -263,12 +258,12 @@ def check_selinux():
     else:            
         print align_n("Oh no! SELINUX is " + output)
 
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def chronytdd():
 	msg="verify chronyd"
 	runCheck(msg,'chronyc sources -v ')
 
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 # @roles('controller','compute','network')
 def tdd():
 	check_firewall()
