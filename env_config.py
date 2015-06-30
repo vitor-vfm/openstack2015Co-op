@@ -59,7 +59,13 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                      'controller' : ['root@controller']}
 
 	logfilename='/opt/coop2015/coop2015/fabric.log'
-
+	etc_hosts="""192.168.1.11	controller
+192.168.1.21	network
+192.168.1.41	compute1
+192.168.1.42	compute2
+192.168.1.43	compute3
+192.168.1.44	compute4
+ """
 	my_cnf="""
 [mysqld]
 datadir=/var/lib/mysql

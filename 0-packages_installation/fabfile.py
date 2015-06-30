@@ -30,25 +30,26 @@ if output['debug']:
 ########################## Deployment ########################################
 
 @roles('controller','compute','network','storage')
-def renameHost():
+def mustDoOnHost():
+	selinuxStatus=run("grep -w ^SELINUX /etc/selinux/config")
+	if( "enforcing"  in  selinuxStatus):
+		sed('/etc/selinux/config','SELINUX=enforcing','SELINUX=disabled')
+		print(red(" REBOOT ")+green(" REBOOT ")+blue(" REBOOT ")+" REBOOT ")
+		abort("you must reboot")
+	with settings(warn_only=True):
+		fwdstatus=run("systemctl is-active firewalld")
+		if ( fwdstatus != "unknown"): 
+			msg = 'Stop & Disable firewalld on ' + env.host
+			runCheck(msg, 'systemctl stop firewalld ; systemctl disable firewalld')
 	msg='Renaming host to %s' % env['host']
 	run('hostnamectl set-hostname %s' % env['host'])
 	printMessage("good", msg)
 	logging.info(msg)
-
-#@roles(env_config.roles)
-@roles('controller','compute','network','storage')
-def disableFirewall():
-    
-    msg = 'Disable firewalld on ' + env.host
-    runCheck(msg, 'systemctl disable firewalld')
-    msg = 'Stop firewalld on ' + env.host
-    runCheck(msg, 'systemctl stop firewalld')
-
-#@roles(env_config.roles)
-@roles('controller','compute','network','storage')
-def disableSELinux():
-    set_parameter('/etc/selinux/config', '""', 'SELINUX', 'disabled')
+	with settings(warn_only=True):
+		hostsStatus=run('grep controller /etc/hosts')
+		if(hostsStatus != 0):
+			msg="updating /etc/hosts"
+			runCheck(msg,"echo '%s' >> /etc/hosts" % env_config.etc_hosts)
 
 
 @roles('controller','compute','network','storage')
@@ -60,17 +61,18 @@ def installConfigureChrony():
 	logging.info(msg +" version "+ var1)
 	if env.host == 'controller':
 		sed ('/etc/chrony.conf',
-                     'server 0.centos.pool.ntp.org iburst',
-                     'server time1.srv.ualberta.ca iburst')
+					 'server 0.centos.pool.ntp.org iburst',
+					 'server time1.srv.ualberta.ca iburst')
 		sed ('/etc/chrony.conf',
-                     'server 1.centos.pool.ntp.org iburst',
-                     'server time2.srv.ualberta.ca iburst')
+					 'server 1.centos.pool.ntp.org iburst',
+					 'server time2.srv.ualberta.ca iburst')
 		sed ('/etc/chrony.conf',
-                     'server 2.centos.pool.ntp.org iburst',
-                     'server time3.srv.ualberta.ca iburst')
+					 'server 2.centos.pool.ntp.org iburst',
+					 'server time3.srv.ualberta.ca iburst')
 		sed ('/etc/chrony.conf',
-                     'server 3.centos.pool.ntp.org iburst',
-                     '')
+					 'server 3.centos.pool.ntp.org iburst',
+					 '')
+		sed("/etc/chrony.conf","#allow 192.168/16","allow 192.168/16")
 	else:
 		run('echo "server controller iburst" > /etc/chrony.conf')
 
@@ -133,41 +135,41 @@ def install_packages():
 
 @roles('controller')
 def installMariaDB():
-    # Install MariaDB
-    
-    msg = 'Get packages'
-    runCheck(msg, 'yum -y install mariadb mariadb-server MySQL-python')
+	# Install MariaDB
 
-    # set the config file
+	msg = 'Get packages'
+	runCheck(msg, 'yum -y install mariadb mariadb-server MySQL-python')
 
-    with cd('/etc/'):
-        confFile = 'my.cnf'
-        fileContents = env_config.my_cnf
+	# set the config file
 
-        # set bind-address
-        fileContents = fileContents.replace(\
-                'BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
+	with cd('/etc/'):
+		confFile = 'my.cnf'
+		fileContents = env_config.my_cnf
 
-        # make a backup
-        run("cp {} {}.back12".format(confFile,confFile))
+		# set bind-address
+		fileContents = fileContents.replace(\
+				'BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
 
-        if mode == 'debug':
-            # change only backup file
-            confFile += '.back12'
+		# make a backup
+		run("cp {} {}.back12".format(confFile,confFile))
 
-        # Add new my.cnf file, clobbering if necessary
-        msg = 'Create my.cnf file'
-        runCheck(msg, "echo '{}' >{}".format(fileContents,confFile))
-        
-        if mode == 'debug':
-            print "Here is the final my.cnf file:"
-            print blue(run("grep -vE '(^#|^$)' {}".format(confFile),\
-                    quiet=True))
+		if mode == 'debug':
+			# change only backup file
+			confFile += '.back12'
 
-    msg = 'Enable mariadb service'
-    runCheck(msg, 'systemctl enable mariadb.service')
-    msg = 'Enable mariadb service'
-    runCheck(msg, 'systemctl start mariadb.service')
+		# Add new my.cnf file, clobbering if necessary
+		msg = 'Create my.cnf file'
+		runCheck(msg, "echo '{}' >{}".format(fileContents,confFile))
+	
+		if mode == 'debug':
+			print "Here is the final my.cnf file:"
+			print blue(run("grep -vE '(^#|^$)' {}".format(confFile),\
+					quiet=True))
+
+	msg = 'Enable mariadb service'
+	runCheck(msg, 'systemctl enable mariadb.service')
+	msg = 'start mariadb service'
+	runCheck(msg, 'systemctl start mariadb.service')
  
 @roles('controller')       
 def secureDB():
@@ -190,12 +192,12 @@ def tdd_DB():
 			print("Here is a list of the current databases:\n %s"% result)
 
 
-
 @roles('controller')
 # @roles('controller','compute','network')
 @with_settings(warn_only=True)
 def test():
-	print(env_config.passwd['ROOT_SECRET'])
+	run('chronyc sources -v ')
+
 
 @roles('controller', 'compute', 'network', 'storage')
 def shrinkHome():
@@ -245,30 +247,22 @@ def prepGlusterFS():
 @roles('controller','compute','network')
 # @roles('controller','compute','network')
 def deploy():
-	execute(renameHost)
-	execute(check_firewall)
-	execute(check_selinux)
+	execute(mustDoOnHost)
 	execute(installConfigureChrony)
 	execute(install_packages)
 	execute(installMariaDB)
-	execute(disableFirewall)
-	execute(disableSELinux)
+	execute(secureDB)
+	execute(shrinkHome)
+	execute(prepGlusterFS)
 
-        execute(shrinkHome)
-        execute(prepGlusterFS)
-
-        # reboot the machine
-        with settings(warn_only=True):
-            run('reboot')
 
 @roles('controller','compute','network','storage')
 def check_firewall():
-    output = run("systemctl status firewalld | awk '/Active/ {print $2,$3}'", quiet=True)
-    if any(status in output for status in ["inactive", "(dead)"]):
-        print align_y("Firewall is: " + output)
-    else:
-        print align_n("Firewall is not dead. Show status:")
-        run("systemctl status firewalld")
+	with settings(warn_only=True):
+		fwdstatus=run("systemctl is-active firewalld")
+		if ( fwdstatus == "unknown"): 
+			msg="Verify firewall is down "
+			printMessage("good",msg)
         
 @roles('controller','compute','network','storage')
 def check_selinux():
@@ -280,26 +274,8 @@ def check_selinux():
 
 @roles('controller','compute','network','storage')
 def chronytdd():
-
-	with settings(warn_only=True):
-		print('checking var/log/messages for chronyd output')
-		run('grep "$(date +"%b %d %H")" /var/log/messages | '
-                    'grep -Ei "(chronyd)"')
-
-	logging.info( " TDD on " +env.host)
-	with settings(hide('warnings', 'running', 'stdout', 'stderr'),
-                warn_only=True):
-
-		servstatus = run('systemctl status chronyd.service |grep Active')
-		date = run('date')
-	logging.info(env.host +" Chrony is "+ servstatus)
-	logging.info(env.host +" the date is "+ date)
-
-        confFile = '/etc/chrony.conf'
-        if servstatus.return_code == 0:
-            saveConfigFile(confFile,'good')
-        else:
-            saveConfigFile(confFile,'bad')
+	msg="verify chronyd"
+	runCheck(msg,'chronyc sources -v ')
 
 @roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
@@ -307,4 +283,6 @@ def tdd():
         check_firewall()
         check_selinux()
         chronytdd()
+        tdd_DB()
+        tdd_lvs()
 
