@@ -168,25 +168,35 @@ def installMariaDB():
     runCheck(msg, 'systemctl enable mariadb.service')
     msg = 'Enable mariadb service'
     runCheck(msg, 'systemctl start mariadb.service')
-        
-    msg = 'Upgrade to implement changes'
-    runCheck(msg, 'yum -y upgrade')
+ 
+@roles('controller')       
+def secureDB():
+	run('echo "DELETE FROM mysql.user WHERE User=\'\';" | mysql ')
+	run('echo "DELETE FROM mysql.db WHERE Db=\'test\' " | mysql ')
+	run('/usr/bin/mysqladmin -u root password \'%s\''%  env_config.passwd['ROOT_SECRET'])
+	run('/usr/bin/mysqladmin -u root -p%s -f drop test'%  env_config.passwd['ROOT_SECRET'])
+	run('/usr/bin/mysqladmin -u root -p%s flush-privilege'%  env_config.passwd['ROOT_SECRET'])
+	printMessage("good","********** MySQL is installed, configured and secured *************")
 
-def ask_for_reboot():
-    run('wall Everybody please reboot')
+@roles('controller')       
+def tdd_DB():
+	with settings(hide('everything'),warn_only=True):
+		msg=" talk to database engine"
+		result = run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])
+		if result.failed :
+			printMessage("oops",msg)
+		else:
+			printMessage("good",msg)
+			print("Here is a list of the current databases:\n %s"% result)
 
 
-@roles('controller','compute','network','storage')
+
+@roles('controller')
 # @roles('controller','compute','network')
 @with_settings(warn_only=True)
 def test():
-	result=run('systemctl status chronyd.service')
-	if result.failed:
-		run('systemctl start chronyd.service')
-		run('systemctl enable chronyd.service')
-	else:
-		printMessage("good",result)
-	var1=run('systemctl status chronyd.service |grep Active')
+	print(env_config.passwd['ROOT_SECRET'])
+
 
 @roles('controller', 'compute', 'network', 'storage')
 def shrinkHome():
