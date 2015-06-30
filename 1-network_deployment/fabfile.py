@@ -49,8 +49,11 @@ def generate_ip(ip_address,nodes_in_role,node):
 ########################## Deployment ########################################
 
 def set_up_NIC_using_nmcli(specs_dict):
-    # Set up a new interface by using NetworkManager's 
-    # command line interface
+    """
+    Set up a new interface by using NetworkManager's command line interface
+
+    We don't use this currently, but we keep this function in case we need it
+    """
 
     ifname = specs_dict['DEVICE']
     ip = specs_dict['IPADDR']
@@ -110,45 +113,6 @@ def set_up_network_interface(specs_dict,role):
             print debug_str('ls | grep ifcfg')
             print 'Deleting test file'
             print debug_str('rm ' + config_file_name)
-
-
-
-# def set_hosts():
-#     # configure the /etc/hosts file to put aliases
-#     aliases = env_config.hosts
-
-#     # make backup
-#     run("cp /etc/hosts /etc/hosts.back12")
-
-
-#     if mode == 'normal':
-#         confFile = '/etc/hosts'
-#     elif mode == 'debug':
-#         confFile = '~/hosts.debug'
-#         sudo("cp /etc/hosts " + confFile)
-#         print blue("Debugging set_hosts")
-
-#     # delete previous aliases
-#     msg = "Delete aliases for the nodes that were already in /etc/hosts"
-#     runCheck(msg, "sed -i '/controller/d' {};".format(confFile) + \
-#             "sed -i '/network/d' {};".format(confFile) + \
-#             "sed -i '/compute/d' {};".format(confFile) + \
-#             "sed -i '/storage/d' {}".format(confFile))
-
-#     # add new aliases
-#     lines_to_add = [ip + "\t" + aliases[ip] for ip in aliases.keys()]
-#     for line in lines_to_add:
-#         msg = "Add new aliases for /etc/hosts/"
-#         runCheck(msg, "echo '{}' >>{}".format(line,confFile))
-#     # delete empty lines
-#     run("sed -i '/^$/ d' {}".format(confFile))
-
-#     if mode == 'debug':
-#         # show file to check
-#         print blue("Final result for {} : ".format(confFile))
-#         sudo("cat " + confFile)
-#         # delete test file
-#         sudo("rm " + confFile)
 
 def configChrony():
 
@@ -261,143 +225,65 @@ def deploy():
 
 ################################ TDD #########################################
 
-def ping_ip(ip_address, host, role='', type_interface=''):
-    """
-    TDD: Pings an IP (or hostname) and reports the results
-    """
-    ping_command = 'ping -q -c 1 ' + ip_address
-
-    if type_interface:
-        msg = 'Ping {}\'s {} interface ({}) from {}'.format(
-                host, type_interface,ip_address,env.host)
-    else:
-        msg = 'Ping {} from {}'.format(ip_address,env.host)
-
-    runCheck(msg, ping_command)
-
 @roles('controller')
-def network_tdd_controller():
+def controller_tdd():
 
-    # ping a website
-    ping_ip('www.google.ca','google.ca')
-    ping_ip('8.8.8.8', '8.8.8.8')
+    pings = [
+            ('google', 'google.ca'),
+            ('8.8.8.8', '8.8.8.8'),
+            ('management interface on network node', env_config.networkManagement['IPADDR']),
+            ('management interface on compute node', env_config.computeManagement['IPADDR']),
+            ]
 
-    # ping management interface on network nodes
-    nodes_in_role = env.roledefs['network']
-    base_ip = env_config.networkManagement['IPADDR']
-    # generate a list of tuples (IP,node) for each network node
-    management_network_interfaces = [ \
-            (generate_ip(base_ip,nodes_in_role,node),node) \
-            for node in nodes_in_role]
-    # ping the management interfaces
-    for interface_ip, network_node in management_network_interfaces:
-        ping_ip(interface_ip, network_node, 'network', 'management')
+    for name, address in pings:
+        msg = 'Ping %s from %s' % (name, env.host)
+        runCheck(msg, 'ping -c 1 %s' % address) 
 
 @roles('network')
-def network_tdd_network():
+def network_tdd():
 
-    # needs to ping management interface(s) on controller node(s)
-    # and instance tunnels interface(s) on compute node(s)
+    pings = [
+            ('google', 'google.ca'),
+            ('8.8.8.8', '8.8.8.8'),
+            ('management interface on controller node', env_config.controllerManagement['IPADDR']),
+            ('instance tunnels interface on compute node', env_config.computeTunnels['IPADDR']),
+            ]
 
-    # check for connection to internet
-    ping_ip('google.ca', 'google.ca')
-    ping_ip('8.8.8.8', '8.8.8.8')
-
-    # management interfaces on controller
-    specs_dict = env_config.controllerManagement
-
-    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['controller'],\
-            node), node) for node in env.roledefs['controller']]
-
-    for ip, host in ip_list:
-        ping_ip(ip, host, 'controller', 'management')
-
-    # instance tunnel interfaces on compute
-    specs_dict = env_config.computeTunnels
-
-    ip_list = [(generate_ip(specs_dict['IPADDR'], env.roledefs['compute'],\
-            node), node) for node in env.roledefs['compute']]
-
-    for ip, host in ip_list:
-        ping_ip(ip, host, 'compute', 'instance tunnel')
+    for name, address in pings:
+        msg = 'Ping %s from %s' % (name, env.host)
+        runCheck(msg, 'ping -c 1 %s' % address) 
 
 @roles('compute')
-def network_tdd_compute():
+def compute_tdd():
 
-    # check for connection to internet
-    ping_ip('google.ca', 'google.ca')
-    ping_ip('8.8.8.8', '8.8.8.8')
+    pings = [
+            ('google', 'google.ca'),
+            ('8.8.8.8', '8.8.8.8'),
+            ('management interface on controller node', env_config.controllerManagement['IPADDR']),
+            ('instance tunnels interface on network node', env_config.networkTunnels['IPADDR']),
+            ]
 
-    # ping management interface on controller nodes
-    nodes_in_role = env.roledefs['controller']
-    base_ip = env_config.controllerManagement['IPADDR']
-    # generage a list of tuples (IP,node) for each controller node
-    management_controller_interfaces = [\
-            (generate_ip(base_ip, nodes_in_role, node), node) \
-            for node in nodes_in_role]
-    # ping the management interfaces
-    for interface_ip, controller_node in management_controller_interfaces:
-        ping_ip(interface_ip, controller_node, 'controller', 'management')
-
-    # ping instance tunnel interface on network nodes
-    nodes_in_role = env.roledefs['network']
-    base_ip = env_config.networkTunnels['IPADDR']
-    # generage a list of tuples (IP,node) for each controller node
-    network_tunnels_interfaces = [\
-            (generate_ip(base_ip, nodes_in_role, node), node) \
-            for node in nodes_in_role]
-    # ping the management interfaces
-    for interface_ip, network_node in network_tunnels_interfaces:
-        ping_ip(interface_ip, network_node, 'network', 'instance tunnel')
+    for name, address in pings:
+        msg = 'Ping %s from %s' % (name, env.host)
+        runCheck(msg, 'ping -c 1 %s' % address) 
 
 @roles('storage')
-def network_tdd_storage():
+def storage_tdd():
     # see if the storage node can ping all the management interfaces
-    for ip in env_config.hosts:
-        ping_ip(ip,env_config.hosts[ip],type_interface='management')
+    hostsToPing = [
+            "controller",
+            "network",
+            "compute1",
+            "storage1",
+            ]
 
-
-
-@roles('controller')
-def chronyTDDController():
-    # check if ntp servers are in the sources
-    msg = 'Get chrony sources on ' + env.host
-    sourcesTable = runCheck(msg, 'chronyc sources')
-    for server in env_config.ntpServers:
-        if server in sourcesTable:
-            resultmsg = "server {} is a source for chrony".format(server)
-            print green(resultmsg)
-            logging.debug(resultmsg)
-        else:
-            resultmsg = "server {} is not a source for chrony".format(server)
-            print red(resultmsg)
-            logging.error(resultmsg)
-
-
-# run this on all nodes except controller
-@roles('network', 'compute', 'storage')
-def chronyTDDOtherNodes():
-    # check if controller is in the sources
-    msg = 'Get chrony sources on ' + env.host
-    sourcesTable = runCheck(msg, 'chronyc sources')
-    if 'controller' in sourcesTable:
-        resultmsg = "Controller is a source for chrony on " + env.host
-        print green(resultmsg)
-        logging.debug(resultmsg)
-    else:
-        resultmsg = "Controller is NOT a source for chrony on " + env.host
-        print red(resultmsg)
-        logging.error(resultmsg)
-
-def chronyTDD():
-    execute(chronyTDDController)
-    execute(chronyTDDOtherNodes)
-
+    for host in hostsToPing:
+        msg = 'Ping %s from %s' % (host, env.host)
+        runCheck(msg, 'ping -c 1 %s' % host)  
 
 def tdd():
     with settings(warn_only=True):
-        execute(network_tdd_controller)
-        execute(network_tdd_network)
-        execute(network_tdd_compute)
-        execute(network_tdd_storage)
-        execute(chronyTDD)
+        execute(controller_tdd)
+        execute(network_tdd)
+        execute(compute_tdd)
+        execute(storage_tdd)

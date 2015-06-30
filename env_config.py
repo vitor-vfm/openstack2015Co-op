@@ -260,7 +260,6 @@ pid-file=/var/run/mariadb/mariadb.pid
 192.168.1.31    storage1
 192.168.1.41	compute1
  """
-
     ###########################################################################
 
     ##    ## ######## ######## ##      ##  #######  ########  ##    ## 
@@ -321,31 +320,12 @@ pid-file=/var/run/mariadb/mariadb.pid
                             'DNS1' : '129.128.208.13',
                             'NETMASK' : '255.255.255.0',
                             }
-
-    hosts = { controllerManagement['IPADDR'] : 'controller',
-              networkManagement['IPADDR'] : 'network'}
-
-    # add the compute nodes to hosts config,
-    # as compute1, compute2, etc.
-    baseIP = computeManagement['IPADDR']
-    for i, computeNode in enumerate(roledefs['compute']):
-        octets = baseIP.split('.')
-        # increment last octet
-        octets[-1] = str( int(octets[-1]) + i )
-        IP = ".".join(octets)
-
-        hosts[IP] = 'compute' + str(i+1)
-
-    # add the storage nodes to hosts config,
-    # as storage1, storage2, etc.
-    baseIP = storageManagement['IPADDR']
-    for i, storageNode in enumerate(roledefs['storage']):
-        octets = baseIP.split('.')
-        # increment last octet
-        octets[-1] = str( int(octets[-1]) + i )
-        IP = ".".join(octets)
-
-        hosts[IP] = 'storage' + str(i+1)
+    
+    etc_hosts="""192.168.1.11	controller
+192.168.1.21	network
+192.168.1.31    storage1
+192.168.1.41	compute1
+ """
 
     """
     admin-openrc and demo-openrc
