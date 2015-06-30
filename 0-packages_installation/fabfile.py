@@ -228,7 +228,8 @@ def prepGlusterFS():
 		run('fdisk -l|grep str')
 
 
-@roles('controller','compute','network')
+@roles('controller','compute','network', 'storage')
+# @roles('controller','compute','network')
 def deploy():
 	logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
 	execute(mustDoOnHost)

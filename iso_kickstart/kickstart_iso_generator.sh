@@ -33,7 +33,7 @@
 # # sudo bash kickstart_iso.generator.sh
 #
 
-kickstart_file="storage1_ks.cfg"
+kickstart_file="controller_ks.cfg"
 
 iso_file="CentOS-7-x86_64-DVD-1503-01.iso"
 
