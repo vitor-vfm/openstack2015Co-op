@@ -36,7 +36,8 @@ def renameHost():
 	printMessage("good", msg)
 	logging.info(msg)
 
-@roles(env_config.roles)
+#@roles(env_config.roles)
+@roles('controller','compute','network','storage')
 def disableFirewall():
     
     msg = 'Disable firewalld on ' + env.host
@@ -44,9 +45,9 @@ def disableFirewall():
     msg = 'Stop firewalld on ' + env.host
     runCheck(msg, 'systemctl stop firewalld')
 
-@roles(env_config.roles)
+#@roles(env_config.roles)
+@roles('controller','compute','network','storage')
 def disableSELinux():
-
     set_parameter('/etc/selinux/config', '""', 'SELINUX', 'disabled')
 
 
