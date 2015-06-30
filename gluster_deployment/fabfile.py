@@ -89,7 +89,7 @@ def probe(all_hosts):
         for node in all_hosts:
             if node != env.host_string:
                 node_ip = node.split('@', 1)[-1]
-                if sudo('gluster peer probe {}'.format(node_ip)).return_code:
+                if runCheck('Probe', 'gluster peer probe {}'.format(node_ip)).return_code:
                     print(red('{} cannot probe {}'.format(env.host, node.split('@', 1)[0])))
                 else:
                     print(green('{} can probe {}'.format(env.host, node.split('@', 1)[0])))
