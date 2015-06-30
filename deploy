@@ -9,48 +9,114 @@ Run with the -h option to see usage
 import sys
 import os
 from fabric.colors import green, red, blue
+from fabric.api import local
 from subprocess import check_output
 
 class Options:
-    verbose = bool
-    logfile = str()
-    task = str()
-    first = str()
-    last = str()
+    """
+    Holds all the options 
+    that are used through out the script
+    """
 
+    def __init__(self):
+        self.verbose = False
+        self.warnOnly = False
+
+        self.logfile = 'deploy_log'
+        self.task = 'deploy'
+        self.first = '0'
+        self.last = '14'
+
+    def getOptions(self,params): 
+        """
+        From a list of parameters taken 
+        from the command line, set the options
+        """
+
+        while '-' in params[0]:
+            shift = 1
+            if 'h' in params[0]:
+                showUsage()
+            if 'v' in params[0]:
+                self.verbose = True
+            if 'w' in params[0]:
+                self.warnOnly = True
+
+            if 't' in params[0]:
+                self.task = params[1]
+                shift += 1
+            elif 'f' in params[0]:
+                self.logfile = params[1]
+                shift += 1
+
+            # shift
+            for i in range(shift):
+                del params[0]
+
+        self.first = params[0]
+        if len(params) >= 2:
+            self.last = params[1]
+        else:
+            self.last = self.first
+
+
+
+
+def printErrors(log):
+
+    err = 'FAIL'
+
+    if err not in log:
+        return False
+    else:
+        print red('\n\nThere were errors in the task:\n')
+        errors = [l for l in log.splitlines() if err in l]
+        for line in errors:
+            print line
+        return True
 
 def fab(directories,opt):
 
-    log = ""
+    # put date in logfile
+    check_output('echo -e "\n\n$(date)\n\n" >>'+opt.logfile, shell=True)
+
     for direc in directories:
         os.chdir(direc)
         print blue("\n\t\tNow in directory {}".format(direc))
 
-        print blue("\n\t\tRunning task " + opt.task)
-        out = check_output("fab " + opt.task, shell=True)
+        # print blue("\n\t\tRunning task " + opt.task)
+        command = "fab %s | tee -a ../%s" % (opt.task,opt.logfile)
+        out = check_output(command, shell=True)
         if opt.verbose:
             print out
-        log += out
+
+        err = printErrors(out)
+        if err and not opt.warnOnly:
+            # abort 
+            sys.exit()
 
         os.chdir('..')
-
-    # save log
-    f = open(opt.logfile, 'w')
-    f.write(log)
-    f.close()
 
 def getDirectories(first,last):
     strDirectories = check_output("ls | grep -P '^\d' | sort -g", shell=True)
     dirs = strDirectories.splitlines()
 
-    print 'first is ',first
-    print 'last is ',last
+    if first == last:
+        # only one parameter
+        return [d for d in dirs if d.startswith(first)]
 
+    iFirst = first
+    iLast = last
     for i, d in enumerate(dirs):
         if d.startswith(first):
             iFirst = i
         elif d.startswith(last):
             iLast = i
+
+    if type(iFirst) == str:
+        raise ValueError("Fabfile %s doesn't exist!" % iFirst)
+    elif type(iLast) == str:
+        raise ValueError("Fabfile %s doesn't exist!" % iLast)
 
     return dirs[iFirst : iLast+1]
 
@@ -66,6 +132,7 @@ def showUsage():
          -h : show usage
          -t [task] : specify a fabric task to run, such as 'tdd'
          -v : verbose
+         -w : warn only. Script won't abort if there is an error in a task
          -f [path] : choose a file to log results in; default is 'deploy_log'
     """
     print us
@@ -76,30 +143,7 @@ if __name__=="__main__":
 
     opt = Options()
     params = sys.argv[1:]
-
-    # defaults
-    opt.task = 'deploy'
-    opt.verbose = False
-    opt.logfile = 'deploy_log'
-
-    # process options
-    while '-' in params[0]:
-        if 'h' in params[0]:
-            showUsage()
-        if 'v' in params[0]:
-            opt.verbose = True
-        if 't' in params[0]:
-            opt.task = params[1]
-            del params[0]
-        if 'f' in params[0]:
-            opt.logfile = params[1]
-            del params[0]
-
-        # shift
-        del params[0]
-
-    opt.first = params[0]
-    opt.last = params[1]
+    opt.getOptions(params)
 
     dirs = getDirectories(opt.first, opt.last)
     fab(dirs, opt)
