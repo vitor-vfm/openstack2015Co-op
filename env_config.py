@@ -255,6 +255,15 @@ pid-file=/var/run/mariadb/mariadb.pid
                'CEILOMETER_PASS' : '34ceilometer_ks43',
                }
 
+    etc_hosts="""192.168.1.11	controller
+192.168.1.21	network
+192.168.1.31    storage1
+192.168.1.41	compute1
+192.168.1.42	compute2
+192.168.1.43	compute3
+192.168.1.44	compute4
+ """
+
     ###########################################################################
 
     ##    ## ######## ######## ##      ##  #######  ########  ##    ## 
