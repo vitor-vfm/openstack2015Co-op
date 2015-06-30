@@ -1,37 +1,63 @@
 #! /bin/bash
 
-<<EOF
 
-Performs specified action on the services for the openstack component specified by the user
 
-Usage:
+# Performs specified action on the services for the openstack component specified by the user
 
-requires (in order):
+# Usage:
 
-Action = the action to be performed on the services. (status|restart|disable|enable|stop|...) and anyother action that systemctl supports
+# requires (in order):
 
-Range - is specified using the start and end variables
-start = the number corresponding to the openstack component you wish to start with
-end = the number corresponding to the openstack component you wish to end with
+# Action = the action to be performed on the services. (status|restart|disable|enable|stop|...) and anyother action that systemctl supports
+
+# Range - is specified using the start and end variables
+# start = the number corresponding to the openstack component you wish to start with
+# end = the number corresponding to the openstack component you wish to end with
 
  
-syntax:
+# syntax:
 
-- to get the status for all services specified in components 1 through 3, the syntax is as follows:
+# - to get the status for all services specified in components 1 through 3, the syntax is as follows:
 
-./service.sh status 1 3
+# ./service.sh status 1 3
 
-- to restart all services for components 5, the syntax is:
+# - to restart all services for components 5, the syntax is:
 
-./service.sh restart 5
-
-
-EOF
+# ./service.sh restart 5
 
 
-action=$1
-start=$2
-end=$3
+
+OPTIND=1
+verbosity=0
+
+while getopts "vs:e:a:" OPTION
+do
+
+    case $OPTION in 
+	v)
+	    verbosity=$(($verbosity+1))
+	    ;;
+	s)
+	    start=$OPTARG
+	    ;;
+
+	e)
+	    end=$OPTARG
+	    ;;
+	a)
+	    action=$OPTARG
+	    ;;
+	esac
+done
+
+# shift argument so that verbose options don't conflict with arguments 
+# for script 
+shift $((OPTIND-1))
+
+
+#action=$1
+#start=$2
+#end=$3
 
 servicesComp=""
 servicesCont=""
@@ -127,20 +153,28 @@ function action_on_services {
 
 	for service in $1;
 	do 
-	    echo -e "\n\n"
+	    output=$(ssh root@$node "systemctl $2 $service")
 
+	    if [ $verbosity -ge 1 ]
+	    then
+		echo "###############################################################################"
+
+		echo -e "\n"
+		echo "###############################################################################"
+		echo "${green}running $action on $service ${reset}"
+		echo "###############################################################################"
+
+	    fi
 	    
-	    # run specified command
-	    echo "###############################################################################"
-	    echo "${green}running $action on $service ${reset}"
-	    echo "###############################################################################"
+	    if  [ $verbosity == 2 ]
+	    then
 
+		echo "$output" # quoted to keep spacing and prettiness 
 
-	    ssh root@$node "systemctl $2 $service"
+		echo "###############################################################################"
 
-	    # echo out status after specified command is run
-
-	    echo "###############################################################################"
+	    fi
+	    
 	    
 	    state=$(ssh root@$node "systemctl status $service | awk '/Active/ {\$1=\"\"; print \$0}'")
 	    if [[ "$state" =~ ^active  ]] || [[ "$state" =~ running  ]]
@@ -156,7 +190,6 @@ function action_on_services {
 		
 	    fi
 
-	    echo "###############################################################################"
 
 	done
 	
@@ -166,10 +199,12 @@ function action_on_services {
 
     if ! [ -z "$servicesCont" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Controller"
-	echo "###############################################################################"
-	#    ssh root@controller "systemctl $action $servicesCont"
+	
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for $component that run on the Controller"
+	fi
 
 	run_command "$servicesCont" $action "controller"
 	
@@ -177,41 +212,46 @@ function action_on_services {
 
     if ! [ -z "$servicesComp" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Compute"
-	echo "###############################################################################"
-	#    ssh root@compute1 "systemctl $action $servicesComp"
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for $component that run on the Compute"
+	fi
 
 	run_command "$servicesComp" $action "compute1"
     fi
 
     if ! [ -z "$servicesNetw" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Network"
-	echo "###############################################################################"
-	#    ssh root@network "systemctl $action $servicesNetw"
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for $component that run on the Network"
+	fi
 	run_command "$servicesNetw" $action "network"
 
     fi
 
     if ! [ -z "$servicesStor" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Storage"
-	echo "###############################################################################"
-	#    ssh root@storage1 "systemctl $action $servicesStor"
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for $component that run on the Storage"
+	fi
 	run_command "$servicesStor" $action "storage1"
 
     fi
-
-
-
-
-
 }
+if [ -z "$start"  ]
+then
+    echo "--Argument for start missing"
 
-if ! [ -z "$end"  ]
+elif [ -z "$action" ] 
+then 
+    echo "--Argument for action missing"
+
+elif ! [ -z "$end"  ]
 then
     for i in $(seq $start $end); 
     do
@@ -222,18 +262,16 @@ else
     # to handle the case when a single 
     # digit is specified in the range
     action_on_services $start $action
-    
+
 fi
 
 
 
 
 
-<<EOF
 
-ref:
 
-colors:
-http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
+# ref:
 
-EOF
+# colors:
+# http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
