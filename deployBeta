@@ -17,13 +17,17 @@ def fab(number,task,directories):
 
     # change to directory
     run("cd " + direc)
-    print blue("\n\t\tNow on directory {}\n".format(direc)
+    print blue("\n\t\tNow on directory {}\n".format(direc))
 
     # run the task
     command = "fab {}".format(task)
     print blue("Running task " + task)
     run(command)
 
+def getDirectories():
+    dirs = []
+    stringOfDirectories = run(
+    "ls | 
 
 if __name__=="__main__":
 
@@ -34,10 +38,3 @@ if __name__=="__main__":
         first = int(sys.argv[1])
         last = int(sys.argv[2])
         task = 'deploy'
-
-    for i in range(first, last+1):
-    fab(
-
-
-
-
