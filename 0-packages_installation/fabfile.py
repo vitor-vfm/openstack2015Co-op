@@ -89,11 +89,11 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 def install_packages():
 	# Install EPEL (Extra Packages for Entreprise Linux
 	print('installing yum-plugin-priorities and epel-release')
-        msg = 'Install EPEL packages'
+	msg = 'Install EPEL packages'
 	runCheck(msg, 'yum -y install yum-plugin-priorities')
 	runCheck(msg, 'yum -y install epel-release')
 	for item in ['yum-plugin-priorities','epel-release']:
@@ -103,21 +103,22 @@ def install_packages():
 
 
 	# Install RDO repository for Juno
-        with settings(warn_only=True):
-            print('installing yum-plugin-priorities and epel-release')
-            msg = 'Install rdo-release-juno.rpm'
-            runCheck(msg, 'yum -y install '
+	with settings(warn_only=True):
+		print('installing yum-plugin-priorities and epel-release')
+		msg = 'Install rdo-release-juno.rpm'
+		runCheck(msg, 'yum -y install '
                     'http://rdo.fedorapeople.org/openstack-juno/'
                     'rdo-release-juno.rpm')
 
-        # Install Crudini and wget
-        print('installing crudini wget')
-	sudo("yum -y install crudini wget")
+	# Install Crudini and wget
+	print('installing crudini wget')
+	run("yum -y install crudini wget")
 	for item in ['crudini','wget']:
 		var1=run('rpm -qa |grep %s ' %item)
 		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
-
+"""
+#################### why is this HERE? 
         # save credentials in the host
         contents = env_config.admin_openrc
         msg = 'Put admin_openrc.sh in '+env.host
@@ -126,11 +127,7 @@ def install_packages():
         contents = env_config.demo_openrc
         msg = 'Put demo_openrc.sh in '+env.host
         runCheck(msg, "echo '{}' >/root/demo_openrc.sh".format(contents))
-
-
-
-        msg = 'Upgrade to implement changes'
-        runCheck(msg, 'yum -y upgrade')
+"""
 
 
 
@@ -232,10 +229,12 @@ def prepGlusterFS():
 
         run('lvs')
 
-@roles('controller','compute','network','storage')
+@roles('controller','compute','network')
 # @roles('controller','compute','network')
 def deploy():
 	execute(renameHost)
+	execute(check_firewall)
+	execute(check_selinux)
 	execute(installConfigureChrony)
 	execute(install_packages)
 	execute(installMariaDB)
@@ -266,6 +265,7 @@ def check_selinux():
     else:            
         print align_n("Oh no! SELINUX is " + output)
 
+@roles('controller','compute','network','storage')
 def chronytdd():
 
 	with settings(warn_only=True):
