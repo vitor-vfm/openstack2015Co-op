@@ -28,7 +28,9 @@ if output['debug']:
     mode = 'debug'
 ########################## Deployment ########################################
 
-@roles('controller','compute','network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network')
 def mustDoOnHost():
     selinuxStatus=run("grep -w ^SELINUX /etc/selinux/config")
     if( "enforcing"  in  selinuxStatus):
@@ -51,7 +53,9 @@ def mustDoOnHost():
             runCheck(msg,"echo '%s' >> /etc/hosts" % env_config.etc_hosts)
 
 
-@roles('controller','compute','network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network')
 def installConfigureChrony():
     msg='installing chrony on %s'% env.host
     sudo('yum -y install chrony')
@@ -90,7 +94,9 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
-@roles('controller','compute','network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network')
 def install_packages():
     # Install EPEL (Extra Packages for Entreprise Linux
     print('installing yum-plugin-priorities and epel-release')
@@ -119,8 +125,11 @@ def install_packages():
         print blue(item +" is version "+ var1)
         logging.info(item +" is version "+ var1)
 
+#@roles('storage')
 @roles('controller')
 def installMariaDB():
+    if (env.host != "controller"):
+        return
     # Install MariaDB
 
     msg = 'Get packages for MariaDB'
@@ -158,8 +167,11 @@ def installMariaDB():
     msg = 'start mariadb service'
     runCheck(msg, 'systemctl start mariadb.service')
  
+#@roles('storage')
 @roles('controller')
 def secureDB():
+    if (env.host != "controller"):
+        return
     run('echo "DELETE FROM mysql.user WHERE User=\'\';" | mysql ')
     run('echo "DELETE FROM mysql.db WHERE Db=\'test\' " | mysql ')
     run('/usr/bin/mysqladmin -u root password \'%s\''%  env_config.passwd['ROOT_SECRET'])
@@ -183,13 +195,16 @@ def tdd_DB():
 
 
 @roles('controller')
+#@roles('controller','compute','network', 'storage')
 # @roles('controller','compute','network')
 @with_settings(warn_only=True)
 def test():
     run('chronyc sources -v ')
 
 
-@roles('controller', 'compute', 'network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller', 'compute', 'network')
 def shrinkHome():
     # check if partitions already exist
     if 'str' in run("lvs"):
@@ -201,14 +216,18 @@ def shrinkHome():
         run('mkfs -t xfs -f {}'.format(home_dir))
         run('mount /home')
 
+#@roles('storage')
 @roles('controller', 'compute', 'network', 'storage')
+#@roles('controller','compute','network')
 def tdd_lvs():
     msg = "TDD LVS Free space"
     lvsFree=run("vgs | awk '/centos/ {print $7}'")
     printMessage("good", msg +' '+ lvsFree)
 
 
-@roles('controller', 'network', 'compute')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller', 'network', 'compute')
 def prepGlusterFS():
 # check if partitions already exist
     if 'str' in run("lvs"):
@@ -228,6 +247,7 @@ def prepGlusterFS():
         run('fdisk -l|grep str')
 
 
+#@roles('storage')
 @roles('controller','compute','network', 'storage')
 # @roles('controller','compute','network')
 def deploy():
@@ -243,7 +263,9 @@ def deploy():
     abort('Yeah we are done')
 
 
-@roles('controller','compute','network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network')
 def check_firewall():
     with settings(warn_only=True):
         fwdstatus=run("systemctl is-active firewalld")
@@ -251,7 +273,9 @@ def check_firewall():
             msg="Verify firewall is down "
             printMessage("good",msg)
         
-@roles('controller','compute','network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network')
 def check_selinux():
     output = run("getenforce")
     if "Disabled" in output:
@@ -259,12 +283,15 @@ def check_selinux():
     else:            
         print align_n("Oh no! SELINUX is " + output)
 
-@roles('controller','compute','network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network')
 def chronytdd():
     msg="verify chronyd"
     runCheck(msg,'chronyc sources -v ')
 
-@roles('controller','compute','network')
+#@roles('storage')
+@roles('controller','compute','network', 'storage')
 # @roles('controller','compute','network')
 def tdd():
     check_firewall()
