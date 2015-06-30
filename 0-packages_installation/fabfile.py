@@ -248,8 +248,7 @@ def prepGlusterFS():
 		run('fdisk -l|grep str')
 
 
-@roles('controller','compute','network')
-# @roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 def deploy():
 	execute(mustDoOnHost)
 	execute(installConfigureChrony)
