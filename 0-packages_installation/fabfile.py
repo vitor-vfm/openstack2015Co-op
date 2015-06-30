@@ -215,8 +215,7 @@ def tdd_lvs():
 	runCheck(msg,"vgs | awk '/centos/ {print $7}'")
 
 
-#@roles('controller', 'network', 'compute', 'storage')
-@roles('controller')
+@roles('controller', 'network', 'compute', 'storage')
 def prepGlusterFS():
 # check if partitions already exist
 	if 'str' in run("lvs"):
