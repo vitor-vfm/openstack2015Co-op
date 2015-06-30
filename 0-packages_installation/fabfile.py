@@ -119,19 +119,6 @@ def install_packages():
 		var1=run('rpm -qa |grep %s ' %item)
 		print blue(item +" is version "+ var1)
 		logging.info(item +" is version "+ var1)
-"""
-#################### why is this HERE? 
-        # save credentials in the host
-        contents = env_config.admin_openrc
-        msg = 'Put admin_openrc.sh in '+env.host
-        runCheck(msg, "echo '{}' >/root/admin_openrc.sh".format(contents))
-
-        contents = env_config.demo_openrc
-        msg = 'Put demo_openrc.sh in '+env.host
-        runCheck(msg, "echo '{}' >/root/demo_openrc.sh".format(contents))
-"""
-
-
 
 @roles('controller')
 def installMariaDB():
