@@ -61,7 +61,8 @@ shift $((OPTIND-1))
 
 
 function check_port {
-    nodes="controller compute1 network storage1"
+    #nodes="controller compute1 network storage1"
+    nodes="controller"
     case "$1" in 
 	0)
 	    ports=""
