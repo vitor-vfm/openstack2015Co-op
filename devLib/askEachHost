@@ -1,8 +1,9 @@
 #!/bin/bash
 QUESTION="$1"
+MYHOSTNAME=`hostname -s`
 
 # Choose hostlist file (production or development)
-if $(hostname | grep ipmi5); then
+if [ "$MYHOSTNAME" = "ipmi5" ]; then
     hostlist=hostlist_prod;
 else
     hostlist=hostlist_dev;

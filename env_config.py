@@ -59,7 +59,13 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                      'controller' : ['root@controller']}
 
 	logfilename='/opt/coop2015/coop2015/fabric.log'
-
+	etc_hosts="""192.168.1.11	controller
+192.168.1.21	network
+192.168.1.41	compute1
+192.168.1.42	compute2
+192.168.1.43	compute3
+192.168.1.44	compute4
+ """
 	my_cnf="""
 [mysqld]
 datadir=/var/lib/mysql
@@ -70,7 +76,7 @@ symbolic-links=0
 # If you need to run mysqld under a different user or group,
 # customize your systemd unit file for mariadb according to the
 # instructions in http://fedoraproject.org/wiki/Systemd
-bind-address = 192.168.1.11
+bind-address = BIND_ADDRESS
 default-storage-engine = innodb
 innodb_file_per_table
 collation-server = utf8_general_ci
@@ -85,7 +91,7 @@ pid-file=/var/run/mariadb/mariadb.pid
 # include all files from the config directory
 #
 !includedir /etc/my.cnf.d
-"""
+           """
     # passwords
 	passwd = { 'METADATA_SECRET' : '34m3t$3c43',
                    'ROOT_SECRET' : '34root43',
@@ -109,6 +115,59 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'TROVE_PASS' : '34Tr0v343',
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
+	controllerManagement = { 'DEVICE' : 'eno1',
+							 'IPADDR' : '192.168.1.11',
+							 'NETMASK' : '255.255.255.0',
+							 'GATEWAY' : '192.168.1.1',
+							 'DNS1' : '129.128.208.13',
+							 }
+
+	controllerTunnels = { 'DEVICE' : 'enp2s10',
+						  'IPADDR' : '192.168.2.11',
+						  'NETMASK' : '255.255.255.0',
+						  }
+
+	networkManagement = { 'DEVICE' : 'eno1',
+						  'IPADDR' : '192.168.1.21',
+						  'GATEWAY' : '192.168.1.1',
+						  'DNS1' : '129.128.208.13',
+						  'NETMASK' : '255.255.255.0',
+						  }
+
+	networkTunnels = { 'DEVICE' : 'enp2s10',
+					   'IPADDR' : '192.168.2.21',
+					   'NETMASK' : '255.255.255.0',
+					   }
+
+	networkExternal = { 'DEVICE' : 'enp2s12',
+						'TYPE' : 'Ethernet',
+						'ONBOOT' : '"yes"',
+						'BOOTPROTO' : '"none"',
+						'IPADDR' : '192.168.3.21'}
+
+	computeManagement = { 'DEVICE' : 'eno1',
+						  'IPADDR' : '192.168.1.41',
+						  'GATEWAY' : '192.168.1.1',
+						  'DNS1' : '129.128.208.13',
+						  'NETMASK' : '255.255.255.0',
+						  }
+
+	computeTunnels = { 'DEVICE' : 'enp2s10',
+					   'IPADDR' : '192.168.2.41',
+					   'NETMASK' : '255.255.255.0',
+					   }
+
+	storageManagement = {   'DEVICE' : 'enp0s25',
+							'IPADDR' : '192.168.1.31',
+							'GATEWAY' : '192.168.1.1',
+							'DNS1' : '129.128.208.13',
+							'NETMASK' : '255.255.255.0',
+							}
+
+	partition = {   'size_reduction_of_home' : '3.5T',
+					'partition_size' : '500G',        
+					'stripe_number' : 3, 
+					}
 
 ##############################################################################
 
