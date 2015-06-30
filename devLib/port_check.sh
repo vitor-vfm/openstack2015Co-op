@@ -1,20 +1,21 @@
 #! /bin/bash
 
-<<EOF
-
-Checks whether or not a port listener is setup for a given 
-openstack component using ss -nltp | grep port 
-
-Requires:
-
-component
-
-usage:
-
-To check for listeners for component number 2
-./port_check 2
-
-EOF
+#
+# Checks whether or not a port listener is setup for a given 
+# openstack component using ss -nltp | grep port 
+#
+# Requires:
+#
+# component - can be specified in a range(1 5, 3 4, 2 10)
+#
+# usage:
+#
+# To check for listeners for component number 2
+# bash port_check 2
+#
+# To check for listeners for components from 2 to 7
+# bash port_check 2 7
+#
 
 start=$1
 end=$2
@@ -22,7 +23,8 @@ end=$2
 source dictionary.sh
 
 function check_port {
-    nodes="controller compute1 network storage1"
+    #nodes="controller compute1 network storage1"
+    nodes="controller"
     case "$1" in 
 	0)
 	    ports=""
@@ -82,7 +84,7 @@ function check_port {
 	    then
 		echo "${green}LISTENER found on $node ${reset}: "$output
 	    else
-		echo "${red}No LISTENER found on $node ${reset}"	    
+	        echo "${red}No LISTENER found on $node ${reset}"	    
 		
 	    fi
 	done
