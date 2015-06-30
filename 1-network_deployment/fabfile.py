@@ -30,20 +30,20 @@ def debug_str(command):
     return blue(sudo(command,quiet=True))
 
 def generate_ip(ip_address,nodes_in_role,node):
-	# generate an IP address based on a base ip, a node, and a role list
-	# will be used for setting up interfaces and for testing
+    # generate an IP address based on a base ip, a node, and a role list
+    # will be used for setting up interfaces and for testing
 
-        # split the IP into its four octets
-        octets = ip_address.split('.')
-        
-	# increment last octet according to the node's index in the 
-        # nodes_in_role list; 
-	index = nodes_in_role.index(node)
-        octets[-1] = str( int(octets[-1]) + index )
+    # split the IP into its four octets
+    octets = ip_address.split('.')
 
-	# turn it back into a single string
-	ip_address = ".".join(octets)
-	return ip_address
+    # increment last octet according to the node's index in the 
+    # nodes_in_role list; 
+    index = nodes_in_role.index(node)
+    octets[-1] = str( int(octets[-1]) + index )
+
+    # turn it back into a single string
+    ip_address = ".".join(octets)
+    return ip_address
 
 
 ########################## Deployment ########################################
@@ -77,10 +77,10 @@ def restart_network():
 def set_up_network_interface(specs_dict,role):
 
     if 'IPADDR' in specs_dict:
-	# change the IP in the dict for the correct one
-	specs_dict['IPADDR'] = generate_ip(specs_dict['IPADDR'], \
+        # change the IP in the dict for the correct one
+        specs_dict['IPADDR'] = generate_ip(specs_dict['IPADDR'],
                 env.roledefs[role], env.host_string)
-	#IPs_in_network.append((ip_address, env.host_string))
+    #IPs_in_network.append((ip_address, env.host_string))
 
 
     # create config file
@@ -113,42 +113,42 @@ def set_up_network_interface(specs_dict,role):
 
 
 
-def set_hosts():
-    # configure the /etc/hosts file to put aliases
-    aliases = env_config.hosts
+# def set_hosts():
+#     # configure the /etc/hosts file to put aliases
+#     aliases = env_config.hosts
 
-    # make backup
-    run("cp /etc/hosts /etc/hosts.back12")
+#     # make backup
+#     run("cp /etc/hosts /etc/hosts.back12")
 
 
-    if mode == 'normal':
-        confFile = '/etc/hosts'
-    elif mode == 'debug':
-        confFile = '~/hosts.debug'
-        sudo("cp /etc/hosts " + confFile)
-        print blue("Debugging set_hosts")
+#     if mode == 'normal':
+#         confFile = '/etc/hosts'
+#     elif mode == 'debug':
+#         confFile = '~/hosts.debug'
+#         sudo("cp /etc/hosts " + confFile)
+#         print blue("Debugging set_hosts")
 
-    # delete previous aliases
-    msg = "Delete aliases for the nodes that were already in /etc/hosts"
-    runCheck(msg, "sed -i '/controller/d' {};".format(confFile) + \
-            "sed -i '/network/d' {};".format(confFile) + \
-            "sed -i '/compute/d' {};".format(confFile) + \
-            "sed -i '/storage/d' {}".format(confFile))
+#     # delete previous aliases
+#     msg = "Delete aliases for the nodes that were already in /etc/hosts"
+#     runCheck(msg, "sed -i '/controller/d' {};".format(confFile) + \
+#             "sed -i '/network/d' {};".format(confFile) + \
+#             "sed -i '/compute/d' {};".format(confFile) + \
+#             "sed -i '/storage/d' {}".format(confFile))
 
-    # add new aliases
-    lines_to_add = [ip + "\t" + aliases[ip] for ip in aliases.keys()]
-    for line in lines_to_add:
-        msg = "Add new aliases for /etc/hosts/"
-        runCheck(msg, "echo '{}' >>{}".format(line,confFile))
-    # delete empty lines
-    run("sed -i '/^$/ d' {}".format(confFile))
+#     # add new aliases
+#     lines_to_add = [ip + "\t" + aliases[ip] for ip in aliases.keys()]
+#     for line in lines_to_add:
+#         msg = "Add new aliases for /etc/hosts/"
+#         runCheck(msg, "echo '{}' >>{}".format(line,confFile))
+#     # delete empty lines
+#     run("sed -i '/^$/ d' {}".format(confFile))
 
-    if mode == 'debug':
-        # show file to check
-        print blue("Final result for {} : ".format(confFile))
-        sudo("cat " + confFile)
-        # delete test file
-        sudo("rm " + confFile)
+#     if mode == 'debug':
+#         # show file to check
+#         print blue("Final result for {} : ".format(confFile))
+#         sudo("cat " + confFile)
+#         # delete test file
+#         sudo("rm " + confFile)
 
 def configChrony():
 
@@ -195,13 +195,6 @@ def deployInterface(interface,specs):
         print blue('Deploying Interface {} now'.format(interface))
         print ''
 
-    if 'management' in interface:
-        # set hostname according to the alias in /etc/hosts
-        # (network, compute1, compute2, etc)
-        hostname = env_config.hosts[specs['IPADDR']]
-        msg = 'Set hostname to ' + hostname
-        runCheck(msg, "hostnamectl set-hostname " + hostname)
-
     role = getRole()
     set_up_network_interface(specs,role)
 
@@ -223,7 +216,6 @@ def controller_network_deploy():
     deployInterface('controller tunnels',env_config.controllerTunnels)
 
     restart_network()
-    set_hosts()
     logging.debug('Deployment done on host' + env.host_string)
 
 @roles('network')
@@ -237,7 +229,6 @@ def network_node_network_deploy():
 
 
     restart_network()
-    set_hosts()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('compute')
@@ -248,7 +239,6 @@ def compute_network_deploy():
     deployInterface('compute tunnels',env_config.computeTunnels)
 
     restart_network()
-    set_hosts()
     logging.debug('Deployment done on host' + env.host)
 
 @roles('storage')
@@ -257,7 +247,6 @@ def storage_network_deploy():
     deployInterface('storage management',env_config.storageManagement)
     
     restart_network()
-    set_hosts()
     logging.debug('Deployment done on host' + env.host)
 
 def deploy():
@@ -272,13 +261,15 @@ def deploy():
 
 ################################ TDD #########################################
 
-# pings an ip address and see if it works
 def ping_ip(ip_address, host, role='', type_interface=''):
+    """
+    TDD: Pings an IP (or hostname) and reports the results
+    """
     ping_command = 'ping -q -c 1 ' + ip_address
 
     if type_interface:
-        msg = 'Ping {}\'s {} interface ({}) from {}'.format(host, \
-                type_interface,ip_address,env.host)
+        msg = 'Ping {}\'s {} interface ({}) from {}'.format(
+                host, type_interface,ip_address,env.host)
     else:
         msg = 'Ping {} from {}'.format(ip_address,env.host)
 
@@ -362,7 +353,7 @@ def network_tdd_compute():
 @roles('storage')
 def network_tdd_storage():
     # see if the storage node can ping all the management interfaces
-    for ip in env_config.hosts.keys():
+    for ip in env_config.hosts:
         ping_ip(ip,env_config.hosts[ip],type_interface='management')
 
 
@@ -384,7 +375,7 @@ def chronyTDDController():
 
 
 # run this on all nodes except controller
-@roles([r for r in env_config.roles if r != 'controller'])
+@roles('network', 'compute', 'storage')
 def chronyTDDOtherNodes():
     # check if controller is in the sources
     msg = 'Get chrony sources on ' + env.host
@@ -402,11 +393,11 @@ def chronyTDD():
     execute(chronyTDDController)
     execute(chronyTDDOtherNodes)
 
-            
+
 def tdd():
     with settings(warn_only=True):
-	execute(network_tdd_controller)
-	execute(network_tdd_network)
-	execute(network_tdd_compute)
-	execute(network_tdd_storage)
-	execute(chronyTDD)
+        execute(network_tdd_controller)
+        execute(network_tdd_network)
+        execute(network_tdd_compute)
+        execute(network_tdd_storage)
+        execute(chronyTDD)
