@@ -249,7 +249,7 @@ def deploy():
         with settings(warn_only=True):
             run('reboot')
 
-
+@roles('controller','compute','network','storage')
 def check_firewall():
     output = run("systemctl status firewalld | awk '/Active/ {print $2,$3}'", quiet=True)
     if any(status in output for status in ["inactive", "(dead)"]):
@@ -258,9 +258,10 @@ def check_firewall():
         print align_n("Firewall is not dead. Show status:")
         run("systemctl status firewalld")
         
+@roles('controller','compute','network','storage')
 def check_selinux():
-    output = run("crudini --get /etc/selinux/config '' SELINUX", quiet=True)
-    if "disabled" in output:
+    output = run("getenforce")
+    if "Disabled" in output:
         print align_y("SELINUX is " + output)
     else:            
         print align_n("Oh no! SELINUX is " + output)
