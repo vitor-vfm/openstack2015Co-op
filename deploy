@@ -3,15 +3,7 @@
 # Runs deploy and tdd in the interval specified
 # Wrapper for allfabs
 
-# You can specify a role with -R
-
-if [ $1 = '-R' ]; then
-    first=$3
-    last=$4
-    command="-R $2 deploy tdd"
-else
-    first=$1
-    last=$2
-fi
+first=$1
+last=$2
 
 ./allfabs $first $last "$command"
