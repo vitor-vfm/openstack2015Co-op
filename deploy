@@ -1,17 +1,106 @@
-#! /bin/bash
+#! /usr/bin/python
 
-# Runs deploy and tdd in the interval specified
-# Wrapper for allfabs
+"""
+A script to deploy the fabfiles by number.
 
-# You can specify a role with -R
+Run with the -h option to see usage
+"""
 
-if [ $1 = '-R' ]; then
-    first=$3
-    last=$4
-    command="-R $2 deploy tdd"
-else
-    first=$1
-    last=$2
-fi
+import sys
+import os
+from fabric.colors import green, red, blue
+from subprocess import check_output
 
-./allfabs $first $last "$command"
+class Options:
+    verbose = bool
+    logfile = str()
+    task = str()
+    first = str()
+    last = str()
+
+
+def fab(directories,opt):
+
+    log = ""
+    for direc in directories:
+        os.chdir(direc)
+        print blue("\n\t\tNow in directory {}".format(direc))
+
+        print blue("\n\t\tRunning task " + opt.task)
+        out = check_output("fab " + opt.task, shell=True)
+        if opt.verbose:
+            print out
+        log += out
+
+        os.chdir('..')
+
+    # save log
+    f = open(opt.logfile, 'w')
+    f.write(log)
+    f.close()
+
+def getDirectories(first,last):
+    strDirectories = check_output("ls | grep -P '^\d' | sort -g", shell=True)
+    dirs = strDirectories.splitlines()
+
+    print 'first is ',first
+    print 'last is ',last
+
+    for i, d in enumerate(dirs):
+        if d.startswith(first):
+            iFirst = i
+        elif d.startswith(last):
+            iLast = i
+
+    return dirs[iFirst : iLast+1]
+
+def showUsage():
+    us = """
+    ./deploy [-options] f l
+
+       where
+         f : first script, by number
+         l : last script, by number
+
+       options:
+         -h : show usage
+         -t [task] : specify a fabric task to run, such as 'tdd'
+         -v : verbose
+         -f [path] : choose a file to log results in; default is 'deploy_log'
+    """
+    print us
+    sys.exit()
+        
+
+if __name__=="__main__":
+
+    opt = Options()
+    params = sys.argv[1:]
+
+    # defaults
+    opt.task = 'deploy'
+    opt.verbose = False
+    opt.logfile = 'deploy_log'
+
+    # process options
+    while '-' in params[0]:
+        if 'h' in params[0]:
+            showUsage()
+        if 'v' in params[0]:
+            opt.verbose = True
+        if 't' in params[0]:
+            opt.task = params[1]
+            del params[0]
+        if 'f' in params[0]:
+            opt.logfile = params[1]
+            del params[0]
+
+        # shift
+        del params[0]
+
+    opt.first = params[0]
+    opt.last = params[1]
+
+    dirs = getDirectories(opt.first, opt.last)
+    fab(dirs, opt)
+
