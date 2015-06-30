@@ -158,6 +158,11 @@ pid-file=/var/run/mariadb/mariadb.pid
 							'NETMASK' : '255.255.255.0',
 							}
 
+	partition = {   'size_reduction_of_home' : '3.5T',
+					'partition_size' : '500G',        
+					'stripe_number' : 3, 
+					}
+
 ##############################################################################
 
 ########  ######## ##     ## 

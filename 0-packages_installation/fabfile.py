@@ -197,47 +197,51 @@ def tdd_DB():
 def test():
 	print(env_config.passwd['ROOT_SECRET'])
 
-
 @roles('controller', 'compute', 'network', 'storage')
 def shrinkHome():
-    # check if partitions already exist
-    if 'str' in run("lvs"):
-        print blue('Partitions already created. Nothing done on '+env.host)
-    else:
-        home_dir = run("lvs | awk '/home/ {print $2}'")
-        run('umount /home')
-        run('lvresize -L -{} /dev/mapper/{}-home'.format(
-            env_config.partition['size_reduction_of_home'], home_dir))
-        run('mkfs -t xfs -f /dev/{}/home'.format(home_dir))
-        run('mount /home')
+	# check if partitions already exist
+	if 'str' in run("lvs"):
+		print blue('Partitions already created. Nothing done on '+env.host)
+	else:
+		home_dir = run("mount | grep home|cut -d' ' -f1")
+		run('umount /home')
+		run('lvresize -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
+		run('mkfs -t xfs -f {}'.format(home_dir))
+		run('mount /home')
 
-@roles('controller', 'network', 'compute', 'storage')
+@roles('controller', 'compute', 'network', 'storage')
+def tdd_lvs():
+	msg = "TDD LVS Free space"
+	runCheck(msg,"vgs | awk '/centos/ {print $7}'")
+
+
+#@roles('controller', 'network', 'compute', 'storage')
+@roles('controller')
 def prepGlusterFS():
+# check if partitions already exist
+	if 'str' in run("lvs"):
+		print blue('Partitions already created. Nothing done on '+env.host)
+	else:
+		STRIPE_NUMBER = env_config.partition['stripe_number']
 
-    # check if partitions already exist
-    if 'str' in run("lvs"):
-        print blue('Partitions already created. Nothing done on '+env.host)
-    else:
-        STRIPE_NUMBER = env_config.partition['stripe_number']
+		home_dir = run("lvs | awk '/home/ {print $2}'")
 
-        home_dir = run("lvs | awk '/home/ {print $2}'")
+		run('lvcreate -i {} -I 8 -L {} {}'.format(
+			STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
 
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
-            STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+		run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
 
-        run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
+		run('lvcreate -i {} -I 8 -L {} {}'.format(
+			STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
 
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
-            STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+		run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
 
-        run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
+		run('lvcreate -i {} -I 8 -L {} {}'.format(
+			STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
 
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
-            STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+		run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
 
-        run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-
-        run('lvs')
+		run('lvs')
 
 @roles('controller','compute','network')
 # @roles('controller','compute','network')
