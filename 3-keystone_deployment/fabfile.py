@@ -13,11 +13,24 @@ import env_config
 from myLib import runCheck, createDatabaseScript
 from myLib import keystone_check, database_check, align_y, align_n, saveConfigFile
 
-########################## Configuring Environment ########################################
+########################## Configuring Environment #################################
+
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
-################### Deployment ########################################
+################################ Deployment ########################################
+
+@roles(env_config.roles)
+def saveOpenrcFiles():
+    "Save the admin-openrc and demo-openrc files in the hosts"
+
+    contents = env_config.admin_openrc
+    msg = 'Put admin-openrc.sh in '+env.host
+    runCheck(msg, "echo '{}' >/root/admin-openrc.sh".format(contents))
+
+    contents = env_config.demo_openrc
+    msg = 'Put demo-openrc.sh in '+env.host
+    runCheck(msg, "echo '{}' >/root/demo-openrc.sh".format(contents))
 
 def setKeystoneConfigFile(admin_token,password):
     """
@@ -179,6 +192,7 @@ def setupKeystone():
 
 def deploy():
     execute(setupKeystone)
+    execute(saveOpenrcFiles)
 
 ######################################## TDD #########################################
 
