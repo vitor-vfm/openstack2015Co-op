@@ -1,32 +1,14 @@
 #! /bin/bash
 
-<<<<<<< HEAD:port_check.sh
-<<EOF
-
-Checks whether or not a port listener is setup for a given 
-openstack component using ss -nltp | grep port 
-
-Requires:
-
-component
-
-usage:
-
-To check for listeners for component number 2
-./port_check 2
-
-EOF
-=======
-
 # Checks whether or not a port listener is setup for a given 
 # openstack component using ss -nltp | grep port 
 #
-# Requires:
+# REQUIRES:
+######################################################################
+# component(s) - can be specified in a range
 #
-# component - can be specified in a range
-#
-# usage:
-#
+# USAGE:
+######################################################################
 # To check for listeners for component number 2 use -s(tart)
 # bash port_check -s 2
 #
