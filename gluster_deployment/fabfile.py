@@ -105,12 +105,14 @@ def setup_gluster():
 def probe(some_hosts):
     with settings(warn_only=True):
         # peer probe the ip addresses of all the nodes
-        for node in some_hosts:
-            if some_hosts[node] not in env.host_string:
-                if runCheck('Probe', 'gluster peer probe {}'.format(node)).return_code:
-                    print(red('{} cannot probe {}'.format(env.host, node)))
-                else:
-                    print(green('{} can probe {}'.format(env.host, node)))
+        for nodes in some_hosts:
+            for node in nodes:
+                if node !=  env.host_string:
+                    node_id = node.split('@', 1)[-1]
+                    if runCheck('Probe', 'gluster peer probe {}'.format(node_id)).return_code:
+                        print(red('{} cannot probe {}'.format(env.host, node_id)))
+                    else:
+                        print(green('{} can probe {}'.format(env.host, node_id)))
     
 @roles('controller', 'compute', 'network', 'storage')
 def prevolume_start():
@@ -122,7 +124,7 @@ def create_volume(hosts):
     num_nodes = len(hosts)
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
-    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/{}'.format(BRICK) for node in hosts])
+    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/{} '.format(BRICK) for nodes in hosts for node in nodes])
     check_volume = run('gluster volume list', warn_only=True)
     if check_volume != VOLUME:
         runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
@@ -312,7 +314,7 @@ def deploy_cinder():
     #global [env_config.hosts] 
     #env_config.hosts = {'192.168.1.11': 'controller', '192.168.1.31': 'storage1'}
     execute(setup_gluster, roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
-    execute(probe, {'192.168.1.11':'controller', '192.168.1.31':'storage1'}, roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
+    execute(probe, [['root@controller'], ['root@storage1']], roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(create_volume, {'192.168.1.11':'controller', '192.168.1.31':'storage1'}, roles=['controller'])
     execute(mounter, roles=['controller', 'storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(change_cinder_files)

@@ -7,6 +7,7 @@ from fabric.context_managers import settings
 from fabric.colors import green, red, blue
 import env_config
 from myLib import runCheck, set_parameter
+import time
 
 
 @roles('controller', 'compute', 'network', 'storage')
@@ -27,7 +28,7 @@ def setup_gluster(partition,brick):
     runCheck('Start glusterd', 'systemctl start glusterd')
 
     # If not already made, make the file system (include in partition function)
-    out = run('file -sL /dev/centos/{} | grep -i xfs'.format(partition))
+    out = run('file -sL /dev/{}/{} | grep -i xfs'.format(home_dir, partition), warn_only=True)
     if out == '':
         runCheck('Make file system', 'mkfs.xfs -f /dev/{}/{}'.format(
             home_dir, partition))
@@ -46,28 +47,31 @@ def setup_gluster(partition,brick):
 
 
 @roles('controller', 'compute', 'network', 'storage')
-def probe():
+def probe(some_hosts):
     with settings(warn_only=True):
         # peer probe the ip addresses of all the nodes
-        for node in env_config.hosts:
-            if node != env.host_string:
-                node_ip = node.split('@', 1)[-1]
-                if sudo('gluster peer probe {}'.format(node_ip)).return_code:
-                    print(red('{} cannot probe {}'.format(
-                        env.host, node.split('@', 1)[0])))
-                else:
-                    print(green('{} can probe {}'.format(
-                        env.host, node.split('@', 1)[0])))
+        for nodes in some_hosts:
+            for node in nodes:
+                if node != env.host_string:
+                    node_id = node.split('@', 1)[-1]
+                    if runCheck('Probe', 'gluster peer probe {}'.format(
+                                node_id)).return_code:
+                        print(red('{} cannot probe {}'.format(
+                            env.host, node_id)))
+                    else:
+                        print(green('{} can probe {}'.format(
+                            env.host, node_id)))
+    time.sleep(3)
 
 @roles('compute')
-def create_volume(brick, volume):
-    num_nodes = len(env_config.hosts)
+def create_volume(brick, volume, some_hosts):
+    num_nodes = len(some_hosts)
 
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
     node_ips = "".join([
-        node.split('@', 1)[-1]+':/data/gluster/{}'.format(brick)
-        for node in env_config.hosts
+        node.split('@', 1)[-1]+':/data/gluster/{} '.format(brick)
+        for nodes in some_hosts for node in nodes
         ])
 
     check_volume = run('gluster volume list', warn_only=True)
