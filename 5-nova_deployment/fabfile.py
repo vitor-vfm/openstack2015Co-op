@@ -40,7 +40,7 @@ def setup_nova_database_on_controller():
     mysql_commands = createDatabaseScript('nova',NOVA_DBPASS)
     
     msg = "Create database for Nova"
-    runCheck(msg, 'echo "' + mysql_commands + '" | mysql -u root')
+    runCheck(msg, 'echo "' + mysql_commands + '" | mysql -u root -p' + env_config.passwd['ROOT_SECRET'])
     
 @roles('controller')
 def setup_nova_keystone_on_controller():
