@@ -697,9 +697,11 @@ def compute_tdd():
 
     agents = ['Open vSwitch']
     # get list of compute nodes from the hosts config
-    list_of_compute_hostnames = [hostname for hostname in env_config.hosts.values()\
-            if 'compute' in hostname]
-
+    list_of_compute_hostnames = [hostname for hostname in env_config.hosts\
+            if 'compute' in ''.join(hostname)]
+ 
+    print env_config.hosts
+    print list_of_compute_hostnames
     for host in list_of_compute_hostnames:
         res = verify_neutron_agents(neutron_agents=agents,hostname=host)
         if res != 'OK':
