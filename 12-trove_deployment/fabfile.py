@@ -84,7 +84,7 @@ def setup_database():
 
     
     print("mysql commands are: " + mysql_commands)
-    sudo('echo "{}" | mysql -u root'.format(mysql_commands))
+    sudo('echo "{}" | mysql -u root -p{}'.format(mysql_commands,env_config.passwd['ROOT_SECRET']))
 
 def populate_database():
     sudo("""su -s /bin/sh -c "trove-manage db_sync" trove""")
