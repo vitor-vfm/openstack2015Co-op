@@ -1,37 +1,86 @@
 #! /bin/bash
 
-<<EOF
+
+
+
+
+OPTIND=1
+verbosity=0
+dead=0
+source dictionary.sh
+
+
+while getopts "vs:e:a:dh" OPTION
+do
+
+    case $OPTION in 
+	v)
+	    verbosity=$(($verbosity+1))
+	    ;;
+	s)
+	    start=$OPTARG
+	    ;;
+
+	e)
+	    end=$OPTARG
+	    ;;
+	a)
+	    action=$OPTARG
+	    ;;
+	d)
+	    dead=$(($dead+1))
+	    ;;
+	h)
+	    cat <<EOF
 
 Performs specified action on the services for the openstack component specified by the user
 
-Usage:
+USAGE:
 
-requires (in order):
+REQUIRES:
 
-Action = the action to be performed on the services. (status|restart|disable|enable|stop|...) and anyother action that systemctl supports
+(Mandatory)
+-a = Action = the action to be performed on the services. (status|restart|disable|enable|stop|...) and anyother action that systemctl supports
 
 Range - is specified using the start and end variables
-start = the number corresponding to the openstack component you wish to start with
-end = the number corresponding to the openstack component you wish to end with
 
- 
-syntax:
+(Mandatory)
+-s = start = the number corresponding to the openstack component you wish to start with
+
+(Optional)
+-e = end = the number corresponding to the openstack component you wish to end with
+
+(Optional)
+-d = dead = show only services that are dead (inactive)
+
+SYNTAX:
 
 - to get the status for all services specified in components 1 through 3, the syntax is as follows:
 
-./service.sh status 1 3
+./service.sh -s 1 -e 3 -a status
 
 - to restart all services for components 5, the syntax is:
 
-./service.sh restart 5
+./service.sh -s 5 -a restart
 
+- to get all services for component number 8 that are dead:
+
+bash service.sh -s 8 -a status -d
 
 EOF
+	    exit
+	    ;;
+	esac
+done
+
+# shift argument so that verbose options don't conflict with arguments 
+# for script 
+shift $((OPTIND-1))
 
 
-action=$1
-start=$2
-end=$3
+#action=$1
+#start=$2
+#end=$3
 
 servicesComp=""
 servicesCont=""
@@ -51,10 +100,10 @@ function action_on_services {
 	    servicesStor="chronyd"
 	    ;;
 	1)
-	    servicesComp="network chronyd "  
+#	    servicesComp="network chronyd "  
 	    servicesCont="network chronyd "
-	    servicesNetw="network chronyd "
-	    servicesStor="network chronyd "
+#	    servicesNetw="network chronyd "
+#	    servicesStor="network chronyd "
 	    ;;
 	2)
 	    servicesComp=""
@@ -127,36 +176,52 @@ function action_on_services {
 
 	for service in $1;
 	do 
-	    echo -e "\n\n"
+	    output=$(ssh root@$node "systemctl $2 $service")
 
-	    
-	    # run specified command
-	    echo "###############################################################################"
-	    echo "${green}running $action on $service ${reset}"
-	    echo "###############################################################################"
-
-
-	    ssh root@$node "systemctl $2 $service"
-
-	    # echo out status after specified command is run
-
-	    echo "###############################################################################"
-	    
-	    state=$(ssh root@$node "systemctl status $service | awk '/Active/ {\$1=\"\"; print \$0}'")
-	    if [[ "$state" =~ ^active  ]] || [[ "$state" =~ running  ]]
+	    if [ $verbosity -ge 1 ]
 	    then
-		echo "$service status on $node is now: ${green} $state ${reset}"
-		
-	    elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
-	    then
-		echo "$service status on $node is now: ${red} $state ${reset}"
+		echo "###############################################################################"
 
+		echo -e "\n"
+		echo "###############################################################################"
+		echo "${green}running $action on $service ${reset}"
+		echo "###############################################################################"
+
+	    fi
+	    
+	    if  [ $verbosity == 2 ]
+	    then
+
+		echo "$output" # quoted to keep spacing and prettiness 
+
+		echo "###############################################################################"
+
+	    fi
+	    
+	    state=$(ssh root@$node "systemctl status $service | awk '/Active:/ {\$1=\"\"; print \$0}' | xargs") 
+	    # piped to xargs in order to get rid of spaces on either side
+	    if [ "$dead" == 0 ]
+	    then
+
+		if [[ "$state" =~ ^active  ]] || [[ "$state" =~ running  ]] || [[ "$state" =~ exited ]]
+		then
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: ${green} $state ${reset}"
+		    
+		elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
+		then
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: ${red} $state ${reset}"
+
+		else
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: $state (Unknown)"
+		    
+		fi
 	    else
-		echo "$service status on $node is now: $state (neither active nor inactive)"
+		if [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
+		then
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: ${red} $state ${reset}"
+		fi
 		
 	    fi
-
-	    echo "###############################################################################"
 
 	done
 	
@@ -166,10 +231,12 @@ function action_on_services {
 
     if ! [ -z "$servicesCont" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Controller"
-	echo "###############################################################################"
-	#    ssh root@controller "systemctl $action $servicesCont"
+	
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Controller"
+	fi
 
 	run_command "$servicesCont" $action "controller"
 	
@@ -177,41 +244,46 @@ function action_on_services {
 
     if ! [ -z "$servicesComp" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Compute"
-	echo "###############################################################################"
-	#    ssh root@compute1 "systemctl $action $servicesComp"
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Compute"
+	fi
 
 	run_command "$servicesComp" $action "compute1"
     fi
 
     if ! [ -z "$servicesNetw" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Network"
-	echo "###############################################################################"
-	#    ssh root@network "systemctl $action $servicesNetw"
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Network"
+	fi
 	run_command "$servicesNetw" $action "network"
 
     fi
 
     if ! [ -z "$servicesStor" ] 
     then
-	echo -e "\n\n"
-	echo "running $action on services for $component that run on the Storage"
-	echo "###############################################################################"
-	#    ssh root@storage1 "systemctl $action $servicesStor"
+	if [ $verbosity -ge 1 ]
+	then
+	    echo -e "\n"
+	    echo "running $action on services for ${component_dictionary[$component]} that run on the Storage"
+	fi
 	run_command "$servicesStor" $action "storage1"
 
     fi
-
-
-
-
-
 }
+if [ -z "$start"  ]
+then
+    echo "--Argument for start missing"
 
-if ! [ -z "$end"  ]
+elif [ -z "$action" ] 
+then 
+    echo "--Argument for action missing"
+
+elif ! [ -z "$end"  ]
 then
     for i in $(seq $start $end); 
     do
@@ -222,18 +294,16 @@ else
     # to handle the case when a single 
     # digit is specified in the range
     action_on_services $start $action
-    
+
 fi
 
 
 
 
 
-<<EOF
 
-ref:
 
-colors:
-http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
+# ref:
 
-EOF
+# colors:
+# http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
