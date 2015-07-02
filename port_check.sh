@@ -1,29 +1,5 @@
 #! /bin/bash
 
-# Checks whether or not a port listener is setup for a given 
-# openstack component using ss -nltp | grep port 
-#
-# REQUIRES:
-######################################################################
-# component(s) - can be specified in a range
-#
-# USAGE:
-######################################################################
-# To check for listeners for component number 2 use -s(tart)
-# bash port_check -s 2
-#
-# To check for listeners for components from 2 to 7 -s(tart) and -e(nd)
-# bash port_check -s 2 -e 7
-#
-#
-#
-# Verbose options:
-# -v ---> shows which component name is found on what node(s) 
-#         and the port associated with it
-#
-# -vv ---> shows which component name is found on what node(s) 
-#          and the port associated as well as the output of the 
-# 	 ss -ntlp | grep port command
 
 
 
@@ -35,10 +11,41 @@ source dictionary.sh
 OPTIND=1
 verbosity=0
 
-while getopts "vs:e:" OPTION
+while getopts "hvs:e:" OPTION
 do
 
     case $OPTION in 
+	h)
+	    cat <<EOF
+
+Checks whether or not a port listener is setup for a given 
+openstack component using ss -nltp | grep port 
+
+REQUIRES:
+
+component(s) - can be specified in a range
+
+USAGE:
+
+To check for listeners for component number 2 use -s(tart)
+bash port_check -s 2
+
+To check for listeners for components from 2 to 7 -s(tart) and -e(nd)
+bash port_check -s 2 -e 7
+
+
+
+Verbose options:
+-v ---> shows which component name is found on what node(s) 
+        and the port associated with it
+
+-vv ---> shows which component name is found on what node(s) 
+         and the port associated as well as the output of the 
+	 ss -ntlp | grep port command
+
+EOF
+	    exit
+	    ;;
 	v)
 	    verbosity=$(($verbosity+1))
 	    ;;
