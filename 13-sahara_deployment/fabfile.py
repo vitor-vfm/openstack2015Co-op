@@ -56,7 +56,7 @@ def setup_sahara_database(SAHARA_DBPASS):
     mysql_commands = mysql_commands + " GRANT ALL PRIVILEGES ON sahara.* TO 'sahara'@'%' IDENTIFIED BY '{}';".format(SAHARA_DBPASS)
 
     
-    sudo_log('echo "{}" | mysql -u root'.format(mysql_commands))
+    sudo_log('echo "{}" | mysql -u root -p{}'.format(mysql_commands, env_config.passwd['ROOT_SECRET']))
     
     sudo_log("sahara-db-manage --config-file /etc/sahara/sahara.conf upgrade head")
 

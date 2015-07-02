@@ -57,7 +57,7 @@ def setup_cinder_database_on_controller():
 
     mysql_commands = createDatabaseScript("cinder",CINDER_DBPASS)    
     msg = 'Create the database'
-    runCheck(msg, 'echo "{}" | mysql -u root'.format(mysql_commands))
+    runCheck(msg, 'echo "{}" | mysql -u root -p{}'.format(mysql_commands, env_config.passwd['ROOT_SECRET']))
     
 
 @roles('controller')
