@@ -491,14 +491,14 @@ def database_check(db,verbose=False):
         "FROM INFORMATION_SCHEMA.SCHEMATA "+\
         "WHERE SCHEMA_NAME = '{}';".format(db)
 
-        return (db in run_v("""echo "{}" | mysql -u root""".format(command)))
+        return (db in run_v("""echo "{}" | mysql -u root -p{}""".format(command, passwd['ROOT_SECRET'])))
         
     def table_count(db):
         command = "SELECT COUNT(*) "+\
         "FROM information_schema.tables "+\
         "WHERE table_schema = '{}';".format(db) 
 
-        output = run_v('echo "{}" | mysql -u root '.format(command)+\
+        output = run_v('echo "{}" | mysql -u root -p{}'.format(command, passwd['ROOT_SECRET'])+\
                 '| grep -v "COUNT" ')
         return int(output)
 

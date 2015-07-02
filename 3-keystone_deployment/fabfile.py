@@ -165,7 +165,7 @@ def setupKeystone():
     databaseCreation = createDatabaseScript('keystone',passwd['KEYSTONE_DBPASS'])
 
     msg = "Create database for keystone"
-    runCheck(msg, 'echo "' + databaseCreation + '" | mysql -u root')
+    runCheck(msg, 'echo "' + databaseCreation + '" | mysql -u root -p"%s" ' % env_config.passwd['ROOT_SECRET'])
     
     execute(installPackages)
   
