@@ -6,11 +6,11 @@
 
 OPTIND=1
 verbosity=0
-
+dead=0
 source dictionary.sh
 
 
-while getopts "vs:e:a:h" OPTION
+while getopts "vs:e:a:dh" OPTION
 do
 
     case $OPTION in 
@@ -26,6 +26,9 @@ do
 	    ;;
 	a)
 	    action=$OPTARG
+	    ;;
+	d)
+	    dead=$(($dead+1))
 	    ;;
 	h)
 	    cat <<EOF
@@ -47,16 +50,22 @@ Range - is specified using the start and end variables
 (Optional)
 -e = end = the number corresponding to the openstack component you wish to end with
 
+(Optional)
+-d = dead = show only services that are dead (inactive)
+
 SYNTAX:
 
 - to get the status for all services specified in components 1 through 3, the syntax is as follows:
 
-./service.sh status -s 1 -e 3 -a status
+./service.sh -s 1 -e 3 -a status
 
 - to restart all services for components 5, the syntax is:
 
-./service.sh restart -s 5 -a restart
+./service.sh -s 5 -a restart
 
+- to get all services for component number 8 that are dead:
+
+bash service.sh -s 8 -a status -d
 
 EOF
 	    exit
@@ -91,10 +100,10 @@ function action_on_services {
 	    servicesStor="chronyd"
 	    ;;
 	1)
-	    servicesComp="network chronyd "  
+#	    servicesComp="network chronyd "  
 	    servicesCont="network chronyd "
-	    servicesNetw="network chronyd "
-	    servicesStor="network chronyd "
+#	    servicesNetw="network chronyd "
+#	    servicesStor="network chronyd "
 	    ;;
 	2)
 	    servicesComp=""
@@ -190,20 +199,30 @@ function action_on_services {
 	    fi
 	    
 	    
-	    state=$(ssh root@$node "systemctl status $service | awk '/Active/ {\$1=\"\"; print \$0}'")
-	    if [[ "$state" =~ ^active  ]] || [[ "$state" =~ running  ]]
+	    state=$(ssh root@$node "systemctl status $service | awk '/Active:/ {\$1=\"\"; print \$0}' | xargs") 
+	    # piped to xargs in order to get rid of spaces on either side
+	    if [ "$dead" == 0 ]
 	    then
-		echo "$service status on $node is now: ${green} $state ${reset}"
-		
-	    elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
-	    then
-		echo "$service status on $node is now: ${red} $state ${reset}"
 
+		if [[ "$state" =~ ^active  ]] || [[ "$state" =~ running  ]] || [[ "$state" =~ exited ]]
+		then
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: ${green} $state ${reset}"
+		    
+		elif [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
+		then
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: ${red} $state ${reset}"
+
+		else
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: $state (Unknown)"
+		    
+		fi
 	    else
-		echo "$service status on $node is now: $state (neither active nor inactive)"
+		if [[ "$state" =~ ^inactive  ]] || [[ "$state" =~ dead  ]] || [[ "$state" =~ failed ]]
+		then
+		    echo "As of $(date '+%H:%M:%S'), $service status on $node is: ${red} $state ${reset}"
+		fi
 		
 	    fi
-
 
 	done
 	
