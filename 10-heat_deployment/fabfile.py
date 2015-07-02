@@ -32,7 +32,7 @@ def setup_heat_database(HEAT_DBPASS):
     mysql_commands = createDatabaseScript('heat',HEAT_DBPASS)
     
     msg = 'Create database for heat'
-    runCheck(msg, 'echo "{}" | mysql -u root'.format(mysql_commands))
+    runCheck(msg, 'echo "{}" | mysql -u root -p{}'.format(mysql_commands, env_config.passwd['ROOT_SECRET']))
     
 
 
