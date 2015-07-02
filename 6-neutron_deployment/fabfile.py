@@ -42,7 +42,7 @@ def create_neutron_database():
 
     # send the commands to mysql client
     msg = "Create MySQL database for neutron"
-    runCheck(msg, '''echo "{}" | mysql -u root'''.format(database_script))
+    runCheck(msg, '''echo "{}" | mysql -u root -p{}'''.format(database_script, env_config.passwd['ROOT_SECRET']))
 
 def setup_keystone_controller():
     """
