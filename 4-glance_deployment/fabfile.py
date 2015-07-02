@@ -35,7 +35,7 @@ def setup_glance_database():
     mysql_commands = createDatabaseScript('glance',GLANCE_DBPASS)
     
     msg = "Create database for keystone"
-    runCheck(msg, 'echo "' + mysql_commands + '" | mysql -u root')
+    runCheck(msg, 'echo "' + mysql_commands + '" | mysql -u root -p"%s" ' % env_config.passwd['ROOT_SECRET'])
     
 
 
@@ -222,8 +222,8 @@ def setup_GlusterFS():
     brick = 'glance_brick'
 
     execute(glusterLib.setup_gluster, partition, brick)
-    execute(glusterLib.probe)
-    execute(glusterLib.create_volume, brick, volume)
+    execute(glusterLib.probe, env_config.hosts)
+    execute(glusterLib.create_volume, brick, volume, env_config.hosts)
     execute(glusterLib.mount, volume)
     
     execute(setup_nova_conf_file)
