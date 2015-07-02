@@ -13,7 +13,8 @@ import time
 @roles('controller', 'compute', 'network', 'storage')
 def setup_gluster(partition,brick):
     # Get name of directory partitions are in 
-    home_dir = run("lvs | awk '/home/ {print $2}'")
+    #home_dir = run("lvs | awk '/home/ {print $2}'")
+    home_dir = run('ls /dev/ | grep centos')
 
     # Get and install gluster
 
@@ -61,6 +62,7 @@ def probe(some_hosts):
                     else:
                         print(green('{} can probe {}'.format(
                             env.host, node_id)))
+    # Make sure the peers have enough time to actually connect
     time.sleep(3)
 
 @roles('compute')

@@ -9,6 +9,7 @@ import sys
 sys.path.append('../')#global_config_files')
 import env_config
 from myLib import runCheck
+import time
 
 ############################ Config ########################################
 
@@ -72,7 +73,7 @@ def setup_gluster():
     # Following commented out line is for when /dev/centos isn't called /dev/centos. Put it instead of 
     # the /centos part of '/dev/centos' if there are troubles
     #home_dir = run("lvs | awk '/home/ {print $2}'")
-    #home_dir = run("lvs | awk '/home/ {print $2}'")
+    home_dir = run('ls /dev/ | grep centos')
     # Get and install gluster
     runCheck('Getting packages for gluster', 'wget -P /etc/yum.repos.d http://download.gluster.org/pub/gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
     runCheck('Installing gluster packages', 'yum -y install glusterfs glusterfs-fuse glusterfs-server')
@@ -80,16 +81,16 @@ def setup_gluster():
     # If not already made, make the file system (include in partition function)
     #out = run('df -T | grep {}'.format(PARTITION), warn_only=True)
     #out = run('file -sL /dev/{}/{} | grep -i xfs'.format(home_dir, PARTITION), warn_only = True)
-    out = run('file -sL /dev/centos/{} | grep -i xfs'.format(PARTITION), warn_only = True)
+    out = run('file -sL /dev/{}/{} | grep -i xfs'.format(home_dir, PARTITION), warn_only = True)
     if out == '':
         #runCheck('Making file system', 'mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
-        runCheck('Making file system', 'mkfs.xfs -f /dev/centos/{}'.format(PARTITION))
+        runCheck('Making file system', 'mkfs.xfs -f /dev/{}/{}'.format(home_dir, PARTITION))
     # Mount the brick on the established partition
     run('mkdir -p /data/gluster/{}'.format(BRICK))
     out = run('mount | grep {} | grep /data/gluster/{}'.format(PARTITION, BRICK), warn_only=True)
     if out == '':
         #runCheck('Mounting brick on partition', 'mount /dev/{}/{} /data/gluster/{}'.format(home_dir, PARTITION, BRICK))
-        runCheck('Mounting brick on partition', 'mount /dev/centos/{} /data/gluster/{}'.format(PARTITION, BRICK))
+        runCheck('Mounting brick on partition', 'mount /dev/{}/{} /data/gluster/{}'.format(home_dir, PARTITION, BRICK))
     # Setup the ports
     #sudo('iptables -A INPUT -m state --state NEW -m tcp -p tcp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
     #sudo('iptables -A INPUT -m state --state NEW -m udp -p udp -s 192.168.254.0/24 --dport 111         -j ACCEPT')
@@ -113,6 +114,8 @@ def probe(some_hosts):
                         print(red('{} cannot probe {}'.format(env.host, node_id)))
                     else:
                         print(green('{} can probe {}'.format(env.host, node_id)))
+    # Give time for the peers to actually attach to each other
+    time.sleep(3)
     
 @roles('controller', 'compute', 'network', 'storage')
 def prevolume_start():
@@ -120,11 +123,11 @@ def prevolume_start():
     runCheck('Restarting glusterd', 'service glusterd restart')
 
 @roles('compute')
-def create_volume(hosts):
-    num_nodes = len(hosts)
+def create_volume(some_hosts):
+    num_nodes = len(some_hosts)
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
-    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/{} '.format(BRICK) for nodes in hosts for node in nodes])
+    node_ips = string.join([node.split('@', 1)[-1]+':/data/gluster/{} '.format(BRICK) for nodes in some_hosts for node in nodes])
     check_volume = run('gluster volume list', warn_only=True)
     if check_volume != VOLUME:
         runCheck('Creating volume', 'gluster volume create {} rep {} transport tcp {} force'.format(VOLUME, num_nodes, node_ips))
@@ -315,7 +318,7 @@ def deploy_cinder():
     #env_config.hosts = {'192.168.1.11': 'controller', '192.168.1.31': 'storage1'}
     execute(setup_gluster, roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(probe, [['root@controller'], ['root@storage1']], roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
-    execute(create_volume, {'192.168.1.11':'controller', '192.168.1.31':'storage1'}, roles=['controller'])
+    execute(create_volume, [['root@controller'], ['root@storage1']], roles=['controller'])
     execute(mounter, roles=['controller', 'storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(change_cinder_files)
     execute(restart_cinder) 
