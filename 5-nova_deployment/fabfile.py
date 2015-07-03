@@ -225,11 +225,36 @@ def setup_nova_on_controller():
     execute(populate_database_on_controller)
     execute(start_nova_services_on_controller)
 
+@roles('controller') 
+def setup_GlusterFS_Nova(): 
+    """ 
+    Configure the file path for the Nova Gluster volume 
+    """ 
+ 
+    # change the path that Glance uses for its file system 
+    msg = 'Configure Nova to use Gluster' 
+    glusterBrick = env_config.novaGlusterBrick 
+ 
+    msg = 'Create local directory for the brick' 
+    runCheck(msg, 'mkdir -p {}'.format(glusterBrick)) 
+ 
+    msg = 'Set ownership of the brick' 
+    runCheck(msg, 'chown -R nova:nova {}'.format(glusterBrick)) 
+ 
+@roles('controller', 'compute') 
+def setup_nova_conf_file(): 
+    confFile = '/etc/nova/nova.conf'      
+    set_parameter(confFile, 'glance', 'libvirt_type', 'qemu') 
+    set_parameter(confFile, 'DEFAULT', 'instances_path',  
+            env_config.novaGlusterBrick)
+
 ################################## Deployment ########################################
 
 def deploy():
     execute(setup_nova_on_controller)
     execute(setup_nova_on_compute)
+    execute(setup_GlusterFS_Nova)
+    execute(setup_nova_conf_file)
 
 ######################################## TDD #########################################
 
