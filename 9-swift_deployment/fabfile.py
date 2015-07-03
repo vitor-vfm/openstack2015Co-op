@@ -126,13 +126,74 @@ def controllerDeploy():
 def setGluster():
     """
     Set the storage nodes to use the Gluster brick
+
+    Based on the gluster-swift quick start guide:
+    https://github.com/gluster/gluster-swift/blob/master/doc/markdown/quick_start_guide.md
+
+    Assumes GlusterFS packages are installed
     """
-    # brick = env_config.
+
     pass
 
 
 
 ##########################################################################
+
+@roles('storage')
+def glusterswiftSetup(swift_volume):
+    """
+    Configures gluster-swift
+
+    Based on the gluster-swift quick start guide:
+    https://github.com/gluster/gluster-swift/blob/master/doc/markdown/quick_start_guide.md
+
+    Assumes GlusterFS packages are installed
+    """
+
+    msg = 'Install gluster-swift'
+    runCheck(msg, 
+            'yum install -y https://launchpad.net/swiftonfile/havana/1.10.0-2/+download/glusterfs-openstack-swift-1.10.0-2.5.el6.noarch.rpm')
+
+    msg = 'Make sure that gluster-swift is enabled at system startup'
+    runCheck(msg, 
+            "chkconfig openstack-swift-proxy on\n"
+            "chkconfig openstack-swift-account on\n"
+            "chkconfig openstack-swift-container on\n"
+            "chkconfig openstack-swift-object on")
+
+    # Fedora 19 Adjustment - might or might not be necessary for CentOS 7
+
+    # Currently gluster-swift requires its processes to be run as root. 
+    # We need to edit the openstack-swift-*.service files in 
+    # /etc/systemd/system/multi-user.target.wants and change the User entry value to root.
+
+    services = ['proxy','account','container','object']
+    for service in services:
+        confFile = '/etc/systemd/system/multi-user.target.wants/openstack-swift-%s.service' % (service)
+        set_parameter(confFile, '', 'User', 'root')
+
+    msg = 'Restart services'
+    runCheck(msg, 'systemctl --system daemon-reload')
+
+    # copy the *.conf-gluster files to *.conf files
+    with cd('/etc/swift/'):
+        msg = 'copy the *.conf-gluster files to *.conf files'
+        runCheck(msg, 
+                'for tmpl in *.conf-gluster ; do cp ${tmpl} ${tmpl%.*}.conf; done')
+
+    msg = 'Generate the ring files'
+    runCheck(msg,
+            'gluster-swift-gen-builders '+swift_volume)
+
+    msg = 'Expose the gluster volume'
+    runCheck(msg,
+            'cd /etc/swift; /usr/bin/gluster-swift-gen-builders myvolume')
+
+    for service in services:
+        msg = 'Start service ' + service
+        runCheck(msg, 'service %s start' % service)
+
+
 
 @roles('storage')
 def localStorage():
@@ -371,7 +432,7 @@ def installPackagesStorage():
 @roles('storage')
 def storageDeploy():
 
-    # execute(installPackagesStorage)
+    execute(installPackagesStorage)
 
     # execute(localStorage)        
     # execute(setGluster)
@@ -423,7 +484,38 @@ def checkStat():
         msg = 'Check the status'
         print blue(runCheck(msg, 'swift stat'))
 
+@roles('storage')
+def glusterswiftTDD(volume):
+    msg = 'Create a container'
+    out = runCheck(msg, 'curl -v -X PUT http://localhost:8080/v1/AUTH_%s/mycontainer' % volume)
+    if 'HTTP/1.1 201 Created' in  out:
+        print align_y('Container creation succeeded')
+    else:
+        print align_n('Problem in the container creation')
+        return
 
+    msg = 'confirm that the container was created'
+    containers = run('ls /mnt/gluster-object/'+volume, quiet=True) 
+    if volume in containers:
+        print align_y('Container is in directory')
+    else:
+        print align_n('Container is not in directory')
+        print containers
+
+    run('echo "Now testing obejct creation" >mytestfile')
+    msg = 'Create an object'
+    runCheck(msg, 'curl -v -X PUT -T mytestfile http://localhost:8080/v1/AUTH_%s/mycontainer/mytestfile' % volume)
+
+    msg = 'Request the new object'
+    runCheck('curl -v -X GET -o newfile http://localhost:8080/v1/AUTH_%s/mycontainer/mytestfile' % volume)
+
+    diff = run('diff newfile mytestfile', quiet=True)
+    if diff:
+        print align_n('File downloaded and local file are not the same')
+        run('cat newfile')
+        run('cat mytestfile')
+    else:
+        print align_y('File downloaded and local file are the same')
 
 def tdd():
     with settings(warn_only=True):
