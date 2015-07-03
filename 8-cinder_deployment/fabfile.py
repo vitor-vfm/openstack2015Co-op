@@ -184,7 +184,7 @@ def setup_cinder_config_files_on_storage():
     CINDER_DBPASS = passwd['CINDER_DBPASS']
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
-    NETWORK_MANAGEMENT_IP = env_config.storageManagement['IPADDR']
+    STORAGE_MANAGEMENT_IP = env_config.storageManagement['IPADDR']
 
     install_command = "yum install -y openstack-cinder targetcli python-oslo-db MySQL-python"
     runCheck('Install packages on storage node', install_command)
@@ -205,7 +205,7 @@ def setup_cinder_config_files_on_storage():
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_user', 'cinder')   
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_password', CINDER_PASS)   
 
-    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', "192.168.0.41")
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', STORAGE_MANAGEMENT_IP)
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'iscsi_helper', 'lioadm')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glance_host', 'controller')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'verbose', 'True')
@@ -252,11 +252,11 @@ def setup_cinder_on_storage():
     cinder_device_name = ""
     cinder_partition_name = "/dev/centos/strBlk"
 
-    execute(install_and_start_lvm)
+    #execute(install_and_start_lvm)
 
-    execute(setup_volume_using_cinder,cinder_partition_name)
+    #execute(setup_volume_using_cinder,cinder_partition_name)
 
-    execute(setup_lvm_config_file,cinder_device_name)
+    #execute(setup_lvm_config_file,cinder_device_name)
 
     execute(setup_cinder_config_files_on_storage)     
 
