@@ -287,6 +287,7 @@ def deploy_cinder():
     execute(change_shares_file)
     execute(restart_cinder) 
 
+				
 def undeploy_cinder():
     global PARTITION
     PARTITION = 'strBlk'
