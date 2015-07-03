@@ -424,8 +424,8 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ##################################################################
 
-    glanceGlusterBrick = '/mnt/gluster/glance/images'
-    novaGlusterBrick = '/mnt/gluster/instance'
+    glanceGlusterBrick = '/mnt/gluster/glance_volume/glance/images'
+    novaGlusterBrick = '/mnt/gluster/glance_volume/instance'
 
     ##################################################################
 
