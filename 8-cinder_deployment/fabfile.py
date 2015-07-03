@@ -38,7 +38,6 @@ node is less than 60 seconds
 
 env.roledefs = env_config.roledefs
 
-#admin_openrc = "../global_config_files/admin-openrc.sh"
 admin_openrc = env_config.admin_openrc
 
 demo_openrc = env_config.demo_openrc
@@ -95,7 +94,7 @@ def setup_cinder_keystone_on_controller():
         else:
             print blue('Service cinderv2 already created')
 
-        if '8776' not in run("keystone endpoint-list"):
+        if 'http://controller:8776' not in run("keystone endpoint-list"):
             runCheck('Create the Block Storage service API endpoints',
             "keystone endpoint-create \
             --service-id $(keystone service-list | awk '/ volume / {print $2}') \
