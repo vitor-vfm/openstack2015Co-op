@@ -10,7 +10,7 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck, set_parameter, createDatabaseScript, printMessage
+from myLib import runCheck, set_parameter, createDatabaseScript, printMessage, align_n, align_y
 
 
 
@@ -283,10 +283,17 @@ def verify():
         msg = 'Verify creation and availability of volume'
         run('cinder list')
         status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
-        if (status != '') and (status != 'error'):
-            printMessage('good', msg)
+        if not status:
+            print align_n('There is no voume called demo-volume1')
         else:
-            printMessage('oops', msg)
+            while status != 'error' and status != 'available':
+                status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
+
+            if status == 'available':
+                print align_y('demo-volume1 is available')
+            else:
+                print align_n('Problem with demo-volume1:')
+                print status
 
         runCheck('Delete test volume', 'cinder delete demo-volume1')
         #runCheck('Check if cinder is running', 'cinder service-list')
