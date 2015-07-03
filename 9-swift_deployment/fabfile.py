@@ -134,7 +134,7 @@ def setGluster():
     pass
 
 @roles('storage')
-def glusterswiftSetup(swiftVolume):
+def glusterswiftSetup(swift_volume):
     """
     Configures gluster-swift
 
@@ -177,7 +177,7 @@ def glusterswiftSetup(swiftVolume):
 
     msg = 'Generate the ring files'
     runCheck(msg,
-            'gluster-swift-gen-builders '+swiftVolume)
+            'gluster-swift-gen-builders '+swift_volume)
 
     msg = 'Expose the gluster volume'
     runCheck(msg,
@@ -477,7 +477,38 @@ def checkStat():
         msg = 'Check the status'
         print blue(runCheck(msg, 'swift stat'))
 
+@roles('storage')
+def glusterswiftTDD(volume):
+    msg = 'Create a container'
+    out = runCheck(msg, 'curl -v -X PUT http://localhost:8080/v1/AUTH_%s/mycontainer' % volume)
+    if 'HTTP/1.1 201 Created' in  out:
+        print align_y('Container creation succeeded')
+    else:
+        print align_n('Problem in the container creation')
+        return
 
+    msg = 'confirm that the container was created'
+    containers = run('ls /mnt/gluster-object/'+volume, quiet=True) 
+    if volume in containers:
+        print align_y('Container is in directory')
+    else:
+        print align_n('Container is not in directory')
+        print containers
+
+    run('echo "Now testing obejct creation" >mytestfile')
+    msg = 'Create an object'
+    runCheck(msg, 'curl -v -X PUT -T mytestfile http://localhost:8080/v1/AUTH_%s/mycontainer/mytestfile' % volume)
+
+    msg = 'Request the new object'
+    runCheck('curl -v -X GET -o newfile http://localhost:8080/v1/AUTH_%s/mycontainer/mytestfile' % volume)
+
+    diff = run('diff newfile mytestfile', quiet=True)
+    if diff:
+        print align_n('File downloaded and local file are not the same')
+        run('cat newfile')
+        run('cat mytestfile')
+    else:
+        print align_y('File downloaded and local file are the same')
 
 def tdd():
     with settings(warn_only=True):
