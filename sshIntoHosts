@@ -1,0 +1,9 @@
+#! /bin/bash
+
+hosts='controller network compute1 storage1'
+
+for h in $hosts; do
+    sed -i "/$h/d" ~/.ssh/known_hosts
+
+    ssh-copy-id root@$h
+done

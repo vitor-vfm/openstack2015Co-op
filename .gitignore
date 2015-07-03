@@ -11,3 +11,5 @@
 
 # for not including development config files as they change depending on host
 development_config.cfg
+
+deploy_log

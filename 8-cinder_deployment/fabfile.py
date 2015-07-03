@@ -10,7 +10,7 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck, set_parameter, createDatabaseScript, printMessage
+from myLib import runCheck, set_parameter, createDatabaseScript, printMessage, align_n, align_y
 
 
 
@@ -38,7 +38,6 @@ node is less than 60 seconds
 
 env.roledefs = env_config.roledefs
 
-#admin_openrc = "../global_config_files/admin-openrc.sh"
 admin_openrc = env_config.admin_openrc
 
 demo_openrc = env_config.demo_openrc
@@ -95,7 +94,7 @@ def setup_cinder_keystone_on_controller():
         else:
             print blue('Service cinderv2 already created')
 
-        if '8776' not in run("keystone endpoint-list"):
+        if 'http://controller:8776' not in run("keystone endpoint-list"):
             runCheck('Create the Block Storage service API endpoints',
             "keystone endpoint-create \
             --service-id $(keystone service-list | awk '/ volume / {print $2}') \
@@ -252,11 +251,11 @@ def setup_cinder_on_storage():
     cinder_device_name = ""
     cinder_partition_name = "/dev/centos/strBlk"
 
-    execute(install_and_start_lvm)
+    #execute(install_and_start_lvm)
 
-    execute(setup_volume_using_cinder,cinder_partition_name)
+    #execute(setup_volume_using_cinder,cinder_partition_name)
 
-    execute(setup_lvm_config_file,cinder_device_name)
+    #execute(setup_lvm_config_file,cinder_device_name)
 
     execute(setup_cinder_config_files_on_storage)     
 
@@ -284,10 +283,17 @@ def verify():
         msg = 'Verify creation and availability of volume'
         run('cinder list')
         status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
-        if (status != '') and (status != 'error'):
-            printMessage('good', msg)
+        if not status:
+            print align_n('There is no voume called demo-volume1')
         else:
-            printMessage('oops', msg)
+            while status != 'error' and status != 'available':
+                status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
+
+            if status == 'available':
+                print align_y('demo-volume1 is available')
+            else:
+                print align_n('Problem with demo-volume1:')
+                print status
 
         runCheck('Delete test volume', 'cinder delete demo-volume1')
         #runCheck('Check if cinder is running', 'cinder service-list')
