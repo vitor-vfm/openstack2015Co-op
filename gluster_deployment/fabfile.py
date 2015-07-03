@@ -137,9 +137,9 @@ def create_volume(some_hosts):
 
 @roles('controller', 'compute', 'network', 'storage')
 def mounter():
-    runCheck('Making mount point', 'mkdir -p /mnt/gluster')
-    if run('mount | grep {} | grep /mnt/gluster'.format(VOLUME), warn_only=True).return_code:
-        runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/'.format(env.host, VOLUME))
+    runCheck('Making mount point', 'mkdir -p /mnt/gluster/{}'.format(VOLUME))
+    if run('mount | grep {} | grep /mnt/gluster/{}'.format(VOLUME, VOLUME), warn_only=True).return_code:
+        runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/{}/'.format(env.host, VOLUME, VOLUME))
 
 # This function exists for testing. Should be able to use this then deploy to
 # set up gluster on a prepartitioned section of the hard drive
@@ -156,8 +156,11 @@ def destroy_vol():
 
 @roles('controller', 'compute', 'network', 'storage')
 def destroy_mount():
-    runCheck('Unmounting gluster from /mnt/', 'umount -l /mnt/gluster') 
-    runCheck('Removing gluster from /mnt/', 'rm -rf /mnt/gluster')
+    runCheck('Unmounting gluster from /mnt/', 'umount -l /mnt/gluster/{}'.format(VOLUME)) 
+    runCheck('Removing gluster from /mnt/', 'rm -rf /mnt/gluster/{}'.format(VOLUME))
+    #runCheck('Unmounting gluster from /mnt/', 'umount -l /mnt/gluster') 
+    #runCheck('Removing gluster from /mnt/', 'rm -rf /mnt/gluster')
+
 
 @roles('controller', 'compute', 'network', 'storage')
 def nuke_probes():
@@ -165,6 +168,7 @@ def nuke_probes():
         run('rm -f /var/lib/glusterd/glusterd.info')
         run('rm -f /var/lib/glusterd/peers/*')
         run('service glusterd stop')
+        run('systemctl restart glusterd')
 
 ##################### Glance ###############################################
 
@@ -175,35 +179,35 @@ def put_in_nova_line():
 
 @roles('controller')
 def put_in_glance_line():
-    runCheck('Putting line into glance-api.conf', "crudini --set '/etc/glance/glance-api.conf' 'glance_store' 'filesystem_store_datadir' '/mnt/gluster/glance/images'")
+    runCheck('Putting line into glance-api.conf', "crudini --set '/etc/glance/glance-api.conf' 'glance_store' 'filesystem_store_datadir' '/mnt/gluster/glance_volume/glance/images'")
 
 @roles('controller')
 def backup_glance_with_gluster():
-    runCheck('Making the place where stuff from Glance will be stored', 'mkdir -p /mnt/gluster/glance/images')
-    runCheck('Changing the owner to Glance', 'chown -R glance:glance /mnt/gluster/glance/')
+    runCheck('Making the place where stuff from Glance will be stored', 'mkdir -p /mnt/gluster/glance_volume/glance/images')
+    runCheck('Changing the owner to Glance', 'chown -R glance:glance /mnt/gluster/glance_volume/glance/')
     #runCheck('Making the place where stuff from Nova will be stored', 'mkdir /mnt/gluster/instance/')
     #runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/instance/')
     runCheck('Restarting Glance', 'service openstack-glance-api restart') 
 
 @roles('controller', 'compute')
 def put_in_other_nova_line():
-    runCheck('Adding another line to nova.conf', "crudini --set '/etc/nova/nova.conf' 'DEFAULT' 'instances_path' '/mnt/gluster/instance'")
+    runCheck('Adding another line to nova.conf', "crudini --set '/etc/nova/nova.conf' 'DEFAULT' 'instances_path' '/mnt/gluster/glance_volume/instance'")
 
 @roles('compute')
 def setup_nova_paths():
-    runCheck('Making the place where stuff from Nova will be stored', 'mkdir -p /mnt/gluster/instance/')
-    runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/instance/')
+    runCheck('Making the place where stuff from Nova will be stored', 'mkdir -p /mnt/gluster/glance_volume/instance/')
+    runCheck('Changing the owner to Nova', 'chown -R nova:nova /mnt/gluster/glance_volume/instance/')
     runCheck('Restarting Nova', 'service openstack-nova-compute restart')
 
 @roles('controller')
 def destroy_backup():
-    runCheck('Removing glance from gluster', 'rm -rf /mnt/gluster/glance')
+    runCheck('Removing glance from gluster', 'rm -rf /mnt/gluster/glance_volume/glance')
     #runCheck('Removing instance from gluster', 'rm -rf /mnt/gluster/instance')
     runCheck('Restarting glance', 'service openstack-glance-api restart')
 
 @roles('compute')
 def destroy_nova_paths():
-    runCheck('Removing instance from gluster', 'rm -rf /mnt/gluster/instance/')
+    runCheck('Removing instance from gluster', 'rm -rf /mnt/gluster/glance_volume/instance/')
     runCheck('Restarting nova', 'service openstack-nova-compute restart')
 
 def deploy_glance():
@@ -303,6 +307,11 @@ def change_cinder_files():
     runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'glusterfs_shares_config' '/etc/cinder/shares.conf'")
 
 @roles('controller', 'storage')
+def change_shares_file():
+    runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" >> /etc/cinder/shares.conf')
+
+@roles('controller', 'storage')
 def restart_cinder():
     runCheck('Restart cinder services', 'for i in api scheduler volume; do service openstack-cinder-${i} restart; done')
 
@@ -316,10 +325,10 @@ def deploy_cinder():
     BRICK = 'cinder_brick'
     #global [env_config.hosts] 
     #env_config.hosts = {'192.168.1.11': 'controller', '192.168.1.31': 'storage1'}
-    execute(setup_gluster, roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
-    execute(probe, [['root@controller'], ['root@storage1']], roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
-    execute(create_volume, [['root@controller'], ['root@storage1']], roles=['controller'])
-    execute(mounter, roles=['controller', 'storage'])#, hosts=['root@controller', 'root@storage1'])
+    execute(setup_gluster)#, roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
+    execute(probe, env_config.hosts)#, [['root@controller'], ['root@storage1']], roles=['controller','storage'])#, hosts=['root@controller', 'root@storage1'])
+    execute(create_volume, env_config.hosts)#, [['root@controller'], ['root@storage1']], roles=['controller'])
+    execute(mounter)#, roles=['controller', 'storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(change_cinder_files)
     execute(restart_cinder) 
 
@@ -327,7 +336,7 @@ def undeploy_cinder():
     global PARTITION
     PARTITION = 'strBlk'
     global VOLUME
-    VOLUME = 'cinder_volume'
+    VOLUME = 'cinder_volume99'
     global BRICK
     BRICK = 'cinder_brick'
     execute(destroy_mount, roles=['controller', 'storage'])
@@ -383,7 +392,7 @@ def check_log(time):
 
 @roles('controller', 'compute', 'network', 'storage')
 def check_for_file():
-    if run('ls /mnt/gluster/'):
+    if run('ls /mnt/gluster/{}'.format(VOLUME)):
         print(green('Gluster is set up on {}'.format(env.user)))
     else:
         print(red('No matter what was said before, Gluster isn\'t correctly set up on any'))
@@ -391,9 +400,9 @@ def check_for_file():
 @roles('compute')
 def tdd():
     with settings(warn_only=True):
-        run('touch /mnt/gluster/testfile')
+        run('touch /mnt/gluster/{}/testfile'.format(VOLUME))
         execute(check_for_file)
-        run('rm /mnt/gluster/testfile')
+        run('rm /mnt/gluster/{}/testfile'.format(VOLUME))
 
 # Edit this. Check for permissions and who owns the brick.
 def glance_tdd():
