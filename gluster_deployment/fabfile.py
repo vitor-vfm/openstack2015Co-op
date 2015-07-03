@@ -309,7 +309,7 @@ def change_cinder_files():
 @roles('controller', 'storage')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" >> /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
 
 @roles('controller', 'storage')
 def restart_cinder():
@@ -330,8 +330,10 @@ def deploy_cinder():
     execute(create_volume, env_config.hosts)#, [['root@controller'], ['root@storage1']], roles=['controller'])
     execute(mounter)#, roles=['controller', 'storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(change_cinder_files)
+    execute(change_shares_file)
     execute(restart_cinder) 
 
+				
 def undeploy_cinder():
     global PARTITION
     PARTITION = 'strBlk'
