@@ -143,7 +143,7 @@ function action_on_services {
 	    ;;
 	8)
 	    servicesComp=""
-	    servicesCont="openstack-cinder-api openstack-cinder-scheduler.servic"
+	    servicesCont="openstack-cinder-api openstack-cinder-scheduler.service"
 	    servicesNetw=""
 	    servicesStor="openstack-cinder-volume target"
 	    ;;
