@@ -226,10 +226,10 @@ def setup_GlusterFS():
     execute(glusterLib.create_volume, brick, volume, env_config.hosts)
     execute(glusterLib.mount, volume)
     
-    execute(setup_nova_conf_file)
+    #execute(setup_nova_conf_file)
     execute(setup_glance_api_conf_file)
     execute(setup_GlusterFS_Glance)
-    execute(setup_GlusterFS_Nova)
+    #execute(setup_GlusterFS_Nova)
     execute(start_glance_services)
 
 
