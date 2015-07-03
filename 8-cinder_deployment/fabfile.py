@@ -252,11 +252,11 @@ def setup_cinder_on_storage():
     cinder_device_name = ""
     cinder_partition_name = "/dev/centos/strBlk"
 
-    execute(install_and_start_lvm)
+    #execute(install_and_start_lvm)
 
-    execute(setup_volume_using_cinder,cinder_partition_name)
+    #execute(setup_volume_using_cinder,cinder_partition_name)
 
-    execute(setup_lvm_config_file,cinder_device_name)
+    #execute(setup_lvm_config_file,cinder_device_name)
 
     execute(setup_cinder_config_files_on_storage)     
 

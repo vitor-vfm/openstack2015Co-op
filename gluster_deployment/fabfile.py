@@ -22,52 +22,6 @@ BRICK = 'glance_brick'
 ############################# GENERAL FUNCTIONS ############################
 
 @roles('controller', 'compute', 'network', 'storage')
-def shrinkHome():
-    # Check if the partitions already exist
-    if 'str' in run("lvs"):
-        print blue('Partitions already created. Nothing done on '+env.host)
-    else:
-        home_dir = run("mount | grep home | cut -d ' ' -f1")
-        runCheck('Unmount home', 'umount /home')
-        runCheck('Resize home', 'lvresize -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
-        #runCheck('Resize home', 'lvresize -L -{} /dev/mapper/centos-home'.format(env_config.partition['size_reduction_of_home']))
-        #runCheck('Remake home', 'mkfs -t xfs -f /dev/{}/home'.format(home_dir))
-        runCheck('Remake home', 'mkfs -t xfs -f {}'.format(home_dir))
-        #runCheck('Remake home', 'mkfs -t xfs -f /dev/centos/home')
-        runCheck('Remount home', 'mount /home')
-
-@roles('controller', 'network', 'compute', 'storage')
-def prepGlusterFS():
-    if 'str' in run("lvs"):
-        print blue('Partitions already created. Nothing done on '+env.host)
-    else:
-        home_dir = run("lvs | awk '/home/ {print $2}'")
-        runCheck('List original logical volume info', 'lvs')
-        #run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-        #run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-        #run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-        #run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-        #run('lvcreate -i {} -I 8 -L {} {}'.format(STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-        #run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-        #runCheck('Create strFile partition', 'lvcreate -i {} -I 8 -L {} centos'.format(STRIPE_NUMBER, env_config.partition['partition_size']))
-        #runCheck('Name partition strFile', 'lvrename /dev/{}/lvol0 strFile')
-        #runCheck('Create strObj partition', 'lvcreate -i {} -I 8 -L {} centos'.format(STRIPE_NUMBER, env_config.partition['partition_size']))
-        #runCheck('Name partition strObj', 'lvrename /dev/{}/lvol0 strObj')
-        #runCheck('Create partition strBlk', 'lvcreate -i {} -I 8 -L {} centos'.format(STRIPE_NUMBER, env_config.partition['partition_size']))
-        #runCheck('Name partition strBlk', 'lvrename /dev/{}/lvol0 strBlk')
-        #runCheck('List final partition info', 'lvs')
-        runCheck('Create strFile partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
-                    STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-        runCheck('Name partition strFile', 'lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-        runCheck('Create strObj partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
-                    STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-        runCheck('Name partition strObj', 'lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-        runCheck('Create partition strBlk', 'lvcreate -i {} -I 8 -L {} {}'.format(
-                    STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
-        runCheck('Name partition strBlk', 'lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-        runCheck('List final partition info', 'fdisk -l | grep str')
-
-@roles('controller', 'compute', 'network', 'storage')
 def setup_gluster():
     # Get name of directory partitions are in 
     # Following commented out line is for when /dev/centos isn't called /dev/centos. Put it instead of 
@@ -309,7 +263,7 @@ def change_cinder_files():
 @roles('controller', 'storage')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" >> /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
 
 @roles('controller', 'storage')
 def restart_cinder():
@@ -330,6 +284,7 @@ def deploy_cinder():
     execute(create_volume, env_config.hosts)#, [['root@controller'], ['root@storage1']], roles=['controller'])
     execute(mounter)#, roles=['controller', 'storage'])#, hosts=['root@controller', 'root@storage1'])
     execute(change_cinder_files)
+    execute(change_shares_file)
     execute(restart_cinder) 
 
 def undeploy_cinder():
