@@ -120,6 +120,8 @@ def controllerDeploy():
 
 # STORAGE NODE
 
+############################### GLUSTER ##################################
+
 @roles('storage')
 def setGluster():
     """
@@ -127,6 +129,10 @@ def setGluster():
     """
     # brick = env_config.
     pass
+
+
+
+##########################################################################
 
 @roles('storage')
 def localStorage():
@@ -359,6 +365,7 @@ def finalizeInstallation():
 def installPackagesStorage():
     msg = 'Install packages on host ' + env.host
     runCheck(msg, "yum -y install openstack-swift-account openstack-swift-container openstack-swift-object")
+
 
 
 @roles('storage')

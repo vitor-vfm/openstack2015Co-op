@@ -8,6 +8,7 @@ from fabric.colors import green, red, blue
 import env_config
 from myLib import runCheck, set_parameter
 import time
+from fabric.contrib.files import append
 
 
 @roles('controller', 'compute', 'network', 'storage')
@@ -17,22 +18,32 @@ def setup_gluster(partition,brick):
     home_dir = run('ls /dev/ | grep centos')
 
     # Get and install gluster
-
+    
     runCheck('Get packages for gluster', 
             'wget -P /etc/yum.repos.d '
             'http://download.gluster.org/pub/'
             'gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
-
+    
+    # Last 2 arguments of next command were put on for swift. Check if they work for others.
     runCheck('Install gluster packages', 
-            'yum -y install glusterfs glusterfs-fuse glusterfs-server')
+            'yum -y install glusterfs glusterfs-fuse glusterfs-server memcached xfsprogs')
 
     runCheck('Start glusterd', 'systemctl start glusterd')
+    
+    # Next 3 commands added for swift. See if they work
+    runCheck('Start memcached', 'systemctl start memcached')
+    runCheck('Make memcache start on system startup', 'chkconfig memcached on')
+    runCheck('Make gluster start on system startup', 'chkconfig glusterd on')
 
     # If not already made, make the file system (include in partition function)
     out = run('file -sL /dev/{}/{} | grep -i xfs'.format(home_dir, partition), warn_only=True)
     if out == '':
         runCheck('Make file system', 'mkfs.xfs -f /dev/{}/{}'.format(
             home_dir, partition))
+
+    # Added for swift. Check if it works.
+    append('/etc/fstab', '/dev/%s/%s /data/gluster/%s xfs inode64,noatime,nodiratime 0 0'%(
+            home_dir, partition, brick))
 
     # Mount the brick on the established partition
     run('mkdir -p /data/gluster/{}'.format(brick))
