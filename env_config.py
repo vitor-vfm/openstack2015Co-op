@@ -111,7 +111,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'GLANCE_PASS' : '34glance_ks43',
                    'SAHARA_PASS' : '34sahara_ks43',
                    'CINDER_PASS' : '34cinder_ks43',
-                   'SWIFT_PASS' : '34$w1f43',
+                   'SWIFT_PASS' : '34Sw1f43',
                    'TROVE_PASS' : '34Tr0v343',
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
@@ -248,7 +248,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                'HEAT_PASS' : '34heat_ks43',
                'SAHARA_PASS' : '34sahara_ks43',
                'CINDER_PASS' : '34cinder_ks43',
-               'SWIFT_PASS' : '34$w1f43',
+               'SWIFT_PASS' : '34Sw1f43',
                'TROVE_PASS' : '34Tr0v343',
                'TROVE_DBPASS' : '34Tr0v3db4s343',
                'CEILOMETER_DBPASS' : '34ceilometer_db43',

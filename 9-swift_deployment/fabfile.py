@@ -87,7 +87,7 @@ def configureController():
     set_parameter(confFile,'DEFAULT','swift_dir','/etc/swift')
 
 
-    set_parameter(confFile,'pipeline:main','pipeline','authtoken cache healthcheck keystoneauth proxy-logging proxy-server')
+    set_parameter(confFile,'pipeline:main','pipeline',"'authtoken cache healthcheck keystoneauth proxy-logging proxy-server'")
     set_parameter(confFile,'app:proxy-server','allow_account_management','true')
     set_parameter(confFile,'app:proxy-server','account_autocreate','true')
 
@@ -137,8 +137,6 @@ def setGluster():
     execute(glusterLib.probe, env_config.hosts)
     execute(glusterLib.create_volume, env_config.swiftBrick, env_config.swiftVolume, env_config.hosts)
     execute(glusterLib.mount, env_config.swiftVolume)
-
-    execute(glusterswiftSetup)
 
 
 ##########################################################################
@@ -326,6 +324,10 @@ def configureStorage():
 
         set_parameter('/etc/swift/' + confFile,'filter:recon','recon_cache_path','/var/cache/swift')
 
+        # when the device isn't an actual disk, 
+        # we need to set mount_check to false
+        set_parameter('/etc/swift/' + confFile,'DEFAULT','mount_check','false')
+
 
     # Edit the account-server.conf file
     confFile = '/etc/swift/' + serverConfFiles[0]
@@ -355,6 +357,9 @@ def configureStorage():
     msg = 'Ensure proper ownership of recon directory'
     runCheck(msg, " chown -R swift:swift /var/cache/swift")
 
+def deleteRings():
+    pass
+
 def createRing(typeRing,port,IP,deviceName,deviceWeight):
     # ASSUMES A SINGLE DEVICE ON STORAGE NODE
 
@@ -362,32 +367,66 @@ def createRing(typeRing,port,IP,deviceName,deviceWeight):
 
     with cd('/etc/swift/'):
         # verify if ring is already there
-        out = run("swift-ring-builder {}.builder".format(typeRing),quiet=True)
+        out = run("swift-ring-builder %s.builder" % (typeRing),quiet=True)
         if 'does not exist' in out:
             # ring is not created yet
 
             # Create the base *.builder file
-            run("swift-ring-builder {}.builder create 10 3 1".format(typeRing))
+            run("swift-ring-builder %s.builder create 10 3 1" % (typeRing))
 
             # Add node to the ring
-            run("swift-ring-builder {}.builder add r1z1-{}:{}/{} {}".format(typeRing,IP,port,deviceName,deviceWeight))
+            run("swift-ring-builder %s.builder add r1z1-%s:%s/%s %s" % 
+                    (typeRing,IP,port,deviceName,deviceWeight))
 
             # rebalance ring
-            run("swift-ring-builder {}.builder rebalance".format(typeRing))
+            run("swift-ring-builder %s.builder rebalance" % (typeRing))
         else:
             print blue("Ring {} already exists. Nothing done".format(typeRing))
 
         run("ls")
 
+    msg = 'Restart proxy server service'
+    runCheck(msg, 'systemctl restart openstack-swift-proxy.service')
+
+@roles('controller')
+def grabGZfiles():
+    """
+    Grabs the three .gz files from the controller node and
+    returns their contents as a dictionary
+    """
+
+    filenames = ['account.ring.gz','container.ring.gz','object.ring.gz']
+
+    with cd('/etc/swift'):
+        for filename in filenames:
+            get(filename)
+
 @roles('storage')
+def saveGZfiles():
+    """
+    Saves the three .gz files in the storage node
+    """
+    filenames = ['account.ring.gz','container.ring.gz','object.ring.gz']
+
+    with cd('/etc/swift'):
+        for filename in filenames:
+            put(local_path='root@controller/'+filename,
+                    remote_path='/etc/swift/'+filename)
+
+@roles('controller')
 def createInitialRings():
     """
     Create 3 initial rings as a test
     """
 
     managementIP = env_config.storageManagement['IPADDR']
-    deviceName = "/dev/sdd"
+    deviceLocation = env_config.glusterPath + env_config.swiftVolume
+    deviceName = "rings"
     deviceWeight = '100'
+    # deviceName = "/dev/sdd"
+
+    msg = 'create new directory for the rings'
+    runCheck(msg, 'mkdir -p %s/%s' % (deviceLocation, deviceName))
 
     # create account ring
     createRing('account',6002,managementIP,deviceName,deviceWeight)
@@ -397,6 +436,11 @@ def createInitialRings():
 
     # create object ring
     createRing('object',6000,managementIP,deviceName,deviceWeight)
+
+    execute(grabGZfiles)
+    execute(saveGZfiles)
+
+
 
 
 @roles('storage')
@@ -432,17 +476,17 @@ def finalizeInstallation():
 
     # start the Object Storage services and configure them to start when the system boots
     msg = 'Enable account services'
-    runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+    # runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
     msg = 'Start account services'
     runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
 
     msg = 'Enable container services'
-    runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+    # runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
     msg = 'Start container services'
     runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
 
     msg = 'Enable object services'
-    runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+    # runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
     msg = 'Start object services'
     runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
 
@@ -460,8 +504,7 @@ def storageDeploy():
 
     execute(installPackagesStorage)
 
-    # execute(localStorage)        
-    execute(setGluster)
+    # execute(setGluster)
 
     execute(createInitialRings)
 
