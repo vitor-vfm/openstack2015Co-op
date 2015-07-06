@@ -41,10 +41,6 @@ def installRabbitMQ():
     msg = "Start rabbitmq service"
     runCheck(msg, 'systemctl start rabbitmq-server.service')
 
-    # Unnecessary since we don't have a firewall between the nodes
-    # if run('firewall-cmd --permanent --add-port=5672/tcp').return_code != 0:
-    # run('firewall-cmd --reload')
-
 @roles('controller')
 def setGuestPassword():
     """
@@ -102,8 +98,8 @@ def installRabbitMQtdd():
     command = 'systemctl restart rabbitmq-server.service'
     runAndRecordTime(command,timestamps)
 
-    command = 'rabbitmqctl change_password guest {}'.format\
-            (passwd['RABBIT_PASS'])
+    command = 'rabbitmqctl change_password guest {}'.format(
+                passwd['RABBIT_PASS'])
     runAndRecordTime(command,timestamps)
 
     return timestamps
@@ -117,7 +113,6 @@ def check_log(timestamps):
     Print results
     """
 
-    
     status = 'good'
     with settings(quiet=True):
         for command, time in timestamps:
@@ -125,8 +120,7 @@ def check_log(timestamps):
             # and for the timestamp
             error = run("cat /var/log/messages "
                         "| egrep -i '(error|warning|critical)' "
-                        "| grep '{}'".format\
-                                (time))
+                        "| grep '{}'".format(time))
 
             if error:
                 print red("/var/log/messages shows an error "
@@ -136,8 +130,8 @@ def check_log(timestamps):
                 print red(error)
                 status = 'bad'
             else:
-                print(green("No error when the command '{}' was run".format\
-                        (command)))
+                print(green("No error when the command '{}' was run".format(
+                        command)))
 
     saveConfigFile('/etc/rabbitmq/rabbitmq-env.conf',status)
 
