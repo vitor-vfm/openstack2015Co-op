@@ -423,14 +423,17 @@ pid-file=/var/run/mariadb/mariadb.pid
     ##########################################################################
 
 
-    glanceVolume = glance_volume
-    glanceBrick = glance_brick
+    glanceVolume = 'glance_volume'
+    glanceBrick = 'glance_brick'
+    glancePartition = 'strFile'
 
-    cinderVolume = cinder_volume
-    cinderBrick = cinder_brick
+    cinderVolume = 'cinder_volume'
+    cinderBrick = 'cinder_brick'
+    cinderPartition = 'strBlk'
 
-    swiftVolume = swift_volume
-    swiftBrick = swift_brick
+    swiftVolume = 'swift_volume'
+    swiftBrick = 'swift_brick'
+    swiftPartition = 'strObj'
 
 
     ##################################################################
