@@ -135,6 +135,7 @@ def setGluster():
     execute(glusterLib.setup_gluster, env_config.swiftPartition, env_config.swiftBrick)
     execute(glusterLib.probe, env_config.hosts)
     execute(glusterLib.create_volume, env_config.swiftBrick, env_config.swiftVolume, env_config.hosts)
+    execute(glusterLib.mount, env_config.swiftVolume)
 
     execute(glusterswiftSetup)
 
@@ -154,7 +155,8 @@ def glusterswiftSetup():
 
     msg = 'Install gluster-swift'
     runCheck(msg,
-            'yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/epel-7/openstack-swift-2.2.0-1.el7.centos.noarch.rpm')
+            'yum install -y http://ftp.redhat.com/pub/redhat/linux/enterprise/6Server/en/RHS/SRPMS/gluster-swift-1.4.8-4.el6.src.rpm')
+            #'yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/epel-7/openstack-swift-2.2.0-1.el7.centos.noarch.rpm')
             #'yum install -y https://launchpad.net/swift/juno/2.2.0/+download/swift-2.2.0.tar.gz')
             #'yum install -y https://launchpad.net/swiftonfile/havana/1.10.0-2/+download/glusterfs-openstack-swift-1.10.0-2.5.el6.noarch.rpm')
 
