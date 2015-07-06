@@ -13,6 +13,7 @@ import env_config
 from myLib import runCheck, set_parameter, printMessage
 from myLib import database_check, keystone_check, align_y, align_n
 
+import glusterLib
 
 ############################ Config ########################################
 
@@ -132,15 +133,17 @@ def setGluster():
 
     Assumes GlusterFS packages are installed
     """
+    execute(glusterLib.setup_gluster, env_config.swiftPartition, env_config.swiftBrick)
+    execute(glusterLib.probe, env_config.hosts)
+    execute(glusterLib.create_volume, env_config.swiftBrick, env_config.swiftVolume, env_config.hosts)
 
-    pass
-
+    execute(glusterswiftSetup)
 
 
 ##########################################################################
 
 @roles('storage')
-def glusterswiftSetup(swift_volume):
+def glusterswiftSetup():
     """
     Configures gluster-swift
 
@@ -151,8 +154,10 @@ def glusterswiftSetup(swift_volume):
     """
 
     msg = 'Install gluster-swift'
-    runCheck(msg, 
-            'yum install -y https://launchpad.net/swiftonfile/havana/1.10.0-2/+download/glusterfs-openstack-swift-1.10.0-2.5.el6.noarch.rpm')
+    runCheck(msg,
+            'yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/epel-7/openstack-swift-2.2.0-1.el7.centos.noarch.rpm')
+            #'yum install -y https://launchpad.net/swift/juno/2.2.0/+download/swift-2.2.0.tar.gz')
+            #'yum install -y https://launchpad.net/swiftonfile/havana/1.10.0-2/+download/glusterfs-openstack-swift-1.10.0-2.5.el6.noarch.rpm')
 
     msg = 'Make sure that gluster-swift is enabled at system startup'
     runCheck(msg, 
@@ -183,7 +188,7 @@ def glusterswiftSetup(swift_volume):
 
     msg = 'Generate the ring files'
     runCheck(msg,
-            'gluster-swift-gen-builders '+swift_volume)
+            'gluster-swift-gen-builders '+env_config.swiftVolume)
 
     msg = 'Expose the gluster volume'
     runCheck(msg,
@@ -454,7 +459,7 @@ def storageDeploy():
     execute(installPackagesStorage)
 
     # execute(localStorage)        
-    # execute(setGluster)
+    execute(setGluster)
 
     execute(createInitialRings)
 

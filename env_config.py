@@ -424,15 +424,17 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     glusterPath = '/mnt/gluster/'
 
-
     glanceVolume = 'glance_volume'
     glanceBrick = 'glance_brick'
+    glancePartition = 'strFile'
 
     cinderVolume = 'cinder_volume'
     cinderBrick = 'cinder_brick'
+    cinderPartition = 'strBlk'
 
     swiftVolume = 'swift_volume'
     swiftBrick = 'swift_brick'
+    swiftPartition = 'strObj'
 
 
     ##################################################################
