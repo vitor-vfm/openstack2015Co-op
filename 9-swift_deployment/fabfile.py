@@ -11,7 +11,7 @@ import sys
 sys.path.append('..')
 import env_config
 from myLib import runCheck, set_parameter, printMessage
-from myLib import database_check, keystone_check
+from myLib import database_check, keystone_check, align_y, align_n
 
 
 ############################ Config ########################################
@@ -113,7 +113,7 @@ def startServicesController():
 @roles('controller')
 def controllerDeploy():
 
-    # execute(installPackagesController)
+    execute(installPackagesController)
     execute(setKeystoneController)
     execute(configureController)
     execute(startServicesController)
@@ -195,75 +195,99 @@ def glusterswiftSetup(swift_volume):
 
 
 
-@roles('storage')
-def localStorage():
-    """
-    Set up Swift using local storage instead of Gluster.
-    """
-    confFile = '/etc/rsyncd.conf'
+# @roles('storage')
+# def localStorage():
+#     """
+#     Set up Swift using local storage instead of Gluster.
+#     """
+#     confFile = '/etc/rsyncd.conf'
 
-    # Previously created physical partitions
-    partitions = ['/dev/sdd','/dev/sde']
+#     # Previously created physical partitions
+#     partitions = ['/dev/sdd','/dev/sde']
 
-    # Mount points for the partitions
-    path = '/srv/node/'
-    mntpoints = ['/srv/node/sdb1','/srv/node/sdc1']
+#     # Mount points for the partitions
+#     path = '/srv/node/'
+#     mntpoints = ['/srv/node/sdb1','/srv/node/sdc1']
 
-    msg = "Install XFS utilities"
-    runCheck(msg, "yum -y install xfsprogs rsync")
+#     msg = "Install XFS utilities"
+#     runCheck(msg, "yum -y install xfsprogs rsync")
 
-    for p in partitions:
-        msg = "Format {} as XFS".format(p)
-        runCheck(msg, "mkfs.xfs " + p)
+#     for p in partitions:
+#         msg = "Format {} as XFS".format(p)
+#         runCheck(msg, "mkfs.xfs " + p)
 
-    for m in mntpoints:
-        msg = "Create mount point " + m
-        runCheck(msg, "mkdir -p " + m)
+#     for m in mntpoints:
+#         msg = "Create mount point " + m
+#         runCheck(msg, "mkdir -p " + m)
 
-    # edit fstab
-    for p, m in zip(partitions, mntpoints):
-        msg = "Set up device {} on fstab".format(m)
+#     # edit fstab
+#     for p, m in zip(partitions, mntpoints):
+#         msg = "Set up device {} on fstab".format(m)
 
-        newline = "{} {} xfs noatime,nodiratime,nobarrier,logbufs=8 0 2".format(p,m)
-        out = append('/etc/fstab',newline)
+#         newline = "{} {} xfs noatime,nodiratime,nobarrier,logbufs=8 0 2".format(p,m)
+#         out = append('/etc/fstab',newline)
         
-        if out and out.return_code != 0:
-            printMessage('oops',msg)
-        else:
-            printMessage('good',msg)
+#         if out and out.return_code != 0:
+#             printMessage('oops',msg)
+#         else:
+#             printMessage('good',msg)
 
-    # mount devices
-    for m in mntpoints:
-        msg = "Mount device " + m
-        runCheck(msg, "mount " + m)
+#     # mount devices
+#     for m in mntpoints:
+#         msg = "Mount device " + m
+#         runCheck(msg, "mount " + m)
 
-    # set rsyncd conf file
-    set_parameter(confFile,"''",'uid','swift' )
-    set_parameter(confFile,"''",'gid','swift')
-    set_parameter(confFile,"''",'log file','/var/log/rsyncd.log' )
-    set_parameter(confFile,"''",'pid file','/var/run/rsyncd.pid')
-    set_parameter(confFile,"''",'address',env_config.storageManagement['IPADDR'])
+#     # set rsyncd conf file
+#     set_parameter(confFile,"''",'uid','swift' )
+#     set_parameter(confFile,"''",'gid','swift')
+#     set_parameter(confFile,"''",'log file','/var/log/rsyncd.log' )
+#     set_parameter(confFile,"''",'pid file','/var/run/rsyncd.pid')
+#     set_parameter(confFile,"''",'address',env_config.storageManagement['IPADDR'])
 
-    set_parameter(confFile,'account',"'max connections'",'2')
-    set_parameter(confFile,'account','path',path)
-    set_parameter(confFile,'account',"'read only'",'false')
-    set_parameter(confFile,'account',"'lock file'",'/var/lock/account.lock')
+#     set_parameter(confFile,'account',"'max connections'",'2')
+#     set_parameter(confFile,'account','path',path)
+#     set_parameter(confFile,'account',"'read only'",'false')
+#     set_parameter(confFile,'account',"'lock file'",'/var/lock/account.lock')
 
-    set_parameter(confFile,'container',"'max connections'",'2')
-    set_parameter(confFile,'container','path',path) 
-    set_parameter(confFile,'container',"'read only'",'false')
-    set_parameter(confFile,'container',"'lock file'",'/var/lock/container.lock')
+#     set_parameter(confFile,'container',"'max connections'",'2')
+#     set_parameter(confFile,'container','path',path) 
+#     set_parameter(confFile,'container',"'read only'",'false')
+#     set_parameter(confFile,'container',"'lock file'",'/var/lock/container.lock')
 
-    set_parameter(confFile,'object',"'max connections'",'2')
-    set_parameter(confFile,'object','path',path)
-    set_parameter(confFile,'object',"'read only'",'false')
-    set_parameter(confFile,'object',"'lock file'",'/var/lock/object.lock')
+#     set_parameter(confFile,'object',"'max connections'",'2')
+#     set_parameter(confFile,'object','path',path)
+#     set_parameter(confFile,'object',"'read only'",'false')
+#     set_parameter(confFile,'object',"'lock file'",'/var/lock/object.lock')
 
-    msg = 'Enable rsyncd service'
+#     msg = 'Enable rsyncd service'
+#     runCheck(msg, 'systemctl enable rsyncd.service')
+#     msg = 'Start rsyncd service'
+#     runCheck(msg, 'systemctl start rsyncd.service')
+
+@roles('storage')
+def configurersyncd():
+
+    fileContents = env_config.rsyncd_conf
+
+    # replace variables
+    fileContents = fileContents.replace('MANAGEMENT_INTERFACE_IP_ADDRESS', 
+            env_config.storageManagement['IPADDR'])
+
+    devicepath = env_config.glusterPath + env_config.swiftVolume
+    fileContents = fileContents.replace('PATH', devicepath)
+
+    out = append('/etc/rsynd.conf', fileContents)
+    if out:
+        print align_n("Error appending to rsyncd.conf")
+        logging.error(out)
+    else:
+        print align_y("Success appending to rsyncd.conf")
+        logging.info(out)
+
+    msg= 'Enable rsyncd service'
     runCheck(msg, 'systemctl enable rsyncd.service')
-    msg = 'Start rsyncd service'
+    msg= 'Start rsyncd service'
     runCheck(msg, 'systemctl start rsyncd.service')
-
 
 @roles('storage')
 def configureStorage():
@@ -273,7 +297,8 @@ def configureStorage():
 
     serverConfFiles = ['account-server.conf','container-server.conf','object-server.conf']
     ip = env_config.storageManagement['IPADDR']
-    devicepath = '/srv/node'
+    devicepath = env_config.glusterPath + env_config.swiftVolume
+    # devicepath = '/srv/node'
 
     # save base files into the host
     for fil in serverConfFiles:
@@ -287,12 +312,12 @@ def configureStorage():
 
     # set variables that are the same in all conf files
     for confFile in serverConfFiles:
-        set_parameter(confFile,'DEFAULT','bind_ip',ip)
-        set_parameter(confFile,'DEFAULT','user','swift')
-        set_parameter(confFile,'DEFAULT','swift_dir','/etc/swift')
-        set_parameter(confFile,'DEFAULT','devices',devicepath)
+        set_parameter('/etc/swift/' + confFile,'DEFAULT','bind_ip',ip)
+        set_parameter('/etc/swift/' + confFile,'DEFAULT','user','swift')
+        set_parameter('/etc/swift/' + confFile,'DEFAULT','swift_dir','/etc/swift')
+        set_parameter('/etc/swift/' + confFile,'DEFAULT','devices',devicepath)
 
-        set_parameter(confFile,'filter:recon','recon_cache_path','/var/cache/swift')
+        set_parameter('/etc/swift/' + confFile,'filter:recon','recon_cache_path','/var/cache/swift')
 
 
     # Edit the account-server.conf file
@@ -400,25 +425,19 @@ def finalizeInstallation():
 
     # start the Object Storage services and configure them to start when the system boots
     msg = 'Enable account services'
-    runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service \
-              openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+    runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
     msg = 'Start account services'
-    runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service \
-            openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+    runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
 
     msg = 'Enable container services'
-    runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service \
-            openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+    runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
     msg = 'Start container services'
-    runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service \
-            openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+    runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
 
     msg = 'Enable object services'
-    runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service \
-            openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+    runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
     msg = 'Start object services'
-    runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service \
-            openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+    runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
 
 
 
@@ -437,6 +456,9 @@ def storageDeploy():
     # execute(localStorage)        
     # execute(setGluster)
 
+    execute(createInitialRings)
+
+    execute(configurersyncd)    
     execute(configureStorage)    
 
     execute(finalizeInstallation)

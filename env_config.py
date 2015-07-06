@@ -422,15 +422,17 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ##########################################################################
 
+    glusterPath = '/mnt/gluster/'
 
-    glanceVolume = glance_volume
-    glanceBrick = glance_brick
 
-    cinderVolume = cinder_volume
-    cinderBrick = cinder_brick
+    glanceVolume = 'glance_volume'
+    glanceBrick = 'glance_brick'
 
-    swiftVolume = swift_volume
-    swiftBrick = swift_brick
+    cinderVolume = 'cinder_volume'
+    cinderBrick = 'cinder_brick'
+
+    swiftVolume = 'swift_volume'
+    swiftBrick = 'swift_brick'
 
 
     ##################################################################
@@ -463,6 +465,36 @@ pid-file=/var/run/mariadb/mariadb.pid
     # Find out how to get decent hash values
     hashPathPrefix = '3443'
     hashPathSuffix = '3443'
+
+    # base rsyncd.conf
+    # MANAGEMENT_INTERFACE_IP_ADDRESS and PATH will be replaced by adequate
+    # values in the deployment script
+
+    rsyncd_conf = """
+uid = swift
+gid = swift
+log file = /var/log/rsyncd.log
+pid file = /var/run/rsyncd.pid
+address = MANAGEMENT_INTERFACE_IP_ADDRESS
+
+[account]
+max connections = 2
+path = PATH
+read only = false
+lock file = /var/lock/account.lock
+
+[container]
+max connections = 2
+path = PATH
+read only = false
+lock file = /var/lock/container.lock
+
+[object]
+max connections = 2
+path = PATH
+read only = false
+lock file = /var/lock/object.lock
+"""
 
 
 
