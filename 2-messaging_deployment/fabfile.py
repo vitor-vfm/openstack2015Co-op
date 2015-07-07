@@ -10,18 +10,13 @@ import paramiko
 import logging
 import sys
 sys.path.append('..')
-from myLib import runCheck, saveConfigFile
+from myLib import runCheck, saveConfigFile, printMessage
 import env_config
 
 ############################### Config ########################################
 
-# set mode
-mode = 'normal'
-if output['debug']:
-    mode = 'debug'
-
 env.roledefs = env_config.roledefs
-passwd = env_config.passwd['RABBIT_PASS']
+passwd = env_config.passwd
 
 ############################## Deployment #####################################
 @roles('controller')
@@ -32,18 +27,14 @@ def installRabbitMQ():
     run('systemctl start rabbitmq-server.service')
     run('systemctl restart rabbitmq-server.service')
     msg="Changing rabbit guest password "
-    runCheck(msg, 'rabbitmqctl change_password guest %s'% passwd['RABBIT_PASS'])
+    runCheck(msg, 'rabbitmqctl change_password guest %s' % passwd['RABBIT_PASS'])
+
+def deploy():
+    execute(installRabbitMQ)
 
 @roles('controller')
 def tdd():
     with settings(hide('everything'),warn_only=True):
-        msg=" test RabbitMQ status"
-        result = run('rabbitmqctl status')
-        if result.failed :
-            myLib.printMessage("oops",msg +' \n' + result)
-        else:
-            myLib.printMessage("good",msg)
-            #print("Here RabbitMQ result\n %s"% result)
+        msg=" testing RabbitMQ status"
+        runCheck(msg, 'rabbitmqctl status')
 
-def deploy():
-    execute(installRabbitMQ)
