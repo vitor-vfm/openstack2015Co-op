@@ -26,7 +26,7 @@ passwd = env_config.passwd['RABBIT_PASS']
 ############################## Deployment #####################################
 @roles('controller')
 def installRabbitMQ():
-    mesg= "install rabbitmq-server erlang-sd_notify"
+    msg= "install rabbitmq-server erlang-sd_notify"
     runCheck(msg, 'yum -y install rabbitmq-server erlang-sd_notify')
     run('systemctl enable rabbitmq-server.service')
     run('systemctl start rabbitmq-server.service')
@@ -44,3 +44,6 @@ def tdd():
         else:
             myLib.printMessage("good",msg)
             #print("Here RabbitMQ result\n %s"% result)
+
+def deploy():
+    execute(installRabbitMQ)
