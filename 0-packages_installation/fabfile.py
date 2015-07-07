@@ -22,6 +22,7 @@ logging.info("################# "\
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+nicDictionary = env_config.nicDictionary
 
 mode = 'normal'
 if output['debug']:
@@ -50,7 +51,9 @@ def mustDoOnHost():
         hostsStatus=run('grep controller /etc/hosts')
         if(hostsStatus != 0):
             msg="updating /etc/hosts"
-            runCheck(msg,"echo '%s' >> /etc/hosts" % env_config.etc_hosts)
+            for host in nicDictionary.keys():
+                newline = '%s\t%s' % (nicDictionary[host]['mgtIPADDR'], host)
+                runCheck(msg,"echo '%s' >> /etc/hosts" % newline)
 
 
 #@roles('storage')
