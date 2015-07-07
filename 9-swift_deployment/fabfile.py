@@ -542,6 +542,9 @@ def testFile():
         msg = 'Download test file'
         runCheck(msg, "swift download {} {}".format(testcontainer,testfile))
 
+        msg = 'Show test file'
+        runCheck(msg, "cat "+testfile)
+
         msg = 'Remove test file'
         runCheck(msg, 'rm ' + testfile)
 
@@ -555,29 +558,28 @@ def checkStat():
         print blue(runCheck(msg, 'swift stat'))
 
 @roles('storage')
-def glusterswiftTDD(volume):
-    msg = 'Create a container'
-    out = runCheck(msg, 'curl -v -X PUT http://localhost:8080/v1/AUTH_%s/mycontainer' % volume)
-    if 'HTTP/1.1 201 Created' in  out:
+def curlTDD():
+
+    with prefix(env_config.admin_openrc):
+        msg = 'Get storage URL and token'
+        url, token = runCheck(msg, "swift stat -v | awk '/StorageURL/ {print $2} /Auth Token/ {print $3}'").splitlines()
+
+    msg = 'Show containers'
+    runCheck(msg, 'curl -v -X GET -H "X-Auth-Token: %s" %s' % (token,url))
+
+    msg = 'Make a container creation request'
+    out = runCheck(msg, 'curl -v -X PUT -H "X-Auth-Token: %s" %s/mycontainer' % (token,url))
+    if 'HTTP/1.1 201 Created' in out:
         print align_y('Container creation succeeded')
     else:
         print align_n('Problem in the container creation')
-        return
 
-    msg = 'confirm that the container was created'
-    containers = run('ls /mnt/gluster-object/'+volume, quiet=True) 
-    if volume in containers:
-        print align_y('Container is in directory')
-    else:
-        print align_n('Container is not in directory')
-        print containers
-
-    run('echo "Now testing obejct creation" >mytestfile')
-    msg = 'Create an object'
-    runCheck(msg, 'curl -v -X PUT -T mytestfile http://localhost:8080/v1/AUTH_%s/mycontainer/mytestfile' % volume)
+    run('echo "Now testing object creation" >mytestfile')
+    msg = 'Request object creation'
+    runCheck(msg, 'curl -v -X PUT -T mytestfile -H "X-Auth-Token: %s" %s/mycontainer/mytestfile' % (token, url))
 
     msg = 'Request the new object'
-    runCheck('curl -v -X GET -o newfile http://localhost:8080/v1/AUTH_%s/mycontainer/mytestfile' % volume)
+    runCheck(msg, 'curl -v -X GET -o newfile -H "X-Auth-Token: %s" %s/mycontainer/mytestfile' % (token, url))
 
     diff = run('diff newfile mytestfile', quiet=True)
     if diff:
@@ -587,9 +589,10 @@ def glusterswiftTDD(volume):
     else:
         print align_y('File downloaded and local file are the same')
 
+    run('rm newfile mytestfile')
+
 def tdd():
     with settings(warn_only=True):
         execute(keystone_check,'swift',roles=['controller'])
-        return
-        execute(checkStat)
         execute(testFile)
+        execute(curlTDD)
