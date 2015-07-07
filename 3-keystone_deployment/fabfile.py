@@ -71,7 +71,7 @@ def createGenericCertificatesAndKeys():
     runCheck(msg, "chown -R keystone:keystone /var/log/keystone")
     runCheck(msg, "chown -R keystone:keystone /etc/keystone/ssl")
 
-    msg = "Give rwx permissions to everyone on /etc/keystone/ssl"
+    msg = "Remove rwx permissions to everyone on /etc/keystone/ssl"
     runCheck(msg, "chmod -R o-rwx /etc/keystone/ssl")
 
 def configureCronToPurgeExpiredTokens():
@@ -149,24 +149,25 @@ def installPackages():
 
     msg = "Start keystone service"
     runCheck(msg, "systemctl start openstack-keystone.service",quiet=True)
+    msg = "Start enable service"
+    runCheck(msg, "systemctl enable openstack-keystone.service",quiet=True)
 
  
 @roles('controller')
 def setupKeystone():
 
-    msg = "Restart MariaDB service"
-    out = runCheck(msg, "systemctl restart mariadb")
-
+    msg = "Checking MariaDB service"
+    out = runCheck(msg, "systemctl is-enabled mariadb")
     if out.return_code != 0:
         # we need mariadb working in order to proceed
-        sys.exit("Failed to restart mariadb")
+        sys.exit("mariadb is not enabled")
 
     # get Keystone database creation scripts
     databaseCreation = createDatabaseScript('keystone',passwd['KEYSTONE_DBPASS'])
 
     msg = "Create database for keystone"
     runCheck(msg, 'echo "' + databaseCreation + '" | mysql -u root -p"%s" ' % env_config.passwd['ROOT_SECRET'])
-    
+    run(' mysql -u root -p"%s" -e "Select * from users where user=`keystone`"' % env_config.passwd['ROOT_SECRET'])
     execute(installPackages)
   
     msg = "Generate an admin token"

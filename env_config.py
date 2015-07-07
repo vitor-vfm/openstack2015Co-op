@@ -55,8 +55,12 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                                   'root@compute4',
                                   ],
                      'network' : ['root@network'],
-                     'storage' : ['root@storage'],
+#                     'storage' : ['root@storage'],
                      'controller' : ['root@controller']}
+
+    roles = roledefs.keys()
+    hosts = roledefs.values()
+
 
     logfilename='/opt/coop2015/coop2015/fabric.log'
     etc_hosts="""192.168.1.11	controller
@@ -116,6 +120,11 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'TROVE_PASS' : '34Tr0v343',
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
+    partition = {   'size_reduction_of_home' : '3.5T',
+                    'partition_size' : '500G',        
+                    'stripe_number' : 3, 
+                    }
+
     nicDictionary = {
             'controller': { 
                              'mgtDEVICE' : 'eno1',
@@ -129,7 +138,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                           },
 
             'network' : {
-                             'mgtDEVICE' : 'eno1',
+                             'mgtDEVICE' : 'enp2s0f0',
                              'mgtIPADDR' : '192.168.1.21',
                              'mgtNETMASK' : '255.255.255.0',
                              'mgtGATEWAY' : '192.168.1.1',
@@ -137,7 +146,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                              'tnlDEVICE' : 'eno2',
                              'tnlIPADDR' : '192.168.2.21',
                              'tnlNETMASK' : '255.255.255.0',
-                             'extDEVICE' : 'enp2s12',
+                             'extDEVICE' : 'enp2s0f1',
                              'extTYPE' : 'Ethernet',
                              'extONBOOT' : '"yes"',
                              'extBOOTPROTO' : '"none"',
@@ -198,10 +207,17 @@ pid-file=/var/run/mariadb/mariadb.pid
 
             }
 
-    partition = {   'size_reduction_of_home' : '3.5T',
-                    'partition_size' : '500G',        
-                    'stripe_number' : 3, 
-                    }
+
+    admin_openrc = "export OS_TENANT_NAME=admin; " +\
+            "export OS_USERNAME=admin; " + \
+            "export OS_PASSWORD={}; ".format(passwd['ADMIN_PASS']) + \
+            "export OS_AUTH_URL=http://controller:35357/v2.0"
+
+    demo_openrc = "export OS_TENANT_NAME=demo; " +\
+            "export OS_USERNAME=demo; " + \
+            "export OS_PASSWORD={}; ".format(passwd['DEMO_PASS']) + \
+            "export OS_AUTH_URL=http://controller:5000/v2.0"
+
 
 ##############################################################################
 
