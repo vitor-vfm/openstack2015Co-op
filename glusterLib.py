@@ -101,9 +101,9 @@ def create_volume(brick, volume, some_hosts):
 
 @roles('controller', 'compute', 'network', 'storage')
 def mount(volume):
-    runCheck('Make mount point', 'mkdir -p /mnt/gluster')
-    if run("mount | grep '{}' | grep /mnt/gluster".format(volume), 
+    runCheck('Make mount point', 'mkdir -p /mnt/gluster/{}'.format(volume))
+    if run("mount | grep '{}' | grep /mnt/gluster/{}".format(volume, volume), 
             warn_only=True).return_code:
         runCheck('Mount mount point', 
-                'mount -t glusterfs {}:/{} /mnt/gluster/'.format(
-                    env.host, volume))
+                'mount -t glusterfs {}:/{} /mnt/gluster/{}/'.format(
+                    env.host, volume, volume))
