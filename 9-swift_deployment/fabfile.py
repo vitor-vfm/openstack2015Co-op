@@ -61,8 +61,9 @@ def setKeystoneController():
 @roles('controller')
 def installPackagesController():
     msg = "Install Packages on controller"
-    runCheck(msg, "yum -y install openstack-swift-proxy python-swiftclient python-keystone-auth-token \
-              python-keystonemiddleware memcached")
+    # package python-keystone-auth-token was changed to python-keystoneclient
+    runCheck(msg, "yum -y install openstack-swift-proxy python-swiftclient "
+            "python-keystonemiddleware memcached")
 
 
 @roles('controller')
@@ -369,10 +370,32 @@ def createInitialRings():
     execute(grabGZfiles)
     execute(saveGZfiles)
 
-
-
-
 @roles('storage')
+def startServicesStorage():
+    """
+    Start the Object Storage services and configure them to start when the system boots
+
+    Enabling the services currently doesn't work; returns "Invalid argument"
+    """
+
+    msg = 'Enable account services'
+    # runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+    msg = 'Start account services'
+    runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+
+    msg = 'Enable container services'
+    # runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+    msg = 'Start container services'
+    runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+
+    msg = 'Enable object services'
+    # runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+    msg = 'Start object services'
+    runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+
+
+
+@roles('storage', 'controller')
 def finalizeInstallation():
     """
     Final steps of the installation, such as setting swift.conf and restarting services
@@ -400,26 +423,10 @@ def finalizeInstallation():
     msg = 'Change ownership of the configuration directory to swift'
     run("chown -R swift:swift /etc/swift")
 
-    # restart proxy service on controller node
     execute(startServicesController)
+    execute(startServicesStorage)
 
-    # start the Object Storage services and configure them to start when the system boots
-    msg = 'Enable account services'
-    runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
-    msg = 'Start account services'
-    runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
-
-    msg = 'Enable container services'
-    runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
-    msg = 'Start container services'
-    runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
-
-    msg = 'Enable object services'
-    runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
-    msg = 'Start object services'
-    runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
-
-
+    
 
 @roles('storage')
 def installPackagesStorage():
@@ -433,7 +440,7 @@ def storageDeploy():
 
     execute(installPackagesStorage)
 
-    # execute(setGluster)
+    execute(setGluster)
 
     execute(createInitialRings)
 
