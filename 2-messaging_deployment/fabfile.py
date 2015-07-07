@@ -21,7 +21,7 @@ if output['debug']:
     mode = 'debug'
 
 env.roledefs = env_config.roledefs
-passwd = env_config.passwd
+passwd = env_config.passwd['RABBIT_PASS']
 
 ############################## Deployment #####################################
 
@@ -52,7 +52,7 @@ def setGuestPassword():
     """
 
     msg = "Set password for user guest"
-    runCheck(msg, 'rabbitmqctl change_password guest ' + passwd['RABBIT_PASS'])
+    runCheck(msg, 'rabbitmqctl change_password guest ' + passwd)
 
     msg = "Restart rabbitmq service"
     runCheck(msg, 'systemctl restart rabbitmq-server.service')
@@ -102,8 +102,7 @@ def installRabbitMQtdd():
     command = 'systemctl restart rabbitmq-server.service'
     runAndRecordTime(command,timestamps)
 
-    command = 'rabbitmqctl change_password guest {}'.format\
-            (passwd['RABBIT_PASS'])
+    command = 'rabbitmqctl change_password guest {}'.format(passwd)
     runAndRecordTime(command,timestamps)
 
     return timestamps
@@ -125,8 +124,7 @@ def check_log(timestamps):
             # and for the timestamp
             error = run("cat /var/log/messages "
                         "| egrep -i '(error|warning|critical)' "
-                        "| grep '{}'".format\
-                                (time))
+                        "| grep '{}'".format(time))
 
             if error:
                 print red("/var/log/messages shows an error "
@@ -136,8 +134,8 @@ def check_log(timestamps):
                 print red(error)
                 status = 'bad'
             else:
-                print(green("No error when the command '{}' was run".format\
-                        (command)))
+                print(green("No error when the command '{}' was run".format(
+                        command)))
 
     saveConfigFile('/etc/rabbitmq/rabbitmq-env.conf',status)
 
