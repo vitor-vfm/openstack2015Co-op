@@ -297,8 +297,6 @@ def chronytdd():
 @roles('controller','compute','network', 'storage')
 # @roles('controller','compute','network')
 def tdd():
-    check_firewall()
-    check_selinux()
     chronytdd()
     tdd_DB()
     tdd_lvs()
