@@ -21,10 +21,10 @@ if output['debug']:
     mode = 'debug'
 
 env.roledefs = env_config.roledefs
-passwd = env_config.passwd
+passwd = env_config.passwd['RABBIT_PASS']
 
 ############################## Deployment #####################################
-
+@roles('controller')
 def installRabbitMQ():
     mesg= "install rabbitmq-server erlang-sd_notify"
     runCheck(msg, 'yum -y install rabbitmq-server erlang-sd_notify')
@@ -34,6 +34,7 @@ def installRabbitMQ():
     msg="Changing rabbit guest password "
     runCheck(msg, 'rabbitmqctl change_password guest %s'% passwd['RABBIT_PASS'])
 
+@roles('controller')
 def tdd():
     with settings(hide('everything'),warn_only=True):
         msg=" test RabbitMQ status"

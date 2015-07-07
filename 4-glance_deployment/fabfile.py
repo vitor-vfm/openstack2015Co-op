@@ -103,9 +103,9 @@ def setup_glance_config_files():
 
     set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
 
-    set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_user', 'glance')   
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_user', 'glance') 
 
-    set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS)   
+    set_parameter(glance_api_config_file, 'keystone_authtoken', 'admin_password', GLANCE_PASS) 
 
     set_parameter(glance_api_config_file, 'paste_deploy', 'flavor', 'keystone')
 
@@ -186,37 +186,21 @@ def setup_GlusterFS_Glance():
     runCheck(msg, 'systemctl restart openstack-glance-api') 
 
 @roles('controller')
-def setup_GlusterFS_Nova():
-    """
-    Configure the file path for the Nova Gluster volume
-    """
-
-    # change the path that Glance uses for its file system
-    msg = 'Configure Nova to use Gluster'
-    glusterBrick = env_config.novaGlusterBrick
-
-    msg = 'Create local directory for the brick'
-    runCheck(msg, 'mkdir -p {}'.format(glusterBrick))
-
-    msg = 'Set ownership of the brick'
-    runCheck(msg, 'chown -R nova:nova {}'.format(glusterBrick))
-
-@roles('controller', 'compute')
-def setup_nova_conf_file():
-    confFile = '/etc/nova/nova.conf'     
-    set_parameter(confFile, 'glance', 'libvirt_type', 'qemu')
-    set_parameter(confFile, 'DEFAULT', 'instances_path', 
-            env_config.novaGlusterBrick)
-
-@roles('controller')
 def setup_glance_api_conf_file():
     confFile = '/etc/glance/glance-api.conf' 
     set_parameter(confFile, 'glance_store', 'filesystem_store_datadir', 
             env_config.glanceGlusterBrick)
 
-def setup_GlusterFS():
-    "Create a Gluster volume for Glance and configure it"
+@roles('controller')
+def install_packages():
+    # Install packages
+    msg = "Install OpenStack Glance packages"
+    runCheck(msg, "yum install -y openstack-glance python-glanceclient")
+   
+############################## Deployment #####################################
 
+def deploy():
+    # Setup gluster
     partition = 'strFile'
     volume = 'glance_volume'
     brick = 'glance_brick'
@@ -225,35 +209,19 @@ def setup_GlusterFS():
     execute(glusterLib.probe, env_config.hosts)
     execute(glusterLib.create_volume, brick, volume, env_config.hosts)
     execute(glusterLib.mount, volume)
-    
-    #execute(setup_nova_conf_file)
-    execute(setup_glance_api_conf_file)
-    execute(setup_GlusterFS_Glance)
-    #execute(setup_GlusterFS_Nova)
-    execute(start_glance_services)
 
-
-@roles('controller')
-def install_packages():
-    # Install packages
-    msg = "Install OpenStack Glance packages"
-    runCheck(msg, "yum install -y openstack-glance python-glanceclient")
-   
-@roles('controller')
-def setup_glance():
-    
+    # Setup glance
     execute(install_packages)
     execute(setup_glance_database)
     execute(setup_glance_keystone)
     execute(setup_glance_config_files)
     execute(populate_database)
     execute(start_glance_services)
-        
-############################## Deployment #####################################
 
-def deploy():
-    execute(setup_glance)
-    execute(setup_GlusterFS)
+    # Customize gluster to glance
+    execute(setup_glance_api_conf_file)
+    execute(setup_GlusterFS_Glance)
+    execute(start_glance_services)
 
 ################################# TDD #########################################
 
