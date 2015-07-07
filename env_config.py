@@ -48,8 +48,8 @@ lslogs = ['/var/log/nova/nova-manage.log',
 ###############################################################################
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
-	# PRODUCTION
-	roledefs = { 'compute' : ['root@compute1',
+    # PRODUCTION
+    roledefs = { 'compute' : ['root@compute1',
                                   'root@compute2',
                                   'root@compute3',
                                   'root@compute4',
@@ -58,15 +58,16 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                      'storage' : ['root@storage'],
                      'controller' : ['root@controller']}
 
-	logfilename='/opt/coop2015/coop2015/fabric.log'
-	etc_hosts="""192.168.1.11	controller
+    logfilename='/opt/coop2015/coop2015/fabric.log'
+    etc_hosts="""192.168.1.11	controller
 192.168.1.21	network
 192.168.1.41	compute1
 192.168.1.42	compute2
 192.168.1.43	compute3
 192.168.1.44	compute4
  """
-	my_cnf="""
+
+    my_cnf="""
 [mysqld]
 datadir=/var/lib/mysql
 socket=/var/lib/mysql/mysql.sock
@@ -93,7 +94,7 @@ pid-file=/var/run/mariadb/mariadb.pid
 !includedir /etc/my.cnf.d
            """
     # passwords
-	passwd = { 'METADATA_SECRET' : '34m3t$3c43',
+    passwd = {     'METADATA_SECRET' : '34m3t$3c43',
                    'ROOT_SECRET' : '34root43',
                    'RABBIT_PASS' : '34RabbGuest43',
                    'NOVA_DBPASS' : '34nova_db43',
@@ -115,59 +116,92 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'TROVE_PASS' : '34Tr0v343',
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
-	controllerManagement = { 'DEVICE' : 'eno1',
-							 'IPADDR' : '192.168.1.11',
-							 'NETMASK' : '255.255.255.0',
-							 'GATEWAY' : '192.168.1.1',
-							 'DNS1' : '129.128.208.13',
-							 }
+    nicDictionary = {
+            'controller': { 
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.11',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'enp2s10',
+                             'tnlIPADDR' : '192.168.2.11',
+                             'tnlNETMASK' : '255.255.255.0',
+                          },
 
-	controllerTunnels = { 'DEVICE' : 'enp2s10',
-						  'IPADDR' : '192.168.2.11',
-						  'NETMASK' : '255.255.255.0',
-						  }
+            'network' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.21',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'enp2s10',
+                             'tnlIPADDR' : '192.168.2.21',
+                             'tnlNETMASK' : '255.255.255.0',
+                             'extDEVICE' : 'enp2s12',
+                             'extTYPE' : 'Ethernet',
+                             'extONBOOT' : '"yes"',
+                             'extBOOTPROTO' : '"none"',
+                             'extIPADDR' : '192.168.3.21',
+                        },
 
-	networkManagement = { 'DEVICE' : 'eno1',
-						  'IPADDR' : '192.168.1.21',
-						  'GATEWAY' : '192.168.1.1',
-						  'DNS1' : '129.128.208.13',
-						  'NETMASK' : '255.255.255.0',
-						  }
+            'compute1' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.41',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'enp2s10',
+                             'tnlIPADDR' : '192.168.2.41',
+                             'tnlNETMASK' : '255.255.255.0',
+                         },
 
-	networkTunnels = { 'DEVICE' : 'enp2s10',
-					   'IPADDR' : '192.168.2.21',
-					   'NETMASK' : '255.255.255.0',
-					   }
+            'compute2' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.42',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'eno2',
+                             'tnlIPADDR' : '192.168.2.42',
+                             'tnlNETMASK' : '255.255.255.0',
+                         },
 
-	networkExternal = { 'DEVICE' : 'enp2s12',
-						'TYPE' : 'Ethernet',
-						'ONBOOT' : '"yes"',
-						'BOOTPROTO' : '"none"',
-						'IPADDR' : '192.168.3.21'}
+            'compute3' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.43',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'eno2',
+                             'tnlIPADDR' : '192.168.2.43',
+                             'tnlNETMASK' : '255.255.255.0',
+                         },
 
-	computeManagement = { 'DEVICE' : 'eno1',
-						  'IPADDR' : '192.168.1.41',
-						  'GATEWAY' : '192.168.1.1',
-						  'DNS1' : '129.128.208.13',
-						  'NETMASK' : '255.255.255.0',
-						  }
+            'compute4' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.44',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'eno2',
+                             'tnlIPADDR' : '192.168.2.44',
+                             'tnlNETMASK' : '255.255.255.0',
+                         },
 
-	computeTunnels = { 'DEVICE' : 'enp2s10',
-					   'IPADDR' : '192.168.2.41',
-					   'NETMASK' : '255.255.255.0',
-					   }
+            'storage1' : {
+                             'mgtDEVICE' : 'enp0s25',
+                             'mgtIPADDR' : '192.168.1.31',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                         },
 
-	storageManagement = {   'DEVICE' : 'enp0s25',
-							'IPADDR' : '192.168.1.31',
-							'GATEWAY' : '192.168.1.1',
-							'DNS1' : '129.128.208.13',
-							'NETMASK' : '255.255.255.0',
-							}
+            }
 
-	partition = {   'size_reduction_of_home' : '3.5T',
-					'partition_size' : '500G',        
-					'stripe_number' : 3, 
-					}
+    partition = {   'size_reduction_of_home' : '3.5T',
+                    'partition_size' : '500G',        
+                    'stripe_number' : 3, 
+                    }
 
 ##############################################################################
 
@@ -255,11 +289,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                'CEILOMETER_PASS' : '34ceilometer_ks43',
                }
 
-    etc_hosts="""192.168.1.11	controller
-192.168.1.21	network
-192.168.1.31    storage1
-192.168.1.41	compute1
- """
+
     ###########################################################################
 
     ##    ## ######## ######## ##      ##  #######  ########  ##    ## 
@@ -271,70 +301,62 @@ pid-file=/var/run/mariadb/mariadb.pid
     ##    ## ########    ##     ###  ###   #######  ##     ## ##    ## 
 
     ###########################################################################
-  
-    controllerManagement = { 'DEVICE' : 'eno1',
-                             'IPADDR' : '192.168.1.11',
-                             'NETMASK' : '255.255.255.0',
-                             'GATEWAY' : '192.168.1.1',
-                             'DNS1' : '129.128.208.13',
-                             }
 
-    controllerTunnels = { 'DEVICE' : 'enp2s10',
-                          'IPADDR' : '192.168.2.11',
-                          'NETMASK' : '255.255.255.0',
-                          }
+    nicDictionary = {
+            'controller': { 
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.11',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'enp2s10',
+                             'tnlIPADDR' : '192.168.2.11',
+                             'tnlNETMASK' : '255.255.255.0',
+                          },
 
-    networkManagement = { 'DEVICE' : 'eno1',
-                          'IPADDR' : '192.168.1.21',
-                          'GATEWAY' : '192.168.1.1',
-                          'DNS1' : '129.128.208.13',
-                          'NETMASK' : '255.255.255.0',
-                          }
+            'network' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.21',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'enp2s10',
+                             'tnlIPADDR' : '192.168.2.21',
+                             'tnlNETMASK' : '255.255.255.0',
+                             'extDEVICE' : 'enp2s12',
+                             'extTYPE' : 'Ethernet',
+                             'extONBOOT' : '"yes"',
+                             'extBOOTPROTO' : '"none"',
+                             'extIPADDR' : '192.168.3.21',
+                        },
 
-    networkTunnels = { 'DEVICE' : 'enp2s10',
-                       'IPADDR' : '192.168.2.21',
-                       'NETMASK' : '255.255.255.0',
-                       }
+            'compute1' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.41',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'enp2s10',
+                             'tnlIPADDR' : '192.168.2.41',
+                             'tnlNETMASK' : '255.255.255.0',
+                         },
 
-    networkExternal = { 'DEVICE' : 'enp2s12',
-                        'TYPE' : 'Ethernet',
-                        'ONBOOT' : '"yes"',
-                        'BOOTPROTO' : '"none"',
-                        'IPADDR' : '192.168.3.21'}
+            'storage1' : {
+                             'mgtDEVICE' : 'enp0s25',
+                             'mgtIPADDR' : '192.168.1.31',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                         },
 
-    computeManagement = { 'DEVICE' : 'eno1',
-                          'IPADDR' : '192.168.1.41',
-                          'GATEWAY' : '192.168.1.1',
-                          'DNS1' : '129.128.208.13',
-                          'NETMASK' : '255.255.255.0',
-                          }
+            }
 
-    computeTunnels = { 'DEVICE' : 'enp2s10',
-                       'IPADDR' : '192.168.2.41',
-                       'NETMASK' : '255.255.255.0',
-                       }
-
-    storageManagement = {   'DEVICE' : 'enp0s25',
-                            'IPADDR' : '192.168.1.31',
-                            'GATEWAY' : '192.168.1.1',
-                            'DNS1' : '129.128.208.13',
-                            'NETMASK' : '255.255.255.0',
-                            }
+    # admin-openrc and demo-openrc
     
-    etc_hosts="""192.168.1.11	controller
-192.168.1.21	network
-192.168.1.31    storage1
-192.168.1.41	compute1
- """
-
-    """
-    admin-openrc and demo-openrc
-    
-    These scripts set up credentials for the keystone users
-    admin and demo respectively. They export system variables that 
-    allow the user to execute certain keystone CLI commands. They 
-    are necessary every time the deployment scripts use keystone.
-    """
+    # These scripts set up credentials for the keystone users
+    # admin and demo respectively. They export system variables that 
+    # allow the user to execute certain keystone CLI commands. They 
+    # are necessary every time the deployment scripts use keystone.
 
     admin_openrc = "export OS_TENANT_NAME=admin; " +\
             "export OS_USERNAME=admin; " + \
@@ -423,14 +445,14 @@ pid-file=/var/run/mariadb/mariadb.pid
     ##########################################################################
 
 
-    glanceVolume = glance_volume
-    glanceBrick = glance_brick
+    glanceVolume = 'glance_volume'
+    glanceBrick = 'glance_brick'
 
-    cinderVolume = cinder_volume
-    cinderBrick = cinder_brick
+    cinderVolume = 'cinder_volume'
+    cinderBrick = 'cinder_brick'
 
-    swiftVolume = swift_volume
-    swiftBrick = swift_brick
+    swiftVolume = 'swift_volume'
+    swiftBrick = 'swift_brick'
 
 
     ##################################################################
