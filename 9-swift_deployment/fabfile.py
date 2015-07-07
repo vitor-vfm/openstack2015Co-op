@@ -198,77 +198,6 @@ def glusterswiftSetup():
         msg = 'Start service ' + service
         runCheck(msg, 'service %s start' % service)
 
-
-
-# @roles('storage')
-# def localStorage():
-#     """
-#     Set up Swift using local storage instead of Gluster.
-#     """
-#     confFile = '/etc/rsyncd.conf'
-
-#     # Previously created physical partitions
-#     partitions = ['/dev/sdd','/dev/sde']
-
-#     # Mount points for the partitions
-#     path = '/srv/node/'
-#     mntpoints = ['/srv/node/sdb1','/srv/node/sdc1']
-
-#     msg = "Install XFS utilities"
-#     runCheck(msg, "yum -y install xfsprogs rsync")
-
-#     for p in partitions:
-#         msg = "Format {} as XFS".format(p)
-#         runCheck(msg, "mkfs.xfs " + p)
-
-#     for m in mntpoints:
-#         msg = "Create mount point " + m
-#         runCheck(msg, "mkdir -p " + m)
-
-#     # edit fstab
-#     for p, m in zip(partitions, mntpoints):
-#         msg = "Set up device {} on fstab".format(m)
-
-#         newline = "{} {} xfs noatime,nodiratime,nobarrier,logbufs=8 0 2".format(p,m)
-#         out = append('/etc/fstab',newline)
-        
-#         if out and out.return_code != 0:
-#             printMessage('oops',msg)
-#         else:
-#             printMessage('good',msg)
-
-#     # mount devices
-#     for m in mntpoints:
-#         msg = "Mount device " + m
-#         runCheck(msg, "mount " + m)
-
-#     # set rsyncd conf file
-#     set_parameter(confFile,"''",'uid','swift' )
-#     set_parameter(confFile,"''",'gid','swift')
-#     set_parameter(confFile,"''",'log file','/var/log/rsyncd.log' )
-#     set_parameter(confFile,"''",'pid file','/var/run/rsyncd.pid')
-#     set_parameter(confFile,"''",'address',env_config.storageManagement['IPADDR'])
-
-#     set_parameter(confFile,'account',"'max connections'",'2')
-#     set_parameter(confFile,'account','path',path)
-#     set_parameter(confFile,'account',"'read only'",'false')
-#     set_parameter(confFile,'account',"'lock file'",'/var/lock/account.lock')
-
-#     set_parameter(confFile,'container',"'max connections'",'2')
-#     set_parameter(confFile,'container','path',path) 
-#     set_parameter(confFile,'container',"'read only'",'false')
-#     set_parameter(confFile,'container',"'lock file'",'/var/lock/container.lock')
-
-#     set_parameter(confFile,'object',"'max connections'",'2')
-#     set_parameter(confFile,'object','path',path)
-#     set_parameter(confFile,'object',"'read only'",'false')
-#     set_parameter(confFile,'object',"'lock file'",'/var/lock/object.lock')
-
-#     msg = 'Enable rsyncd service'
-#     runCheck(msg, 'systemctl enable rsyncd.service')
-#     msg = 'Start rsyncd service'
-#     runCheck(msg, 'systemctl start rsyncd.service')
-
 @roles('storage')
 def configurersyncd():
 
@@ -476,17 +405,17 @@ def finalizeInstallation():
 
     # start the Object Storage services and configure them to start when the system boots
     msg = 'Enable account services'
-    # runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
+    runCheck(msg, "systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
     msg = 'Start account services'
     runCheck(msg, "systemctl start openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service")
 
     msg = 'Enable container services'
-    # runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
+    runCheck(msg, "systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
     msg = 'Start container services'
     runCheck(msg, "systemctl start openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service")
 
     msg = 'Enable object services'
-    # runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
+    runCheck(msg, "systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
     msg = 'Start object services'
     runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
 
@@ -524,7 +453,7 @@ def deploy():
 @roles('controller')
 def testFile():
     """
-    TDD: Upload and download back a test file
+    TDD: Upload and download back a test file using the CLI
     """
     testcontainer = 'demo-container1'
     testfile = 'FILE'
@@ -536,13 +465,13 @@ def testFile():
         out = runCheck(msg, "echo 'Test file for Swift TDD\nline1\nline2\nline3' >" + testfile)
 
         msg = 'Upload test file'
-        runCheck(msg, "swift upload {} {}".format(testcontainer,testfile))
+        runCheck(msg, "swift upload %s %s" % (testcontainer,testfile))
 
         msg = 'See new container'
         runCheck(msg, "swift list | grep " + testcontainer)
 
         msg = 'Download test file'
-        runCheck(msg, "swift download {} {}".format(testcontainer,testfile))
+        runCheck(msg, "swift download %s %s" % (testcontainer,testfile))
 
         msg = 'Show test file'
         runCheck(msg, "cat "+testfile)
@@ -550,17 +479,54 @@ def testFile():
         msg = 'Remove test file'
         runCheck(msg, 'rm ' + testfile)
 
-@roles('controller')
-def checkStat():
+@roles(env_config.roles)
+def peerStatus():
     """
-    TDD: run 'swift stat' and check results
+    TDD: Check gluster peer status
     """
-    with prefix(env_config.demo_openrc):
-        msg = 'Check the status'
-        print blue(runCheck(msg, 'swift stat'))
+    expectedNumPeers = sum([len(rolelist) for rolelist in env.roledefs.values()]) - 1
+    numPeersConnected = int(run('gluster peer status | '
+                   'grep -c "Peer in Cluster (Connected)"'))
+    if numPeersConnected != expectedNumPeers:
+        print align_n('Problem on host '+env.host)
+        run('gluster peer status')
+    else:
+        print align_y('Peer status on host %s OK')
+
+
+
+@roles('storage')
+def glusterTDD():
+    """
+    TDD: check if the contents of the Gluster brick are the same on all nodes
+    """
+
+    @roles('controller','network','storage','compute')
+    def _glusterTDD():
+        "Grab the contents of the gluster brick for each host"
+        directory = env_config.glusterPath + env_config.swiftVolume 
+        with cd(directory):
+            msg = 'Get contents of brick on '+env.host
+            contents = runCheck(msg, "ls -a")
+        return contents
+
+    results = execute(_glusterTDD)
+    hosts = results.keys()
+
+    for i, host in enumerate(hosts):
+        for otherHost in hosts[i+1:]:
+            if results[host] != results[otherHost]:
+                print align_n('Hosts %s and %s have different contents' % (host,otherHost))
+            else:
+                print align_y('Hosts %s and %s OK' % (host,otherHost))
+            
+
 
 @roles('storage')
 def curlTDD():
+    """
+    TDD: make some curl operations and check their results
+    """
 
     with prefix(env_config.admin_openrc):
         msg = 'Get storage URL and token'
@@ -598,3 +564,5 @@ def tdd():
         execute(keystone_check,'swift',roles=['controller'])
         execute(testFile)
         execute(curlTDD)
+        execute(peerStatus)
+        execute(glusterTDD)
