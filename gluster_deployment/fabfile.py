@@ -90,7 +90,7 @@ def create_volume(some_hosts):
     runCheck('Restarting glusterd', '/bin/systemctl restart glusterd.service')
 
 @roles('controller', 'compute', 'network', 'storage')
-def mounter():
+def mounter(VOLUME):
     runCheck('Making mount point', 'mkdir -p /mnt/gluster/{}'.format(VOLUME))
     if run('mount | grep {} | grep /mnt/gluster/{}'.format(VOLUME, VOLUME), warn_only=True).return_code:
         runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/{}/'.format(env.host, VOLUME, VOLUME))
