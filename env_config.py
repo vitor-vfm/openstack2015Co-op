@@ -116,7 +116,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'GLANCE_PASS' : '34glance_ks43',
                    'SAHARA_PASS' : '34sahara_ks43',
                    'CINDER_PASS' : '34cinder_ks43',
-                   'SWIFT_PASS' : '34$w1f43',
+                   'SWIFT_PASS' : '34Sw1f43',
                    'TROVE_PASS' : '34Tr0v343',
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
@@ -298,7 +298,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                'HEAT_PASS' : '34heat_ks43',
                'SAHARA_PASS' : '34sahara_ks43',
                'CINDER_PASS' : '34cinder_ks43',
-               'SWIFT_PASS' : '34$w1f43',
+               'SWIFT_PASS' : '34Sw1f43',
                'TROVE_PASS' : '34Tr0v343',
                'TROVE_DBPASS' : '34Tr0v3db4s343',
                'CEILOMETER_DBPASS' : '34ceilometer_db43',
@@ -441,9 +441,11 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ###########################################################################
 
-    partition = {   'size_reduction_of_home' : '30G',
-                    'partition_size' : '10G',        
-                    'stripe_number' : 1, 
+    partition = {   'size_reduction_of_home' : '350G',
+                    'glance_partition_size' : '50G',
+                    'cinder_partition_size' : '150G',
+                    'swift_partition_size' : '150G',
+                    'stripe_number' : 1,
                     }
 
 
@@ -460,15 +462,19 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ##########################################################################
 
+    glusterPath = '/mnt/gluster/'
 
     glanceVolume = 'glance_volume'
     glanceBrick = 'glance_brick'
+    glancePartition = 'strFile'
 
     cinderVolume = 'cinder_volume'
     cinderBrick = 'cinder_brick'
+    cinderPartition = 'strBlk'
 
     swiftVolume = 'swift_volume'
     swiftBrick = 'swift_brick'
+    swiftPartition = 'strObj'
 
 
     ##################################################################
@@ -483,8 +489,8 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ##################################################################
 
-    glanceGlusterBrick = '/mnt/gluster/glance/images'
-    novaGlusterBrick = '/mnt/gluster/instance'
+    glanceGlusterBrick = '/mnt/gluster/glance_volume/glance/images'
+    novaGlusterBrick = '/mnt/gluster/glance_volume/instance'
 
     ##################################################################
 
@@ -501,6 +507,36 @@ pid-file=/var/run/mariadb/mariadb.pid
     # Find out how to get decent hash values
     hashPathPrefix = '3443'
     hashPathSuffix = '3443'
+
+    # base rsyncd.conf
+    # MANAGEMENT_INTERFACE_IP_ADDRESS and PATH will be replaced by adequate
+    # values in the deployment script
+
+    rsyncd_conf = """
+uid = swift
+gid = swift
+log file = /var/log/rsyncd.log
+pid file = /var/run/rsyncd.pid
+address = MANAGEMENT_INTERFACE_IP_ADDRESS
+
+[account]
+max connections = 2
+path = PATH
+read only = false
+lock file = /var/lock/account.lock
+
+[container]
+max connections = 2
+path = PATH
+read only = false
+lock file = /var/lock/container.lock
+
+[object]
+max connections = 2
+path = PATH
+read only = false
+lock file = /var/lock/object.lock
+"""
 
 
 

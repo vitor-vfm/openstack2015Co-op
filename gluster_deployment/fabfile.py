@@ -90,7 +90,7 @@ def create_volume(some_hosts):
     runCheck('Restarting glusterd', '/bin/systemctl restart glusterd.service')
 
 @roles('controller', 'compute', 'network', 'storage')
-def mounter():
+def mounter(VOLUME):
     runCheck('Making mount point', 'mkdir -p /mnt/gluster/{}'.format(VOLUME))
     if run('mount | grep {} | grep /mnt/gluster/{}'.format(VOLUME, VOLUME), warn_only=True).return_code:
         runCheck('Mounting mount point', 'mount -t glusterfs {}:/{} /mnt/gluster/{}/'.format(env.host, VOLUME, VOLUME))
@@ -287,16 +287,17 @@ def deploy_cinder():
     execute(change_shares_file)
     execute(restart_cinder) 
 
+				
 def undeploy_cinder():
     global PARTITION
     PARTITION = 'strBlk'
     global VOLUME
-    VOLUME = 'cinder_volume99'
+    VOLUME = 'cinder_volume'
     global BRICK
     BRICK = 'cinder_brick'
-    execute(destroy_mount, roles=['controller', 'storage'])
-    execute(destroy_vol, roles=['controller'])
-    execute(destroy_gluster, roles=['controller', 'storage'])
+    execute(destroy_mount)#, roles=['controller', 'storage'])
+    execute(destroy_vol)#, roles=['controller'])
+    execute(destroy_gluster)#, roles=['controller', 'storage'])
  
 ################################ Deployment ##################################
 

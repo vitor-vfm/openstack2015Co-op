@@ -19,6 +19,7 @@ env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
 ############################## Deployment #####################################
+
 @roles('controller')
 def installRabbitMQ():
     msg= "install rabbitmq-server erlang-sd_notify"
@@ -31,6 +32,9 @@ def installRabbitMQ():
 
 def deploy():
     execute(installRabbitMQ)
+
+################################# TDD #########################################
+
 
 @roles('controller')
 def tdd():

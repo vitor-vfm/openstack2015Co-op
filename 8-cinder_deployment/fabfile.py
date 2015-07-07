@@ -11,7 +11,7 @@ import sys
 sys.path.append('../')
 import env_config
 from myLib import runCheck, set_parameter, createDatabaseScript, printMessage, align_n, align_y
-
+import glusterLib
 
 
 """
@@ -118,7 +118,7 @@ def setup_cinder_config_files_on_controller():
     CINDER_DBPASS = passwd['CINDER_DBPASS']
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
-    CONTROLLER_MANAGEMENT_IP = env_config.controllerManagement['IPADDR']
+    CONTROLLER_MANAGEMENT_IP = env_config.nicDictionary['controller']['mgtIPADDR']
 
     installation_command = "yum install -y openstack-cinder python-cinderclient python-oslo-db"
 
@@ -161,29 +161,13 @@ def start_cinder_services_on_controller():
     runCheck('Enable Block Storage services to start when system boots', enable_all)
     runCheck('Start the Block Storage services', start_all)
 
-
-@roles('controller')   
-def setup_cinder_on_controller():
-    
-    # setup cinder database
-    execute(setup_cinder_database_on_controller)
-
-    execute(setup_cinder_keystone_on_controller)
-
-    execute(setup_cinder_config_files_on_controller)
-
-    execute(populate_database_on_controller)
-
-    execute(start_cinder_services_on_controller)
-
-
 @roles('storage')
 def setup_cinder_config_files_on_storage():
     
     CINDER_DBPASS = passwd['CINDER_DBPASS']
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
-    NETWORK_MANAGEMENT_IP = env_config.storageManagement['IPADDR']
+    STORAGE_MANAGEMENT_IP = env_config.nicDictionary['storage1']['mgtIPADDR']
 
     install_command = "yum install -y openstack-cinder targetcli python-oslo-db MySQL-python"
     runCheck('Install packages on storage node', install_command)
@@ -204,7 +188,7 @@ def setup_cinder_config_files_on_storage():
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_user', 'cinder')   
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_password', CINDER_PASS)   
 
-    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', "192.168.0.41")
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', STORAGE_MANAGEMENT_IP)
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'iscsi_helper', 'lioadm')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glance_host', 'controller')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'verbose', 'True')
@@ -219,55 +203,50 @@ def start_services_on_storage():
     runCheck('Start services on storage', start_services)
     runCheck('Restart services on storage', restart_services)
 
-@roles('storage')
-def setup_volume_using_cinder(partition_name):
-    if partition_name in run("ls /dev/"):
-        sudo("pvcreate /dev/" + partition_name)
-        sudo("vgcreate cinder-volumes /dev/" + partition_name)
-        
-@roles('storage')
-def setup_lvm_config_file(device_name):
-    config_file = "/etc/lvm/lvm.conf"
-    # replace line 107 with the filter line
-    filter_command = '\ \ \ \ filter = [ "a/'+device_name+'/","r/.*/" ]'
-    filter_line = 'filter = [ "a/'+device_name+'/","r/.*/" ]'
-    if filter_line not in run("cat " + config_file, quiet=True):
-        runCheck('Append filter command to lvm.conf',"""sed -i '107i""" + filter_command +  """' """ + config_file)
-    else:
-        print(blue("lvm.conf already configured, i.e"))
-        print(blue(filter_line + " already present in lvm.conf file"))
+########################### Gluster ###########################################
 
-@roles('storage')
-def install_and_start_lvm():
-    # install package and start
-    runCheck('Install lvm2', "yum install -y lvm2")
-    runCheck('Enable lvm2', "systemctl enable lvm2-lvmetad.service")
-    runCheck('Start lvm2', "systemctl start lvm2-lvmetad.service")
+@roles('controller', 'storage')
+def change_cinder_files():
+    runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'volume_driver' 'cinder.volume.drivers.glusterfs.GlusterfsDriver'")
+    runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'glusterfs_shares_config' '/etc/cinder/shares.conf'")
 
+@roles('controller', 'storage')
+def change_shares_file():
+    runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
 
-@roles('storage')
-def setup_cinder_on_storage():
-
-    cinder_device_name = ""
-    cinder_partition_name = "/dev/centos/strBlk"
-
-    #execute(install_and_start_lvm)
-
-    #execute(setup_volume_using_cinder,cinder_partition_name)
-
-    #execute(setup_lvm_config_file,cinder_device_name)
-
-    execute(setup_cinder_config_files_on_storage)     
-
-    execute(start_services_on_storage)
-    
-
+@roles('controller', 'storage')
+def restart_cinder():
+    runCheck('Restart cinder services', 'for i in api scheduler volume; do service openstack-cinder-${i} restart; done')
 
 ########################### Deployment ########################################
 
 def deploy():
-    execute(setup_cinder_on_controller)
-    execute(setup_cinder_on_storage)
+    # setup gluster
+    partition = 'strBlk'
+    volume = 'cinder_volume'
+    brick = 'cinder_brick'
+
+    execute(glusterLib.setup_gluster, partition, brick)
+    execute(glusterLib.probe, env_config.hosts)
+    execute(glusterLib.create_volume, brick, volume, env_config.hosts)
+    execute(glusterLib.mount, volume)
+
+    # setup cinder database
+    execute(setup_cinder_database_on_controller)
+    execute(setup_cinder_keystone_on_controller)
+    execute(setup_cinder_config_files_on_controller)
+    execute(populate_database_on_controller)
+    execute(start_cinder_services_on_controller)
+
+    # setup services on storage
+    execute(setup_cinder_config_files_on_storage)
+    execute(start_services_on_storage)
+
+    # customize gluster to cinder
+    execute(change_cinder_files)
+    execute(change_shares_file)
+    execute(restart_cinder)
 
 ################################# TDD #########################################
 
