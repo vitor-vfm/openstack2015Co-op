@@ -144,7 +144,7 @@ def installMariaDB():
 
         # set bind-address
         fileContents = fileContents.replace(\
-                'BIND_ADDRESS',env_config.controllerManagement['IPADDR'])
+                'BIND_ADDRESS',nicDictionary[env.host]['mgtIPADDR'])
 
         # make a backup
         run("cp {} {}.back12".format(confFile,confFile))
