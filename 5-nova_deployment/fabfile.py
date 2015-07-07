@@ -253,8 +253,8 @@ def setup_nova_conf_file():
 def deploy():
     execute(setup_nova_on_controller)
     execute(setup_nova_on_compute)
-    execute(setup_GlusterFS_Nova)
     execute(setup_nova_conf_file)
+    execute(setup_GlusterFS_Nova)
 
 ######################################## TDD #########################################
 

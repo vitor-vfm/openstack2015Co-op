@@ -167,6 +167,7 @@ def setup_cinder_config_files_on_storage():
     CINDER_DBPASS = passwd['CINDER_DBPASS']
     CINDER_PASS = passwd['CINDER_PASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
+    STORAGE_MANAGEMENT_IP = env_config.nicDictionary['storage1']['mgtIPADDR']
 
     install_command = "yum install -y openstack-cinder targetcli python-oslo-db MySQL-python"
     runCheck('Install packages on storage node', install_command)
@@ -187,7 +188,7 @@ def setup_cinder_config_files_on_storage():
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_user', 'cinder')   
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_password', CINDER_PASS)   
 
-    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', "192.168.0.41")
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', STORAGE_MANAGEMENT_IP)
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'iscsi_helper', 'lioadm')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glance_host', 'controller')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'verbose', 'True')
