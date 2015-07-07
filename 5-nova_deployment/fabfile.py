@@ -208,23 +208,6 @@ def start_services_on_compute():
     msg = "Restart Nova service"
     runCheck(msg, "systemctl restart openstack-nova-compute.service")
 
-@roles('compute')
-def setup_nova_on_compute():
-
-    execute(install_packages_compute)
-    execute(setup_nova_config_files_on_compute)        
-    execute(start_services_on_compute)
-
-@roles('controller')   
-def setup_nova_on_controller():
-
-    execute(install_packages_controller)
-    execute(setup_nova_database_on_controller)
-    execute(setup_nova_keystone_on_controller)
-    execute(setup_nova_config_files_on_controller)
-    execute(populate_database_on_controller)
-    execute(start_nova_services_on_controller)
-
 @roles('controller') 
 def setup_GlusterFS_Nova(): 
     """ 
@@ -251,8 +234,20 @@ def setup_nova_conf_file():
 ################################## Deployment ########################################
 
 def deploy():
-    execute(setup_nova_on_controller)
-    execute(setup_nova_on_compute)
+
+    #nova installation on the controller
+    execute(install_packages_controller)
+    execute(setup_nova_database_on_controller)
+    execute(setup_nova_keystone_on_controller)
+    execute(setup_nova_config_files_on_controller)
+    execute(populate_database_on_controller)
+    execute(start_nova_services_on_controller)
+
+    #nova installation on the compute
+    execute(install_packages_compute)
+    execute(setup_nova_config_files_on_compute)        
+    execute(start_services_on_compute)
+
     execute(setup_nova_conf_file)
     execute(setup_GlusterFS_Nova)
 
