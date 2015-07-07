@@ -291,12 +291,12 @@ def undeploy_cinder():
     global PARTITION
     PARTITION = 'strBlk'
     global VOLUME
-    VOLUME = 'cinder_volume99'
+    VOLUME = 'cinder_volume'
     global BRICK
     BRICK = 'cinder_brick'
-    execute(destroy_mount, roles=['controller', 'storage'])
-    execute(destroy_vol, roles=['controller'])
-    execute(destroy_gluster, roles=['controller', 'storage'])
+    execute(destroy_mount)#, roles=['controller', 'storage'])
+    execute(destroy_vol)#, roles=['controller'])
+    execute(destroy_gluster)#, roles=['controller', 'storage'])
  
 ################################ Deployment ##################################
 
