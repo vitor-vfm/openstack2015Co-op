@@ -31,9 +31,11 @@ def debug_str(command):
     return blue(sudo(command,quiet=True))
 
 ########################## Deployment ########################################
-@roles('controller','compute','network', 'storage')
+
+@roles('controller','compute','network')
 def deployNIC():
     config_file = ''
+    print env.host
     if (nicDictionary[env.host]['tnlDEVICE']!=''):
         config_file += "DEVICE=" +nicDictionary[env.host]['tnlDEVICE'] + '\n'
         config_file += "IPADDR=" +nicDictionary[env.host]['tnlIPADDR'] + '\n'
@@ -49,7 +51,7 @@ def deploy():
 
 ################################ TDD #########################################
 
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network')
 def tdd():
 
     pings = [
