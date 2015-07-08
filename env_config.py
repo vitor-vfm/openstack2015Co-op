@@ -34,18 +34,14 @@ lslogs = ['/var/log/nova/nova-manage.log',
           ]
 
 ###############################################################################
-
-
-########  ########   #######  ########  
-##     ## ##     ## ##     ## ##     ## 
-##     ## ##     ## ##     ## ##     ## 
-########  ########  ##     ## ##     ## 
-##        ##   ##   ##     ## ##     ## 
-##        ##    ##  ##     ## ##     ## 
-##        ##     ##  #######  ########  
-
-
-###############################################################################
+#  ascii art generated from http://www.network-science.de/ascii/  Font = ogre 
+'''
+   ___               _            _   _             
+  / _ \_ __ ___   __| |_   _  ___| |_(_) ___  _ __  
+ / /_)/ '__/ _ \ / _` | | | |/ __| __| |/ _ \| '_ \ 
+/ ___/| | | (_) | (_| | |_| | (__| |_| | (_) | | | |
+\/    |_|  \___/ \__,_|\__,_|\___|\__|_|\___/|_| |_|
+'''
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
     # PRODUCTION
@@ -120,9 +116,11 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'TROVE_PASS' : '34Tr0v343',
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
-    partition = {   'size_reduction_of_home' : '3.5T',
-                    'partition_size' : '500G',        
-                    'stripe_number' : 3, 
+     partition = {   'size_reduction_of_home' : '3.5T',
+                    'glance_partition_size' : '300G',
+                    'cinder_partition_size' : '600G',
+                    'swift_partition_size' : '600G',
+                    'stripe_number' : 3,
                     }
 
     nicDictionary = {
@@ -206,6 +204,19 @@ pid-file=/var/run/mariadb/mariadb.pid
                          },
 
             }
+    """
+     _____                        _                   
+    |___ /     /\ /\___ _   _ ___| |_ ___  _ __   ___ 
+      |_ \    / //_/ _ \ | | / __| __/ _ \| '_ \ / _ \
+     ___) |  / __ \  __/ |_| \__ \ || (_) | | | |  __/
+    |____/   \/  \/\___|\__, |___/\__\___/|_| |_|\___|
+                        |___/   
+    """
+
+
+    keystone_emails = { 'ADMIN_EMAIL' : 'admin@example.com',
+                         'DEMO_EMAIL' : 'demo@example.com'}
+
 
 
     admin_openrc = "export OS_TENANT_NAME=admin; " +\
@@ -217,6 +228,42 @@ pid-file=/var/run/mariadb/mariadb.pid
             "export OS_USERNAME=demo; " + \
             "export OS_PASSWORD={}; ".format(passwd['DEMO_PASS']) + \
             "export OS_AUTH_URL=http://controller:5000/v2.0"
+
+    '''
+     _  _       ___ _                      
+    | || |     / _ \ | __ _ _ __   ___ ___ 
+    | || |_   / /_\/ |/ _` | '_ \ / __/ _ \
+    |__   _| / /_\\| | (_| | | | | (_|  __/
+       |_|   \____/|_|\__,_|_| |_|\___\___|
+    '''
+
+    glanceGlusterBrick = '/mnt/gluster/glance_volume/glance/images'
+    novaGlusterBrick = '/mnt/gluster/glance_volume/instance'
+
+
+    '''
+      __         __           _                   
+     / /_     /\ \ \___ _   _| |_ _ __ ___  _ __  
+    | '_ \   /  \/ / _ \ | | | __| '__/ _ \| '_ \ 
+    | (_) | / /\  /  __/ |_| | |_| | | (_) | | | |
+     \___/  \_\ \/ \___|\__,_|\__|_|  \___/|_| |_|
+                                              
+    '''
+
+    # Specifications for the initial networks
+
+    ext_subnet = {
+            'start' : '192.168.1.100',
+            'end' : '192.168.1.150',
+            'gateway' : '192.168.1.1',
+            'cidr' : '192.168.1.0/24',
+            }
+
+    demo_subnet = {
+            'gateway' : '10.0.0.1', 
+            'cidr' : '10.0.0.0/8', 
+            }
+
 
 
 ##############################################################################
