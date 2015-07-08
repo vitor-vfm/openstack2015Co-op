@@ -105,5 +105,5 @@ def mount(volume):
     if run("mount | grep '{}' | grep /mnt/gluster/{}".format(volume, volume), 
             warn_only=True).return_code:
         runCheck('Mount mount point', 
-                'mount -t glusterfs {}:/{} /mnt/gluster/{}/'.format(
+                'mount -t glusterfs {}:/{} /mnt/gluster/{}'.format(
                     env.host, volume, volume))

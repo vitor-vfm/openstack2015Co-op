@@ -213,7 +213,7 @@ def change_cinder_files():
 @roles('controller', 'storage')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume" > /etc/cinder/shares.conf')
 
 @roles('controller', 'storage')
 def restart_cinder():

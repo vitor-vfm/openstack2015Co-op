@@ -90,7 +90,7 @@ def setup_nova_config_files_on_controller():
     NOVA_PASS = passwd['NOVA_PASS']
     NOVA_DBPASS = passwd['NOVA_DBPASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
-    CONTROLLER_MANAGEMENT_IP = env_config.controllerManagement['IPADDR']
+    CONTROLLER_MANAGEMENT_IP = env_config.nicDictionary['controller']['mgtIPADDR']
 
     set_parameter(etc_nova_config_file, 'database', 'connection', \
             'mysql://nova:{}@controller/nova'.format(NOVA_DBPASS))
@@ -164,7 +164,7 @@ def setup_nova_config_files_on_compute():
     NOVA_PASS = passwd['NOVA_PASS']
     NOVA_DBPASS = passwd['NOVA_DBPASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
-    NETWORK_MANAGEMENT_IP = env_config.networkManagement['IPADDR']
+    NETWORK_MANAGEMENT_IP = env_config.nicDictionary['network']['mgtIPADDR']
     
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_host', 'controller')

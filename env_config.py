@@ -425,10 +425,10 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ###########################################################################
 
-    partition = {   'size_reduction_of_home' : '350G',
-                    'glance_partition_size' : '50G',
-                    'cinder_partition_size' : '150G',
-                    'swift_partition_size' : '150G',
+    partition = {   'size_reduction_of_home' : '150G',
+                    'glance_partition_size' : '30G',
+                    'cinder_partition_size' : '60G',
+                    'swift_partition_size' : '60G',
                     'stripe_number' : 1,
                     }
 

@@ -211,10 +211,10 @@ def shrinkHome():
         print blue('Partitions already created. Nothing done on '+env.host)
     else:
         home_dir = run("mount | grep home|cut -d' ' -f1")
-        run('umount /home')
-        run('lvresize -f -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
-        run('mkfs -t xfs -f {}'.format(home_dir))
-        run('mount /home')
+        runCheck('Unmount home', 'umount /home')
+        runCheck('Resize home', 'lvresize -f -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
+        runCheck('Put a filesystem back on home', 'mkfs -t xfs -f {}'.format(home_dir))
+        runCheck('Remount home', 'mount /home')
 
 #@roles('storage')
 @roles('controller', 'compute', 'network', 'storage')
@@ -235,16 +235,16 @@ def prepGlusterFS():
     else:
         STRIPE_NUMBER = env_config.partition['stripe_number']
         home_dir = run("lvs | awk '/home/ {print $2}'")
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
+        runCheck('Create glance partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
             STRIPE_NUMBER, env_config.partition['glance_partition_size'], home_dir))
-        run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
+        runCheck('Rename glance partition', 'lvrename /dev/{}/lvol0 strFile'.format(home_dir))
+        runCheck('Create swift partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
             STRIPE_NUMBER, env_config.partition['swift_partition_size'], home_dir))
-        run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
+        runCheck('Rename swift partition', 'lvrename /dev/{}/lvol0 strObj'.format(home_dir))
+        runCheck('Create cinder partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
             STRIPE_NUMBER, env_config.partition['cinder_partition_size'], home_dir))
-        run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-        run('fdisk -l|grep str')
+        runCheck('Rename cinder partition', 'lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
+        runCheck('List new partitions', 'fdisk -l|grep str')
 
 
 #@roles('storage')
