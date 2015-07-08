@@ -116,7 +116,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'TROVE_PASS' : '34Tr0v343',
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
-     partition = {   'size_reduction_of_home' : '3.5T',
+    partition = {   'size_reduction_of_home' : '3.5T',
                     'glance_partition_size' : '300G',
                     'cinder_partition_size' : '600G',
                     'swift_partition_size' : '600G',
