@@ -122,7 +122,7 @@ def install_packages():
 
     # Install Crudini and wget
     print('installing crudini wget')
-    run("yum -y install crudini wget")
+    run("yum -y install crudini wget openstack-utils")
     for item in ['crudini','wget']:
         var1=run('rpm -qa |grep %s ' %item)
         print blue(item +" is version "+ var1)

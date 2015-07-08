@@ -179,6 +179,7 @@ def setupKeystone():
 
     msg = 'Populate the Identity service database'
     runCheck(msg, "su -s /bin/sh -c 'keystone-manage db_sync' keystone")
+    run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])
 
     # start the Identity service and configure it to start when the system boots
     msg = "Enable keystone service"
@@ -269,5 +270,6 @@ def keystone_tdd():
 def tdd():
     print blue('Starting TDD function')
     execute(keystone_tdd)
+    run('openstack-status')
     print blue('Done')
 
