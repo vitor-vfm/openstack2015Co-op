@@ -695,17 +695,20 @@ def network_tdd():
 @roles('compute')
 def compute_tdd():
 
-    agents = ['Open vSwitch']
-    # get list of compute nodes from the hosts config
-    list_of_compute_hostnames = [hostname for hostname in env_config.hosts\
-            if 'compute' in ''.join(hostname)]
- 
-    print env_config.hosts
-    print list_of_compute_hostnames
-    for host in list_of_compute_hostnames:
-        res = verify_neutron_agents(neutron_agents=agents,hostname=host)
-        if res != 'OK':
-            status = 'bad'
+    with prefix(env_config.admin_openrc):
+        agent = 'Open vSwitch'
+        # get list of compute nodes from the hosts config
+        list_of_compute_hostnames = [hostname for hostname in env_config.hosts\
+                if 'compute' in ''.join(hostname)]
+
+        agent_lines = run('neutron agent-list | grep "%s"' % agent, quiet=True).splitlines()
+        for line in agent_lines:
+            if ':-)' not in line:
+                print align_n('Problem with agent ' + agent)
+                status = 'bad'
+            else:
+                print align_y("Neutron agent %s OK!" % agent)
+
 
 @roles('controller')
 def saveConfigController(status):

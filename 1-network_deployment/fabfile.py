@@ -31,9 +31,11 @@ def debug_str(command):
     return blue(sudo(command,quiet=True))
 
 ########################## Deployment ########################################
-@roles('controller','compute','network', 'storage')
+
+@roles('controller','compute','network')
 def deployNIC():
     config_file = ''
+    print env.host
     if (nicDictionary[env.host]['tnlDEVICE']!=''):
         config_file += "DEVICE=" +nicDictionary[env.host]['tnlDEVICE'] + '\n'
         config_file += "IPADDR=" +nicDictionary[env.host]['tnlIPADDR'] + '\n'
@@ -41,15 +43,19 @@ def deployNIC():
         config_file_name = '/etc/sysconfig/network-scripts/ifcfg-' + nicDictionary[env.host]['tnlDEVICE']
         msg = 'Set up NIC with conf file %s' % nicDictionary[env.host]['tnlDEVICE']
         runCheck(msg, 'echo -e "%s" > %s' % (config_file,config_file_name))
-        msg = "Restart network service"
-        runCheck(msg, 'systemctl restart network')
+
+@roles('controller','compute','network')
+def restartnetwork():
+    msg = "Restart network service"
+    runCheck(msg, 'systemctl restart network')
 
 def deploy():
     execute(deployNIC)
+    execute(restartnetwork)
 
 ################################ TDD #########################################
 
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network')
 def tdd():
 
     pings = [
@@ -63,4 +69,5 @@ def tdd():
         msg = 'Ping %s from %s' % (name, env.host)
         runCheck(msg, 'ping -c 1 %s' % address) 
 
+    run('openstack-status')
 

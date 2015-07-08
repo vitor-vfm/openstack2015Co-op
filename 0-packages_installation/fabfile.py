@@ -22,6 +22,7 @@ logging.info("################# "\
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
+nicDictionary = env_config.nicDictionary
 
 mode = 'normal'
 if output['debug']:
@@ -50,7 +51,9 @@ def mustDoOnHost():
         hostsStatus=run('grep controller /etc/hosts')
         if(hostsStatus != 0):
             msg="updating /etc/hosts"
-            runCheck(msg,"echo '%s' >> /etc/hosts" % env_config.etc_hosts)
+            for host in nicDictionary.keys():
+                newline = '%s\t%s' % (nicDictionary[host]['mgtIPADDR'], host)
+                runCheck(msg,"echo '%s' >> /etc/hosts" % newline)
 
 
 #@roles('storage')
@@ -119,7 +122,7 @@ def install_packages():
 
     # Install Crudini and wget
     print('installing crudini wget')
-    run("yum -y install crudini wget")
+    run("yum -y install crudini wget openstack-utils")
     for item in ['crudini','wget']:
         var1=run('rpm -qa |grep %s ' %item)
         print blue(item +" is version "+ var1)
@@ -294,8 +297,6 @@ def chronytdd():
 @roles('controller','compute','network', 'storage')
 # @roles('controller','compute','network')
 def tdd():
-    check_firewall()
-    check_selinux()
     chronytdd()
     tdd_DB()
     tdd_lvs()
