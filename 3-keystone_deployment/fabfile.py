@@ -167,7 +167,7 @@ def setupKeystone():
 
     msg = "Create database for keystone"
     runCheck(msg, 'echo "' + databaseCreation + '" | mysql -u root -p"%s" ' % env_config.passwd['ROOT_SECRET'])
-    run(' mysql -u root -p"%s" -e "Select * from users where user=`keystone`"' % env_config.passwd['ROOT_SECRET'])
+    run(' mysql -u root -p"%s" -e  "select host, user, password from user where user=\'keystone\'" mysql' % env_config.passwd['ROOT_SECRET'])
     execute(installPackages)
   
     msg = "Generate an admin token"
