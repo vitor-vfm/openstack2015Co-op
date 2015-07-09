@@ -113,15 +113,14 @@ def install_packages():
 
 
     # Install RDO repository for Juno
-    with settings(warn_only=True):
-        print('installing yum-plugin-priorities and epel-release')
-        msg = 'Install rdo-release-juno.rpm'
-        runCheck(msg, 'yum -y localinstall https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm')
-        logging.info(msg)
+    print('installing yum-plugin-priorities and epel-release')
+    msg = 'Install rdo-release-juno.rpm'
+    runCheck(msg, 'yum -y localinstall https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm')
+    logging.info(msg)
 
 
     # Install Crudini and wget
-    print('installing crudini wget')
+    print('installing crudini wget openstack-utils')
     run("yum -y install crudini wget openstack-utils")
     for item in ['crudini','wget']:
         var1=run('rpm -qa |grep %s ' %item)
@@ -187,14 +186,13 @@ def secureDB():
 def tdd_DB():
     if (env.host != "controller"):
         return
-    with settings(hide('everything'),warn_only=True):
-        msg=" talk to database engine"
-        result = run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])
-        if result.failed :
-            printMessage("oops",msg)
-        else:
-            printMessage("good",msg)
-            print("Here is a list of the current databases:\n %s"% result)
+    msg=" talk to database engine"
+    result = run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])
+    if result.failed :
+        printMessage("oops",msg)
+    else:
+        printMessage("good",msg)
+        print("Here is a list of the current databases:\n %s"% result)
 
 
 @roles('controller')
