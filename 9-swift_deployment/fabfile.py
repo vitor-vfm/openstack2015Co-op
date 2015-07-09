@@ -206,7 +206,7 @@ def configurersyncd():
 
     # replace variables
     fileContents = fileContents.replace('MANAGEMENT_INTERFACE_IP_ADDRESS', 
-            env_config.storageManagement['IPADDR'])
+            env_config.nicDictionary['storage1']['mgtIPADDR'])
 
     devicepath = env_config.glusterPath + env_config.swiftVolume
     fileContents = fileContents.replace('PATH', devicepath)
@@ -231,7 +231,7 @@ def configureStorage():
     """
 
     serverConfFiles = ['account-server.conf','container-server.conf','object-server.conf']
-    ip = env_config.storageManagement['IPADDR']
+    ip = env_config.nicDictionary['storage1']['mgtIPADDR']
     devicepath = env_config.glusterPath + env_config.swiftVolume
     # devicepath = '/srv/node'
 
@@ -349,7 +349,7 @@ def createInitialRings():
     Create 3 initial rings as a test
     """
 
-    managementIP = env_config.storageManagement['IPADDR']
+    managementIP = env_config.nicDictionary['storage1']['mgtIPADDR']
     deviceLocation = env_config.glusterPath + env_config.swiftVolume
     deviceName = "rings"
     deviceWeight = '100'

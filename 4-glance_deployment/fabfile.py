@@ -36,7 +36,7 @@ def setup_glance_database():
     
     msg = "Create database for keystone"
     runCheck(msg, 'echo "' + mysql_commands + '" | mysql -u root -p"%s" ' % env_config.passwd['ROOT_SECRET'])
-    
+    run(' mysql -u root -p"%s" -e  "select host, user, password from user where user=\'glance\'" mysql' % env_config.passwd['ROOT_SECRET'])
 
 
 @roles('controller')
@@ -54,7 +54,6 @@ def setup_glance_keystone():
 
     with prefix(credentials):
         # before each creation, we check a list to avoid duplicates
-
         if 'glance' not in run("keystone user-list"):
             msg = "Create user glance"
             runCheck(msg, "keystone user-create --name glance --pass {}"\
@@ -119,11 +118,8 @@ def setup_glance_config_files():
 
     set_parameter(glance_api_config_file, 'DEFAULT', 'verbose', 'True')
 
-
-
     set_parameter(glance_registry_config_file, 'database', 'connection', \
             'mysql://glance:{}@controller/glance'.format(GLANCE_DBPASS))
-
 
     set_parameter(glance_registry_config_file, 'keystone_authtoken', 'auth_uri', \
             'http://controller:5000/v2.0')
@@ -145,7 +141,6 @@ def setup_glance_config_files():
     set_parameter(glance_registry_config_file, 'DEFAULT', 'notification_driver', 'noop')
 
     set_parameter(glance_registry_config_file, 'DEFAULT', 'verbose', 'True')
-    
 
 
 
@@ -153,7 +148,8 @@ def setup_glance_config_files():
 def populate_database():
     msg = "Populate database"
     runCheck(msg, "su -s /bin/sh -c 'glance-manage db_sync' glance")
-    
+    run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])    
+
 @roles('controller')
 def start_glance_services():
     msg = "Enable glance services"
@@ -169,7 +165,7 @@ def setup_GlusterFS_Glance():
     """
     Configure the file path for the Glance Gluster volume
     """
-
+    run("mount |grep '^/'")
     # change the path that Glance uses for its file system
     msg = 'Configure Glance to use Gluster'
     glusterBrick = env_config.glanceGlusterBrick
@@ -184,6 +180,8 @@ def setup_GlusterFS_Glance():
 
     msg = 'Restart Glance'
     runCheck(msg, 'systemctl restart openstack-glance-api') 
+    run("mount |grep '^/'")
+
 
 @roles('controller')
 def setup_glance_api_conf_file():
@@ -327,6 +325,20 @@ def removeTestImage(ID):
             result = 'FAIL'
 
     return result
+
+
+@roles('controller')
+def tdd1():
+    run('mysql -u root -p%s -D mysql -e  "show databases" mysql' % passwd.ROOT_DBPASS)
+    run('mysql -u root -p%s -D mysql -e  "select User, Host, Password  from user" mysql' % passwd.ROOT_DBPASS)
+    run('mysql -u root -p%s -D mysql -e  "show tables" glance' % passwd.ROOT_DBPASS)
+    run('source admin-openrc.sh; keystone user-list')
+    run('source admin-openrc.sh; keystone tenant-list')
+    run('rpm -qa |grep "openstack-glance\|python-glanceclient"')
+    run('. admin-openrc.sh;  glance image-list')
+    print(green('[GOOD]')+ ' glance service is fully functional')
+
+
 
 @roles('controller')
 def tdd():

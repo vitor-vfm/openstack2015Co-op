@@ -11,7 +11,7 @@ import time
 from fabric.contrib.files import append
 
 
-@roles('controller', 'compute', 'network', 'storage')
+@roles('controller','compute','network', 'storage')
 def setup_gluster(partition,brick):
     # Get name of directory partitions are in 
     #home_dir = run("lvs | awk '/home/ {print $2}'")
@@ -58,7 +58,7 @@ def setup_gluster(partition,brick):
     runCheck('Restart glusterd', 'service glusterd restart')
 
 
-@roles('controller', 'compute', 'network', 'storage')
+@roles('controller','compute','network', 'storage')
 def probe(some_hosts):
     with settings(warn_only=True):
         # peer probe the ip addresses of all the nodes
@@ -99,11 +99,11 @@ def create_volume(brick, volume, some_hosts):
     runCheck('Restart glusterd', '/bin/systemctl restart glusterd.service')
 
 
-@roles('controller', 'compute', 'network', 'storage')
+@roles('controller','compute','network', 'storage')
 def mount(volume):
     runCheck('Make mount point', 'mkdir -p /mnt/gluster/{}'.format(volume))
     if run("mount | grep '{}' | grep /mnt/gluster/{}".format(volume, volume), 
             warn_only=True).return_code:
         runCheck('Mount mount point', 
-                'mount -t glusterfs {}:/{} /mnt/gluster/{}/'.format(
+                'mount -t glusterfs {}:/{} /mnt/gluster/{}'.format(
                     env.host, volume, volume))

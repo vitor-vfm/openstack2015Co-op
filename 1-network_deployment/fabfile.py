@@ -8,8 +8,8 @@ from fabric.state import output
 import string
 import logging
 import ConfigParser
-
-import sys
+import time
+import sys 
 sys.path.append('..')
 import env_config
 from myLib import runCheck, getRole
@@ -43,11 +43,18 @@ def deployNIC():
         config_file_name = '/etc/sysconfig/network-scripts/ifcfg-' + nicDictionary[env.host]['tnlDEVICE']
         msg = 'Set up NIC with conf file %s' % nicDictionary[env.host]['tnlDEVICE']
         runCheck(msg, 'echo -e "%s" > %s' % (config_file,config_file_name))
-        msg = "Restart network service"
-        runCheck(msg, 'systemctl restart network')
+
+@roles('controller','compute','network')
+def restartnetwork():
+    msg = "Restart network service"
+    runCheck(msg, 'systemctl restart network')
 
 def deploy():
     execute(deployNIC)
+    execute(restartnetwork)
+    print('Sleeping for 10 sec.')
+    time.sleep(10)
+    execute(restartnetwork)
 
 ################################ TDD #########################################
 
@@ -65,4 +72,5 @@ def tdd():
         msg = 'Ping %s from %s' % (name, env.host)
         runCheck(msg, 'ping -c 1 %s' % address) 
 
+    run('openstack-status')
 

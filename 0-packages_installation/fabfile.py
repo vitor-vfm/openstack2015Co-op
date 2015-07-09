@@ -30,7 +30,7 @@ if output['debug']:
 ########################## Deployment ########################################
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def mustDoOnHost():
     selinuxStatus=run("grep -w ^SELINUX /etc/selinux/config")
@@ -57,7 +57,7 @@ def mustDoOnHost():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def installConfigureChrony():
     msg='installing chrony on %s'% env.host
@@ -98,7 +98,7 @@ def installConfigureChrony():
 
 # General function to install packages that should be in all or several nodes
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def install_packages():
     # Install EPEL (Extra Packages for Entreprise Linux
@@ -113,16 +113,15 @@ def install_packages():
 
 
     # Install RDO repository for Juno
-    with settings(warn_only=True):
-        print('installing yum-plugin-priorities and epel-release')
-        msg = 'Install rdo-release-juno.rpm'
-        runCheck(msg, 'yum -y localinstall https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm')
-        logging.info(msg)
+    print('installing yum-plugin-priorities and epel-release')
+    msg = 'Install rdo-release-juno.rpm'
+    runCheck(msg, 'yum -y localinstall https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm')
+    logging.info(msg)
 
 
     # Install Crudini and wget
-    print('installing crudini wget')
-    run("yum -y install crudini wget")
+    print('installing crudini wget openstack-utils')
+    run("yum -y install crudini wget openstack-utils")
     for item in ['crudini','wget']:
         var1=run('rpm -qa |grep %s ' %item)
         print blue(item +" is version "+ var1)
@@ -187,18 +186,17 @@ def secureDB():
 def tdd_DB():
     if (env.host != "controller"):
         return
-    with settings(hide('everything'),warn_only=True):
-        msg=" talk to database engine"
-        result = run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])
-        if result.failed :
-            printMessage("oops",msg)
-        else:
-            printMessage("good",msg)
-            print("Here is a list of the current databases:\n %s"% result)
+    msg=" talk to database engine"
+    result = run('mysql -u root -p%s -e "SHOW DATABASES"'% env_config.passwd['ROOT_SECRET'])
+    if result.failed :
+        printMessage("oops",msg)
+    else:
+        printMessage("good",msg)
+        print("Here is a list of the current databases:\n %s"% result)
 
 
 @roles('controller')
-#@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 @with_settings(warn_only=True)
 def test():
@@ -206,7 +204,7 @@ def test():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller', 'compute', 'network')
 def shrinkHome():
     # check if partitions already exist
@@ -214,13 +212,13 @@ def shrinkHome():
         print blue('Partitions already created. Nothing done on '+env.host)
     else:
         home_dir = run("mount | grep home|cut -d' ' -f1")
-        run('umount /home')
-        run('lvresize -f -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
-        run('mkfs -t xfs -f {}'.format(home_dir))
-        run('mount /home')
+        runCheck('Unmount home', 'umount /home')
+        runCheck('Resize home', 'lvresize -f -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
+        runCheck('Put a filesystem back on home', 'mkfs -t xfs -f {}'.format(home_dir))
+        runCheck('Remount home', 'mount /home')
 
 #@roles('storage')
-@roles('controller', 'compute', 'network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def tdd_lvs():
     msg = "TDD LVS Free space"
@@ -229,7 +227,7 @@ def tdd_lvs():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller', 'network', 'compute')
 def prepGlusterFS():
 # check if partitions already exist
@@ -238,20 +236,20 @@ def prepGlusterFS():
     else:
         STRIPE_NUMBER = env_config.partition['stripe_number']
         home_dir = run("lvs | awk '/home/ {print $2}'")
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
+        runCheck('Create glance partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
             STRIPE_NUMBER, env_config.partition['glance_partition_size'], home_dir))
-        run('lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
+        runCheck('Rename glance partition', 'lvrename /dev/{}/lvol0 strFile'.format(home_dir))
+        runCheck('Create swift partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
             STRIPE_NUMBER, env_config.partition['swift_partition_size'], home_dir))
-        run('lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-        run('lvcreate -i {} -I 8 -L {} {}'.format(
+        runCheck('Rename swift partition', 'lvrename /dev/{}/lvol0 strObj'.format(home_dir))
+        runCheck('Create cinder partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
             STRIPE_NUMBER, env_config.partition['cinder_partition_size'], home_dir))
-        run('lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-        run('fdisk -l|grep str')
+        runCheck('Rename cinder partition', 'lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
+        runCheck('List new partitions', 'fdisk -l|grep str')
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 def deploy():
     logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
@@ -267,7 +265,7 @@ def deploy():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def check_firewall():
     with settings(warn_only=True):
@@ -277,7 +275,7 @@ def check_firewall():
             printMessage("good",msg)
         
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def check_selinux():
     output = run("getenforce")
@@ -287,18 +285,19 @@ def check_selinux():
         print align_n("Oh no! SELINUX is " + output)
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def chronytdd():
     msg="verify chronyd"
     runCheck(msg,'chronyc sources -v ')
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 def tdd():
     chronytdd()
     tdd_DB()
     tdd_lvs()
     run('fdisk -l|grep str')
+    run('openstack-status')
 
