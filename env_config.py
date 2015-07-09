@@ -55,7 +55,7 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                      'controller' : ['root@controller']}
 
     roles = roledefs.keys()
-    hosts = roledefs.values()
+    hosts = sum(roledefs.values(), [])
 
 
     logfilename='/opt/coop2015/coop2015/fabric.log'
