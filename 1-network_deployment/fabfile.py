@@ -53,7 +53,7 @@ def deploy():
     execute(deployNIC)
     execute(restartnetwork)
     print('Sleeping for 10 sec.')
-    sleep(10)
+    time.sleep(10)
     execute(restartnetwork)
 
 ################################ TDD #########################################
