@@ -8,8 +8,8 @@ from fabric.state import output
 import string
 import logging
 import ConfigParser
-
-import sys
+import time
+import sys 
 sys.path.append('..')
 import env_config
 from myLib import runCheck, getRole
@@ -51,6 +51,9 @@ def restartnetwork():
 
 def deploy():
     execute(deployNIC)
+    execute(restartnetwork)
+    print('Sleeping for 10 sec.')
+    sleep(10)
     execute(restartnetwork)
 
 ################################ TDD #########################################
