@@ -12,7 +12,7 @@ def printMessage(status, msg):
                 print align_n('I CANNOT: ' + msg)
 
 import logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.WARNING,
                     format='%(asctime)s %(levelname)-8s %(message)s',
                     datefmt='%b %d %H:%M',
                     #filename='/opt/coop2015/coop2015/fabric.log',

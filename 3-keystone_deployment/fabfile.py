@@ -145,12 +145,12 @@ def createUsersRolesAndTenants(admin_token):
 @roles('controller')
 def installPackages():
     msg = 'Install packages'
-    runCheck(msg, 'yum -y install openstack-keystone python-keystoneclient',quiet=True)
+    runCheck(msg, 'yum -y install openstack-keystone python-keystoneclient')
 
     msg = "Start keystone service"
-    runCheck(msg, "systemctl start openstack-keystone.service",quiet=True)
+    runCheck(msg, "systemctl start openstack-keystone.service")
     msg = "Start enable service"
-    runCheck(msg, "systemctl enable openstack-keystone.service",quiet=True)
+    runCheck(msg, "systemctl enable openstack-keystone.service")
 
  
 @roles('controller')
@@ -266,10 +266,10 @@ def keystone_tdd():
 
         confFile= '/etc/keystone/keystone.conf'
         saveConfigFile(confFile,status)
+        run('openstack-status')
 
 def tdd():
     print blue('Starting TDD function')
     execute(keystone_tdd)
-    run('openstack-status')
     print blue('Done')
 
