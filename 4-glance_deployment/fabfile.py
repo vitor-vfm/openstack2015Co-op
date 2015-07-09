@@ -10,8 +10,8 @@ import string
 import sys
 sys.path.append('..')
 import env_config
+import myLib
 from myLib import runCheck, createDatabaseScript, set_parameter
-from myLib import database_check, keystone_check
 from myLib import run_v, align_n, align_y, saveConfigFile
 
 import glusterLib
@@ -274,9 +274,6 @@ def imageCreationTDD():
     msg = 'Clear local files'
     runCheck(msg, "rm -r /tmp/images")
 
-    # remove the test image(s)
-    execute(removeTestImage, imageID)
-
     return result
 
 @roles(env_config.roles)
@@ -311,23 +308,6 @@ def glusterTDD(imageID):
     return result
 
 @roles('controller')
-def removeTestImage(ID):
-    """
-    TDD: Remove an image created by the TDD functions
-    """
-
-    result = 'OK'
-    
-    with prefix(env_config.admin_openrc):
-        msg = 'Remove image ' + ID
-        out = runCheck(msg, "glance image-delete {}".format(ID))
-        if out.return_code != 0:
-            result = 'FAIL'
-
-    return result
-
-
-@roles('controller')
 def tdd1():
     run('mysql -u root -p%s -D mysql -e  "show databases" mysql' % passwd['ROOT_SECRET'])
     run('mysql -u root -p%s -D mysql -e  "select User, Host, Password  from user" mysql' % passwd['ROOT_SECRET'])
@@ -338,34 +318,30 @@ def tdd1():
     run('. admin-openrc.sh;  glance image-list')
     print(green('[GOOD]')+ ' glance service is fully functional')
 
-
-
 @roles('controller')
 def tdd():
-    with settings(warn_only=True):
+    # save results of the tdds in a list
+    results = list()
 
-        # save results of the tdds in a list
-        results = list()
+    res = myLib.database_check('glance')
+    results.append(res)
 
-        res = database_check('glance')
-        results.append(res)
+    res = myLib.keystone_check('glance')
+    results.append(res)
 
-        res = keystone_check('glance')
-        results.append(res)
+    res = imageCreationTDD()
+    results.append(res)
 
-        res = imageCreationTDD()
-        results.append(res)
+    # check if any of the functions failed
+    # and set status accordingly
+    if any([r == 'FAIL' for r in results]):
+        status = 'bad'
+    else:
+        status = 'good'
 
-        # check if any of the functions failed
-        # and set status accordingly
-        if any([r == 'FAIL' for r in results]):
-            status = 'bad'
-        else:
-            status = 'good'
-
-        # save config files
-        confFile = "/etc/glance/glance-api.conf"
-        saveConfigFile(confFile, status)
-        confFile = "/etc/glance/glance-registry.conf"
-        saveConfigFile(confFile, status)
+    # save config files
+    confFile = "/etc/glance/glance-api.conf"
+    saveConfigFile(confFile, status)
+    confFile = "/etc/glance/glance-registry.conf"
+    saveConfigFile(confFile, status)
 
