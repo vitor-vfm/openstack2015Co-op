@@ -60,19 +60,18 @@ def setup_gluster(partition,brick):
 
 @roles('controller','compute','network', 'storage')
 def probe(some_hosts):
-    with settings(warn_only=True):
-        # peer probe the ip addresses of all the nodes
-        for nodes in some_hosts:
-            for node in nodes:
-                if node != env.host_string:
-                    node_id = node.split('@', 1)[-1]
-                    if runCheck('Probe', 'gluster peer probe {}'.format(
-                                node_id)).return_code:
-                        print(red('{} cannot probe {}'.format(
-                            env.host, node_id)))
-                    else:
-                        print(green('{} can probe {}'.format(
-                            env.host, node_id)))
+    "peer probe the ip addresses of all the nodes"
+
+    for node in some_hosts:
+        if node != env.host_string:
+            node_id = node.split('@', 1)[-1]
+            if runCheck('Probe', 'gluster peer probe {}'.format(
+                        node_id)).return_code:
+                print(red('{} cannot probe {}'.format(
+                    env.host, node_id)))
+            else:
+                print(green('{} can probe {}'.format(
+                    env.host, node_id)))
     # Make sure the peers have enough time to actually connect
     time.sleep(3)
 
@@ -84,7 +83,7 @@ def create_volume(brick, volume, some_hosts):
     # into following command
     node_ips = "".join([
         node.split('@', 1)[-1]+':/data/gluster/{} '.format(brick)
-        for nodes in some_hosts for node in nodes
+        for node in some_hosts
         ])
 
     check_volume = run('gluster volume list', warn_only=True)
