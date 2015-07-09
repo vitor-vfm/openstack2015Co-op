@@ -30,7 +30,7 @@ if output['debug']:
 ########################## Deployment ########################################
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def mustDoOnHost():
     selinuxStatus=run("grep -w ^SELINUX /etc/selinux/config")
@@ -57,7 +57,7 @@ def mustDoOnHost():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def installConfigureChrony():
     msg='installing chrony on %s'% env.host
@@ -98,7 +98,7 @@ def installConfigureChrony():
 
 # General function to install packages that should be in all or several nodes
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def install_packages():
     # Install EPEL (Extra Packages for Entreprise Linux
@@ -196,7 +196,7 @@ def tdd_DB():
 
 
 @roles('controller')
-#@roles('controller','compute','network', 'storage')
+#@roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 @with_settings(warn_only=True)
 def test():
@@ -204,7 +204,7 @@ def test():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller', 'compute', 'network')
 def shrinkHome():
     # check if partitions already exist
@@ -218,7 +218,7 @@ def shrinkHome():
         runCheck('Remount home', 'mount /home')
 
 #@roles('storage')
-@roles('controller', 'compute', 'network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def tdd_lvs():
     msg = "TDD LVS Free space"
@@ -227,7 +227,7 @@ def tdd_lvs():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller', 'network', 'compute')
 def prepGlusterFS():
 # check if partitions already exist
@@ -249,7 +249,7 @@ def prepGlusterFS():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 def deploy():
     logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
@@ -265,7 +265,7 @@ def deploy():
 
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def check_firewall():
     with settings(warn_only=True):
@@ -275,7 +275,7 @@ def check_firewall():
             printMessage("good",msg)
         
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def check_selinux():
     output = run("getenforce")
@@ -285,14 +285,14 @@ def check_selinux():
         print align_n("Oh no! SELINUX is " + output)
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 #@roles('controller','compute','network')
 def chronytdd():
     msg="verify chronyd"
     runCheck(msg,'chronyc sources -v ')
 
 #@roles('storage')
-@roles('controller','compute','network', 'storage')
+@roles('controller','compute','network','storage')
 # @roles('controller','compute','network')
 def tdd():
     chronytdd()
