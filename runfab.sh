@@ -17,9 +17,10 @@ USAGE="""
      -f [path] : choose a file to log results in; default is 'deploy_log'\n
 """
 
+green=`tput setaf 2`
+reset=`tput sgr0`
 
 # DEFAULTS
-
 TASK='deploy tdd'
 WARN_ONLY=false
 LOGFILE='deploy_log'
@@ -51,15 +52,15 @@ while getopts :t:wf:R:h flag; do
     esac
 done
 
-shift $((OPTIND-1))  #This tells getopts to move on to the next argument
+shift $((OPTIND-1))
 
 case "$#" in
     1)  FIRST=$1
-        DIR=$(ls | egrep ^$FIRST-)
+        DIRECTORIES=$(ls | egrep ^$FIRST-)
         ;;
     2)  FIRST=$1 
         LAST=$2
-        DIR=$(ls | egrep ^[0-9] | sort -g | awk "/^$FIRST-/,/^$LAST-/")
+        DIRECTORIES=$(ls | egrep ^[0-9] | sort -g | awk "/^$FIRST-/,/^$LAST-/")
         ;;
     *) echo "Invalid number of parameters"
         echo -e $USAGE
@@ -83,8 +84,8 @@ fi
 
 
 # Run the command in each directory
-for d in $DIR; do
-    echo -e "\nNow on $d\n"
+for d in $DIRECTORIES; do
+    echo -e "\n${green} Now on $d ${reset}\n"
 
     if [ -e $d ]; then
         cd $d;
@@ -94,4 +95,9 @@ for d in $DIR; do
 
 
     $COMMAND $TASK | tee -a ../$LOGFILE
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+        echo -e "NON-ZERO EXIT CODE ON FAB; RUNFAB ABORTING\n"
+        exit
+    fi
+
 done
