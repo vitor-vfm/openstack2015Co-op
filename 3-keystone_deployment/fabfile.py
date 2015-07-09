@@ -266,6 +266,7 @@ def keystone_tdd():
 
         confFile= '/etc/keystone/keystone.conf'
         saveConfigFile(confFile,status)
+        print blue('\nCalling openstack-status\n###########################\n')
         run('openstack-status')
 
 def tdd():
