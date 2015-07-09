@@ -299,4 +299,5 @@ def tdd():
     tdd_DB()
     tdd_lvs()
     run('fdisk -l|grep str')
+    run('openstack-status')
 
