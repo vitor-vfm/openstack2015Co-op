@@ -10,4 +10,6 @@
 1-network_deployment
 2-messaging_deployment
 3-keystone_deployment
+4-glance_deployment
+5-nova_deployment
 glusterLib.py
