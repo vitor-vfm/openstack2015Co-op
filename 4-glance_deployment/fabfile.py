@@ -329,9 +329,9 @@ def removeTestImage(ID):
 
 @roles('controller')
 def tdd1():
-    run('mysql -u root -p%s -D mysql -e  "show databases" mysql' % passwd.ROOT_DBPASS)
-    run('mysql -u root -p%s -D mysql -e  "select User, Host, Password  from user" mysql' % passwd.ROOT_DBPASS)
-    run('mysql -u root -p%s -D mysql -e  "show tables" glance' % passwd.ROOT_DBPASS)
+    run('mysql -u root -p%s -D mysql -e  "show databases" mysql' % passwd['ROOT_SECRET'])
+    run('mysql -u root -p%s -D mysql -e  "select User, Host, Password  from user" mysql' % passwd['ROOT_SECRET'])
+    run('mysql -u root -p%s -D mysql -e  "show tables" glance' % passwd['ROOT_SECRET'])
     run('source admin-openrc.sh; keystone user-list')
     run('source admin-openrc.sh; keystone tenant-list')
     run('rpm -qa |grep "openstack-glance\|python-glanceclient"')

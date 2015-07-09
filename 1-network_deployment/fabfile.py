@@ -52,7 +52,7 @@ def restartnetwork():
 def deploy():
     execute(deployNIC)
     execute(restartnetwork)
-    print('Sleeping for 10 sec.')
+    print(blue(" \n\n Sleeping for 10 sec. \n###########################\n\n"))
     time.sleep(10)
     execute(restartnetwork)
 
