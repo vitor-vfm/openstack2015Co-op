@@ -342,7 +342,7 @@ def installPackagesNetwork():
             "openstack-neutron "
             "openstack-neutron-ml2 "
             "openstack-neutron-openvswitch",
-            quiet=True)
+            )
 
 @roles('network')
 def network_deploy():
@@ -420,8 +420,8 @@ def installPackagesCompute():
     msg = "Install Neutron packages on " + env.host
     runCheck(msg, "yum -y install "
             "openstack-neutron-ml2 "
-            "openstack-neutron-openvswitch"
-            ,quiet=True)
+            "openstack-neutron-openvswitch",
+            )
 
 @roles('compute')
 def compute_deploy():
@@ -527,7 +527,7 @@ def createExtSubnet():
 @roles('controller')
 def createDemoNet():
 
-    with prefix(env_config.admin_openrc):
+    with prefix(env_config.demo_openrc):
         if 'demo-net' in run('neutron net-list'):
             msg = 'Demo-net already created'
             print msg
@@ -544,7 +544,7 @@ def createDemoSubnet():
     gateway = env_config.demo_subnet['gateway']
     cidr = env_config.demo_subnet['cidr']
 
-    with prefix(env_config.admin_openrc):
+    with prefix(env_config.demo_openrc):
         if 'demo-subnet' in run('neutron subnet-list'):
             msg = 'Demo-subnet already created'
             print msg
@@ -562,7 +562,7 @@ def createDemoSubnet():
 @roles('controller')
 def createDemoRouter():
     
-    with prefix(env_config.admin_openrc):
+    with prefix(env_config.demo_openrc):
         if 'demo-router' in run('neutron router-list'):
             msg = 'Demo-router already created'
             print msg
