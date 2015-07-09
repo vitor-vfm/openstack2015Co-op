@@ -1,0 +1,13 @@
+# List of files under Change Control
+
+# Before pushing any changes to these files, or changes to env_config related to these files,
+# we must ask Francois
+
+# Also have a diff of the changes saved
+
+
+0-packages_installation
+1-network_deployment
+2-messaging_deployment
+3-keystone_deployment
+glusterLib.py
