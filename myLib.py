@@ -111,7 +111,8 @@ def runCheck(msg, command, quiet=False, warn_only=False):
 
     if out.return_code == 0:
         result = 'good'
-        logging.debug('Success on: ' + msg)
+        logging.info('Success on: ' + msg)
+        logging.debug(out)
     else:
         result = 'oops'
         errormsg = 'Failure on: ' + msg
