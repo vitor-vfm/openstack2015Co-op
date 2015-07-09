@@ -205,17 +205,19 @@ def start_services_on_storage():
 
 ########################### Gluster ###########################################
 
-@roles('controller', 'storage')
+@roles('controller')
 def change_cinder_files():
     runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'volume_driver' 'cinder.volume.drivers.glusterfs.GlusterfsDriver'")
     runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'glusterfs_shares_config' '/etc/cinder/shares.conf'")
 
-@roles('controller', 'storage')
+@roles('controller')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume" > /etc/cinder/shares.conf')
+    # runCheck('Fill shares.conf file', 'echo "localhost:/cinder_volume" > /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "localhost:/cinder_volume -o backupvolfile-server=compute1:/cinder_volume" > /etc/cinder/shares.conf')
+    # runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
 
-@roles('controller', 'storage')
+@roles('controller')
 def restart_cinder():
     runCheck('Restart cinder services', 'for i in api scheduler volume; do service openstack-cinder-${i} restart; done')
 
