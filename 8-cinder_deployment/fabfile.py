@@ -120,7 +120,8 @@ def setup_cinder_config_files_on_controller():
     RABBIT_PASS = passwd['RABBIT_PASS']
     CONTROLLER_MANAGEMENT_IP = env_config.nicDictionary['controller']['mgtIPADDR']
 
-    installation_command = "yum install -y openstack-cinder python-cinderclient python-oslo-db"
+    installation_command = "yum install -y openstack-cinder python-oslo-db MySQL-python"
+    # installation_command = "yum install -y openstack-cinder python-cinderclient python-oslo-db"
 
     runCheck('Install the packages', installation_command)
     
@@ -143,6 +144,8 @@ def setup_cinder_config_files_on_controller():
 
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', CONTROLLER_MANAGEMENT_IP)
 
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'glance_host', 'controller') # new line
+
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'verbose', 'True')
 
 
@@ -161,6 +164,14 @@ def start_cinder_services_on_controller():
     runCheck('Enable Block Storage services to start when system boots', enable_all)
     runCheck('Start the Block Storage services', start_all)
 
+    enable_services = "systemctl enable openstack-cinder-volume.service target.service"
+    start_services = "systemctl start openstack-cinder-volume.service target.service"
+    restart_services = "systemctl restart openstack-cinder-volume.service target.service"
+
+    runCheck('Enable services on controller', enable_services)
+    runCheck('Start services on controller', start_services)
+    runCheck('Restart services on controller', restart_services)
+
 @roles('storage')
 def setup_cinder_config_files_on_storage():
     
@@ -178,6 +189,7 @@ def setup_cinder_config_files_on_storage():
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rabbit_host', 'controller')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
+
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'auth_strategy', 'keystone')
 
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'auth_uri', 
@@ -213,9 +225,8 @@ def change_cinder_files():
 @roles('controller')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
-    # runCheck('Fill shares.conf file', 'echo "localhost:/cinder_volume" > /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "localhost:/cinder_volume -o backupvolfile-server=compute1:/cinder_volume" > /etc/cinder/shares.conf')
     # runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume" > /etc/cinder/shares.conf')
 
 @roles('controller')
 def restart_cinder():
@@ -242,8 +253,8 @@ def deploy():
     execute(start_cinder_services_on_controller)
 
     # setup services on storage
-    execute(setup_cinder_config_files_on_storage)
-    execute(start_services_on_storage)
+    # execute(setup_cinder_config_files_on_storage)
+    # execute(start_services_on_storage)
 
     # customize gluster to cinder
     execute(change_cinder_files)
