@@ -598,7 +598,7 @@ def deploy():
     execute(controller_deploy)
     execute(network_deploy)
     execute(compute_deploy)
-    
+    execute(createInitialNetwork)
 
 ######################################## TDD #########################################
 
@@ -763,7 +763,7 @@ def tdd():
 
         execute(compute_tdd)
 
-        # execute(createInitialNetworkTdd)
+        execute(createInitialNetworkTdd)
 
         # save config files
         execute(saveConfigController,status)
