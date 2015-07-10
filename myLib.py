@@ -129,6 +129,14 @@ def set_parameter(config_file, section, parameter, value):
     Change a parameter in a config file
 
     Wrapper for crudini
+	
+    Note:
+         For editing the value of a parameter that is has no section,
+         user must include "''" as the arguments for the section.
+         Including only one set of quotes will cause the function to 
+         simply ignore the quotes and assume that the parameter is 
+         the section and that the value is the parameter and that 
+         the value is an empty string.
     """
     crudini_command = "crudini --set {} {} {} {}".format(config_file, section, parameter, value)
     result = run(crudini_command,warn_only=True,quiet=True)
