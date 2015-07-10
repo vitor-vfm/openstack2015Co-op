@@ -100,10 +100,10 @@ function action_on_services {
 	    servicesStor="chronyd"
 	    ;;
 	1)
-#	    servicesComp="network chronyd "  
+	    servicesComp="network chronyd "  
 	    servicesCont="network chronyd "
-#	    servicesNetw="network chronyd "
-#	    servicesStor="network chronyd "
+	    servicesNetw="network chronyd "
+	    servicesStor="network chronyd "
 	    ;;
 	2)
 	    servicesComp=""
@@ -261,17 +261,6 @@ function action_on_services {
 	    echo "running $action on services for ${component_dictionary[$component]} that run on the Network"
 	fi
 	run_command "$servicesNetw" $action "network"
-
-    fi
-
-    if ! [ -z "$servicesStor" ] 
-    then
-	if [ $verbosity -ge 1 ]
-	then
-	    echo -e "\n"
-	    echo "running $action on services for ${component_dictionary[$component]} that run on the Storage"
-	fi
-	run_command "$servicesStor" $action "storage1"
 
     fi
 }
