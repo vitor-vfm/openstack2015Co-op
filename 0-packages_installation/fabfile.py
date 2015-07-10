@@ -261,7 +261,7 @@ def deploy():
     execute(shrinkHome)
     execute(prepGlusterFS)
     logging.info("Deploy ended at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
-    abort('Yeah we are done')
+    print align_y('Yeah we are done')
 
 
 #@roles('storage')

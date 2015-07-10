@@ -82,6 +82,7 @@ if [ $WARN_ONLY = true ]; then
     COMMAND="$COMMAND -w";
 fi
 
+START=$(date -R)
 
 # Run the command in each directory
 for d in $DIRECTORIES; do
@@ -101,3 +102,10 @@ for d in $DIRECTORIES; do
     fi
 
 done
+
+
+END=$(date -R)
+
+echo -e "\nSuccessfully ran $TASK from $FIRST to $LAST\n"
+echo -e "Start time: $START\n"
+echo -e "End time: $END\n"
