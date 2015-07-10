@@ -264,7 +264,7 @@ def deploy():
 ################################# TDD #########################################
 
 @roles('controller')
-def verify():
+def tdd():
     with prefix(admin_openrc):
         runCheck('List service components', 'cinder service-list')
     #runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
@@ -289,10 +289,3 @@ def verify():
 
         runCheck('Delete test volume', 'cinder delete demo-volume1')
         #runCheck('Check if cinder is running', 'cinder service-list')
-
-def tdd():
-    with settings(warn_only=True):
-        # to be done on the controller node
-        execute(verify)
-
-
