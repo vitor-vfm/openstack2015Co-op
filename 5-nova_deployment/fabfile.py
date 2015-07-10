@@ -227,7 +227,7 @@ def setup_GlusterFS_Nova():
 @roles('controller', 'compute') 
 def setup_nova_conf_file(): 
     confFile = '/etc/nova/nova.conf'      
-    set_parameter(confFile, 'glance', 'libvirt_type', 'qemu') 
+    #set_parameter(confFile, 'glance', 'libvirt_type', 'qemu') 
     set_parameter(confFile, 'DEFAULT', 'instances_path',  
             env_config.novaGlusterBrick)
 
