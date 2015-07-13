@@ -20,6 +20,7 @@ Runs a fab command on the range of directories given and saves the output to a l
 """
 
 green=`tput setaf 2`
+red=`tput setaf 1`
 reset=`tput sgr0`
 
 # DEFAULTS
