@@ -84,6 +84,9 @@ fi
 
 START=$(date -R)
 
+# Put header in file
+echo -e "\n############################## $START ##############################\n" >>$LOGFILE
+
 # Run the command in each directory
 for d in $DIRECTORIES; do
     echo -e "\n${green} Now on $d ${reset}\n"
