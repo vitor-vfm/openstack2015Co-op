@@ -1,0 +1,16 @@
+#! /bin/bash
+
+# Choose hostlist (production or development)
+if [ "$MYHOSTNAME" = "ipmi5" ]; then
+    hosts=$(cat hostlist_prod);
+else
+    hosts=$(cat hostlist_dev);
+fi
+
+for host in $hosts; do
+    sed -i "/$host/ d" ~/.ssh/known_hosts
+done
+
+for host in $hosts; do
+    ssh-copy-id root@$host
+done
