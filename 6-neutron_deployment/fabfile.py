@@ -747,27 +747,27 @@ def tdd():
     # it changes the value to 'bad'
     status = 'good'
 
-    with settings(warn_only=True):
+    res = execute(keystone_check,'neutron',roles=['controller'])
+    if res.values()[0] == 'FAIL':
+        status = 'bad'
 
-        res = execute(keystone_check,'neutron',roles=['controller'])
-        if res.values()[0] == 'FAIL':
-            status = 'bad'
+    res = execute(database_check,'neutron',roles=['controller'])
+    if res.values()[0] == 'FAIL':
+        status = 'bad'
 
-        res = execute(database_check,'neutron',roles=['controller'])
-        if res.values()[0] == 'FAIL':
-            status = 'bad'
+    execute(controller_tdd)
 
-        execute(controller_tdd)
+    execute(network_tdd)
 
-        execute(network_tdd)
+    execute(compute_tdd)
 
-        execute(compute_tdd)
+    execute(createInitialNetworkTdd)
 
-        execute(createInitialNetworkTdd)
+    # save config files
+    execute(saveConfigController,status)
+    execute(saveConfigNetwork,status)
+    execute(saveConfigCompute,status)
 
-        # save config files
-        execute(saveConfigController,status)
-        execute(saveConfigNetwork,status)
-        execute(saveConfigCompute,status)
-
-
+    # exit with error if there was a problem anywhere
+    if status != 'good':
+        sys.exit(1)
