@@ -7,6 +7,8 @@ USAGE="""
      f : first script, by number\n
      l : last script, by number\n
 \n
+Runs a fab command on the range of directories given and saves the output to a log file\n
+\n
    options:\n
      -h : show usage\n
      -t [task] : specify a fabric task to run. Default is 'deploy tdd'\n
@@ -100,7 +102,7 @@ for d in $DIRECTORIES; do
 
     $COMMAND $TASK | tee -a ../$LOGFILE
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
-        echo -e "NON-ZERO EXIT CODE ON FAB; RUNFAB ABORTING\n"
+        echo -e "${red}NON-ZERO EXIT CODE ON FAB; RUNFAB ABORTING${reset}\n"
         exit
     fi
 
@@ -109,6 +111,6 @@ done
 
 END=$(date -R)
 
-echo -e "\nSuccessfully ran $TASK from $FIRST to $LAST\n"
+echo -e "${green}\nSuccessfully ran $TASK from $FIRST to $LAST\n"
 echo -e "Start time: $START\n"
-echo -e "End time: $END\n"
+echo -e "End time: $END${reset}\n"
