@@ -49,7 +49,7 @@ def mustDoOnHost():
     logging.info(msg)
     with settings(warn_only=True):
         hostsStatus=run('grep controller /etc/hosts')
-        if(hostsStatus != 0):
+        if(hostsStatus.return_code != 0):
             msg="updating /etc/hosts"
             for host in nicDictionary.keys():
                 newline = '%s\t%s' % (nicDictionary[host]['mgtIPADDR'], host)
