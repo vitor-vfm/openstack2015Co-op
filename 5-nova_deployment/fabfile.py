@@ -164,7 +164,7 @@ def setup_nova_config_files_on_compute():
     NOVA_PASS = passwd['NOVA_PASS']
     NOVA_DBPASS = passwd['NOVA_DBPASS']
     RABBIT_PASS = passwd['RABBIT_PASS']
-    NETWORK_MANAGEMENT_IP = env_config.nicDictionary['network']['mgtIPADDR']
+    MANAGEMENT_IP = env_config.nicDictionary[env.host]['mgtIPADDR']
     
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -178,11 +178,11 @@ def setup_nova_config_files_on_compute():
     set_parameter(etc_nova_config_file, 'keystone_authtoken', 'admin_user', 'nova')   
     set_parameter(etc_nova_config_file, 'keystone_authtoken', 'admin_password', NOVA_PASS)   
 
-    set_parameter(etc_nova_config_file, 'DEFAULT', 'my_ip', NETWORK_MANAGEMENT_IP)
+    set_parameter(etc_nova_config_file, 'DEFAULT', 'my_ip', MANAGEMENT_IP)
 
     set_parameter(etc_nova_config_file, 'DEFAULT', 'vnc_enabled', 'True')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_listen', '0.0.0.0')
-    set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_proxyclient_address', NETWORK_MANAGEMENT_IP)
+    set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_proxyclient_address', MANAGEMENT_IP)
     set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_base_url', 'http://controller:6080/vnc_auto.html')
 
 
