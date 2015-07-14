@@ -103,7 +103,7 @@ for d in $DIRECTORIES; do
 
     $COMMAND $TASK | tee -a ../$LOGFILE
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
-        echo -e "${red}NON-ZERO EXIT CODE ON FAB; RUNFAB ABORTING${reset}\n"
+        echo -e "${red}\nNon-zero exit code on fab; runfab aborting on directory $d${reset}\n"
         exit
     fi
 
