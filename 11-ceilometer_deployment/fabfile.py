@@ -52,11 +52,11 @@ def setup_ceilometer_keystone_on_controller():
 
         if 'ceilometer' not in run("keystone service-list"):
             msg = "Create service ceilometer"
-            runCheck(msg, "keystone service-create --name ceilometer --type image --description 'Telemetry'")
+            runCheck(msg, "keystone service-create --name ceilometer --type metering --description 'Telemetry'")
         else:
             print blue("Service ceilometer already created. Do nothing")
 
-        if 'http://controller:9292' not in run("keystone endpoint-list"):
+        if 'http://controller:8777' not in run("keystone endpoint-list"):
             msg = "Create endpoint for service ceilometer"
             runCheck(msg, "keystone endpoint-create " + \
                     "--service-id $(keystone service-list | awk '/ metering / {print $2}') " +\
