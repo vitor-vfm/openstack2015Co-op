@@ -176,9 +176,9 @@ def secureDB():
         return
     run('echo "DELETE FROM mysql.user WHERE User=\'\';" | mysql ')
     run('echo "DELETE FROM mysql.db WHERE Db=\'test\' " | mysql ')
-    run('/usr/bin/mysqladmin -u root password \'%s\''%  env_config.passwd['ROOT_SECRET'])
-    run('/usr/bin/mysqladmin -u root -p%s -f drop test'%  env_config.passwd['ROOT_SECRET'])
-    run('/usr/bin/mysqladmin -u root -p%s flush-privilege'%  env_config.passwd['ROOT_SECRET'])
+    run("""echo "update mysql.user set password=password('%s') where user='root'; " |mysql """ %  env_config.passwd['ROOT_SECRET'])
+    run('systemctl restart mariadb.service')
+    run("""echo 'select user,password from mysql.user where user="root"' | mysql -u root -p%s """ % env_config.passwd['ROOT_SECRET'])
     printMessage("good","********** MySQL is installed, configured and secured *************")
     logging.info("********** MySQL is installed, configured and secured *************")
 
@@ -195,12 +195,10 @@ def tdd_DB():
         print("Here is a list of the current databases:\n %s"% result)
 
 
-@roles('controller')
-#@roles('controller','compute','network','storage')
-# @roles('controller','compute','network')
+@roles('controller','compute','network','storage')
 @with_settings(warn_only=True)
 def test():
-    run('chronyc sources -v ')
+    pass
 
 
 #@roles('storage')
@@ -248,9 +246,6 @@ def prepGlusterFS():
         runCheck('List new partitions', 'fdisk -l|grep str')
 
 
-#@roles('storage')
-@roles('controller','compute','network','storage')
-# @roles('controller','compute','network')
 def deploy():
     logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
     execute(mustDoOnHost)

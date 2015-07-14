@@ -103,7 +103,7 @@ for d in $DIRECTORIES; do
 
     $COMMAND $TASK | tee -a ../$LOGFILE
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
-        echo -e "${red}NON-ZERO EXIT CODE ON FAB; RUNFAB ABORTING${reset}\n"
+        echo -e "${red}\nNon-zero exit code on fab; runfab aborting on directory $d${reset}\n"
         exit
     fi
 
@@ -112,6 +112,10 @@ done
 
 END=$(date -R)
 
-echo -e "${green}\nSuccessfully ran $TASK from $FIRST to $LAST\n"
+if [ $LAST ]; then
+    echo -e "${green}\nSuccessfully ran $TASK from $FIRST to $LAST\n"
+else
+    echo -e "${green}\nSuccessfully ran $TASK on $FIRST\n"
+fi
 echo -e "Start time: $START\n"
 echo -e "End time: $END${reset}\n"
