@@ -342,8 +342,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                'SWIFT_PASS' : '34Sw1f43',
                'TROVE_PASS' : '34Tr0v343',
                'TROVE_DBPASS' : '34Tr0v3db4s343',
-               'CEILOMETER_DBPASS' : '34ceilometer_db43',
-               'CEILOMETER_PASS' : '34ceilometer_ks43',
+               'CEILOMETER_PASS' : '34ceilometer_db43',
                }
 
 

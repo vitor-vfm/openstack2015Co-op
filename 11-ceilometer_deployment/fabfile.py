@@ -70,7 +70,6 @@ def setup_ceilometer_keystone_on_controller():
 @roles('controller')
 def setup_ceilometer_config_files_on_controller():
     CEILOMETER_PASS = passwd['CEILOMETER_PASS']
-    CEILOMETER_DBPASS = passwd['CEILOMETER_DBPASS']
     ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
     RABBIT_PASS = passwd['RABBIT_PASS']
 
@@ -85,7 +84,7 @@ def setup_ceilometer_config_files_on_controller():
     # and insertion into respective nodes (compute and controller)
     #metering_secret = run("openssl rand -hex 10") 
     
-    set_parameter(ceilometer_config_file, 'database', 'connection', 'mongodb://ceilometer:{}@controller:27017/ceilometer'.format(CEILOMETER_DBPASS))
+    set_parameter(ceilometer_config_file, 'database', 'connection', 'mongodb://ceilometer:{}@controller:27017/ceilometer'.format(CEILOMETER_PASS))
 
     set_parameter(ceilometer_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(ceilometer_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -149,7 +148,7 @@ def setup_mongo_on_controller():
 
 @roles('controller')
 def create_mongo_ceilometer_db_on_controller():
-    CEILOMETER_PASS = env_config.passwd['CEILOMETER_PASS']
+    CEILOMETER_PASS = passwd['CEILOMETER_PASS']
 
     command = """ mongo --host controller --eval ' """ + \
               """ db = db.getSiblingDB("ceilometer");  """ + \
