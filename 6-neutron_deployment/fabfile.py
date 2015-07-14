@@ -602,6 +602,46 @@ def deploy():
 
 ######################################## TDD #########################################
 
+@roles('controller')
+def saveConfigController(status):
+    """
+    Save locally the config files that exist in the controller node
+    """
+    saveConfigFile(neutron_conf,status)
+    saveConfigFile(ml2_conf_file,status)
+    saveConfigFile(nova_conf,status)
+
+@roles('network')
+def saveConfigNetwork(status):
+    """
+    Save locally the config files that exist in the network node
+    """
+    saveConfigFile(sysctl_conf,status)
+    saveConfigFile(neutron_conf,status)
+    saveConfigFile(ml2_conf_file,status)
+    saveConfigFile(l3_agent_file,status)
+    saveConfigFile(dhcp_agent_file,status)
+    saveConfigFile(metadata_agent_file,status)
+
+@roles('compute')
+def saveConfigCompute(status):
+    """
+    Save locally the config files that exist in the compute nodes
+    """
+    saveConfigFile(sysctl_conf,status)
+    saveConfigFile(neutron_conf,status)
+    saveConfigFile(nova_conf,status)
+
+def errorAndExit():
+    """
+    Saves all config file with status 'bad' and exits the script
+    """
+    execute(saveConfigController,'bad')
+    execute(saveConfigNetwork,'bad')
+    execute(saveConfigCompute,'bad')
+    sys.exit(1)
+
+
 @roles('network', 'controller', 'compute')
 def createInitialNetworkTdd():
 
@@ -637,18 +677,19 @@ def controller_tdd():
     
     with prefix(env_config.admin_openrc):
         # save ext-list into a file, to avoid running the list command several times
-        ext_list = run('neutron ext-list >ext-list',quiet=True)
+        ext_list = run('neutron ext-list >ext-list',quiet=True, warn_only=True)
 
         if ext_list.return_code != 0:
             print red('Could not run ext-list')
-            return 'FAIL'
+            errorAndExit()
 
         for pair in alias_name_pairs:
             alias = pair[0]
-            name = run("cat ext-list | grep ' {} ' | cut -d\| -f3".format(alias),quiet=True)
+            name = run("cat ext-list | grep ' {} ' | cut -d\| -f3".format(alias),
+                    quiet=True, warn_only=True)
             if pair[1] not in name:
                 print align_n("Alias {} should be {}, is {}".format(alias,pair[1],name.strip()))
-                status = 'bad'
+                errorAndExit()
             else:
                 print align_y("Alias {} is {}, as expected".format(alias,name.strip()))
 
@@ -666,21 +707,23 @@ def verify_neutron_agents(neutron_agents,hostname):
         run("neutron agent-list >agent-list",quiet=True)
 
         for agent in neutron_agents:
-            agent_line = run("cat agent-list | grep '%s' | grep '%s'" % (agent,hostname),quiet=True)
+            agent_line = run("cat agent-list | grep '%s' | grep '%s'" % (agent,hostname),
+                    quiet=True, warn_only=True)
             if agent_line.return_code != 0:
                 print align_n("Neutron agent {} not found in agent-list".format(agent))
-                status = 'bad'
+                errorAndExit()
             else:
                 n_lines = len(agent_line.splitlines())
 
                 if n_lines > 1:
                     print align_n('There\'s more than one agent called ' + agent)
+                    errorAndExit()
                 elif hostname not in agent_line:
                     print align_n('Host for agent %s is not %s' % (agent,hostname))
-                    status = 'bad'
+                    errorAndExit()
                 elif ':-)' not in agent_line:
                     print align_n("Status for %s agent is not ':-)'" % agent)
-                    status = 'bad'
+                    errorAndExit()
                 else:
                     print align_y("Neutron agent {} OK!".format(agent))
 
@@ -701,59 +744,23 @@ def compute_tdd():
         list_of_compute_hostnames = [hostname for hostname in env_config.hosts\
                 if 'compute' in ''.join(hostname)]
 
-        agent_lines = run('neutron agent-list | grep "%s"' % agent, quiet=True).splitlines()
+        agent_lines = run('neutron agent-list | grep "%s"' % agent, 
+                quiet=True, warn_only=True).splitlines()
         for line in agent_lines:
             if ':-)' not in line:
                 print align_n('Problem with agent ' + agent)
-                status = 'bad'
+                errorAndExit()
             else:
                 print align_y("Neutron agent %s OK!" % agent)
-
-
-@roles('controller')
-def saveConfigController(status):
-    """
-    Save locally the config files that exist in the controller node
-    """
-    saveConfigFile(neutron_conf,status)
-    saveConfigFile(ml2_conf_file,status)
-    saveConfigFile(nova_conf,status)
-
-@roles('network')
-def saveConfigNetwork(status):
-    """
-    Save locally the config files that exist in the network node
-    """
-    saveConfigFile(sysctl_conf,status)
-    saveConfigFile(neutron_conf,status)
-    saveConfigFile(ml2_conf_file,status)
-    saveConfigFile(l3_agent_file,status)
-    saveConfigFile(dhcp_agent_file,status)
-    saveConfigFile(metadata_agent_file,status)
-
-@roles('compute')
-def saveConfigCompute(status):
-    """
-    Save locally the config files that exist in the compute nodes
-    """
-    saveConfigFile(sysctl_conf,status)
-    saveConfigFile(neutron_conf,status)
-    saveConfigFile(nova_conf,status)
-
 def tdd():
-
-    # status is initialized as 'good'
-    # if any of the tdd functions gets an error,
-    # it changes the value to 'bad'
-    status = 'good'
 
     res = execute(keystone_check,'neutron',roles=['controller'])
     if res.values()[0] == 'FAIL':
-        status = 'bad'
+        errorAndExit()
 
     res = execute(database_check,'neutron',roles=['controller'])
     if res.values()[0] == 'FAIL':
-        status = 'bad'
+        errorAndExit()
 
     execute(controller_tdd)
 
@@ -763,11 +770,7 @@ def tdd():
 
     execute(createInitialNetworkTdd)
 
-    # save config files
-    execute(saveConfigController,status)
-    execute(saveConfigNetwork,status)
-    execute(saveConfigCompute,status)
-
-    # exit with error if there was a problem anywhere
-    if status != 'good':
-        sys.exit(1)
+    # save config files with success
+    execute(saveConfigController,'good')
+    execute(saveConfigNetwork,'good')
+    execute(saveConfigCompute,'good')
