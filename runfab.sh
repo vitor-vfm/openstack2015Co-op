@@ -112,7 +112,7 @@ done
 
 END=$(date -R)
 
-if [ $LAST != '' ]; then
+if [ $LAST ]; then
     echo -e "${green}\nSuccessfully ran $TASK from $FIRST to $LAST\n"
 else
     echo -e "${green}\nSuccessfully ran $TASK on $FIRST\n"
