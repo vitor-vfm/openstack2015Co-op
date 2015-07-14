@@ -231,7 +231,7 @@ def configure_object_storage():
 def install_packages_on_compute():
     # Install packages
     msg = "Install OpenStack Ceilometer packages"
-    runCheck(msg, "yum install -y openstack-ceilometer python-ceilometerclient python-pecan")
+    runCheck(msg, "yum install -y openstack-ceilometer-compute python-ceilometerclient python-pecan")
    
 
 @roles('compute')
@@ -336,13 +336,13 @@ def verify():
     with prefix(credentials):
         # before each creation, we check a list to avoid duplicates
         run("ceilometer meter-list")
-        run('glance image-download "cirros-0.3.3-x86_64" > cirros.img')
+        run('glance image-download "cirros-test" > cirros.img')
         run("ceilometer meter-list")
         run('ceilometer statistics -m image.download -p 60')
         
     
 def tdd():
     with settings(warn_only=True):
-        execute(database_check,'ceilometer',roles=['controller'])
+        #execute(database_check,'ceilometer',roles=['controller'])
         execute(keystone_check,'ceilometer',roles=['controller'])
         execute(verify)
