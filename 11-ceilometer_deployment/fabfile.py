@@ -59,7 +59,7 @@ def setup_ceilometer_keystone_on_controller():
         if 'http://controller:8777' not in run("keystone endpoint-list"):
             msg = "Create endpoint for service ceilometer"
             runCheck(msg, "keystone endpoint-create " + \
-                    "--service-id $(keystone service-list | awk '/ metering / {print $2}') " +\
+                    "--service-id $(keystone service-list | awk '/ceilometer/ {print $2}') " +\
                     "--publicurl http://controller:8777 " + \
                     "--internalurl http://controller:8777 " + \
                     "--adminurl http://controller:8777 " + \
@@ -70,10 +70,11 @@ def setup_ceilometer_keystone_on_controller():
 @roles('controller')
 def setup_ceilometer_config_files_on_controller():
     CEILOMETER_PASS = passwd['CEILOMETER_PASS']
-    CEILOMETER_DBPAS = passwd['CEILOMETER_DBPASS']
+    CEILOMETER_DBPASS = passwd['CEILOMETER_DBPASS']
     ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
+    RABBIT_PASS = passwd['RABBIT_PASS']
 
-    install_command = "yum install openstack-ceilometer-api openstack-ceilometer-collector " + \
+    install_command = "yum install -y openstack-ceilometer-api openstack-ceilometer-collector " + \
         "openstack-ceilometer-notification openstack-ceilometer-central openstack-ceilometer-alarm " + \
         "python-ceilometerclient"
     
@@ -113,7 +114,7 @@ def setup_ceilometer_config_files_on_controller():
 
 @roles('controller')
 def setup_mongo_on_controller():
-    CONTROLLER_IP = env_config.controllerManagement['IPADDR']
+    CONTROLLER_IP = env_config.nicDictionary['controller']['mgtIPADDR']
     run("yum install -y mongodb-server mongodb")
     confFile = "/etc/mongod.conf"
 
@@ -175,6 +176,7 @@ def start_ceilometer_services_on_controller():
 
 @roles('controller')
 def configure_image_service():
+    RABBIT_PASS = passwd['RABBIT_PASS']
     image_config_file_names = ['/etc/glance/glance-api.conf','/etc/glance/glance-registry.conf']
 
     for image_config_file in image_config_file_names:
