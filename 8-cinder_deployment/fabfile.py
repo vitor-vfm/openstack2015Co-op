@@ -38,10 +38,6 @@ node is less than 60 seconds
 
 env.roledefs = env_config.roledefs
 
-admin_openrc = env_config.admin_openrc
-
-demo_openrc = env_config.demo_openrc
-
 etc_cinder_config_file = "/etc/cinder/cinder.conf"
 
 passwd = env_config.passwd
@@ -52,23 +48,19 @@ passwd = env_config.passwd
 @roles('controller')
 def setup_cinder_database_on_controller():
 
-    CINDER_DBPASS = passwd['CINDER_DBPASS']
-
-    mysql_commands = createDatabaseScript("cinder",CINDER_DBPASS)    
+    mysql_commands = createDatabaseScript("cinder",passwd['CINDER_DBPASS'])    
     msg = 'Create the database'
-    runCheck(msg, 'echo "{}" | mysql -u root -p{}'.format(mysql_commands, env_config.passwd['ROOT_SECRET']))
-    
+    runCheck(msg, 'echo "%s" | mysql -u root -p%s' % (mysql_commands, 
+        env_config.passwd['ROOT_SECRET']))
 
 @roles('controller')
 def setup_cinder_keystone_on_controller():
 
-    CINDER_PASS = passwd['CINDER_PASS']
-
-    with prefix(admin_openrc):
+    with prefix(env_config.admin_openrc):
 
         if 'cinder' not in run("keystone user-list"):
             runCheck('Create a cinder user',
-                    "keystone user-create --name cinder --pass {}".format(CINDER_PASS))
+                    "keystone user-create --name cinder --pass %s" % passwd['CINDER_PASS'])
             runCheck('Add the admin role to the cinder user',
                     "keystone user-role-add "
                     "--user cinder --tenant service --role admin")
@@ -115,22 +107,17 @@ def setup_cinder_keystone_on_controller():
 @roles('controller')
 def setup_cinder_config_files_on_controller():
 
-    CINDER_DBPASS = passwd['CINDER_DBPASS']
-    CINDER_PASS = passwd['CINDER_PASS']
-    RABBIT_PASS = passwd['RABBIT_PASS']
-    CONTROLLER_MANAGEMENT_IP = env_config.nicDictionary['controller']['mgtIPADDR']
-
     installation_command = "yum install -y openstack-cinder python-oslo-db MySQL-python"
     # installation_command = "yum install -y openstack-cinder python-cinderclient python-oslo-db"
 
     runCheck('Install the packages', installation_command)
     
     set_parameter(etc_cinder_config_file, 'database', 'connection', 
-            'mysql://cinder:{}@controller/cinder'.format(CINDER_DBPASS))
+            'mysql://cinder:%s@controller/cinder' % passwd['CINDER_DBPASS'])
 
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'rabbit_host', 'controller')
-    set_parameter(etc_cinder_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'rabbit_password', passwd['RABBIT_PASS'])
 
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'auth_strategy', 'keystone')
 
@@ -140,9 +127,11 @@ def setup_cinder_config_files_on_controller():
             'http://controller:35357') 
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_tenant_name', 'service') 
     set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_user', 'cinder')   
-    set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_password', CINDER_PASS)   
+    set_parameter(etc_cinder_config_file, 'keystone_authtoken', 'admin_password', 
+            passwd['CINDER_PASS'])   
 
-    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', CONTROLLER_MANAGEMENT_IP)
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'my_ip', 
+           env_config.nicDictionary['controller']['mgtIPADDR'])
 
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glance_host', 'controller') # new line
 
@@ -156,21 +145,14 @@ def populate_database_on_controller():
 
 @roles('controller')
 def start_cinder_services_on_controller():
+    services = ['openstack-cinder-api','openstack-cinder-scheduler',
+            'openstack-cinder-volume','target']
 
-    enable_all = "systemctl enable openstack-cinder-api.service openstack-cinder-scheduler.service"
-
-    start_all = "systemctl start openstack-cinder-api.service openstack-cinder-scheduler.service"
-    
-    runCheck('Enable Block Storage services to start when system boots', enable_all)
-    runCheck('Start the Block Storage services', start_all)
-
-    enable_services = "systemctl enable openstack-cinder-volume.service target.service"
-    start_services = "systemctl start openstack-cinder-volume.service target.service"
-    restart_services = "systemctl restart openstack-cinder-volume.service target.service"
-
-    runCheck('Enable services on controller', enable_services)
-    runCheck('Start services on controller', start_services)
-    runCheck('Restart services on controller', restart_services)
+    for service in services:
+        msg = 'Enable %s service' % service
+        runCheck(msg, 'systemctl enable %s.service' % service)
+        msg = 'Start %s service' % service
+        runCheck(msg, 'systemctl start %s.service' % service)
 
 @roles('storage')
 def setup_cinder_config_files_on_storage():
@@ -230,7 +212,10 @@ def change_shares_file():
 
 @roles('controller')
 def restart_cinder():
-    runCheck('Restart cinder services', 'for i in api scheduler volume; do service openstack-cinder-${i} restart; done')
+    services = ['api', 'scheduler', 'volume']
+    for service in services:
+        msg = 'Restart cinder-%s' % service
+        runCheck(msg, 'systemctl restart openstack-cinder-%s' % service)
 
 ########################### Deployment ########################################
 
@@ -263,12 +248,18 @@ def deploy():
 
 ################################# TDD #########################################
 
+@roles(env_config.roles)
+def showStatus():
+    run('openstack-status')
+
 @roles('controller')
 def tdd():
-    with prefix(admin_openrc):
+    execute(showStatus)
+
+    with prefix(env_config.admin_openrc):
         runCheck('List service components', 'cinder service-list')
     #runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
-    with prefix(demo_openrc):    
+    with prefix(env_config.demo_openrc):    
         runCheck('Create a 1 GB volume', 
                 'cinder create --display-name demo-volume1 1')
 
