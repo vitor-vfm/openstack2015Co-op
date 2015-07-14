@@ -79,7 +79,10 @@ def setup_ceilometer_config_files_on_controller():
     
     run(install_command)
     
-    metering_secret = run("openssl rand -hex 10")
+
+    # we use our own from env_config in order to simplify key generation
+    # and insertion into respective nodes (compute and controller)
+    #metering_secret = run("openssl rand -hex 10") 
     
     set_parameter(ceilometer_config_file, 'database', 'connection', 'mongodb://ceilometer:{}@controller:27017/ceilometer'.format(CEILOMETER_DBPASS))
 
@@ -103,7 +106,7 @@ def setup_ceilometer_config_files_on_controller():
     set_parameter(ceilometer_config_file, 'service_credentials', 'os_password', CEILOMETER_PASS)   
 
 
-    set_parameter(ceilometer_config_file, 'publisher', 'metering_secret', metering_secret)
+    set_parameter(ceilometer_config_file, 'publisher', 'metering_secret', env_config.metering_secret)
 
     set_parameter(ceilometer_config_file, 'DEFAULT', 'verbose', 'True')
     
@@ -234,12 +237,7 @@ def install_and_configure_ceilometer_on_compute():
 
     RABBIT_PASS = passwd['RABBIT_PASS']
     CEILOMETER_PASS = passwd['CEILOMETER_PASS']
-
-    # get ceilometer config file from controller
-    local("scp root@controller:/etc/ceilometer/ceilometer.conf /tmp/")
-
-    # getting metering_secret from config file
-    metering_secret = local("crudini --get /tmp/ceilometer.conf publisher metering_secret")
+    metering_secret = env_config.metering_secret
 
     ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
 
