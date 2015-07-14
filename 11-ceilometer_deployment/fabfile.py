@@ -317,8 +317,8 @@ def deploy():
     ###### configure block service
     execute(configure_block_storage)
 
-    ###### configure object service
-    execute(configure_object_storage)
+    ###### configure object service ### left out for now
+    #execute(configure_object_storage)
     
 
 
