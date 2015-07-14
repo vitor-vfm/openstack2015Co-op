@@ -279,9 +279,9 @@ def configure_notifications_on_compute():
 
 @roles('compute')
 def start_telemetry_on_compute():
-    run("enable telemetry","systemctl enable openstack-ceilometer-compute.service")
-    run("start telemetry","systemctl start openstack-ceilometer-compute.service")
-    run("restart telemetry","systemctl restart openstack-ceilometer-compute.service")
+    runCheck("enable telemetry","systemctl enable openstack-ceilometer-compute.service")
+    runCheck("start telemetry","systemctl start openstack-ceilometer-compute.service")
+    #runCheck("restart telemetry","systemctl restart openstack-ceilometer-compute.service")
 
 
 @roles('compute')
