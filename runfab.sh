@@ -112,6 +112,10 @@ done
 
 END=$(date -R)
 
-echo -e "${green}\nSuccessfully ran $TASK from $FIRST to $LAST\n"
+if [ $LAST != '' ]; then
+    echo -e "${green}\nSuccessfully ran $TASK from $FIRST to $LAST\n"
+else
+    echo -e "${green}\nSuccessfully ran $TASK on $FIRST\n"
+fi
 echo -e "Start time: $START\n"
 echo -e "End time: $END${reset}\n"
