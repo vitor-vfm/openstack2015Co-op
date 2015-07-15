@@ -307,8 +307,8 @@ pid-file=/var/run/mariadb/mariadb.pid
     # for the env dictionary
     roledefs = { 'compute' : ['root@compute1'],
                  'network' : ['root@network'],
-                 'storage' : ['root@storage1'],
-                 # 'storage' : [],
+                 # 'storage' : ['root@storage1'],
+                 'storage' : [],
                  'controller' : ['root@controller']}
 
     roles = roledefs.keys()
@@ -342,8 +342,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                'SWIFT_PASS' : '34Sw1f43',
                'TROVE_PASS' : '34Tr0v343',
                'TROVE_DBPASS' : '34Tr0v3db4s343',
-               'CEILOMETER_DBPASS' : '34ceilometer_db43',
-               'CEILOMETER_PASS' : '34ceilometer_ks43',
+               'CEILOMETER_PASS' : '34ceilometer_db43',
                }
 
 
@@ -578,6 +577,24 @@ path = PATH
 read only = false
 lock file = /var/lock/object.lock
 """
+
+
+    ##################################################################
+
+
+     ######  ######## #### ##        #######  ##     ## ######## ######## ######## ########  
+    ##    ## ##        ##  ##       ##     ## ###   ### ##          ##    ##       ##     ## 
+    ##       ##        ##  ##       ##     ## #### #### ##          ##    ##       ##     ## 
+    ##       ######    ##  ##       ##     ## ## ### ## ######      ##    ######   ########  
+    ##       ##        ##  ##       ##     ## ##     ## ##          ##    ##       ##   ##   
+    ##    ## ##        ##  ##       ##     ## ##     ## ##          ##    ##       ##    ##  
+     ######  ######## #### ########  #######  ##     ## ########    ##    ######## ##     ## 
+
+    ##################################################################
+
+
+    metering_secret = "34m43s34m43"
+
 
 
 
