@@ -392,9 +392,9 @@ def keystone_check(name, verbose=False):
 
     def service_exists(name):
         if name in run_v("cat service-list | awk '// {print$4}'"):
-            print align_y(name + 'service exists')
+            print align_y(name + ' service exists')
         else:
-            print align_n(name + 'service absent')
+            print align_n(name + ' service absent')
             result = 'FAIL'
     
     def endpoint_check(name):

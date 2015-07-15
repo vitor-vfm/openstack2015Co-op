@@ -179,7 +179,7 @@ def configure_image_service():
     image_config_file_names = ['/etc/glance/glance-api.conf','/etc/glance/glance-registry.conf']
 
     for image_config_file in image_config_file_names:
-        set_parameter(image_config_file, 'DEFAULT', 'notification_driver', 'rabbit')
+        set_parameter(image_config_file, 'DEFAULT', 'notification_driver', 'messagingv2')
         set_parameter(image_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
         set_parameter(image_config_file, 'DEFAULT', 'rabbit_host', 'controller')
         set_parameter(image_config_file, 'DEFAULT', 'rabbit_password', RABBIT_PASS)
