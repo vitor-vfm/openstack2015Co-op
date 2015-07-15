@@ -14,10 +14,10 @@ import time
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
-PARTITION = 'strFile'
-VOLUME = 'glance_volume'
+PARTITION = 'strBlk'
+VOLUME = 'cinder_volume'
 STRIPE_NUMBER = 1
-BRICK = 'glance_brick'
+BRICK = 'cinder_brick'
 
 ############################# GENERAL FUNCTIONS ############################
 
@@ -314,6 +314,18 @@ def undeploy():
         execute(destroy_gluster)
 
 ################################# TDD ########################################
+
+@roles('controller', 'network', 'compute')
+def test():
+    runCheck('Make mount point', 'mkdir -p /mnt/gluster/{}'.format(VOLUME))
+    if run("mount | grep '{}' | grep /mnt/gluster/{}".format(VOLUME, VOLUME),
+            warn_only=True).return_code:
+        runCheck('Mount mount point',
+                'mount -t glusterfs {}:/{} /mnt/gluster/{}'.format(
+                    env.host, VOLUME, VOLUME))
+        append('/etc/fstab', '%s:/%s /mnt/gluster/%s fuse.glusterfs rw,relatime,user_id=0,group_id=0,default_permissions,allow_other,max_read=131072 0 0'%(
+            env.host, VOLUME, VOLUME))
+
 
 
 
