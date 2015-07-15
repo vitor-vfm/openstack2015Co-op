@@ -1,0 +1,47 @@
+/*
+ * * New theme colors for dashboard that override the defaults:
+ * *  dark blue: #355796 / rgb(53, 87, 150) / hsl(219, 48%, 40%)
+ * *  light blue: #BAD3E1 / rgb(186, 211, 225)
+ * *
+ * * By Preston Lee <plee@tgen.org>
+ * */
+h1.brand {
+    background: #355796 repeat-x top left;
+    border-bottom: 2px solid #BAD3E1;
+}
+h1.brand a {
+    background: url(../img/hdr_ece.png) top left no-repeat;
+}
+
+
+/* LOGIN PAGE */
+#splash .login {
+    /* background: #355796 url(../img/loginLogo.png) no-repeat center 35px; */
+    background: hsl(219, 48%, 40%) url(../img/uofa-engg-logo-small.png) no-repeat center 25px;
+}
+#splash .login .modal-header {
+    border: 0px;
+    background: hsl(219, 48%, 60%);
+}
+#splash .login .modal-footer {
+    border: 0px;
+    background: hsl(219, 48%, 60%);
+}
+
+#splash form {
+    background: hsl(219, 48%, 80%);
+}
+
+.btn-primary {
+    background-image: none !important;
+    background-color: #355796 !important;
+    border: none !important;
+    box-shadow: none;
+}
+.btn-primary:hover,
+.btn-primary:active {
+    border: none;
+    box-shadow: none;
+    background-color: #BAD3E1 !important;
+    text-decoration: none;
+}
