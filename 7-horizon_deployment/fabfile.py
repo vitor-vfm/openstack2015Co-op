@@ -104,7 +104,7 @@ def reach_dashboard():
     output = runCheck(msg, "curl --connect-timeout 10 http://controller/dashboard | head -10")
 
     # check if it's the Dashboard frontpage
-    if '<title>Login - OpenStack Dashboard</title>' in output:
+    if any(value in output for value in ['<title>','Login']):
         print align_y('Can access Dashboard frontpage')
     else:
         print align_n('Cannot access Dashboard frontpage')
