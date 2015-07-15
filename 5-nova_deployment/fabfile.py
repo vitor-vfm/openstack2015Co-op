@@ -216,20 +216,20 @@ def setup_GlusterFS_Nova():
  
     # change the path that Glance uses for its file system 
     msg = 'Configure Nova to use Gluster' 
-    glusterBrick = env_config.novaGlusterBrick 
+    glusterDir = env_config.novaGlusterDir
  
     msg = 'Create local directory for the brick' 
-    runCheck(msg, 'mkdir -p {}'.format(glusterBrick)) 
+    runCheck(msg, 'mkdir -p {}'.format(glusterDir)) 
  
     msg = 'Set ownership of the brick' 
-    runCheck(msg, 'chown -R nova:nova {}'.format(glusterBrick)) 
+    runCheck(msg, 'chown -R nova:nova {}'.format(glusterDir)) 
  
 @roles('controller', 'compute') 
 def setup_nova_conf_file(): 
     confFile = '/etc/nova/nova.conf'      
     set_parameter(confFile, 'glance', 'libvirt_type', 'qemu') 
     set_parameter(confFile, 'DEFAULT', 'instances_path',  
-            env_config.novaGlusterBrick)
+            env_config.novaGlusterDir)
 
 ################################## Deployment ########################################
 

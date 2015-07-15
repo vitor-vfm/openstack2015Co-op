@@ -168,15 +168,15 @@ def setup_GlusterFS_Glance():
     run("mount |grep '^/'")
     # change the path that Glance uses for its file system
     msg = 'Configure Glance to use Gluster'
-    glusterBrick = env_config.glanceGlusterBrick
+    glusterDir = env_config.glanceGlusterDir
     runCheck(msg, "crudini --set /etc/glance/glance-api.conf glance_store " + \
-            "filesystem_store_datadir {}".format(glusterBrick))
+            "filesystem_store_datadir {}".format(glusterDir))
 
     msg = 'Create local directory for the brick'
-    runCheck(msg, 'mkdir -p {}'.format(glusterBrick))
+    runCheck(msg, 'mkdir -p {}'.format(glusterDir))
 
     msg = 'Set ownership of the brick'
-    runCheck(msg, 'chown -R glance:glance {}'.format(glusterBrick))
+    runCheck(msg, 'chown -R glance:glance {}'.format(glusterDir))
 
     msg = 'Restart Glance'
     runCheck(msg, 'systemctl restart openstack-glance-api') 
@@ -185,9 +185,8 @@ def setup_GlusterFS_Glance():
 
 @roles('controller')
 def setup_glance_api_conf_file():
-    confFile = '/etc/glance/glance-api.conf' 
-    set_parameter(confFile, 'glance_store', 'filesystem_store_datadir', 
-            env_config.glanceGlusterBrick)
+    set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', 
+            env_config.glanceGlusterDir)
 
 @roles('controller')
 def install_packages():
@@ -199,14 +198,14 @@ def install_packages():
 
 def deploy():
     # Setup gluster
-    partition = 'strFile'
-    volume = 'glance_volume'
-    brick = 'glance_brick'
+    #partition = 'strFile'
+    #volume = 'glance_volume'
+    #brick = 'glance_brick'
 
-    execute(glusterLib.setup_gluster, partition, brick)
-    execute(glusterLib.probe, env_config.hosts)
-    execute(glusterLib.create_volume, brick, volume, env_config.hosts)
-    execute(glusterLib.mount, volume)
+    #execute(glusterLib.setup_gluster, partition, brick)
+    #execute(glusterLib.probe, env_config.hosts)
+    #execute(glusterLib.create_volume, brick, volume, env_config.hosts)
+    #execute(glusterLib.mount, volume)
 
     # Setup glance
     execute(install_packages)
@@ -283,24 +282,24 @@ def glusterTDD(imageID):
     """
     result = 'OK'
 
-    imageBrick = env_config.glanceGlusterBrick
+    imageDir = env_config.glanceGlusterDir
 
-    if run("[ -e {} ]".format(imageBrick)).return_code != 0:
-        print red("Brick {} does not exist in host {}!".format(
-            imageBrick, env.host))
+    if run("[ -e {} ]".format(imageDir)).return_code != 0:
+        print red("Directory {} does not exist in host {}!".format(
+            imageDir, env.host))
         return 'FAIL'
 
 
-    imagesInBrick = runCheck("See inside brick", "ls " + imageBrick)
+    imagesInDir = runCheck("See inside directory", "ls " + imageDir)
 
-    if not imagesInBrick:
-        print align_n('Brick seems to be empty in host' + env.host)
+    if not imagesInDir:
+        print align_n('Directory seems to be empty in host' + env.host)
         result = 'FAIL'
-    elif imageID not in imagesInBrick:
+    elif imageID not in imagesInDir:
         print align_n('The image requested '
                 'is not in the glance brick in host ' + env.host)
         print 'Image requested: ', blue(imageID)
-        print 'Contents of brick: ', red(imagesInBrick)
+        print 'Contents of directory: ', red(imagesInDir)
         result = 'FAIL'
     else:
         print align_y('Can see the image in host ' + env.host)

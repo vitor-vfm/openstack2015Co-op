@@ -110,9 +110,10 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
     partition = {   'size_reduction_of_home' : '3.5T',
-                    'glance_partition_size' : '300G',
-                    'cinder_partition_size' : '600G',
-                    'swift_partition_size' : '600G',
+                    'partition_size' : '1.5T',
+                    #'glance_partition_size' : '300G',
+                    #'cinder_partition_size' : '600G',
+                    #'swift_partition_size' : '600G',
                     'stripe_number' : 3,
                     }
 
@@ -481,14 +482,15 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ###########################################################################
 
-    partition = {   'size_reduction_of_home' : '150G',
-                    'glance_partition_size' : '30G',
-                    'cinder_partition_size' : '60G',
-                    'swift_partition_size' : '60G',
+    partition = {   'size_reduction_of_home' : '350G',
+                    'partition_size' : '350G',
+                    #'glance_partition_size' : '30G',
+                    #'cinder_partition_size' : '60G',
+                    #'swift_partition_size' : '60G',
                     'stripe_number' : 1,
                     }
 
-
+    cinderGlusterDir = '/mnt/gluster/cinder'
 
     ##########################################################################
 
@@ -503,6 +505,10 @@ pid-file=/var/run/mariadb/mariadb.pid
     ##########################################################################
 
     glusterPath = '/mnt/gluster/'
+
+    volume = 'gluster_volume'
+    brick = 'brick'
+    partitionName = 'storage'
 
     glanceVolume = 'glance_volume'
     glanceBrick = 'glance_brick'
@@ -529,8 +535,8 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ##################################################################
 
-    glanceGlusterBrick = '/mnt/gluster/glance_volume/glance/images'
-    novaGlusterBrick = '/mnt/gluster/glance_volume/instance'
+    glanceGlusterDir = '/mnt/gluster/glance/images'
+    novaGlusterDir = '/mnt/gluster/instance'
 
     ##################################################################
 
@@ -548,6 +554,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     hashPathPrefix = '3443'
     hashPathSuffix = '3443'
 
+    swiftGlusterDir = '/mnt/gluster/swift'
     # base rsyncd.conf
     # MANAGEMENT_INTERFACE_IP_ADDRESS and PATH will be replaced by adequate
     # values in the deployment script

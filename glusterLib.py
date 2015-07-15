@@ -73,7 +73,7 @@ def probe(some_hosts):
                 print(green('{} can probe {}'.format(
                     env.host, node_id)))
     # Make sure the peers have enough time to actually connect
-    time.sleep(3)
+    time.sleep(8)
 
 @roles('compute')
 def create_volume(brick, volume, some_hosts):
@@ -106,3 +106,5 @@ def mount(volume):
         runCheck('Mount mount point', 
                 'mount -t glusterfs {}:/{} /mnt/gluster/{}'.format(
                     env.host, volume, volume))
+        append('/etc/fstab', '%s:/%s /mnt/gluster/%s glusterfs log-file=/root/%s.log,rw 0 0'%(
+            env.host, volume, volume, volume))
