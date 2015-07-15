@@ -25,7 +25,7 @@ passwd = env_config.passwd
 ######################## Deployment ########################################
 
 @roles('controller')
-def setup_ceilometer_keystone():
+def setup_ceilometer_keystone_on_controller():
     """
     Set up Keystone credentials for Ceilometer
 
@@ -52,14 +52,14 @@ def setup_ceilometer_keystone():
 
         if 'ceilometer' not in run("keystone service-list"):
             msg = "Create service ceilometer"
-            runCheck(msg, "keystone service-create --name ceilometer --type image --description 'Telemetry'")
+            runCheck(msg, "keystone service-create --name ceilometer --type metering --description 'Telemetry'")
         else:
             print blue("Service ceilometer already created. Do nothing")
 
-        if 'http://controller:9292' not in run("keystone endpoint-list"):
+        if 'http://controller:8777' not in run("keystone endpoint-list"):
             msg = "Create endpoint for service ceilometer"
             runCheck(msg, "keystone endpoint-create " + \
-                    "--service-id $(keystone service-list | awk '/ metering / {print $2}') " +\
+                    "--service-id $(keystone service-list | awk '/ceilometer/ {print $2}') " +\
                     "--publicurl http://controller:8777 " + \
                     "--internalurl http://controller:8777 " + \
                     "--adminurl http://controller:8777 " + \
@@ -68,20 +68,23 @@ def setup_ceilometer_keystone():
             print blue("Endpoint for service ceilometer already created. Do nothing")
     
 @roles('controller')
-def setup_ceilometer_config_files():
+def setup_ceilometer_config_files_on_controller():
     CEILOMETER_PASS = passwd['CEILOMETER_PASS']
-    CEILOMETER_DBPAS = passwd['CEILOMETER_DBPASS']
     ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
+    RABBIT_PASS = passwd['RABBIT_PASS']
 
-    install_command = "yum install openstack-ceilometer-api openstack-ceilometer-collector " + \
+    install_command = "yum install -y openstack-ceilometer-api openstack-ceilometer-collector " + \
         "openstack-ceilometer-notification openstack-ceilometer-central openstack-ceilometer-alarm " + \
         "python-ceilometerclient"
     
     run(install_command)
     
-    metering_secret = run("openssl rand -hex 10")
+
+    # we use our own from env_config in order to simplify key generation
+    # and insertion into respective nodes (compute and controller)
+    #metering_secret = run("openssl rand -hex 10") 
     
-    set_parameter(ceilometer_config_file, 'database', 'connection', 'mongodb://ceilometer:{}@controller:27017/ceilometer'.format(CEILOMETER_DBPASS))
+    set_parameter(ceilometer_config_file, 'database', 'connection', 'mongodb://ceilometer:{}@controller:27017/ceilometer'.format(CEILOMETER_PASS))
 
     set_parameter(ceilometer_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(ceilometer_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -103,14 +106,14 @@ def setup_ceilometer_config_files():
     set_parameter(ceilometer_config_file, 'service_credentials', 'os_password', CEILOMETER_PASS)   
 
 
-    set_parameter(ceilometer_config_file, 'publisher', 'metering_secret', metering_secret)
+    set_parameter(ceilometer_config_file, 'publisher', 'metering_secret', env_config.metering_secret)
 
     set_parameter(ceilometer_config_file, 'DEFAULT', 'verbose', 'True')
     
 
 @roles('controller')
-def setup_mongo():
-    CONTROLLER_IP = env_config.controllerManagement['IPADDR']
+def setup_mongo_on_controller():
+    CONTROLLER_IP = env_config.nicDictionary['controller']['mgtIPADDR']
     run("yum install -y mongodb-server mongodb")
     confFile = "/etc/mongod.conf"
 
@@ -144,8 +147,8 @@ def setup_mongo():
     
 
 @roles('controller')
-def create_mongo_ceilometer_db():
-    CEILOMETER_PASS = env_config.passwd['CEILOMETER_PASS']
+def create_mongo_ceilometer_db_on_controller():
+    CEILOMETER_PASS = passwd['CEILOMETER_PASS']
 
     command = """ mongo --host controller --eval ' """ + \
               """ db = db.getSiblingDB("ceilometer");  """ + \
@@ -157,7 +160,7 @@ def create_mongo_ceilometer_db():
     runCheck('setup ceilometer db in mongo', command) 
 
 @roles('controller')
-def start_ceilometer_services():
+def start_ceilometer_services_on_controller():
     ceilometer_services = "openstack-ceilometer-api.service openstack-ceilometer-notification.service " + \
                           "openstack-ceilometer-central.service openstack-ceilometer-collector.service " + \
                           "openstack-ceilometer-alarm-evaluator.service openstack-ceilometer-alarm-notifier.service " 
@@ -171,17 +174,8 @@ def start_ceilometer_services():
 
 
 @roles('controller')
-def setup_ceilometer_controller():
-    setup_mongo(env_config.controllerManagement['IPADDR'])
-    create_mongo_ceilometer_db(env_config.passwd['CEILOMETER_PASS'])
-    
-    setup_ceilometer_keystone(passwd['CEILOMETER_PASS'])
-    setup_ceilometer_config_files(passwd['CEILOMETER_PASS'], passwd['CEILOMETER_DBPASS'])
-    start_ceilometer_services()
-
-
-@roles('controller')
 def configure_image_service():
+    RABBIT_PASS = passwd['RABBIT_PASS']
     image_config_file_names = ['/etc/glance/glance-api.conf','/etc/glance/glance-registry.conf']
 
     for image_config_file in image_config_file_names:
@@ -233,23 +227,18 @@ def configure_object_storage():
 
 
 @roles('compute')
-def install_packages():
+def install_packages_on_compute():
     # Install packages
     msg = "Install OpenStack Ceilometer packages"
-    runCheck(msg, "yum install -y openstack-ceilometer python-ceilometerclient python-pecan")
+    runCheck(msg, "yum install -y openstack-ceilometer-compute python-ceilometerclient python-pecan")
    
 
 @roles('compute')
-def install_and_configure_ceilometer():
+def install_and_configure_ceilometer_on_compute():
 
     RABBIT_PASS = passwd['RABBIT_PASS']
     CEILOMETER_PASS = passwd['CEILOMETER_PASS']
-
-    # get ceilometer config file from controller
-    local("scp root@controller:/etc/ceilometer/ceilometer.conf /tmp/")
-
-    # getting metering_secret from config file
-    metering_secret = local("crudini --get /tmp/ceilometer.conf publisher metering_secret")
+    metering_secret = env_config.metering_secret
 
     ceilometer_config_file = "/etc/ceilometer/ceilometer.conf"
 
@@ -279,7 +268,7 @@ def install_and_configure_ceilometer():
 
 
 @roles('compute')
-def configure_notifications():
+def configure_notifications_on_compute():
     conf_file = "/etc/nova/nova.conf" 
     
     set_parameter(conf_file, 'DEFAULT','instance_usage_audit', 'True')
@@ -288,14 +277,14 @@ def configure_notifications():
     set_parameter(conf_file, 'DEFAULT','notification_driver', 'messagingv2')
 
 @roles('compute')
-def start_telemetry():
-    run("enable telemetry","systemctl enable openstack-ceilometer-compute.service")
-    run("start telemetry","systemctl start openstack-ceilometer-compute.service")
-    run("restart telemetry","systemctl restart openstack-ceilometer-compute.service")
+def start_telemetry_on_compute():
+    runCheck("enable telemetry","systemctl enable openstack-ceilometer-compute.service")
+    runCheck("start telemetry","systemctl start openstack-ceilometer-compute.service")
+    #runCheck("restart telemetry","systemctl restart openstack-ceilometer-compute.service")
 
 
 @roles('compute')
-def restart_nova():
+def restart_nova_on_compute():
     run("systemctl restart openstack-nova-compute.service")
 
 
@@ -305,20 +294,20 @@ def deploy():
 
     ###### controller portion
 
-    execute(setup_mongo)
-    execute(create_mongo_ceilometer_db)
-    execute(setup_ceilometer_keystone)
-    execute(setup_ceilometer_config_files)
-    execute(start_ceilometer_services)
+    execute(setup_mongo_on_controller)
+    execute(create_mongo_ceilometer_db_on_controller)
+    execute(setup_ceilometer_keystone_on_controller)
+    execute(setup_ceilometer_config_files_on_controller)
+    execute(start_ceilometer_services_on_controller)
 
 
     ###### compute portion
 
-    execute(install_packages)
-    execute(install_and_configure_ceilometer)
-    execute(configure_notifications)
-    execute(start_telemetry)
-    execute(restart_nova)
+    execute(install_packages_on_compute)
+    execute(install_and_configure_ceilometer_on_compute)
+    execute(configure_notifications_on_compute)
+    execute(start_telemetry_on_compute)
+    execute(restart_nova_on_compute)
     
 
     ###### configure image service
@@ -327,8 +316,8 @@ def deploy():
     ###### configure block service
     execute(configure_block_storage)
 
-    ###### configure object service
-    execute(configure_object_storage)
+    ###### configure object service ### left out for now
+    #execute(configure_object_storage)
     
 
 
@@ -346,13 +335,13 @@ def verify():
     with prefix(credentials):
         # before each creation, we check a list to avoid duplicates
         run("ceilometer meter-list")
-        run('glance image-download "cirros-0.3.3-x86_64" > cirros.img')
+        run('glance image-download "cirros-test" > cirros.img')
         run("ceilometer meter-list")
         run('ceilometer statistics -m image.download -p 60')
         
     
 def tdd():
     with settings(warn_only=True):
-        execute(database_check,'ceilometer',roles=['controller'])
+        #execute(database_check,'ceilometer',roles=['controller'])
         execute(keystone_check,'ceilometer',roles=['controller'])
         execute(verify)
