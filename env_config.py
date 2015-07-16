@@ -110,7 +110,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                    'TROVE_DBPASS' : '34Tr0v3db4s343'}
 
     partition = {   'size_reduction_of_home' : '3.5T',
-                    'partition_size' : '1.5T',
+                    'partition_size' : '3.5T',
                     #'glance_partition_size' : '300G',
                     #'cinder_partition_size' : '600G',
                     #'swift_partition_size' : '600G',
@@ -490,7 +490,7 @@ pid-file=/var/run/mariadb/mariadb.pid
                     'stripe_number' : 1,
                     }
 
-    cinderGlusterDir = '/mnt/gluster/cinder'
+    #cinderGlusterDir = '/mnt/gluster/cinder'
 
     ##########################################################################
 
@@ -506,21 +506,21 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     glusterPath = '/mnt/gluster/'
 
-    volume = 'gluster_volume'
-    brick = 'brick'
-    partitionName = 'storage'
+    gluster_volume = 'gluster_volume'
+    #gluster_brick = 'gluster_brick'
+    #partitionName = 'storage'
 
-    glanceVolume = 'glance_volume'
-    glanceBrick = 'glance_brick'
-    glancePartition = 'strFile'
+    #glanceVolume = 'glance_volume'
+    #glanceBrick = 'glance_brick'
+    #glancePartition = 'strFile'
 
-    cinderVolume = 'cinder_volume'
-    cinderBrick = 'cinder_brick'
-    cinderPartition = 'strBlk'
+    #cinderVolume = 'cinder_volume'
+    #cinderBrick = 'cinder_brick'
+    #cinderPartition = 'strBlk'
 
-    swiftVolume = 'swift_volume'
-    swiftBrick = 'swift_brick'
-    swiftPartition = 'strObj'
+    #swiftVolume = 'swift_volume'
+    #swiftBrick = 'swift_brick'
+    #swiftPartition = 'strObj'
 
 
     ##################################################################
@@ -535,8 +535,8 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ##################################################################
 
-    glanceGlusterDir = '/mnt/gluster/glance/images'
-    novaGlusterDir = '/mnt/gluster/instance'
+    #glanceGlusterDir = '/mnt/gluster/glance/images'
+    #novaGlusterDir = '/mnt/gluster/instance'
 
     ##################################################################
 
@@ -554,7 +554,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     hashPathPrefix = '3443'
     hashPathSuffix = '3443'
 
-    swiftGlusterDir = '/mnt/gluster/swift'
+    #swiftGlusterDir = '/mnt/gluster/swift'
     # base rsyncd.conf
     # MANAGEMENT_INTERFACE_IP_ADDRESS and PATH will be replaced by adequate
     # values in the deployment script

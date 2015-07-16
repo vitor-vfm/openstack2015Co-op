@@ -42,6 +42,7 @@ etc_cinder_config_file = "/etc/cinder/cinder.conf"
 
 passwd = env_config.passwd
 
+cinderGlusterDir = "/mnt/gluster/cinder"
 
 ################### General functions ######################################
 
@@ -207,9 +208,9 @@ def change_cinder_files():
 @roles('controller')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
-    runCheck('Make export path for cinder', 'mkdir -p %s' % env_config.cinderGlusterDir)
+    runCheck('Make export path for cinder', 'mkdir -p %s' % cinderGlusterDir)
     # runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "%s:/%s" > /etc/cinder/shares.conf' % (env_config.nicDictionary['controller']['mgtIPADDR'], env_config.volume))#env_config.cinderGlusterDir))
+    runCheck('Fill shares.conf file', 'echo "%s:/%s" > /etc/cinder/shares.conf' % (env_config.nicDictionary['controller']['mgtIPADDR'], env_config.gluster_volume))
 
 @roles('controller')
 def restart_cinder():

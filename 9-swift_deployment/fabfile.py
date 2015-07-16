@@ -19,6 +19,7 @@ import glusterLib
 
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
+swiftGlusterDir = "/mnt/gluster/swift"
 
 ######################## Deployment ########################################
 
@@ -124,7 +125,8 @@ def controllerDeploy():
 
 ############################### GLUSTER ##################################
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def setGluster():
     """
     Set the storage nodes to use the Gluster brick
@@ -142,7 +144,8 @@ def setGluster():
 
 ##########################################################################
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def glusterswiftSetup():
     """
     Configures gluster-swift
@@ -199,16 +202,17 @@ def glusterswiftSetup():
         msg = 'Start service ' + service
         runCheck(msg, 'service %s start' % service)
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def configurersyncd():
 
     fileContents = env_config.rsyncd_conf
 
     # replace variables
     fileContents = fileContents.replace('MANAGEMENT_INTERFACE_IP_ADDRESS', 
-            env_config.nicDictionary['storage1']['mgtIPADDR'])
+            env_config.nicDictionary['compute1']['mgtIPADDR'])
 
-    devicepath = env_config.glusterPath + env_config.swiftVolume
+    devicepath = swiftGlusterDir
     fileContents = fileContents.replace('PATH', devicepath)
 
     out = append('/etc/rsynd.conf', fileContents)
@@ -224,15 +228,16 @@ def configurersyncd():
     msg= 'Start rsyncd service'
     runCheck(msg, 'systemctl start rsyncd.service')
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def configureStorage():
     """
     Set the account-, container-, and object-server conf files
     """
 
     serverConfFiles = ['account-server.conf','container-server.conf','object-server.conf']
-    ip = env_config.nicDictionary['storage1']['mgtIPADDR']
-    devicepath = env_config.glusterPath + env_config.swiftVolume
+    ip = env_config.nicDictionary['compute1']['mgtIPADDR']
+    devicepath = swiftGlusterDir
     # devicepath = '/srv/node'
 
     # save base files into the host
@@ -331,7 +336,8 @@ def grabGZfiles():
         for filename in filenames:
             get(filename)
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def saveGZfiles():
     """
     Saves the three .gz files in the storage node
@@ -349,8 +355,8 @@ def createInitialRings():
     Create 3 initial rings as a test
     """
 
-    managementIP = env_config.nicDictionary['storage1']['mgtIPADDR']
-    deviceLocation = env_config.glusterPath + env_config.swiftVolume
+    managementIP = env_config.nicDictionary['compute1']['mgtIPADDR']
+    deviceLocation = swiftGlusterDir
     deviceName = "rings"
     deviceWeight = '100'
     # deviceName = "/dev/sdd"
@@ -370,7 +376,8 @@ def createInitialRings():
     execute(grabGZfiles)
     execute(saveGZfiles)
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def startServicesStorage():
     """
     Start the Object Storage services and configure them to start when the system boots
@@ -394,8 +401,8 @@ def startServicesStorage():
     runCheck(msg, "systemctl start openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service")
 
 
-
-@roles('storage', 'controller')
+@roles('compute', 'controller')
+#@roles('storage', 'controller')
 def finalizeInstallation():
     """
     Final steps of the installation, such as setting swift.conf and restarting services
@@ -428,19 +435,20 @@ def finalizeInstallation():
 
     
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def installPackagesStorage():
     msg = 'Install packages on host ' + env.host
     runCheck(msg, "yum -y install openstack-swift-account openstack-swift-container openstack-swift-object")
 
 
-
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def storageDeploy():
 
     execute(installPackagesStorage)
 
-    execute(setGluster)
+    #execute(setGluster)
 
     execute(createInitialRings)
 
@@ -502,16 +510,18 @@ def peerStatus():
 
 
 
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def glusterTDD():
     """
     TDD: check if the contents of the Gluster brick are the same on all nodes
     """
 
-    @roles('controller','network','storage','compute')
+    #@roles('controller','network','storage','compute')
+    @roles('controller', 'network', 'compute')
     def _glusterTDD():
         "Grab the contents of the gluster brick for each host"
-        directory = env_config.glusterPath + env_config.swiftVolume 
+        directory = swiftGlusterDir 
         with cd(directory):
             msg = 'Get contents of brick on '+env.host
             contents = runCheck(msg, "ls -a")
@@ -528,8 +538,8 @@ def glusterTDD():
                 print align_y('Hosts %s and %s OK' % (host,otherHost))
             
 
-
-@roles('storage')
+@roles('compute')
+#@roles('storage')
 def curlTDD():
     """
     TDD: make some curl operations and check their results

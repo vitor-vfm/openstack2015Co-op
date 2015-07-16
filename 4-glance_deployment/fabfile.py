@@ -23,6 +23,7 @@ passwd = env_config.passwd
 
 glance_api_config_file = "/etc/glance/glance-api.conf"
 glance_registry_config_file = "/etc/glance/glance-registry.conf"
+glanceGlusterDir = "/mnt/gluster/glance/images"
 
 ######################## Deployment ########################################
 
@@ -168,14 +169,14 @@ def setup_GlusterFS_Glance():
     run("mount |grep '^/'")
     # change the path that Glance uses for its file system
     msg = 'Configure Glance to use Gluster'
-    glusterDir = env_config.glanceGlusterDir
+    glusterDir = glanceGlusterDir
     runCheck(msg, "crudini --set /etc/glance/glance-api.conf glance_store " + \
             "filesystem_store_datadir {}".format(glusterDir))
 
-    msg = 'Create local directory for the brick'
+    msg = 'Create local directory on the brick'
     runCheck(msg, 'mkdir -p {}'.format(glusterDir))
 
-    msg = 'Set ownership of the brick'
+    msg = 'Set ownership of the directory'
     runCheck(msg, 'chown -R glance:glance {}'.format(glusterDir))
 
     msg = 'Restart Glance'
@@ -186,7 +187,7 @@ def setup_GlusterFS_Glance():
 @roles('controller')
 def setup_glance_api_conf_file():
     set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', 
-            env_config.glanceGlusterDir)
+            glanceGlusterDir)
 
 @roles('controller')
 def install_packages():
@@ -282,7 +283,7 @@ def glusterTDD(imageID):
     """
     result = 'OK'
 
-    imageDir = env_config.glanceGlusterDir
+    imageDir = glanceGlusterDir
 
     if run("[ -e {} ]".format(imageDir)).return_code != 0:
         print red("Directory {} does not exist in host {}!".format(
