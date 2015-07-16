@@ -32,9 +32,8 @@ mode = 'normal'
 if output['debug']:
     mode = 'debug'
 ########################## Deployment ########################################
-
+@parallel
 @roles('controller','compute','network','storage')
-#@roles('controller','compute','network')
 def mustDoOnHost():
     selinuxStatus=run("grep -w ^SELINUX /etc/selinux/config")
     if( "enforcing"  in  selinuxStatus):
@@ -59,8 +58,8 @@ def mustDoOnHost():
                 runCheck(msg,"echo '%s' >> /etc/hosts" % newline)
 
 
+@parallel
 @roles('controller','compute','network','storage')
-#@roles('controller','compute','network')
 def installConfigureChrony():
     msg='installing chrony on %s'% env.host
     sudo('yum -y install chrony')
@@ -99,8 +98,8 @@ def installConfigureChrony():
 
 
 # General function to install packages that should be in all or several nodes
+@parallel
 @roles('controller','compute','network','storage')
-#@roles('controller','compute','network')
 def install_packages():
     # Install EPEL (Extra Packages for Entreprise Linux
     print('installing yum-plugin-priorities and epel-release')
@@ -128,7 +127,6 @@ def install_packages():
         print blue(item +" is version "+ var1)
         logging.info(item +" is version "+ var1)
 
-#@roles('storage')
 @roles('controller')
 def installMariaDB():
     if (env.host != "controller"):
@@ -201,8 +199,8 @@ def test():
     pass
 
 
+@parallel
 @roles('controller','compute','network','storage')
-#@roles('controller', 'compute', 'network')
 def shrinkHome():
     # check if partitions already exist
     if 'storage' in run("lvs"):
@@ -215,15 +213,14 @@ def shrinkHome():
         runCheck('Remount home', 'mount /home')
 
 @roles('controller','compute','network','storage')
-#@roles('controller','compute','network')
 def tdd_lvs():
     msg = "TDD LVS Free space"
     lvsFree=run("vgs | awk '/centos/ {print $7}'")
     printMessage("good", msg +' '+ lvsFree)
 
 
+@parallel
 @roles('controller','compute','network','storage')
-#@roles( 'network', 'compute')
 def prepGlusterFS():
 # check if partitions already exist
     if 'storage' in run("lvs"):
@@ -237,6 +234,7 @@ def prepGlusterFS():
         runCheck('List new partitions', 'fdisk -l|grep storage')
 
 
+@parallel
 @roles('controller','compute','network', 'storage')
 def setupGlusterFS():
     # Get name of directory partitions are in 
@@ -324,6 +322,7 @@ def createVolume(some_hosts):
     runCheck('Restart glusterd', '/bin/systemctl restart glusterd.service')
 
 
+@parallel
 @roles('controller','compute','network', 'storage')
 def mount():
     runCheck('Make mount point', 'mkdir -p /mnt/gluster')
@@ -352,7 +351,6 @@ def deploy():
     print align_y('Yeah we are done')
 
 @roles('controller','compute','network','storage')
-#@roles('controller','compute','network')
 def check_firewall():
     with settings(warn_only=True):
         fwdstatus=run("systemctl is-active firewalld")
@@ -361,7 +359,6 @@ def check_firewall():
             printMessage("good",msg)
         
 @roles('controller','compute','network','storage')
-#@roles('controller','compute','network')
 def check_selinux():
     output = run("getenforce")
     if "Disabled" in output:
@@ -370,13 +367,11 @@ def check_selinux():
         print align_n("Oh no! SELINUX is " + output)
 
 @roles('controller','compute','network','storage')
-#@roles('controller','compute','network')
 def chronytdd():
     msg="verify chronyd"
     runCheck(msg,'chronyc sources -v ')
 
 @roles('controller','compute','network','storage')
-# @roles('controller','compute','network')
 def tdd():
     chronytdd()
     tdd_DB()
