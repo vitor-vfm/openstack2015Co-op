@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
-from fabric.colors import green, red
+from fabric.colors import green, red, blue
 from fabric.contrib.files import append
 import logging
 
