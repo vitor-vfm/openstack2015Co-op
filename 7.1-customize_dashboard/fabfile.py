@@ -83,13 +83,18 @@ def deploy():
 ##################################### TDD ############################################
 
 
+@roles('controller')
 def tdd():
     msg = 'Connect to dashboard'
     output = runCheck(msg, "curl --connect-timeout 10 http://controller/dashboard | head -10")
 
-    # check if it's the Dashboard frontpage
-    if '<title>Login - OpenStack Dashboard</title>' in output:
-        print align_y('Can access Dashboard frontpage')
+    # check if the Dashboard frontpage has been customized
+    if '<title>Login - Electrical and Computer Engineering Department</title>' in output:
+        msg = 'Dashboard frontpage has been customized' 
+        print align_y(msg)
+        logging.info(msg)
     else:
-        print align_n('Cannot access Dashboard frontpage')
+        msg = 'Dashboard frontpage has NOT been customized' 
+        print align_n(msg)
+        logging.error(msg)
         sys.exit(1)
