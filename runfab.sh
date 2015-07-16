@@ -59,7 +59,7 @@ shift $((OPTIND-1))
 
 case "$#" in
     1)  FIRST=$1
-        DIRECTORIES=$(ls | egrep '^$FIRST-' | grep -v ".bak" )
+        DIRECTORIES=$(ls | egrep "^$FIRST-" | grep -v ".bak" )
         ;;
     2)  FIRST=$1 
         LAST=$2
