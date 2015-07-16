@@ -42,6 +42,7 @@ etc_cinder_config_file = "/etc/cinder/cinder.conf"
 
 passwd = env_config.passwd
 
+cinderGlusterDir = "/mnt/gluster/cinder"
 
 ################### General functions ######################################
 
@@ -207,8 +208,9 @@ def change_cinder_files():
 @roles('controller')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
+    runCheck('Make export path for cinder', 'mkdir -p %s' % cinderGlusterDir)
     # runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume" > /etc/cinder/shares.conf')
+    runCheck('Fill shares.conf file', 'echo "%s:/%s" > /etc/cinder/shares.conf' % (env_config.nicDictionary['controller']['mgtIPADDR'], env_config.gluster_volume))
 
 @roles('controller')
 def restart_cinder():
@@ -221,14 +223,14 @@ def restart_cinder():
 
 def deploy():
     # setup gluster
-    partition = 'strBlk'
-    volume = 'cinder_volume'
-    brick = 'cinder_brick'
+    #partition = 'strBlk'
+    #volume = 'cinder_volume'
+    #brick = 'cinder_brick'
 
-    execute(glusterLib.setup_gluster, partition, brick)
-    execute(glusterLib.probe, env_config.hosts)
-    execute(glusterLib.create_volume, brick, volume, env_config.hosts)
-    execute(glusterLib.mount, volume)
+    #execute(glusterLib.setup_gluster, partition, brick)
+    #execute(glusterLib.probe, env_config.hosts)
+    #execute(glusterLib.create_volume, brick, volume, env_config.hosts)
+    #execute(glusterLib.mount, volume)
 
     # setup cinder database
     execute(setup_cinder_database_on_controller)
@@ -267,7 +269,7 @@ def tdd():
         run('cinder list')
         status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
         if not status:
-            print align_n('There is no voume called demo-volume1')
+            print align_n('There is no volume called demo-volume1')
         else:
             while status != 'error' and status != 'available':
                 status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)

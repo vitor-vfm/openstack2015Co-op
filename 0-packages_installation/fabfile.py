@@ -11,6 +11,7 @@ import datetime
 import sys, os
 sys.path.append('..')
 import env_config
+import time
 
 from myLib import printMessage, runCheck, set_parameter
 from myLib import align_n, align_y, saveConfigFile
@@ -23,6 +24,9 @@ logging.info("################# "\
 
 env.roledefs = env_config.roledefs
 nicDictionary = env_config.nicDictionary
+partitionName = 'storage'
+gluster_brick = 'gluster_brick'
+gluster_volume = env_config.gluster_volume
 
 mode = 'normal'
 if output['debug']:
@@ -206,12 +210,12 @@ def test():
 #@roles('controller', 'compute', 'network')
 def shrinkHome():
     # check if partitions already exist
-    if 'str' in run("lvs"):
+    if 'storage' in run("lvs"):
         print blue('Partitions already created. Nothing done on '+env.host)
     else:
         home_dir = run("mount | grep home|cut -d' ' -f1")
         runCheck('Unmount home', 'umount /home')
-        runCheck('Resize home', 'lvresize -f -L -{} {}'.format(env_config.partition['size_reduction_of_home'], home_dir))
+        runCheck('Resize home', 'lvresize -f -L -{} {}'.format(env_config.partition['partition_size'], home_dir))
         runCheck('Put a filesystem back on home', 'mkfs -t xfs -f {}'.format(home_dir))
         runCheck('Remount home', 'mount /home')
 
@@ -226,25 +230,124 @@ def tdd_lvs():
 
 #@roles('storage')
 @roles('controller','compute','network','storage')
-#@roles('controller', 'network', 'compute')
+#@roles( 'network', 'compute')
 def prepGlusterFS():
 # check if partitions already exist
-    if 'str' in run("lvs"):
+    if 'storage' in run("lvs"):
         print blue('Partitions already created. Nothing done on '+env.host)
     else:
         STRIPE_NUMBER = env_config.partition['stripe_number']
         home_dir = run("lvs | awk '/home/ {print $2}'")
-        runCheck('Create glance partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
-            STRIPE_NUMBER, env_config.partition['glance_partition_size'], home_dir))
-        runCheck('Rename glance partition', 'lvrename /dev/{}/lvol0 strFile'.format(home_dir))
-        runCheck('Create swift partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
-            STRIPE_NUMBER, env_config.partition['swift_partition_size'], home_dir))
-        runCheck('Rename swift partition', 'lvrename /dev/{}/lvol0 strObj'.format(home_dir))
-        runCheck('Create cinder partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
-            STRIPE_NUMBER, env_config.partition['cinder_partition_size'], home_dir))
-        runCheck('Rename cinder partition', 'lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
-        runCheck('List new partitions', 'fdisk -l|grep str')
+        runCheck('Create partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
+            STRIPE_NUMBER, env_config.partition['partition_size'], home_dir))
+        runCheck('Rename partition', 'lvrename /dev/{}/lvol0 storage'.format(home_dir))
+        #runCheck('Create swift partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
+        #    STRIPE_NUMBER, env_config.partition['swift_partition_size'], home_dir))
+        #runCheck('Rename swift partition', 'lvrename /dev/{}/lvol0 strObj'.format(home_dir))
+        #runCheck('Create cinder partition', 'lvcreate -i {} -I 8 -L {} {}'.format(
+        #    STRIPE_NUMBER, env_config.partition['cinder_partition_size'], home_dir))
+        #runCheck('Rename cinder partition', 'lvrename /dev/{}/lvol0 strBlk'.format(home_dir))
+        runCheck('List new partitions', 'fdisk -l|grep storage')
 
+
+@roles('controller','compute','network', 'storage')
+def setupGlusterFS():
+    # Get name of directory partitions are in 
+    #home_dir = run("lvs | awk '/home/ {print $2}'")
+    home_dir = run('ls /dev/ | grep centos')
+
+    # Get and install gluster
+
+    runCheck('Get packages for gluster',
+            'wget -P /etc/yum.repos.d '
+            'http://download.gluster.org/pub/'
+            'gluster/glusterfs/LATEST/CentOS/glusterfs-epel.repo')
+
+    # Last 2 arguments of next command were put on for swift. Check if they work for others.
+    runCheck('Install gluster packages',
+            'yum -y install glusterfs glusterfs-fuse glusterfs-server memcached xfsprogs')
+
+    runCheck('Start glusterd', 'systemctl start glusterd')
+
+    # Next 3 commands added for swift. See if they work
+    runCheck('Start memcached', 'systemctl start memcached')
+    runCheck('Make memcache start on system startup', 'chkconfig memcached on')
+    runCheck('Make gluster start on system startup', 'chkconfig glusterd on')
+
+    # If not already made, make the file system (include in partition function)
+    out = run('file -sL /dev/{}/{} | grep -i xfs'.format(home_dir, partitionName), warn_only=True)
+    if out == '':
+        runCheck('Make file system', 'mkfs.xfs -f /dev/{}/{}'.format(
+            home_dir, partitionName))
+
+    # Added for swift. Check if it works.
+    append('/etc/fstab', '/dev/%s/%s /data/gluster/%s xfs inode64,noatime,nodiratime 0 0'%(
+            home_dir, partitionName, gluster_brick))
+
+    # Mount the brick on the established partition
+    run('mkdir -p /data/gluster/{}'.format(gluster_brick))
+    out = run("mount | grep '{}' | grep '/data/gluster/{}'".format(
+        partitionName, gluster_brick), warn_only=True)
+    if out == '':
+        runCheck('Mount brick on partition',
+                'mount /dev/{}/{} /data/gluster/{}'.format(
+                    home_dir, partitionName, gluster_brick))
+
+    # Ensure the nodes can probe each other
+    runCheck('Restart glusterd', 'service glusterd restart')
+
+
+@roles('controller','compute','network', 'storage')
+def probe(some_hosts):
+    "peer probe the ip addresses of all the nodes"
+
+    for node in some_hosts:
+        if node != env.host_string:
+            node_id = node.split('@', 1)[-1]
+            if runCheck('Probe', 'gluster peer probe {}'.format(
+                        node_id)).return_code:
+                print(red('{} cannot probe {}'.format(
+                    env.host, node_id)))
+            else:
+                print(green('{} can probe {}'.format(
+                    env.host, node_id)))
+    # Make sure the peers have enough time to actually connect
+    time.sleep(8)
+
+
+@roles('compute')
+def createVolume(some_hosts):
+    num_nodes = len(some_hosts)
+
+    # Make a string of the ip addresses followed by required string to feed 
+    # into following command
+    node_ips = "".join([
+        node.split('@', 1)[-1]+':/data/gluster/{} '.format(gluster_brick)
+        for node in some_hosts
+        ])
+
+    check_volume = run('gluster volume list', warn_only=True)
+    if check_volume != gluster_volume:
+        runCheck('Create volume',
+                'gluster volume create {} rep {} transport tcp {} force'.format(
+                    gluster_volume, num_nodes, node_ips))
+
+        runCheck('Start volume', 'gluster volume start {} force'.format(
+            gluster_volume))
+
+    runCheck('Restart glusterd', '/bin/systemctl restart glusterd.service')
+
+
+@roles('controller','compute','network', 'storage')
+def mount():
+    runCheck('Make mount point', 'mkdir -p /mnt/gluster')
+    if run("mount | grep '{}' | grep /mnt/gluster".format(gluster_volume),
+            warn_only=True).return_code:
+        runCheck('Mount mount point',
+                'mount -t glusterfs {}:/{} /mnt/gluster'.format(
+                    env.host, gluster_volume))
+        append('/etc/fstab', '%s:/%s /mnt/gluster glusterfs log-file=/root/%s.log,rw 0 0'%(
+            env.host, gluster_volume, gluster_volume))
 
 def deploy():
     logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
@@ -255,6 +358,10 @@ def deploy():
     execute(secureDB)
     execute(shrinkHome)
     execute(prepGlusterFS)
+    execute(setupGlusterFS)
+    execute(probe, env_config.hosts)
+    execute(createVolume, env_config.hosts)
+    execute(mount)
     logging.info("Deploy ended at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
     print align_y('Yeah we are done')
 
@@ -293,6 +400,6 @@ def tdd():
     chronytdd()
     tdd_DB()
     tdd_lvs()
-    run('fdisk -l|grep str')
+    run('fdisk -l|grep storage')
     run('openstack-status')
 
