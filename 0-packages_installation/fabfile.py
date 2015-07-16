@@ -24,9 +24,9 @@ logging.info("################# "\
 
 env.roledefs = env_config.roledefs
 nicDictionary = env_config.nicDictionary
-partitionName = env_config.partitionName
-brick = env_config.brick
-volume = env_config.volume
+partitionName = 'storage'
+gluster_brick = 'gluster_brick'
+gluster_volume = env_config.gluster_volume
 
 mode = 'normal'
 if output['debug']:
@@ -282,16 +282,16 @@ def setupGlusterFS():
 
     # Added for swift. Check if it works.
     append('/etc/fstab', '/dev/%s/%s /data/gluster/%s xfs inode64,noatime,nodiratime 0 0'%(
-            home_dir, partitionName, brick))
+            home_dir, partitionName, gluster_brick))
 
     # Mount the brick on the established partition
-    run('mkdir -p /data/gluster/{}'.format(brick))
+    run('mkdir -p /data/gluster/{}'.format(gluster_brick))
     out = run("mount | grep '{}' | grep '/data/gluster/{}'".format(
-        partitionName, brick), warn_only=True)
+        partitionName, gluster_brick), warn_only=True)
     if out == '':
         runCheck('Mount brick on partition',
                 'mount /dev/{}/{} /data/gluster/{}'.format(
-                    home_dir, partitionName, brick))
+                    home_dir, partitionName, gluster_brick))
 
     # Ensure the nodes can probe each other
     runCheck('Restart glusterd', 'service glusterd restart')
@@ -322,18 +322,18 @@ def createVolume(some_hosts):
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
     node_ips = "".join([
-        node.split('@', 1)[-1]+':/data/gluster/{} '.format(brick)
+        node.split('@', 1)[-1]+':/data/gluster/{} '.format(gluster_brick)
         for node in some_hosts
         ])
 
     check_volume = run('gluster volume list', warn_only=True)
-    if check_volume != volume:
+    if check_volume != gluster_volume:
         runCheck('Create volume',
                 'gluster volume create {} rep {} transport tcp {} force'.format(
-                    volume, num_nodes, node_ips))
+                    gluster_volume, num_nodes, node_ips))
 
         runCheck('Start volume', 'gluster volume start {} force'.format(
-            volume))
+            gluster_volume))
 
     runCheck('Restart glusterd', '/bin/systemctl restart glusterd.service')
 
@@ -341,13 +341,13 @@ def createVolume(some_hosts):
 @roles('controller','compute','network', 'storage')
 def mount():
     runCheck('Make mount point', 'mkdir -p /mnt/gluster')
-    if run("mount | grep '{}' | grep /mnt/gluster".format(volume),
+    if run("mount | grep '{}' | grep /mnt/gluster".format(gluster_volume),
             warn_only=True).return_code:
         runCheck('Mount mount point',
                 'mount -t glusterfs {}:/{} /mnt/gluster'.format(
-                    env.host, volume))
+                    env.host, gluster_volume))
         append('/etc/fstab', '%s:/%s /mnt/gluster glusterfs log-file=/root/%s.log,rw 0 0'%(
-            env.host, volume, volume))
+            env.host, gluster_volume, gluster_volume))
 
 def deploy():
     logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
