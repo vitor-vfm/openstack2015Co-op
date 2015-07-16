@@ -198,16 +198,6 @@ def install_packages():
 ############################## Deployment #####################################
 
 def deploy():
-    # Setup gluster
-    #partition = 'strFile'
-    #volume = 'glance_volume'
-    #brick = 'glance_brick'
-
-    #execute(glusterLib.setup_gluster, partition, brick)
-    #execute(glusterLib.probe, env_config.hosts)
-    #execute(glusterLib.create_volume, brick, volume, env_config.hosts)
-    #execute(glusterLib.mount, volume)
-
     # Setup glance
     execute(install_packages)
     execute(setup_glance_database)

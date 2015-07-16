@@ -222,26 +222,12 @@ def restart_cinder():
 ########################### Deployment ########################################
 
 def deploy():
-    # setup gluster
-    #partition = 'strBlk'
-    #volume = 'cinder_volume'
-    #brick = 'cinder_brick'
-
-    #execute(glusterLib.setup_gluster, partition, brick)
-    #execute(glusterLib.probe, env_config.hosts)
-    #execute(glusterLib.create_volume, brick, volume, env_config.hosts)
-    #execute(glusterLib.mount, volume)
-
     # setup cinder database
     execute(setup_cinder_database_on_controller)
     execute(setup_cinder_keystone_on_controller)
     execute(setup_cinder_config_files_on_controller)
     execute(populate_database_on_controller)
     execute(start_cinder_services_on_controller)
-
-    # setup services on storage
-    # execute(setup_cinder_config_files_on_storage)
-    # execute(start_services_on_storage)
 
     # customize gluster to cinder
     execute(change_cinder_files)
