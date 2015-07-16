@@ -23,7 +23,7 @@ passwd = env_config.passwd
 
 glance_api_config_file = "/etc/glance/glance-api.conf"
 glance_registry_config_file = "/etc/glance/glance-registry.conf"
-glanceGlusterDir = "mnt/gluster/glance/images"
+glanceGlusterDir = "/mnt/gluster/glance/images"
 
 ######################## Deployment ########################################
 
