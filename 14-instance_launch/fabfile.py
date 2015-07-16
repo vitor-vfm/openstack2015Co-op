@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from fabric.api import *
 from fabric.decorators import with_settings
+from fabric.colors import green, red
 import logging
 
 import sys
@@ -25,16 +26,16 @@ def generate_key(keyName):
 
 def create_image(url, imageName, imageFile):
     msg = 'Retrieve instance image'
-    run_v("mkdir /tmp/images")
+    run("mkdir -p /tmp/images")
     runCheck(msg, "wget -qP /tmp/images " + url)
 
     with prefix(env_config.admin_openrc):
 
         msg = 'Create glance image'
-        runCheck(msg, "glance image-create --name '%s' " % imageName
-                "--file /tmp/images/%s " % imageFile
-                "--disk-format qcow2 "
-                "--container-format bare "
+        runCheck(msg, "glance image-create --name '%s' " % imageName + \
+                "--file /tmp/images/'%s' " % imageFile + \
+                "--disk-format qcow2 " + \
+                "--container-format bare " + \
                 "--is-public True "
                 )
 
@@ -44,16 +45,15 @@ def create_image(url, imageName, imageFile):
         imageID = run("glance image-list | grep '%s' | awk '{print $2}'" % imageName)
 
         if len(output.splitlines()) > 1:
-            align_n("There seems to be more than one '%s'!" % imageName)
+            print(red("There seems to be more than one '%s'!" % imageName))
             return 'FAIL'
 
         if output:
-            print(align_y("Successfully installed image"))
+            print(green("Successfully installed image"))
         else:
-            print(align_n("Couldn't install image"))
+            print(red("Couldn't install image"))
             return 'FAIL'
     
-
 def boot_vm(flavorSize, imageName, keyName, instanceName):
     # Assumes cirros-test has been created
 
@@ -73,21 +73,44 @@ def adjust_security():
 def give_floating_ip(instanceName):
 
     runCheck("Assign floating ip", "nova floating-ip-associate %s " % instanceName + \
-            "$(neutron floatingip-create ext-net | wk '/floating_ip_address/ {print $4}')")
+            "$(neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}')")
+
+def create_volume(imageName, volumeSize, volumeName):
+    imageID = run("glance image-list | grep '%s' | awk '{print $2}'" % imageName)
+    with prefix(env_config.demo_openrc):
+        runCheck('Create a %s GB volume' % volumeSize,
+                'cinder create --display-name %s --image_id %s %s' % (
+                    volumeName, imageID, volumeSize))
+
+def attach_volume(volumeName, instanceName):
+    with prefix(env_config.demo_openrc):
+        volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
+        runCheck("Attach volume to instance", "nova volume-attach %s %s" % (
+                    instanceName, volumeID))
+
+def check_if_volume_attached(instanceName, volumeName):
+    with prefix(env_config.demo_openrc):
+        if run('nova volume-list | grep %s | grep in-use' % instanceName, warn_only=True) == '':
+            print(red("Looks like %s didn't get attached to %s" % (volumeName, instanceName)))
+        else:
+            print(green('%s successfully attached to %s' % (volumeName, instanceName)))
 
 
 @roles('controller')
 def deploy_cirros():
     credentials = env_config.admin_openrc
     with prefix(credentials):
-        generate_key('demo_key')
+        #generate_key('demo_key')
         create_image(
             'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
-            'cirros-test',
+            'cirros-test3',
             'cirros-0.3.3-x86_64-disk.img')
-        boot_vm('tiny', 'cirros-test', 'demo_key', 'demo-instance1')
-        give_floating_ip('demo-instance1')
-        run("nova list")
+        boot_vm('tiny', 'cirros-test3', 'demo_key', 'demo-instance2')
+        give_floating_ip('demo-instance2')
+        create_volume('cirros-test3', '1', 'cirros-volume2')
+        attach_volume('cirros-volume2', 'demo-instance2')
+        check_if_volume_attached('demo-instance2', 'cirros-volume2')
+        #run("nova list")
 
 def deploy():
     execute(adjust_security)
