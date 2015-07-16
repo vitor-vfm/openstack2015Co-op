@@ -59,11 +59,11 @@ shift $((OPTIND-1))
 
 case "$#" in
     1)  FIRST=$1
-        DIRECTORIES=$(ls | egrep ^$FIRST-)
+        DIRECTORIES=$(ls | egrep '^$FIRST-' | grep -v ".bak" )
         ;;
     2)  FIRST=$1 
         LAST=$2
-        DIRECTORIES=$(ls | egrep ^[0-9] | sort -g | awk "/^$FIRST-/,/^$LAST-/")
+        DIRECTORIES=$(ls | egrep ^[0-9] | grep -v ".bak" | sort -g | awk "/^$FIRST-/,/^$LAST-/")
         ;;
     *) echo "Invalid number of parameters"
         echo -e $USAGE
