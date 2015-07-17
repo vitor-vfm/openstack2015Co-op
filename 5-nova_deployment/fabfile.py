@@ -281,7 +281,7 @@ def servicesTDD():
         print align_y('All services OK')
 
     # check if all compute nodes are mentioned in the list
-    computeNodes = [n for n in env_config.nicDictionary.keys() if 'compute' in n]
+    computeNodes = [host.replace('root@','') for host in env.roledefs['compute']]
     allComputes = True
     for node in computeNodes:
         if node not in servlist:

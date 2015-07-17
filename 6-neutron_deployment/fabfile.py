@@ -699,7 +699,7 @@ def networkTDD():
         execute(saveConfigNetwork,'bad')
         sys.exit(1)
 
-@roles('compute')
+@roles('controller')
 def computeTDD():
     "Check if all compute nodes have an OVS agent active"
 
@@ -708,7 +708,7 @@ def computeTDD():
         agentList = runCheck(msg, 'neutron agent-list')
 
     # check if all compute nodes are mentioned in the list
-    computeNodes = [n for n in env_config.nicDictionary.keys() if 'compute' in n]
+    computeNodes = [host.replace('root@','') for host in env.roledefs['compute']]
     allInList = True
     for node in computeNodes:
         if node not in agentList:
