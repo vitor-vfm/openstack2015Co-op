@@ -604,18 +604,16 @@ def deploy():
 
 @roles('controller')
 def saveConfigController(status):
-    """
-    Save locally the config files that exist in the controller node
-    """
+    "Save locally the config files that exist in the controller node"
+
     saveConfigFile(neutron_conf,status)
     saveConfigFile(ml2_conf_file,status)
     saveConfigFile(nova_conf,status)
 
 @roles('network')
 def saveConfigNetwork(status):
-    """
-    Save locally the config files that exist in the network node
-    """
+    "Save locally the config files that exist in the network node"
+    
     saveConfigFile(sysctl_conf,status)
     saveConfigFile(neutron_conf,status)
     saveConfigFile(ml2_conf_file,status)
@@ -625,152 +623,142 @@ def saveConfigNetwork(status):
 
 @roles('compute')
 def saveConfigCompute(status):
-    """
-    Save locally the config files that exist in the compute nodes
-    """
+    "Save locally the config files that exist in the compute nodes"
+
     saveConfigFile(sysctl_conf,status)
     saveConfigFile(neutron_conf,status)
     saveConfigFile(nova_conf,status)
 
-def errorAndExit():
-    """
-    Saves all config file with status 'bad' and exits the script
-    """
-    execute(saveConfigController,'bad')
-    execute(saveConfigNetwork,'bad')
-    execute(saveConfigCompute,'bad')
-    sys.exit(1)
+@roles('controller')
+def controllerTDD():
+    "Check if all extensions are functioning"
 
+    with prefix(env_config.admin_openrc):
+        msg = 'Run ext-list'
+        extList = runCheck(msg, 'neutron ext-list')
+
+    extensions = [
+            'security-group',
+            'l3_agent_scheduler',
+            'ext-gw-mode',
+            'binding',
+            'provider',
+            'agent',
+            'quotas',
+            'dhcp_agent_scheduler',
+            'l3-ha',
+            'multi-provider',
+            'external-net',
+            'router',
+            'allowed-address-pairs',
+            'extraroute',
+            'extra_dhcp_opt',
+            'dvr',
+            ]
+
+    allInList = True
+    for extension in extensions:
+        if extension not in extList:
+            print align_n('Extension %s is not in the list' % extension)
+            allInList = False
+    if allInList:
+        print align_y('All extensions in list')
+    else:
+        execute(saveConfigController,'bad')
+        sys.exit(1)
+
+@roles('network')
+def networkTDD():
+    "Check if all agents are functioning"
+
+    with prefix(env_config.admin_openrc):
+        msg = 'Run agent-list'
+        agentList = runCheck(msg, 'neutron agent-list')
+
+    # check if all agents are in the list
+    allInList = True
+    for agent in ['Metadata', 'Open vSwitch', 'L3', 'DHCP']:
+        if agent not in agentList:
+            print align_n('Agent %s is not in agent list' % agent)
+            allInList = False
+    if allInList:
+        print align_y('All agents in list')
+
+    # check if agents are active
+    agentLines = agentList.splitlines()[3:-1] # remove header and footer
+    allActive = True
+    for line in agentLines:
+        if ':-)' not in line:
+            print align_n('One of the agents is not active')
+            print line
+            allActive = False
+    if allActive:
+        print align_y('All agents active')
+
+    if not allActive or not allInList:
+        execute(saveConfigNetwork,'bad')
+        sys.exit(1)
+
+@roles('compute')
+def computeTDD():
+    "Check if all compute nodes have an OVS agent active"
+
+    with prefix(env_config.admin_openrc):
+        msg = 'Run agent-list'
+        agentList = runCheck(msg, 'neutron agent-list')
+
+    # check if all compute nodes are mentioned in the list
+    computeNodes = [n for n in env_config.nicDictionary.keys() if 'compute' in n]
+    allInList = True
+    for node in computeNodes:
+        if node not in agentList:
+            print align_n('%s is not mentioned in the agent list' % node)
+            allInList = False
+    if allInList:
+        print align_y('All compute nodes are mentioned in agent list')
+
+    # check if agents are active
+    agentLines = agentList.splitlines()[3:-1] # remove header and footer
+    allActive = True
+    for line in agentLines:
+        if ':-)' not in line:
+            print align_n('One of the agents is not active')
+            print line
+            allActive = False
+    if allActive:
+        print align_y('All agents active')
+
+    if not allActive or not allInList:
+        execute(saveConfigCompute,'bad')
+        sys.exit(1)
 
 @roles('network', 'controller', 'compute')
-def createInitialNetworkTdd():
+def createInitialNetworkTDD():
 
-    # this is repeated, need to translate into env_config
     floatingIPStart = env_config.ext_subnet['start']
 
     msg = "Ping the tenant router gateway from {}".format(env.host)
     runCheck(msg, "ping -c 1 {}".format(floatingIPStart))
 
 @roles('controller')
-def controller_tdd():
-
-    # Check loaded extensions to verify launch of neutron
-    alias_name_pairs = [('security-group','security-group'),
-                        ('l3_agent_scheduler','L3 Agent Scheduler'),
-                        ('ext-gw-mode','Neutron L3 Configurable external gateway mode'),
-                        ('binding','Port Binding'),
-                        ('provider','Provider Network'),
-                        ('agent','agent'),
-                        ('quotas','Quota management support'),
-                        ('dhcp_agent_scheduler','DHCP Agent Scheduler'),
-                        ('l3-ha','HA Router extension'),
-                        ('multi-provider','Multi Provider Network'),
-                        ('external-net','Neutron external network'),
-                        ('router','Neutron L3 Router'),
-                        ('allowed-address-pairs','Allowed Address Pairs'),
-                        ('extraroute','Neutron Extra Route'),
-                        ('extra_dhcp_opt','Neutron Extra DHCP opts'),
-                        ('dvr','Distributed Virtual Router'),
-                        ]
-
-    print 'Checking loaded extensions'
-    
-    with prefix(env_config.admin_openrc):
-        # save ext-list into a file, to avoid running the list command several times
-        ext_list = run('neutron ext-list >ext-list',quiet=True, warn_only=True)
-
-        if ext_list.return_code != 0:
-            print red('Could not run ext-list')
-            errorAndExit()
-
-        for pair in alias_name_pairs:
-            alias = pair[0]
-            name = run("cat ext-list | grep ' {} ' | cut -d\| -f3".format(alias),
-                    quiet=True, warn_only=True)
-            if pair[1] not in name:
-                print align_n("Alias {} should be {}, is {}".format(alias,pair[1],name.strip()))
-                errorAndExit()
-            else:
-                print align_y("Alias {} is {}, as expected".format(alias,name.strip()))
-
-        run('rm ext-list',quiet=True)
-
-@roles('controller')
-def verify_neutron_agents(neutron_agents,hostname):
-    """
-    TDD: verify successful launch of the neutron agents
-    """
-
-    with prefix(env_config.admin_openrc):
-
-        # grab the agent list and save it to a file
-        run("neutron agent-list >agent-list",quiet=True)
-
-        for agent in neutron_agents:
-            agent_line = run("cat agent-list | grep '%s' | grep '%s'" % (agent,hostname),
-                    quiet=True, warn_only=True)
-            if agent_line.return_code != 0:
-                print align_n("Neutron agent {} not found in agent-list".format(agent))
-                errorAndExit()
-            else:
-                n_lines = len(agent_line.splitlines())
-
-                if n_lines > 1:
-                    print align_n('There\'s more than one agent called ' + agent)
-                    errorAndExit()
-                elif hostname not in agent_line:
-                    print align_n('Host for agent %s is not %s' % (agent,hostname))
-                    errorAndExit()
-                elif ':-)' not in agent_line:
-                    print align_n("Status for %s agent is not ':-)'" % agent)
-                    errorAndExit()
-                else:
-                    print align_y("Neutron agent {} OK!".format(agent))
-
-        # remove local file
-        run("rm agent-list",quiet=True)
-
-@roles('network')
-def network_tdd():
-    agents = ['Metadata','Open vSwitch','L3','DHCP']
-    return execute(verify_neutron_agents,neutron_agents=agents,hostname='network')
-
-@roles('compute')
-def compute_tdd():
-
-    with prefix(env_config.admin_openrc):
-        agent = 'Open vSwitch'
-        # get list of compute nodes from the hosts config
-        list_of_compute_hostnames = [hostname for hostname in env_config.hosts\
-                if 'compute' in ''.join(hostname)]
-
-        agent_lines = run('neutron agent-list | grep "%s"' % agent, 
-                quiet=True, warn_only=True).splitlines()
-        for line in agent_lines:
-            if ':-)' not in line:
-                print align_n('Problem with agent ' + agent)
-                errorAndExit()
-            else:
-                print align_y("Neutron agent %s OK!" % agent)
 def tdd():
 
-    res = execute(keystone_check,'neutron',roles=['controller'])
-    if res.values()[0] == 'FAIL':
-        errorAndExit()
+    res = database_check('nova')
+    if res == 'FAIL':
+        execute(saveConfigController,'bad')
+        sys.exit(1)
 
-    res = execute(database_check,'neutron',roles=['controller'])
-    if res.values()[0] == 'FAIL':
-        errorAndExit()
+    res = keystone_check('nova')
+    if res == 'FAIL':
+        execute(saveConfigController,'bad')
+        sys.exit(1)
 
-    execute(controller_tdd)
+    execute(controllerTDD)
+    execute(networkTDD)
+    execute(computeTDD)
+    execute(createInitialNetworkTDD)
 
-    execute(network_tdd)
-
-    execute(compute_tdd)
-
-    execute(createInitialNetworkTdd)
-
-    # save config files with success
+    # if all TDDs passed, save config files as 'good'
     execute(saveConfigController,'good')
     execute(saveConfigNetwork,'good')
     execute(saveConfigCompute,'good')
