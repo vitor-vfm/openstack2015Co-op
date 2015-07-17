@@ -254,100 +254,75 @@ def deploy():
 
 ######################################## TDD #########################################
 
+@roles('controller')
+def servicesTDD():
+    "Check service-list to see if the nova services are up and running"
 
+    with prefix(env_config.admin_openrc):
+        msg = 'Get service list'
+        serviceList = runCheck(msg, 'nova service-list >service-list')
+
+    run('cat service-list')
+
+    servlist = run('cat service-list | grep nova', quiet=True)
+
+    # check if all services are running
+    allRunning = True
+    for line in servlist.splitlines():
+        if 'enabled' not in line:
+            print align_n('One of the services is not enabled')
+            print line
+            allRunning = False
+        elif 'up' not in line: 
+            print align_n('One of the services is not up')
+            print line
+            allRunning = False
+    if allRunning:
+        print align_y('All services OK')
+
+    # check if all compute nodes are mentioned in the list
+    computeNodes = [n for n in env_config.nicDictionary.keys() if 'compute' in n]
+    allComputes = True
+    for node in computeNodes:
+        if node not in servlist:
+            print align_n('%s is not mentioned in the service list' % node)
+            allComputes = False
+    if allComputes:
+        print align_y('All compute nodes have a service')
+
+
+    if not allRunning or not allComputes:
+        saveConfigFile(etc_nova_config_file, 'bad')
+        sys.exit(1)
 
 @roles('controller')
-def verify():
+def imageTDD():
+    "Run image-list to verify connectivity with Keystone and Glance"
 
-    result = 'OK'
-    nova_services = ['nova-conductor','nova-consoleauth','nova-scheduler', 'nova-cert']
-    
     with prefix(env_config.admin_openrc):
-        # run the lists and save them in local files
-        run('nova service-list >service-list',quiet=True)
-        run('nova image-list >image-list',quiet=True)
+        msg = 'Run nova image-list'
+        out = runCheck(msg, 'nova image-list')
+        if 'ACTIVE' not in out:
+            print align_n('No active images')
+            saveConfigFile(etc_nova_config_file, 'bad')
+            sys.exit(1)
 
-        for service in nova_services:
-            if service in run("cat service-list",quiet=True):
-                print align_y("{} exists in nova service list".format(service)) 
-                check_for = {'6':'controller','8':'internal','10':'enabled','12':'up'}
-
-                for location, correct_value in check_for.iteritems():
-                    current_value = run("cat service-list | awk '/%s/ {print $%s}'" % (service,location),quiet=True)
-                    if (current_value.strip() == correct_value.strip()):
-                        print align_y("{} host is {}".format(service, correct_value)) 
-                    else:
-                        print align_n("{} host is NOT {}".format(service, correct_value))  
-                        result = 'FAIL'
-                        logging.error("Expected service {}\'s status to be {}, got {}"\
-                                .format(service,correct_value,current_value))
-            else:
-                print align_n("{} does NOT exist in nova service list".format(service)) 
-                result = 'FAIL'
-                logging.error("{} does NOT exist in nova service list".format(service)) 
-
-        # separate check for nova-compute as it has different values
-        service = 'nova-compute'
-        if service in run("cat service-list",quiet=True):
-            print align_y("{} exists in nova service list".format(service)) 
-            check_for = {'6':'compute1','8':'nova','10':'enabled','12':'up'}
-            
-            for location, correct_value in check_for.iteritems():
-                current_value = run("cat service-list | awk '/%s/ {print $%s}'" % (service,location),quiet=True)
-                if (current_value.strip() == correct_value):
-                    print align_y("{} host is {}".format(service, correct_value)) 
-                else:
-                    print align_n("{} host is NOT {}".format(service, correct_value))  
-                    result = 'FAIL'
-                    logging.error("Expected service {}\'s status to be {}, got {}"\
-                            .format(service,correct_value,current_value))
-        else:
-            print align_n("{} does NOT exist in nova service list".format(service)) 
-            result = 'FAIL'
-            logging.error("{} does NOT exist in nova service list".format(service)) 
-
-        # checks all statuses to make sure all images are ACTIVE
-        statuses = run("cat image-list | awk '// {print $6}' ",quiet=True)
-    
-        statuses = statuses.split()
-        for status in statuses[1:]:
-            image_name = run("cat image-list | awk '/%s/ {print $4}'" % status,quiet=True)
-            image_id = run("cat image-list | awk '/%s/ {print $2}'" % status,quiet=True)
-            if status == 'ACTIVE':
-                print align_y("Image: {}, ID: {} is {}".format(image_name, image_id, "ACTIVE"))
-            else:
-                print align_n("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
-                result = 'FAIL'
-                logging.error("Image: {}, ID: {} is {}".format(image_name, image_id, "INACTIVE"))
-
-        # run the lists and save them in local files
-        run('rm service-list',quiet=True)
-        run('rm image-list',quiet=True)
-
-        return result
-    
 
 @roles('controller')
 def tdd():
-    with settings(warn_only=True):
-        # save results of the tdds in a list
-        results = list()
 
-        res = database_check('nova')
-        results.append(res)
+    res = database_check('nova')
+    if res == 'FAIL':
+        saveConfigFile(etc_nova_config_file, 'bad')
+        sys.exit(1)
 
-        res = keystone_check('nova')
-        results.append(res)
+    res = keystone_check('nova')
+    if res == 'FAIL':
+        saveConfigFile(etc_nova_config_file, 'bad')
+        sys.exit(1)
 
-        res = verify()
-        results.append(res)
+    execute(servicesTDD)
+    execute(imageTDD)
 
-        # check if any of the functions failed
-        # and set status accordingly
-        if any([r == 'FAIL' for r in results]):
-            status = 'bad'
-        else:
-            status = 'good'
-
-        # save config file
-        saveConfigFile(etc_nova_config_file, status)
+    # if all TDDs passed, save config files as 'good'
+    saveConfigFile(etc_nova_config_file, 'good')
