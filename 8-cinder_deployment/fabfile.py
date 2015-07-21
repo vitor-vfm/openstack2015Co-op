@@ -246,7 +246,7 @@ def tdd():
 
     with prefix(env_config.admin_openrc):
         runCheck('List service components', 'cinder service-list')
-    #runCheck('Restarting cinder', 'systemctl status openstack-cinder-volume.service')
+
     with prefix(env_config.demo_openrc):    
         runCheck('Create a 1 GB volume', 
                 'cinder create --display-name demo-volume1 1')
@@ -257,6 +257,7 @@ def tdd():
         if not status:
             print align_n('There is no volume called demo-volume1')
         else:
+            # volume takes a while to build, so we loop until it's done
             while status != 'error' and status != 'available':
                 status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
 
@@ -267,4 +268,3 @@ def tdd():
                 print status
 
         runCheck('Delete test volume', 'cinder delete demo-volume1')
-        #runCheck('Check if cinder is running', 'cinder service-list')
