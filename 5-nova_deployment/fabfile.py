@@ -115,7 +115,10 @@ def setup_nova_config_files_on_controller():
     set_parameter(etc_nova_config_file, 'glance', 'host', 'controller')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'verbose', 'True')
 
-
+    if 'ipmi5' not in check_output('echo $HOSTNAME',shell=True):
+        # set this parameter if we are not in production mode
+        set_parameter(etc_nova_config_file, 'libvirt', 'cpu_mode', 'host-passthrough')    
+        
 @roles('controller')
 def populate_database_on_controller():
     msg = "Populate database on controller node"
@@ -189,6 +192,11 @@ def setup_nova_config_files_on_compute():
 
     set_parameter(etc_nova_config_file, 'glance', 'host', 'controller')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'verbose', 'True')
+
+
+    if 'ipmi5' not in check_output('echo $HOSTNAME',shell=True):
+        # set this parameter if we are not in production mode
+        set_parameter(etc_nova_config_file, 'libvirt', 'cpu_mode', 'host-passthrough')    
 
     hardware_accel_check()
 
