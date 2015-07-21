@@ -41,8 +41,13 @@ def setSettingsFile():
 def saveImagesAndCSS():
     "Save images and the CSS sheet in the controller"
 
-    # save images
     imagesDir = staticDir + 'dashboard/img/'
+    # backup favicon
+    msg = 'Backup local favicon'
+    with cd(imagesDir):
+        runCheck(msg, 'cp favicon.ico favicon.ico.back12')
+
+    # save images
     imageFiles = local('ls img',capture=True).split()
     for imageFile in imageFiles:
         put(local_path = 'img/%s' % imageFile, remote_path = imagesDir)
