@@ -2,6 +2,7 @@ from fabric.colors import green, red, blue
 from fabric.api import run
 from fabric.operations import get
 from env_config import *
+import sys
 
 def printMessage(status, msg):
 	if (status == "good"):
@@ -92,8 +93,10 @@ def checkLog(time):
             result += red("Found something on log " + log + "\n")
             result += newLines
             result += "\n"
+        else:
+            print blue('Nothing new found in log ' + log)
 
-    return result
+    print result
         
 
 
@@ -105,22 +108,24 @@ def runCheck(msg, command, quiet=False, warn_only=False):
     """
 
     time = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
+
     out = run(command,
             quiet=quiet,
-            warn_only=warn_only)
+            warn_only=True)
 
     if out.return_code == 0:
-        result = 'good'
+        printMessage('good',msg)
         logging.info('Success on: ' + msg)
         logging.debug(out)
     else:
-        result = 'oops'
+        printMessage('oops',msg)
         errormsg = 'Failure on: ' + msg
         logging.error(errormsg)
         logging.error(out)
-        print checkLog(time)
+        checkLog(time)
+        if not warn_only:
+            sys.exit(1)
 
-    printMessage(result,msg)
     return out
 
 
