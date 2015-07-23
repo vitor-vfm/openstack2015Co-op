@@ -145,7 +145,13 @@ display_progress "Done testing" 100
 
 echo "Result (Average taken from performing the the tests $reps time(s))"
 
+#block size for each of the results and their respective titles
+block_size=20
 
-echo "Results"
+printf "%${block_size}s" "RAM Test" && printf "%${block_size}s" "CPU Test" && printf "%${block_size}s" 'Bandwidth Test' && printf "%${block_size}s" 'Hard Drive Test'
+echo
+printf "%${block_size}s" "($ramReps reps)" && printf "%${block_size}s" "($cpuReps reps)" && printf "%${block_size}s" ' ' && printf "%${block_size}s" ' '
+echo
+printf "%${block_size}s" "$ramTimeAvg" && printf "%${block_size}s" "$cpuTimeAvg"  && printf "%${block_size}s" "$netTimeAvg"  && printf "%${block_size}s" "$storTimeAvg"
+echo -e "\n"
 
-echo -e '$ramTimeAvg \t $cpuTimeAvg \t $netTimeAvg \t $storTimeAvg'
