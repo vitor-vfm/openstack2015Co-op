@@ -49,24 +49,24 @@ function cpuTest {
 
 ##########################################################################################################################
 
+function bandwidthTest {
 
-echo "Starting CPU test"
 
-for i in {1..$repetitions};
-do 
-    newCpuTime=0
-    cpuTime=0
+    netTime=0
 
-    newCpuTime=$({ time for i in {1..$cpuReps}; do echo "hello" > /dev/null; done ;} 2>&1 |  awk '/real/ {print $2}' )
-    cpuTime=$((newCpuTime+cpuTime))
-    
-    
-done
+    for ((i=0; i<$reps;i++))
+    do 
+	newNetTime=0
 
-cpuTimeAvg=(echo "$cpuTime / $reps" | bc)
+	newNetTime=$({ time curl -s http://129.128.208.164/sample.txt >/dev/null ; } 2>&1)
+	netTime=$(echo "$newNetTime+$netTime" | bc -l | sed -r 's/0+$//g')    
 
-echo "Done CPU Test"
 
+    done
+
+    netTimeAvg=$(echo "$netTime / $reps" | bc -l | sed -r 's/0+$//g')
+
+}
 
 ##########################################################################################################################
 
