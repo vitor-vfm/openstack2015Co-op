@@ -1,7 +1,12 @@
 #! /bin/bash
 
+if [ -z "$1" ]
+then
+    reps=1
+else
+    reps=$1
+fi
 
-reps=1
 #cpuReps=1000000
 #ramReps=1000000
 cpuReps=10000
@@ -33,7 +38,6 @@ function display_progress {
     	echo -ne "\n"
     fi
 }
-echo "Starting Tests"
 
 
 ##########################################################################################################################
