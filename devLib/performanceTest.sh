@@ -32,7 +32,20 @@ function ramTest {
 ##########################################################################################################################
 
 
-echo "Done RAM Test"
+function cpuTest {
+    cpuTime=0
+    for ((i=0; i<$reps;i++))
+    do 
+	newCpuTime=0
+
+	newCpuTime=$({ time for ((j=0; j<=$cpuReps;j++)); do echo "hello" > /dev/null; done; } 2>&1)
+	cpuTime=$(echo "$newCpuTime+$cpuTime" | bc -l | sed -r 's/0+$//g')    
+	
+	
+    done
+
+    cpuTimeAvg=$(echo "$cpuTime / $reps" | bc -l | sed -r 's/0+$//g')
+}
 
 ##########################################################################################################################
 
