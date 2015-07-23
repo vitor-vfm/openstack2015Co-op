@@ -5,6 +5,7 @@ from fabric.context_managers import cd
 from fabric.colors import green, red, blue
 from fabric.contrib.files import append
 import logging
+from subprocess import check_output
 import string
 
 import sys
@@ -139,6 +140,7 @@ def start_nova_services_on_controller():
     msg = "Restart nova services on controller"
     runCheck(msg, "systemctl restart " + nova_services)
 
+@parallel
 @roles('compute')
 def install_packages_compute():
 
@@ -159,6 +161,7 @@ def hardware_accel_check():
         set_parameter(etc_nova_config_file, 'libvirt', 'virt_type', 'qemu')
 
 
+@parallel
 @roles('compute')
 def setup_nova_config_files_on_compute():
     """
@@ -201,6 +204,7 @@ def setup_nova_config_files_on_compute():
     hardware_accel_check()
 
 
+@parallel
 @roles('compute')
 def start_services_on_compute():
     msg = "Enable libvirt daemon"
