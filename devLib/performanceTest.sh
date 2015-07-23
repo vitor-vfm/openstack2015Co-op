@@ -13,18 +13,23 @@ echo "Starting Tests"
 ##########################################################################################################################
 
 
-echo "Starting RAM test"
+function ramTest {
 
-for i in {1..$repetitions};
-do 
-    newRamTime=0
     ramTime=0
+    for ((i=0; i<$reps;i++))
+    do 
+	newRamTime=0 
+	var=0
+	newRamTime=$( { time for ((j=0; j<=$ramReps;j++)); do var=$((var+j));  done; } 2>&1)
+	ramTime=$(echo "$ramTime+$newRamTime" | bc -l | sed -r 's/0+$//g')    
+    done
+    
+    ramTimeAvg=$(echo "$ramTime / $reps" | bc -l | sed -r 's/0+$//g')
 
-    newRamTime=$({ time for i in {1..$ramReps}; do var=$((var+i));  done;  2>&1 |  awk '/real/ {print $2}' })
-    ramTime=$((newRamTime+ramTime))    
-done
+    
+}
 
-ramTimeAvg=(echo "$ramTime / $reps" | bc)
+##########################################################################################################################
 
 
 echo "Done RAM Test"
