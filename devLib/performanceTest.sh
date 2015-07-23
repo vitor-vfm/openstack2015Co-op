@@ -70,24 +70,26 @@ function bandwidthTest {
 
 ##########################################################################################################################
 
-
-echo "Starting Network Test"
-
-
-for i in {1..$repetitions};
-do 
-    newNetTime=0
-    netTime=0
-
-    networkTime=$({ time curl http://129.128.208.164/sample.txt >/dev/null ; }  2>&1 |  awk '/real/ {print $2}' )
-    netTime=$((newNetTime+netTime))
+function hardDriveTest {
 
 
-done
+    storTime=0
+    for ((i=0; i<$reps;i++))
+    do 
+	newStorTime=0
 
-netTimeAvg=(echo "$netTime / $reps" | bc)
+	newStorTime=$({ time dd if=/dev/urandom of=sample.txt bs=50MB count=1 2> /dev/null; } 2>&1 )
+	storTime=$(echo "$newStorTime+$storTime" | bc -l | sed -r 's/0+$//g')    
 
-echo "Done Network Test"
+    done
+
+    storTimeAvg=$(echo "$storTime / $reps" | bc -l | sed -r 's/0+$//g')
+
+    # clean up after hard drive test
+    rm -f sample.txt
+
+
+}
 
 ##########################################################################################################################
 
