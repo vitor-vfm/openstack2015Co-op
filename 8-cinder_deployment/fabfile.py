@@ -10,7 +10,8 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck, set_parameter, createDatabaseScript, printMessage, align_n, align_y
+from myLib import runCheck, set_parameter, createDatabaseScript, printMessage
+from myLib import align_n, align_y, checkLog
 
 
 """
@@ -247,6 +248,7 @@ def tdd():
         runCheck('List service components', 'cinder service-list')
 
     with prefix(env_config.demo_openrc):    
+        timestamp = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
         runCheck('Create a 1 GB volume', 
                 'cinder create --display-name demo-volume1 1')
 
@@ -265,7 +267,7 @@ def tdd():
                 print align_y('demo-volume1 is available')
             else:
                 print align_n('Problem with demo-volume1:')
-                print status
+                checkLog(timestamp)
                 sys.exit(1)
 
         runCheck('Delete test volume', 'cinder delete demo-volume1')
