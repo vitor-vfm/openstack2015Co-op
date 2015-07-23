@@ -7,6 +7,32 @@ reps=1
 cpuReps=10000
 ramReps=10000
 
+TIMEFORMAT=%R
+
+function display_progress {
+    task=$1
+    progress=$2
+    max_progress=100
+    bar="$task: "
+    for (( i=0; i<=$max_progress; i++)) 
+    do
+    	if [ "$i" -le "$progress" ] 
+    	then
+    	    bar="$bar#"
+    	else
+    	    bar="$bar "	    
+    	fi
+
+    done
+    
+    bar="$bar ($progress%)\r"
+    echo -ne $bar
+
+    if [ "$progress" -ge "$max_progress" ]
+    then
+    	echo -ne "\n"
+    fi
+}
 echo "Starting Tests"
 
 
@@ -94,28 +120,31 @@ function hardDriveTest {
 ##########################################################################################################################
 
 
-echo "Starting Storage Test"
+# run all tests
 
-for i in {1..$repetitions};
-do 
-    newStorTime=0
-    storTime=0
+echo
 
-    newStorTime=$({ time dd if=/dev/urandom of=sample.txt bs=50MB count=1 ; }  2>&1 |  awk '/real/ {print $2}' )
-    storTime=$((netStorTime+storTime))
+display_progress "Testing Ram" 0
 
-done
+ramTest
 
-storTimeAvg=(echo "$storTime / $reps" | bc)
+display_progress "Testing CPU" 20
 
-echo "Done Storage Test"
+cpuTest
+
+display_progress "Testing Bandwidth" 40
+
+bandwidthTest
+
+display_progress "Testing Hard Drive" 70
+
+hardDriveTest
+
+display_progress "Done testing" 100
 
 
-##########################################################################################################################
+echo "Result (Average taken from performing the the tests $reps time(s))"
 
-
-
-echo "Done testing"
 
 echo "Results"
 
