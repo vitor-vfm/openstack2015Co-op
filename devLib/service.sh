@@ -143,7 +143,7 @@ function action_on_services {
 	    ;;
 	8)
 	    servicesComp=""
-	    servicesCont="openstack-cinder-api openstack-cinder-scheduler.service"
+	    servicesCont="openstack-cinder-api openstack-cinder-scheduler.service openstack-cinder-volume target"
 	    servicesNetw=""
 	    servicesStor="openstack-cinder-volume target"
 	    ;;
@@ -251,6 +251,7 @@ function action_on_services {
 	fi
 
 	run_command "$servicesComp" $action "compute1"
+	run_command "$servicesComp" $action "compute2"
     fi
 
     if ! [ -z "$servicesNetw" ] 
