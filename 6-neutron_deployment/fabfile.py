@@ -31,9 +31,6 @@ sysctl_conf = '/etc/sysctl.conf'
 # get database script
 database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
 
-# global variable to be used in the TDD functions
-status = str()
-
 ######################### Deployment ########################################
 
 # CONTROLLER
@@ -42,7 +39,8 @@ def create_neutron_database():
 
     # send the commands to mysql client
     msg = "Create MySQL database for neutron"
-    runCheck(msg, '''echo "{}" | mysql -u root -p{}'''.format(database_script, env_config.passwd['ROOT_SECRET']))
+    runCheck(msg, '''echo "{}" | mysql -u root -p{}'''.format(
+        database_script, env_config.passwd['ROOT_SECRET']))
 
 def setup_keystone_controller():
     """
@@ -68,7 +66,8 @@ def setup_keystone_controller():
         # check if service neutron has been created and if not, create it
         if 'neutron' not in run("keystone service-list"):
             msg = "Create the neutron service entity"
-            runCheck(msg, 'keystone service-create --name neutron --type network --description "OpenStack Networking"')
+            runCheck(msg, 'keystone service-create --name neutron --type network '
+                    '--description "OpenStack Networking"')
         else:
             print blue('\t\tneutron is already a service. Do nothing')
 
@@ -593,8 +592,6 @@ def createInitialNetwork():
     execute(createDemoRouter)
 
 def deploy():
-
-    # with settings(warn_only=True):
     execute(controller_deploy)
     execute(network_deploy)
     execute(compute_deploy)

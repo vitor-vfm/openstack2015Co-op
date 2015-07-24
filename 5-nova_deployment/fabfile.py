@@ -5,6 +5,7 @@ from fabric.context_managers import cd
 from fabric.colors import green, red, blue
 from fabric.contrib.files import append
 import logging
+from subprocess import check_output
 import string
 
 import sys
@@ -115,7 +116,10 @@ def setup_nova_config_files_on_controller():
     set_parameter(etc_nova_config_file, 'glance', 'host', 'controller')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'verbose', 'True')
 
-
+    if 'ipmi5' not in check_output('echo $HOSTNAME',shell=True):
+        # set this parameter if we are not in production mode
+        set_parameter(etc_nova_config_file, 'libvirt', 'cpu_mode', 'host-passthrough')    
+        
 @roles('controller')
 def populate_database_on_controller():
     msg = "Populate database on controller node"
@@ -136,6 +140,7 @@ def start_nova_services_on_controller():
     msg = "Restart nova services on controller"
     runCheck(msg, "systemctl restart " + nova_services)
 
+@parallel
 @roles('compute')
 def install_packages_compute():
 
@@ -156,6 +161,7 @@ def hardware_accel_check():
         set_parameter(etc_nova_config_file, 'libvirt', 'virt_type', 'qemu')
 
 
+@parallel
 @roles('compute')
 def setup_nova_config_files_on_compute():
     """
@@ -190,9 +196,15 @@ def setup_nova_config_files_on_compute():
     set_parameter(etc_nova_config_file, 'glance', 'host', 'controller')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'verbose', 'True')
 
+
+    if 'ipmi5' not in check_output('echo $HOSTNAME',shell=True):
+        # set this parameter if we are not in production mode
+        set_parameter(etc_nova_config_file, 'libvirt', 'cpu_mode', 'host-passthrough')    
+
     hardware_accel_check()
 
 
+@parallel
 @roles('compute')
 def start_services_on_compute():
     msg = "Enable libvirt daemon"

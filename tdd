@@ -1,6 +1,0 @@
-#! /bin/bash
-
-# Runs the tdd in the interval specified
-# Wrapper for allfabs
-
-./allfabs $1 $2 tdd

@@ -10,8 +10,8 @@ import string
 import sys
 sys.path.append('../')
 import env_config
-from myLib import runCheck, set_parameter, createDatabaseScript, printMessage, align_n, align_y
-import glusterLib
+from myLib import runCheck, set_parameter, createDatabaseScript, printMessage
+from myLib import align_n, align_y, checkLog
 
 
 """
@@ -248,6 +248,7 @@ def tdd():
         runCheck('List service components', 'cinder service-list')
 
     with prefix(env_config.demo_openrc):    
+        timestamp = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
         runCheck('Create a 1 GB volume', 
                 'cinder create --display-name demo-volume1 1')
 
@@ -256,6 +257,7 @@ def tdd():
         status = run("cinder list | awk '/demo-volume1/ {print $4}'",quiet=True)
         if not status:
             print align_n('There is no volume called demo-volume1')
+            sys.exit(1)
         else:
             # volume takes a while to build, so we loop until it's done
             while status != 'error' and status != 'available':
@@ -265,6 +267,7 @@ def tdd():
                 print align_y('demo-volume1 is available')
             else:
                 print align_n('Problem with demo-volume1:')
-                print status
+                checkLog(timestamp)
+                sys.exit(1)
 
         runCheck('Delete test volume', 'cinder delete demo-volume1')
