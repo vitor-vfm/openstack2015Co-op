@@ -30,6 +30,10 @@ lslogs = ['/var/log/nova/nova-manage.log',
           '/var/log/rabbitmq/rabbit@localhost.log',
           '/var/log/keystone/keystone-tokenflush.log',
           '/var/log/glance/registry.log',
+          '/var/log/cinder/api.log',
+          '/var/log/cinder/cinder-manage.log',
+          '/var/log/cinder/scheduler.log',
+          '/var/log/cinder/volume.log',
           '/var/log/glusterfs/etc-glusterfs-glusterd.vol.log',
           ]
 
@@ -304,12 +308,23 @@ pid-file=/var/run/mariadb/mariadb.pid
 #
 !includedir /etc/my.cnf.d
            """
+
     # for the env dictionary
-    roledefs = { 'compute' : ['root@compute1'],
-                 'network' : ['root@network'],
+    addNode = False
+    roledefs = { 
+            'compute' : ['root@compute1', 'root@compute2'],
+            'network' : ['root@network'],
+            'storage' : [],
+            'controller' : ['root@controller']
+            }
+
+    #addNode = False
+    #roledefs = { 'compute' : ['root@compute1'],
+    #             'network' : [],
                  # 'storage' : ['root@storage1'],
-                 'storage' : [],
-                 'controller' : ['root@controller']}
+    #             'storage' : [],
+    #             'controller' : []}
+
 
     roles = roledefs.keys()
     hosts = sum(roledefs.values(), [])
@@ -360,12 +375,12 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     nicDictionary = {
             'controller': { 
-                             'mgtDEVICE' : 'eno1',
+                             'mgtDEVICE' : 'enp7s9',
                              'mgtIPADDR' : '192.168.1.11',
                              'mgtNETMASK' : '255.255.255.0',
                              'mgtGATEWAY' : '192.168.1.1',
                              'mgtDNS1' : '129.128.208.13',
-                             'tnlDEVICE' : 'enp2s10',
+                             'tnlDEVICE' : 'enp0s25',
                              'tnlIPADDR' : '192.168.2.11',
                              'tnlNETMASK' : '255.255.255.0',
                           },
@@ -394,6 +409,17 @@ pid-file=/var/run/mariadb/mariadb.pid
                              'mgtDNS1' : '129.128.208.13',
                              'tnlDEVICE' : 'enp2s10',
                              'tnlIPADDR' : '192.168.2.41',
+                             'tnlNETMASK' : '255.255.255.0',
+                         },
+
+            'compute2' : {
+                             'mgtDEVICE' : 'eno1',
+                             'mgtIPADDR' : '192.168.1.42',
+                             'mgtNETMASK' : '255.255.255.0',
+                             'mgtGATEWAY' : '192.168.1.1',
+                             'mgtDNS1' : '129.128.208.13',
+                             'tnlDEVICE' : 'enp2s10',
+                             'tnlIPADDR' : '192.168.2.42',
                              'tnlNETMASK' : '255.255.255.0',
                          },
 
