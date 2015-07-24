@@ -28,7 +28,7 @@ def generate_key(keyName):
 def create_image(url, imageName, imageFile, diskFormat):
     msg = 'Retrieve instance image'
     run("mkdir -p /tmp/images")
-    #runCheck(msg, "wget -P /tmp/images " + url)
+    runCheck(msg, "wget -P /tmp/images " + url)
 
     print(blue("Waiting for image file to finish downloading"))
     with settings(warn_only=True):
@@ -125,12 +125,12 @@ def check_if_volume_attached(instanceName, volumeName):
 def deploy_cirros():
     credentials = env_config.admin_openrc
     with prefix(credentials):
-        #generate_key('demo_key')
-        #create_image(
-        #    'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
-        #    'cirros-test0',
-        #    'cirros-0.3.3-x86_64-disk.img',
-        #    'qcow2')
+        generate_key('demo_key')
+        create_image(
+            'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+            'cirros-test0',
+            'cirros-0.3.3-x86_64-disk.img',
+            'qcow2')
         create_volume('cirros-test0', '1', 'cirros-volume0')
         boot_vm('tiny', 'cirros-volume0', 'demo_key', 'demo-instance0')
         give_floating_ip('demo-instance0')
