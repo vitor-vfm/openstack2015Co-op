@@ -78,6 +78,8 @@ def checkLog(time):
     # much precision
     time = time[:-1]
 
+    print blue('Checking logs...')
+
     for log in lslogs:
         # Filter out all lines before the timestamp
         newLines = run("if [ -e {} ]; then ".format(log) +\
@@ -90,13 +92,14 @@ def checkLog(time):
             newLines = run("echo '{}' | tail -{}".format(newLines,maxLines),
                     quiet=True)
                 
-            result += red("Found something on log " + log + "\n")
+            result += red("Found something in log " + log + "\n")
             result += newLines
             result += "\n"
-        else:
-            print blue('Nothing new found in log ' + log)
 
-    print result
+    if result:
+        print result
+    else:
+        print blue('Nothing found in logs')
         
 
 
