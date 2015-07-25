@@ -202,15 +202,18 @@ def start_services_on_storage():
 
 @roles('controller')
 def change_cinder_files():
-    runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'volume_driver' 'cinder.volume.drivers.glusterfs.GlusterfsDriver'")
-    runCheck('Change cinder.conf file', "crudini --set '/etc/cinder/cinder.conf' 'DEFAULT' 'glusterfs_shares_config' '/etc/cinder/shares.conf'")
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.glusterfs.GlusterfsDriver')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'glusterfs_shares_config', '/etc/cinder/shares.conf')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'state_path', '/mnt/gluster/cinder')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'glusterfs_mount_point_base', '$state_path')
 
 @roles('controller')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
     runCheck('Make export path for cinder', 'mkdir -p %s' % cinderGlusterDir)
     # runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
-    runCheck('Fill shares.conf file', 'echo "%s:/%s" > /etc/cinder/shares.conf' % (env_config.nicDictionary['controller']['mgtIPADDR'], env_config.gluster_volume))
+    #runCheck('Fill shares.conf file', 'echo "%s:/%s" > /etc/cinder/shares.conf' % (env_config.nicDictionary['controller']['mgtIPADDR'], env_config.gluster_volume))
+    runCheck('Fill shares.conf file', 'echo "localhost:/%s" > /etc/cinder/shares.conf' % env_config.gluster_volume)
 
 @roles('controller')
 def restart_cinder():
