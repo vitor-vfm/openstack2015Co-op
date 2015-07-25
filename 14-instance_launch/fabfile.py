@@ -28,21 +28,22 @@ def generate_key(keyName):
 def create_image(url, imageName, imageFile, diskFormat):
     msg = 'Retrieve instance image'
     run("mkdir -p /tmp/images")
-    runCheck(msg, "wget -P /tmp/images " + url)
+    #with settings(warn_only=True):
+    #    if run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
+    #        runCheck(msg, "wget -P /tmp/images " + url)
 
-    print(blue("Waiting for image file to finish downloading"))
-    with settings(warn_only=True):
-        while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
-            pass    
-        msg = 'Create glance image'
-        runCheck(msg, "glance image-create --progress " + \
-                "--name %s " % imageName + \
-                "--file /tmp/images/%s " % imageFile + \
-                "--container-format bare " + \
-                "--is-public True " + \
-                #"--disk-format %s < /tmp/images/%s " % (diskFormat, imageFile)
-                "--disk-format %s " % diskFormat
-                )
+    #    print(blue("Waiting for image file to finish downloading"))
+    #    while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
+    #        pass    
+    msg = 'Create glance image'
+    runCheck(msg, "glance image-create --progress " + \
+            "--name %s " % imageName + \
+            "--file /tmp/images/%s " % imageFile + \
+            "--container-format bare " + \
+            "--is-public True " + \
+            #"--disk-format %s < /tmp/images/%s " % (diskFormat, imageFile)
+            "--disk-format %s " % diskFormat
+            )
 
     msg = 'List images'
     output = runCheck(msg, "glance image-list | grep '%s'" % imageName)
@@ -123,16 +124,16 @@ def check_if_volume_attached(instanceName, volumeName):
 
 @roles('controller')
 def deploy_cirros():
-    credentials = env_config.admin_openrc
-    with prefix(credentials):
-        generate_key('demo_key')
+    with prefix(env_config.admin_openrc):
+        #generate_key('demo-key')
         create_image(
             'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
             'cirros-test0',
             'cirros-0.3.3-x86_64-disk.img',
             'qcow2')
-        create_volume('cirros-test0', '1', 'cirros-volume0')
-        boot_vm('tiny', 'cirros-volume0', 'demo_key', 'demo-instance0')
+    with prefix(env_config.demo_openrc):
+        create_volume('cirros-test0', '10', 'cirros-volume0')
+        boot_vm('small', 'cirros-volume0', 'demo-key', 'demo-instance0')
         give_floating_ip('demo-instance0')
         #attach_volume('cirros-volume0', 'demo-instance0')
         #check_if_volume_attached('demo-instance0', 'cirros-volume0')
@@ -141,14 +142,15 @@ def deploy_cirros():
 @roles('controller')
 def deploy_windows7():
     with prefix(env_config.admin_openrc):
-        #generate_key('demo_key')
+        #generate_key('demo-key')
         create_image(
             'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
             'windows7-test0',
-            'en_windows_7_enterprise_sp1_x86.ISO',
-            'iso')
+            'win7.qcow2',
+            'qcow2')
+    with prefix(env_config.demo_openrc):
         create_volume('windows7-test0', '75', 'windows7-volume0')
-        boot_vm('large', 'windows7-volume0', 'demo_key', 'windows7-instance0')
+        boot_vm('large', 'windows7-volume0', 'demo-key', 'windows7-instance0')
         give_floating_ip('windows7-instance0')
         #attach_volume('windows7-volume0', 'windows7-instance0')
         #check_if_volume_attached('windows7-instance0', 'windows7-volume0')
@@ -156,14 +158,15 @@ def deploy_windows7():
 @roles('controller')
 def deploy_ubuntu():
     with prefix(env_config.admin_openrc):
-        #generate_key('demo_key')
+        #generate_key('demo-key')
         create_image(
             'http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
             'ubuntu-test0',
             'ubuntu-14.04.2-desktop-amd64.iso',
             'qcow2')
+    with prefix(env_config.demo_openrc):
         create_volume('ubuntu-test0', '50', 'ubuntu-volume0')
-        boot_vm('large', 'ubuntu-volume0', 'demo_key', 'ubuntu-instance0')
+        boot_vm('large', 'ubuntu-volume0', 'demo-key', 'ubuntu-instance0')
         give_floating_ip('ubuntu-instance0')
         #attach_volume('ubuntu-volume0', 'ubuntu-instance0')
         #check_if_volume_attached('ubuntu-instance0', 'ubuntu-volume0')
@@ -175,27 +178,23 @@ def deploy():
 
 
 def destroy_stuff(imageName, volumeName, instanceName):
-    runCheck("Delete image", "nova image-delete %s" % imageName)
-    runCheck("Delete instance", "nova delete %s" % instanceName)
-    #volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
-    #runCheck("Delete volume", "cinder delete %s" % volumeID)
-    #runCheck("Delete image files", "rm -rf /tmp/images")
+    with prefix(env_config.admin_openrc):
+        runCheck("Delete image", "nova image-delete %s" % imageName)
+    with prefix(env_config.demo_openrc):
+        runCheck("Delete instance", "nova delete %s" % instanceName)
+        volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
+        runCheck("Delete volume", "cinder delete %s" % volumeID)
+        #runCheck("Delete image files", "rm -rf /tmp/images")
     
 @roles('controller')
 def undeploy_cirros():
-    credentials = env_config.admin_openrc
-    with prefix(credentials):
-        destroy_stuff('cirros-test0', 'cirros-volume0', 'demo-instance0')
+    destroy_stuff('cirros-test0', 'cirros-volume0', 'demo-instance0')
 
 @roles('controller')
 def undeploy_windows7():
-    credentials = env_config.admin_openrc
-    with prefix(credentials):
-        destroy_stuff('windows7-test0', 'windows7-volume0', 'windows7-instance0')
+    destroy_stuff('windows7-test0', 'windows7-volume0', 'windows7-instance0')
 
 @roles('controller')
 def undeploy_ubuntu():
-    credentials = env_config.admin_openrc
-    with prefix(credentials):
-        destroy_stuff('ubuntu-test0', 'ubuntu-volume0', 'ubuntu-instance0')
+    destroy_stuff('ubuntu-test0', 'ubuntu-volume0', 'ubuntu-instance0')
 
