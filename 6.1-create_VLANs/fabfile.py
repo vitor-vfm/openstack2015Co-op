@@ -1,11 +1,9 @@
 from __future__ import with_statement
 from fabric.api import *
-from fabric.decorators import with_settings
-from fabric.context_managers import cd
 from fabric.colors import green, red, blue
 import string
 import logging
-import subprocess
+import time
 
 import sys
 sys.path.append('..')
@@ -19,9 +17,9 @@ from myLib import align_y, align_n, keystone_check, database_check, saveConfigFi
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
-ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
-l3_agent_file = '/etc/neutron/l3_agent.ini'
-dhcp_agent_file = '/etc/neutron/dhcp_agent.ini' 
+ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini.test'
+l3_agent_file = '/etc/neutron/l3_agent.ini.test'
+dhcp_agent_file = '/etc/neutron/dhcp_agent.ini.test'
 
 # dict mapping VLAN tags to CIDRs
 vlans = {
@@ -33,6 +31,24 @@ vlans = {
 
 # name for the test tenant that is used in this script
 tenant = 'test-vlan'
+
+# use the test tenant in the credentials
+credentials = env_config.admin_openrc.replace('OS_TENANT_NAME=admin','OS_TENANT_NAME=%s' % tenant)
+
+############################# General ####################################
+
+@roles('controller')
+def backupConfFile(confFile):
+
+    backupFile = confFile + '.bak'
+
+    exists = run('[ -e %s ]' % backupFile, warn_only=True).return_code == 0
+
+    if exists:
+        print blue('Backup file already exists and will not be rewritten')
+    else:
+        msg = 'Make backup file'
+        runCheck(msg, 'cp %s %s' % (confFile, backupFile))
 
 ############################# VxLAN setup ################################
 
@@ -91,6 +107,9 @@ def VxLANSetMl2Conf():
     # Reference: http://www.opencloudblog.com/?p=630
 
     confFile = ml2_conf_file
+    
+    backupConfFile(confFile)
+
     vniRanges = '65537:69999'
     networkVlanRanges = 'external:6:2131' 
 
@@ -113,7 +132,7 @@ def VxLANSetMl2Conf():
     set_parameter(confFile, 'ovs', 'tenant_network_type' , 'vxlan')
     # set_parameter(confFile, 'ovs', 'local_ip' , l3vxlanIP)
     set_parameter(confFile, 'ovs', 'local_ip' , 
-            physicalInterface = env_config.nicDictionary[env.host]['tnlIPADDR'])
+            env_config.nicDictionary[env.host]['tnlIPADDR'])
          
     set_parameter(confFile, 'agent', 'tunnel_types' , 'vxlan')
     set_parameter(confFile, 'agent', 'l2_population' , 'False')
@@ -123,6 +142,8 @@ def VxLANSetL3Conf():
     # Reference: http://www.opencloudblog.com/?p=630
 
     confFile = l3_agent_file
+    backupConfFile(confFile)
+
 
     # very important - set the two following entries to an empty string
     # do not leave the default values
@@ -153,6 +174,7 @@ def VxLANSetDHCPConf():
     # Reference: http://www.opencloudblog.com/?p=630
 
     confFile = dhcp_agent_file
+    backupConfFile(confFile)
 
     set_parameter(confFile, 'DEFAULT', 'dhcp_delete_namespaces', 'True')
     set_parameter(confFile, 'DEFAULT', 'enable_metadata_network', 'false')
@@ -168,19 +190,18 @@ def VxLANSetDHCPConf():
 @roles('controller')
 def setUpVxLAN():
 
-    execute(VxLANBasicSetup)
+    # execute(VxLANBasicSetup)
     execute(VxLANSetMl2Conf)
     execute(VxLANSetL3Conf)
     execute(VxLANSetDHCPConf)
 
-    msg = 'Restart neutron services'
-    runCheck(msg, 'systemctl restart')
-    runCheck(msg, 'systemctl restart neutron-server.service neutron-openvswitch-agent.service')
+    msg = 'Restart neutron server'
+    runCheck(msg, 'systemctl restart neutron-server.service')
 
 ################################### InitialVlans ####################################
 
 @roles('controller')
-def VLAN_createTenant(tenant):
+def VLAN_createTenant():
     "Create a tenant to test VLANs"
 
     with prefix(env_config.admin_openrc):
@@ -193,19 +214,14 @@ def VLAN_createTenant(tenant):
             runCheck(msg, 'keystone tenant-create --name %s --description "VLAN testing"' %
                     tenant)
 
-            msg = 'Create the admin role'
-            runCheck(msg, 'keystone role-create --name admin')
-
-            msg = 'Give the admin user the role of admin'
+            msg = 'Give the admin user the role of admin in the test tenant'
             runCheck(msg, 'keystone user-role-add --user admin --tenant %s --role admin' %
                     tenant)
 
 @roles('controller')
-def VLAN_createNets(vlans, tenant):
+def VLAN_createNets():
     "Create Neutron networks for each VLAN"
 
-    credentials = env_config.admin_openrc.replace(
-            'OS_TENANT_NAME=admin','OS_TENANT_NAME=%s' % tenant)
     with prefix(credentials):
 
         for tag in vlans.keys():
@@ -213,15 +229,15 @@ def VLAN_createNets(vlans, tenant):
             msg = 'Create net ' + netName
             runCheck(msg, 'neutron net-create %s ' % netName + \
                     '--router:external True '
-                    '--provider:physical_network external '
-                    '--provider:network_type vlan')
+                    # '--provider:physical_network external '
+                    # '--provider:network_type vlan',
+                    # '--provider:network_type gre',
+                    )
 
 @roles('controller')
-def VLAN_createSubnets(vlans, tenant):
+def VLAN_createSubnets():
     "Create Neutron subnets for each VLAN"
 
-    credentials = env_config.admin_openrc.replace(
-            'OS_TENANT_NAME=admin','OS_TENANT_NAME=%s' % tenant)
     with prefix(credentials):
 
         for tag in vlans.keys():
@@ -233,12 +249,10 @@ def VLAN_createSubnets(vlans, tenant):
                     (netName, subnetName, cidr))
 
 @roles('controller')
-def VLAN_createTestInstances(vlans, tenant):
+def VLAN_createTestInstances():
     # Assumes cirros-test has been created
 
     instancesPerVLAN = 1
-    credentials = env_config.admin_openrc.replace(
-            'OS_TENANT_NAME=admin','OS_TENANT_NAME=%s' % tenant)
     with prefix(credentials):
 
         # save net-list locally
@@ -255,6 +269,7 @@ def VLAN_createTestInstances(vlans, tenant):
                 msg = 'Create instance ' + instName
                 runCheck(msg, 'nova boot --flavor m1.tiny --image cirros-test '
                         '--security-group default --nic net-id=%s %s' % (netid, instName))
+                time.sleep(20)
                 checkLog(timestamp)
 
         run('rm net-list')
@@ -262,27 +277,50 @@ def VLAN_createTestInstances(vlans, tenant):
 @roles('controller')
 def createVLANs():
 
-    execute(VLAN_createTenant, tenant)
-    execute(VLAN_createNets, vlans, tenant)
-    execute(VLAN_createSubnets, vlans, tenant)
-    execute(VLAN_createTestInstances, vlans, tenant)
+    execute(VLAN_createTenant)
+    execute(VLAN_createNets)
+    execute(VLAN_createSubnets)
+    execute(VLAN_createTestInstances)
 
 #################################### Deployment ######################################
+
 
 def deploy():
     execute(setUpVxLAN)
     execute(createVLANs)
 
-@roles('controller')
-def undeploy():
-    """
-    Needs testing
-    """
+#################################### Undeployment ######################################
 
-    credentials = env_config.admin_openrc.replace(
-            'OS_TENANT_NAME=admin','OS_TENANT_NAME=%s' % tenant)
-    # with prefix(credentials):
-    with prefix(env_config.admin_openrc):
+@roles('compute', 'network')
+def deleteBridges():
+    for br in ['br-uplink','br-vlan']:
+        msg = 'Delete bridge ' + br
+        runCheck(msg, 'ovs-vsctl del-br ' + br)
+
+@roles('network', 'controller')
+def restoreBackups(confs):
+
+    # The function accepts a string or a list of strings
+    if type(confs) == str:
+        confs = [confs]
+
+    for conf in confs:
+
+        backup = conf + '.bak'
+
+        command = "if [ -e %s ]; then " % backup
+        command += "rm %s; " % conf
+        command += "mv %s %s; " % (backup, conf)
+        command += "else echo No backup file; "
+        command += "fi"
+
+        msg = 'Restore backup for ' + conf
+        runCheck(msg, command)
+
+@roles('controller')
+def removeAllInstances():
+
+    with prefix(credentials):
 
         deletionCommand = "for id in $(%s | tail -n +4 | head -n -1 | awk '{print $2}'); do " + \
                 "%s $id; " + \
@@ -290,20 +328,34 @@ def undeploy():
 
         msg = 'Remove all instances'
         runCheck(msg, deletionCommand % ('nova list', 'nova delete'))
+        time.sleep(10)
 
         msg = 'Remove all routers'
         runCheck(msg, deletionCommand % ('neutron router-list', 'neutron router-delete'))
+        time.sleep(10)
 
         msg = 'Remove all subnets'
         runCheck(msg, deletionCommand % ('neutron subnet-list', 'neutron subnet-delete'))
+        time.sleep(10)
 
         msg = 'Remove all nets'
         runCheck(msg, deletionCommand % ('neutron net-list', 'neutron net-delete'))
+        time.sleep(10)
 
-
-    
+@roles('controller')
+def undeploy():
+    """
+    Needs testing
+    """
+    execute(deleteBridges)
+    execute(restoreBackups, [ml2_conf_file, l3_agent_file, dhcp_agent_file])
+    execute(removeAllInstances)
 
 ####################################### TDD ##########################################
+
+@roles('controller')
+def test():
+    pass
 
 def tdd():
     pass

@@ -34,7 +34,9 @@ lslogs = ['/var/log/nova/nova-manage.log',
           '/var/log/cinder/cinder-manage.log',
           '/var/log/cinder/scheduler.log',
           '/var/log/cinder/volume.log',
-          '/var/log/glusterfs/etc-glusterfs-glusterd.vol.log',
+          '/var/log/neutron/server.log',
+          # for some reason, checkLog gets EOFError on this log:
+          # '/var/log/glusterfs/etc-glusterfs-glusterd.vol.log',
           ]
 
 ###############################################################################
