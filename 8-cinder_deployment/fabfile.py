@@ -204,13 +204,14 @@ def start_services_on_storage():
 def change_cinder_files():
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.glusterfs.GlusterfsDriver')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glusterfs_shares_config', '/etc/cinder/shares.conf')
-    set_parameter(etc_cinder_config_file, 'DEFAULT', 'state_path', '/mnt/gluster/cinder')
-    set_parameter(etc_cinder_config_file, 'DEFAULT', 'glusterfs_mount_point_base', '$state_path')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'state_path', cinderGlusterDir)
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'glusterfs_mount_point_base', "'$state_path'")
 
 @roles('controller')
 def change_shares_file():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
     runCheck('Make export path for cinder', 'mkdir -p %s' % cinderGlusterDir)
+    runCheck('Change permissions for export path for cinder', 'chown -R cinder:cinder %s' % cinderGlusterDir)
     # runCheck('Fill shares.conf file', 'echo "192.168.1.11:/cinder_volume -o backupvolfile-server=192.168.1.31" > /etc/cinder/shares.conf')
     #runCheck('Fill shares.conf file', 'echo "%s:/%s" > /etc/cinder/shares.conf' % (env_config.nicDictionary['controller']['mgtIPADDR'], env_config.gluster_volume))
     runCheck('Fill shares.conf file', 'echo "localhost:/%s" > /etc/cinder/shares.conf' % env_config.gluster_volume)
