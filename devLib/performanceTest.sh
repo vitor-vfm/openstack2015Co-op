@@ -14,6 +14,8 @@ ramReps=10000
 
 TIMEFORMAT=%R
 
+yum install -y bc
+
 function display_progress {
     task=$1
     progress=$2
