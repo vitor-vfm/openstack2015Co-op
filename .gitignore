@@ -13,3 +13,5 @@
 development_config.cfg
 deploy_log
 local_copies_config_files
+/devLib/credentials
+/devLib/ddResults.txt

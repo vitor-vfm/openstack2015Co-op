@@ -9,12 +9,12 @@ fi
 
 #cpuReps=1000000
 #ramReps=1000000
-cpuReps=10000
-ramReps=10000
+cpuReps=1000
+ramReps=1000
 
 TIMEFORMAT=%R
 
-yum install -y bc
+#yum install -y bc
 
 function display_progress {
     task=$1
@@ -55,7 +55,6 @@ function ramTest {
 	newRamTime=$( { time for ((j=0; j<=$ramReps;j++)); do var=$((var+j));  done; } 2>&1)
 	ramTime=$(echo "$ramTime+$newRamTime" | bc -l | sed -r 's/0+$//g')    
     done
-    
     ramTimeAvg=$(echo "$ramTime / $reps" | bc -l | sed -r 's/0+$//g')
 
     
@@ -106,19 +105,25 @@ function hardDriveTest {
 
 
     storTime=0
+    storSpeed=0
+    rate=""
     for ((i=0; i<$reps;i++))
     do 
 	newStorTime=0
+	newStorSpeed=0
 
-	newStorTime=$({ time dd if=/dev/urandom of=sample.txt bs=50MB count=1 2> /dev/null; } 2>&1 )
-	storTime=$(echo "$newStorTime+$storTime" | bc -l | sed -r 's/0+$//g')    
+	newStorTime=$({ time dd if=/dev/urandom of=/mnt/gluster/testFile.txt bs=50MB count=1 2> ddResults.txt; } 2>&1 )
+	newStorSpeed=$(cat ddResults.txt | awk '{print $8}')
+	rate=$(cat ddResults.txt | awk '{print $9}' | xargs)
+	storSpeed=$(echo "$newStorSpeed+$storSpeed" | bc -l | sed -r 's/0+$//g')
+	storTime=$(echo "$newStorTime+$storTime" | bc -l | sed -r 's/0+$//g')
 
     done
 
     storTimeAvg=$(echo "$storTime / $reps" | bc -l | sed -r 's/0+$//g')
-
+    storSpeedAvg=$(echo "$storSpeed / $reps" | bc -l | sed -r 's/0+$//g')
     # clean up after hard drive test
-    rm -f sample.txt
+    rm -f /mnt/gluster/testFile.txt
 
 
 }
@@ -149,15 +154,55 @@ hardDriveTest
 display_progress "Done testing" 100
 
 
-echo "Result (Average taken from performing the the tests $reps time(s))"
+echo "Include a message:"
+read resultsMessage
+
 
 #block size for each of the results and their respective titles
-block_size=20
+block_size=30
 
-printf "%${block_size}s" "RAM Test" && printf "%${block_size}s" "CPU Test" && printf "%${block_size}s" 'Bandwidth Test' && printf "%${block_size}s" 'Hard Drive Test'
+date
+echo "Host: $(hostname)" 
+echo
+
+echo "Result (Average taken from performing the the tests $reps time(s))"
+
+printf "%${block_size}s" "RAM Test (sec)" && printf "%${block_size}s" "CPU Test (sec)" && printf "%${block_size}s" 'Bandwidth Test (sec)' && printf "%${block_size}s" 'Hard Drive Test (sec)' 
 echo
 printf "%${block_size}s" "($ramReps reps)" && printf "%${block_size}s" "($cpuReps reps)" && printf "%${block_size}s" ' ' && printf "%${block_size}s" ' '
 echo
-printf "%${block_size}s" "$ramTimeAvg" && printf "%${block_size}s" "$cpuTimeAvg"  && printf "%${block_size}s" "$netTimeAvg"  && printf "%${block_size}s" "$storTimeAvg"
+printf "%${block_size}s" "$ramTimeAvg" && printf "%${block_size}s" "$cpuTimeAvg"  && printf "%${block_size}s" "$netTimeAvg"  && printf "%${block_size}s" "$storTimeAvg, $storSpeedAvg $rate"
 echo -e "\n"
 
+
+echo "Message: $resultsMessage"
+fileToSaveResults=/tmp/performanceTestResults
+
+# echo "############################################################################################################"
+
+# echo "" > $fileToSaveResults
+# echo "Host: $(hostname)"  >> $fileToSaveResults
+
+# date >> $fileToSaveResults
+
+# echo >> $fileToSaveResults
+
+# echo "Result (Average taken from performing the the tests $reps time(s))" >> $fileToSaveResults
+
+# printf "%${block_size}s" "RAM Test (sec)"  >> $fileToSaveResults && printf "%${block_size}s" "CPU Test (sec)"  >> $fileToSaveResults && printf "%${block_size}s" 'Bandwidth Test (sec)'  >> $fileToSaveResults && printf "%${block_size}s" 'Hard Drive Test (sec)' >> $fileToSaveResults
+# echo >> $fileToSaveResults
+# printf "%${block_size}s" "($ramReps reps)"  >> $fileToSaveResults && printf "%${block_size}s" "($cpuReps reps)"  >> $fileToSaveResults && printf "%${block_size}s" ' '  >> $fileToSaveResults && printf "%${block_size}s" ' ' >> $fileToSaveResults
+# echo >> $fileToSaveResults
+# printf "%${block_size}s" "$ramTimeAvg"  >> $fileToSaveResults && printf "%${block_size}s" "$cpuTimeAvg"   >> $fileToSaveResults && printf "%${block_size}s" "$netTimeAvg"   >> $fileToSaveResults && printf "%${block_size}s" "$storTimeAvg, $storSpeedAvg $rate" >> $fileToSaveResults
+# echo -e "\n" >> $fileToSaveResults
+
+# echo "Message: $resultsMessage" >> $fileToSaveResults
+
+# echo "############################################################################################################" >> $fileToSaveResults
+
+echo -e "$(date) \t $(hostname) \t $reps \t $ramTimeAvg \t $cpuTimeAvg \t $netTimeAvg \t $storTimeAvg \t $storSpeedAvg \t $resultsMessage" > $fileToSaveResults 
+
+./writeToGoogleDoc.sh $fileToSaveResults
+
+
+# date \t hostname \t reps \t ramTimeAvg \t cpuTimeAvg \t netTimeAvg \t storTimeAvg \t storSpeedAvg \t Message 
