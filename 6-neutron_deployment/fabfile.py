@@ -31,6 +31,8 @@ sysctl_conf = '/etc/sysctl.conf'
 # get database script
 database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
 
+dnsServer = '129.128.208.13'
+
 ######################### Deployment ########################################
 
 # CONTROLLER
@@ -532,7 +534,7 @@ def createDemoNet():
             print msg
         else:
             msg = 'create initial demo tenant network on network node'
-            runCheck(msg, 'neutron net-create demo-net')
+            runCheck(msg, 'neutron net-create demo-net --dns-nameservers %s' % dnsServer)
 
         msg = 'Restart Neutron service'
         runCheck(msg, 'systemctl restart neutron-server.service')
