@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Choose hostlist file (production or development)
+if [ "$MYHOSTNAME" = "ipmi5" ]; then
+    hostlist=hostlist_prod;
+else
+    hostlist=hostlist_dev;
+fi
+
+message=$1
+
+for host in $(cat $hostlist);
+do 
+	scp performanceTest.sh root@$host:/root 
+	ssh root@$host "chmod +x performanceTest.sh"
+ 
+	scp writeToGoogleDoc.sh root@$host:/root 
+	ssh root@$host "chmod +x writeToGoogleDoc.sh"
+	
+	scp credentials root@$host:/root
+	ssh root@$host "bash performanceTest.sh '$message'"
+	ssh root@$host "tail -n 10 resultsRecord" >> resultsRecord
+done
+
+echo Done

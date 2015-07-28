@@ -315,10 +315,10 @@ pid-file=/var/run/mariadb/mariadb.pid
     # for the env dictionary
     addNode = False
     roledefs = { 
+            'controller' : ['root@controller'],
             'compute' : ['root@compute1', 'root@compute2'],
             'network' : ['root@network'],
             'storage' : ['root@storage1'],
-            'controller' : ['root@controller']
             }
 
     #addNode = False

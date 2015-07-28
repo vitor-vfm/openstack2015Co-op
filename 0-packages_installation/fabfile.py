@@ -34,7 +34,7 @@ if output['debug']:
     mode = 'debug'
 ########################## Deployment ########################################
 @parallel
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def mustDoOnHost():
     selinuxStatus=run("grep -w ^SELINUX /etc/selinux/config")
     if( "enforcing"  in  selinuxStatus):
@@ -60,7 +60,7 @@ def mustDoOnHost():
 
 
 @parallel
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def installConfigureChrony():
     msg='installing chrony on %s'% env.host
     sudo('yum -y install chrony')
@@ -100,7 +100,7 @@ def installConfigureChrony():
 
 # General function to install packages that should be in all or several nodes
 @parallel
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def install_packages():
     # Install EPEL (Extra Packages for Entreprise Linux
     print('installing yum-plugin-priorities and epel-release')
@@ -127,6 +127,14 @@ def install_packages():
         var1=run('rpm -qa |grep %s ' %item)
         print blue(item +" is version "+ var1)
         logging.info(item +" is version "+ var1)
+
+
+    # Install vim
+    print('Installing vim')
+    run("yum -y install vim-X11 vim-common vim-enhanced vim-minimal")
+    var1=run('rpm -qa |grep vim ')
+    print blue("vim versions: \n"+ var1)
+    logging.info("vim installed on " + env.host)
 
 @roles('controller')
 def installMariaDB():
@@ -194,14 +202,14 @@ def tdd_DB():
         print("Here is a list of the current databases:\n %s"% result)
 
 
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 @with_settings(warn_only=True)
 def test():
     pass
 
 
 @parallel
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def shrinkHome():
     # check if partitions already exist
     if 'storage' in run("lvs"):
@@ -213,7 +221,7 @@ def shrinkHome():
         runCheck('Put a filesystem back on home', 'mkfs -t xfs -f {}'.format(home_dir))
         runCheck('Remount home', 'mount /home')
 
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def tdd_lvs():
     msg = "TDD LVS Free space"
     lvsFree=run("vgs | awk '/centos/ {print $7}'")
@@ -221,7 +229,7 @@ def tdd_lvs():
 
 
 @parallel
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def prepGlusterFS():
 # check if partitions already exist
     if partitionName in run("lvs"):
@@ -326,7 +334,7 @@ def createVolume(some_hosts):
 
 
 @parallel
-@roles('controller','compute','network', 'storage')
+@roles('controller','network','compute','storage')
 def mount():
     runCheck('Make mount point', 'mkdir -p /mnt/gluster')
     if run("mount | grep '{}' | grep /mnt/gluster".format(gluster_volume),
@@ -344,16 +352,16 @@ def deploy():
     execute(install_packages)
     execute(installMariaDB)
     execute(secureDB)
-    #execute(shrinkHome)
-    #execute(prepGlusterFS)
-    #execute(setupGlusterFS)
-    #execute(probe, env_config.hosts)
-    #execute(createVolume, env_config.hosts)
-    #execute(mount)
+    # execute(shrinkHome)
+    # execute(prepGlusterFS)
+    # execute(setupGlusterFS)
+    # execute(probe, env_config.hosts)
+    # execute(createVolume, env_config.hosts)
+    # execute(mount)
     logging.info("Deploy ended at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
     print align_y('Yeah we are done')
 
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def check_firewall():
     with settings(warn_only=True):
         fwdstatus=run("systemctl is-active firewalld")
@@ -361,7 +369,7 @@ def check_firewall():
             msg="Verify firewall is down "
             printMessage("good",msg)
         
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def check_selinux():
     output = run("getenforce")
     if "Disabled" in output:
@@ -369,16 +377,16 @@ def check_selinux():
     else:            
         print align_n("Oh no! SELINUX is " + output)
 
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def chronytdd():
     msg="verify chronyd"
     runCheck(msg,'chronyc sources -v ')
 
-@roles('controller','compute','network','storage')
+@roles('controller','network','storage','compute')
 def tdd():
     chronytdd()
     tdd_DB()
     tdd_lvs()
-    run('fdisk -l|grep storage')
+    # run('fdisk -l|grep storage')
     run('openstack-status')
 
