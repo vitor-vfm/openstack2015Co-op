@@ -127,6 +127,14 @@ def install_packages():
         print blue(item +" is version "+ var1)
         logging.info(item +" is version "+ var1)
 
+
+    # Install vim
+    print('Installing vim')
+    run("yum -y install vim-X11 vim-common vim-enhanced vim-minimal")
+    var1=run('rpm -qa |grep vim ')
+    print blue("vim versions: \n"+ var1)
+    logging.info("vim installed on " + env.host)
+
 @roles('controller')
 def installMariaDB():
     if (env.host != "controller"):
