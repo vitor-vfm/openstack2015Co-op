@@ -160,6 +160,7 @@ def start_glance_services():
     runCheck(msg, "systemctl start openstack-glance-api.service "
             "openstack-glance-registry.service")
 
+################################## Gluster ########################################
 
 @roles('controller')
 def setup_GlusterFS_Glance():
@@ -185,7 +186,7 @@ def setup_GlusterFS_Glance():
 
 
 @roles('controller')
-def setup_glance_api_conf_file():
+def setup_glance_api_conf_file_for_gluster():
     set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', 
             glanceGlusterDir)
 
@@ -195,6 +196,13 @@ def install_packages():
     msg = "Install OpenStack Glance packages"
     runCheck(msg, "yum install -y openstack-glance python-glanceclient")
    
+################################ NFS ##########################################
+
+@roles('storage')
+def setup_glance_api_conf_file_for_nfs():
+    set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', 
+            '/etc/cinder/shares.conf')
+
 ############################## Deployment #####################################
 
 def deploy():
@@ -207,9 +215,12 @@ def deploy():
     execute(start_glance_services)
 
     # Customize gluster to glance
-    execute(setup_glance_api_conf_file)
-    execute(setup_GlusterFS_Glance)
-    execute(start_glance_services)
+    #execute(setup_glance_api_conf_file_for_gluster)
+    #execute(setup_GlusterFS_Glance)
+    #execute(start_glance_services)
+
+    # Customize glance to nfs
+    execute(setup_glance_api_conf_file_for_nfs)
 
 ################################# TDD #########################################
 

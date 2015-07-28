@@ -260,8 +260,8 @@ def deploy():
     execute(setup_nova_config_files_on_compute)        
     execute(start_services_on_compute)
 
-    execute(setup_nova_conf_file)
-    execute(setup_GlusterFS_Nova)
+    #execute(setup_nova_conf_file)
+    #execute(setup_GlusterFS_Nova)
 
 ######################################## TDD #########################################
 

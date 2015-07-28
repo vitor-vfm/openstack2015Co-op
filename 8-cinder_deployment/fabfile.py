@@ -44,6 +44,8 @@ passwd = env_config.passwd
 
 cinderGlusterDir = "/mnt/gluster/cinder"
 
+nfs_share = "/home/cinder"
+
 ################### General functions ######################################
 
 @roles('controller')
@@ -201,14 +203,14 @@ def start_services_on_storage():
 ########################### Gluster ###########################################
 
 @roles('controller')
-def change_cinder_files():
+def change_cinder_file_for_gluster():
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.glusterfs.GlusterfsDriver')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glusterfs_shares_config', '/etc/cinder/shares.conf')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'state_path', cinderGlusterDir)
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'glusterfs_mount_point_base', "'$state_path'")
 
 @roles('controller')
-def change_shares_file():
+def change_shares_file_for_gluster():
     runCheck('Make shares.conf file', 'touch /etc/cinder/shares.conf')
     runCheck('Make export path for cinder', 'mkdir -p %s' % cinderGlusterDir)
     runCheck('Change permissions for export path for cinder', 'chown -R cinder:cinder %s' % cinderGlusterDir)
@@ -223,6 +225,41 @@ def restart_cinder():
         msg = 'Restart cinder-%s' % service
         runCheck(msg, 'systemctl restart openstack-cinder-%s' % service)
 
+############################## NFS ############################################
+
+@roles(storage)
+def install_nfs():
+    runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
+
+@roles(storage)
+def make_nfs_directories():
+    runCheck("Make nfs cinder directory", "mkdir /home/cinder")
+    runCheck("Make nfs swift directory", "mkdir /home/swift")
+
+    runCheck("Setup exports file", "echo '/home/cinder 192.168.1.0/24(rw,sync)'>/etc/exports")
+    runCheck("Continue setting up exports file", "echo '/home/swift 192.168.1.0/24(rw,sync)'>>/etc/exports")
+    
+    runCheck("Change cinder NFS file permissions", "chown -R 65534:65534 /home/cinder/")
+    
+@roles(storage)
+def export_and_start_nfs():
+    runCheck("Export the file system", "exportfs -a")
+    
+    runCheck("Start rpcbind", "service rpcbind start && chkconfig rpcbind on")
+    runCheck("Start NFS", "service rpcbind start; service nfs start")
+
+@roles('storage')
+def change_shares_file_for_nfs():
+    runCheck('Make shares.conf file', 'echo "storage1:/%s" > /etc/cinder/shares.conf' % nfs_share)
+    runCheck('Change permissions for shares.conf file', 'chown root:cinder /etc/cinder/shares.conf')
+    runCheck('Make shares.conf file readable to members of the cinder group',
+                'chmod 0640 /etc/cinder/nfsshares')
+    
+@roles('storage')
+def change_cinder_file_for_nfs():
+    set_parameter('/etc/cinder/shares.conf', 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
+    set_parameter('/etc/cinder/shares.conf', 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
+
 ########################### Deployment ########################################
 
 def deploy():
@@ -234,8 +271,18 @@ def deploy():
     execute(start_cinder_services_on_controller)
 
     # customize gluster to cinder
-    execute(change_cinder_files)
-    execute(change_shares_file)
+    #execute(change_cinder_file_for_gluster)
+    #execute(change_shares_file_for_gluster)
+    #execute(restart_cinder)
+
+    # customize storage node for nfs
+    execute(install_nfs)
+    execute(make_nfs_directories)
+    execute(export_and_start_nfs)
+    
+    # customize cinder for nfs
+    execute(change_shares_file_for_nfs)
+    execute(change_cinder_file_for_nfs)
     execute(restart_cinder)
 
 ################################# TDD #########################################

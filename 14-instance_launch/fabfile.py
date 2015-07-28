@@ -28,13 +28,13 @@ def generate_key(keyName):
 def create_image(url, imageName, imageFile, diskFormat):
     msg = 'Retrieve instance image'
     run("mkdir -p /tmp/images")
-    #with settings(warn_only=True):
-    #    if run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
-    #        runCheck(msg, "wget -P /tmp/images " + url)
+    with settings(warn_only=True):
+        if run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
+            runCheck(msg, "wget -P /tmp/images " + url)
 
-    #    print(blue("Waiting for image file to finish downloading"))
-    #    while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
-    #        pass    
+            print(blue("Waiting for image file to finish downloading"))
+            while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
+                pass    
     msg = 'Create glance image'
     runCheck(msg, "glance image-create --progress " + \
             "--name %s " % imageName + \
@@ -124,15 +124,15 @@ def check_if_volume_attached(instanceName, volumeName):
 
 @roles('controller')
 def deploy_cirros():
-    with prefix(env_config.admin_openrc):
-        #generate_key('demo-key')
-        create_image(
-            'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
-            'cirros-test0',
-            'cirros-0.3.3-x86_64-disk.img',
-            'qcow2')
+    #with prefix(env_config.admin_openrc):
+        #create_image(
+        #    'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+        #    'cirros-test0',
+        #    'cirros-0.3.3-x86_64-disk.img',
+        #    'qcow2')
     with prefix(env_config.demo_openrc):
-        create_volume('cirros-test0', '10', 'cirros-volume0')
+        generate_key('demo-key')
+        #create_volume('cirros-test0', '10', 'cirros-volume0')
         boot_vm('small', 'cirros-volume0', 'demo-key', 'demo-instance0')
         give_floating_ip('demo-instance0')
         #attach_volume('cirros-volume0', 'demo-instance0')
