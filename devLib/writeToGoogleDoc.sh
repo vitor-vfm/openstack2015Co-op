@@ -82,7 +82,7 @@ function getRefreshToken {
 
 
 function getCredentials {
-    fileCount=$(ls | grep credentials)
+    fileCount=$(ls | egrep "^credentials$")
     if [ -z "$fileCount" ]
     then
 
