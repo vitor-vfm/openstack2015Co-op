@@ -12,6 +12,8 @@ fi
 cpuReps=1000
 ramReps=1000
 
+
+
 TIMEFORMAT=%R
 
 #yum install -y bc
@@ -69,7 +71,7 @@ function cpuTest {
     do 
 	newCpuTime=0
 
-	newCpuTime=$({ time for ((j=0; j<=$cpuReps;j++)); do echo "hello" > /dev/null; done; } 2>&1)
+	newCpuTime=$({ time for ((j=0; j<=$cpuReps;j++)); do echo $((13**99)) > /dev/null; done; } 2>&1)
 	cpuTime=$(echo "$newCpuTime+$cpuTime" | bc -l | sed -r 's/0+$//g')    
 	
 	
