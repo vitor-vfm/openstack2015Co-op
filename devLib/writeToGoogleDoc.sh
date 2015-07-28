@@ -26,7 +26,8 @@
 # http://www.visualab.org/index.php/using-google-rest-api-for-analytics
 
 # file in google docs that will be updated 
-docsFile="testResults"
+#docsFile="scriptTesting"
+docsFile="results"
 fileToUpload=$1
 #client_id="557465920695-5bj0l0lutb5km1o8fmak2014eoeq13vg.apps.googleusercontent.com"
 #client_secret="qQMsQ4GZonoGqLEYR7U6Yr4G"
