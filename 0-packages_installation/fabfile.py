@@ -27,6 +27,7 @@ nicDictionary = env_config.nicDictionary
 partitionName = 'storage'
 gluster_brick = 'gluster_brick'
 gluster_volume = env_config.gluster_volume
+backup_volume_file_server = 'compute1'
 
 mode = 'normal'
 if output['debug']:
@@ -223,15 +224,15 @@ def tdd_lvs():
 @roles('controller','compute','network','storage')
 def prepGlusterFS():
 # check if partitions already exist
-    if 'storage' in run("lvs"):
+    if partitionName in run("lvs"):
         print blue('Partitions already created. Nothing done on '+env.host)
     else:
         STRIPE_NUMBER = env_config.partition['stripe_number']
         home_dir = run("lvs | awk '/home/ {print $2}'")
         runCheck('Create partition', 'lvcreate -i {} -I 8 -l 100%FREE {}'.format(
             STRIPE_NUMBER, home_dir))
-        runCheck('Rename partition', 'lvrename /dev/{}/lvol0 storage'.format(home_dir))
-        runCheck('List new partitions', 'fdisk -l|grep storage')
+        runCheck('Rename partition', 'lvrename /dev/%s/lvol0 %s' % (home_dir, partitionName))
+        runCheck('List new partitions', 'fdisk -l|grep %s' % partitionName)
 
 
 @parallel
@@ -301,8 +302,6 @@ def probe(some_hosts):
 
 @roles('compute')
 def createVolume(some_hosts):
-    num_nodes = len(some_hosts)
-
     # Make a string of the ip addresses followed by required string to feed 
     # into following command
     node_ips = "".join([
@@ -310,11 +309,15 @@ def createVolume(some_hosts):
         for node in some_hosts
         ])
 
+    num_nodes = len(some_hosts)
+
     check_volume = run('gluster volume list', warn_only=True)
     if check_volume != gluster_volume:
         runCheck('Create volume',
                 'gluster volume create {} rep {} transport tcp {} force'.format(
                     gluster_volume, num_nodes, node_ips))
+                #'gluster volume create {} rep 2 transport tcp {} force'.format(
+                #    gluster_volume, node_ips))
 
         runCheck('Start volume', 'gluster volume start {} force'.format(
             gluster_volume))
@@ -331,8 +334,8 @@ def mount():
         runCheck('Mount mount point',
                 'mount -t glusterfs {}:/{} /mnt/gluster'.format(
                     env.host, gluster_volume))
-        append('/etc/fstab', '%s:/%s /mnt/gluster glusterfs log-file=/root/%s.log,rw 0 0'%(
-            env.host, gluster_volume, gluster_volume))
+        append('/etc/fstab', '%s:/%s /mnt/gluster glusterfs log-file=/root/%s.log,rw,backupvolfile-server=%s 0 0'%(
+            env.host, gluster_volume, gluster_volume, backup_volume_file_server))
 
 def deploy():
     logging.info("Deploy begin at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
@@ -341,12 +344,12 @@ def deploy():
     execute(install_packages)
     execute(installMariaDB)
     execute(secureDB)
-    execute(shrinkHome)
-    execute(prepGlusterFS)
-    execute(setupGlusterFS)
-    execute(probe, env_config.hosts)
-    execute(createVolume, env_config.hosts)
-    execute(mount)
+    #execute(shrinkHome)
+    #execute(prepGlusterFS)
+    #execute(setupGlusterFS)
+    #execute(probe, env_config.hosts)
+    #execute(createVolume, env_config.hosts)
+    #execute(mount)
     logging.info("Deploy ended at: {:%Y-%b-%d %H:%M:%S}".format(datetime.datetime.now()))
     print align_y('Yeah we are done')
 

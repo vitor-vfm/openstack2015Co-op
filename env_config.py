@@ -317,7 +317,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     roledefs = { 
             'compute' : ['root@compute1', 'root@compute2'],
             'network' : ['root@network'],
-            'storage' : [],
+            'storage' : ['root@storage1'],
             'controller' : ['root@controller']
             }
 
