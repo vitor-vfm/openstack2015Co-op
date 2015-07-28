@@ -376,6 +376,6 @@ def tdd():
     chronytdd()
     tdd_DB()
     tdd_lvs()
-    run('fdisk -l|grep storage')
+    # run('fdisk -l|grep storage')
     run('openstack-status')
 
