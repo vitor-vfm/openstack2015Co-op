@@ -2,15 +2,13 @@
 
 if [ -z "$1" ]
 then
-    reps=1
+    reps=10
 else
     reps=$1
 fi
 
-#cpuReps=1000000
-#ramReps=1000000
-cpuReps=1000
-ramReps=1000
+cpuReps=10000
+ramReps=10000
 
 
 
@@ -156,9 +154,6 @@ hardDriveTest
 display_progress "Done testing" 100
 
 
-echo "Include a message:"
-read resultsMessage
-
 
 #block size for each of the results and their respective titles
 block_size=30
@@ -177,7 +172,10 @@ printf "%${block_size}s" "$ramTimeAvg" && printf "%${block_size}s" "$cpuTimeAvg"
 echo -e "\n"
 
 
-echo "Message: $resultsMessage"
+echo "Include a message:"
+read resultsMessage
+
+#echo "Message: $resultsMessage"
 fileToSaveResults=/tmp/performanceTestResults
 
 # echo "############################################################################################################"
