@@ -263,22 +263,22 @@ def change_cinder_file_for_nfs():
 ########################### Deployment ########################################
 
 def deploy():
-    # # setup cinder database
-    # execute(setup_cinder_database_on_controller)
-    # execute(setup_cinder_keystone_on_controller)
-    # execute(setup_cinder_config_files_on_controller)
-    # execute(populate_database_on_controller)
-    # execute(start_cinder_services_on_controller)
+    # setup cinder database
+    execute(setup_cinder_database_on_controller)
+    execute(setup_cinder_keystone_on_controller)
+    execute(setup_cinder_config_files_on_controller)
+    execute(populate_database_on_controller)
+    execute(start_cinder_services_on_controller)
 
-    # # customize gluster to cinder
-    # #execute(change_cinder_file_for_gluster)
-    # #execute(change_shares_file_for_gluster)
-    # #execute(restart_cinder)
+    # customize gluster to cinder
+    #execute(change_cinder_file_for_gluster)
+    #execute(change_shares_file_for_gluster)
+    #execute(restart_cinder)
 
-    # # customize storage node for nfs
-    # execute(install_nfs)
-    # execute(make_nfs_directories)
-    # execute(export_and_start_nfs)
+    # customize storage node for nfs
+    execute(install_nfs)
+    execute(make_nfs_directories)
+    execute(export_and_start_nfs)
     
     # customize cinder for nfs
     execute(change_shares_file_for_nfs)
