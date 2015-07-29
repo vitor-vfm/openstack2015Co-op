@@ -227,11 +227,11 @@ def restart_cinder():
 
 ############################## NFS ############################################
 
-@roles(storage)
+@roles('storage')
 def install_nfs():
     runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
 
-@roles(storage)
+@roles('storage')
 def make_nfs_directories():
     runCheck("Make nfs cinder directory", "mkdir /home/cinder")
     runCheck("Make nfs swift directory", "mkdir /home/swift")
@@ -241,44 +241,44 @@ def make_nfs_directories():
     
     runCheck("Change cinder NFS file permissions", "chown -R 65534:65534 /home/cinder/")
     
-@roles(storage)
+@roles('storage')
 def export_and_start_nfs():
     runCheck("Export the file system", "exportfs -a")
     
     runCheck("Start rpcbind", "service rpcbind start && chkconfig rpcbind on")
     runCheck("Start NFS", "service rpcbind start; service nfs start")
 
-@roles('storage')
+@roles('controller')
 def change_shares_file_for_nfs():
-    runCheck('Make shares.conf file', 'echo "storage1:/%s" > /etc/cinder/shares.conf' % nfs_share)
+    runCheck('Make shares.conf file', "echo 'storage1:/%s' > /etc/cinder/shares.conf" % nfs_share)
     runCheck('Change permissions for shares.conf file', 'chown root:cinder /etc/cinder/shares.conf')
     runCheck('Make shares.conf file readable to members of the cinder group',
-                'chmod 0640 /etc/cinder/nfsshares')
+                'chmod 0640 /etc/cinder/shares.conf')
     
-@roles('storage')
+@roles('controller')
 def change_cinder_file_for_nfs():
-    set_parameter('/etc/cinder/shares.conf', 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
-    set_parameter('/etc/cinder/shares.conf', 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
 
 ########################### Deployment ########################################
 
 def deploy():
-    # setup cinder database
-    execute(setup_cinder_database_on_controller)
-    execute(setup_cinder_keystone_on_controller)
-    execute(setup_cinder_config_files_on_controller)
-    execute(populate_database_on_controller)
-    execute(start_cinder_services_on_controller)
+    # # setup cinder database
+    # execute(setup_cinder_database_on_controller)
+    # execute(setup_cinder_keystone_on_controller)
+    # execute(setup_cinder_config_files_on_controller)
+    # execute(populate_database_on_controller)
+    # execute(start_cinder_services_on_controller)
 
-    # customize gluster to cinder
-    #execute(change_cinder_file_for_gluster)
-    #execute(change_shares_file_for_gluster)
-    #execute(restart_cinder)
+    # # customize gluster to cinder
+    # #execute(change_cinder_file_for_gluster)
+    # #execute(change_shares_file_for_gluster)
+    # #execute(restart_cinder)
 
-    # customize storage node for nfs
-    execute(install_nfs)
-    execute(make_nfs_directories)
-    execute(export_and_start_nfs)
+    # # customize storage node for nfs
+    # execute(install_nfs)
+    # execute(make_nfs_directories)
+    # execute(export_and_start_nfs)
     
     # customize cinder for nfs
     execute(change_shares_file_for_nfs)
@@ -316,9 +316,9 @@ def tdd():
 
             if status == 'available':
                 print align_y('demo-volume1 is available')
+                runCheck('Delete test volume', 'cinder delete demo-volume1')
             else:
                 print align_n('Problem with demo-volume1:')
                 checkLog(timestamp)
+                runCheck('Delete test volume', 'cinder delete demo-volume1')
                 sys.exit(1)
-
-        runCheck('Delete test volume', 'cinder delete demo-volume1')
