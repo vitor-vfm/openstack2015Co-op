@@ -24,7 +24,7 @@ neutron_conf = '/etc/neutron/neutron.conf'
 ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
 nova_conf = '/etc/nova/nova.conf'
 l3_agent_file = '/etc/neutron/l3_agent.ini'
-dhcp_agent_file = '/etc/neutron/dhcp_agent.ini' 
+dhcp_agent_file = '/etc/neutron/dhcp_agent.ini'
 metadata_agent_file = '/etc/neutron/metadata_agent.ini'
 sysctl_conf = '/etc/sysctl.conf'
 
@@ -48,7 +48,7 @@ def setup_keystone_controller():
     """
     Set up Keystone credentials for Neutron
 
-    Create (a) a user and a service called 'neutron', and 
+    Create (a) a user and a service called 'neutron', and
     (b) an endpoint for the 'neutron' service
     """
 
@@ -87,7 +87,7 @@ def setup_keystone_controller():
 
 def configure_networking_server_component():
     # configure neutron.conf with crudini
- 
+
     # make a backup
     run('cp {} {}.back12'.format(neutron_conf,neutron_conf))
 
@@ -137,8 +137,8 @@ def configure_networking_server_component():
     set_parameter(neutron_conf,'DEFAULT','verbose','True')
 
 def configure_ML2_plugin_general():
-    # The ML2 plug-in uses the Open vSwitch (OVS) mechanism (agent) to build the virtual 
-    # networking framework for instances. However, the controller node does not need the OVS 
+    # The ML2 plug-in uses the Open vSwitch (OVS) mechanism (agent) to build the virtual
+    # networking framework for instances. However, the controller node does not need the OVS
     # components because it does not handle instance network traffic.
 
 
@@ -179,7 +179,7 @@ def configure_nova_to_use_neutron():
 def installPackagesController():
 
     msg = "Install Neutron packages on controller"
-    runCheck(msg, 
+    runCheck(msg,
             'yum -y install '
             'openstack-neutron '
             'openstack-neutron-ml2 '
@@ -196,7 +196,7 @@ def controller_deploy():
     setup_keystone_controller()
 
     installPackagesController()
-    
+  
     configure_networking_server_component()
 
     configure_ML2_plugin_general()
@@ -205,8 +205,8 @@ def controller_deploy():
 
     restart_nova_controller()
 
-    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini 
-    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
+    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini
+    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini.
     # If this symbolic link does not exist, create it
     if 'plugin.ini' not in run('ls /etc/neutron'):
         msg = "Create symbolic link to ml2 conf file"
@@ -225,7 +225,7 @@ def controller_deploy():
     runCheck(msg, 'systemctl enable neutron-server.service')
     msg = "Enable Neutron service"
     runCheck(msg, 'systemctl start neutron-server.service')
-    
+  
 
 # NETWORK
 
@@ -256,20 +256,20 @@ def configure_the_Networking_common_components():
     set_parameter(neutron_conf,'DEFAULT','verbose','True')
 
 def configure_ML2_plug_in_network():
-    
+  
     # most of the configuration is the same as the controller
     configure_ML2_plugin_general()
 
-    # configure the external flat provider network 
+    # configure the external flat provider network
     set_parameter(ml2_conf_file,'ml2_type_flat','flat_networks','external')
 
-    # configure the external flat provider network 
+    # configure the external flat provider network
     set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
     set_parameter(ml2_conf_file,'ovs','bridge_mappings','external:br-ex')
     local_ip = env_config.nicDictionary['network']['tnlIPADDR']
     set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
 
-    # enable GRE tunnels 
+    # enable GRE tunnels
     set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
 def configure_Layer3_agent():
@@ -338,7 +338,7 @@ def configure_Open_vSwitch_service():
 def installPackagesNetwork():
 
     msg = "Install Neutron packages on network"
-    runCheck(msg, 
+    runCheck(msg,
             "yum -y install "
             "openstack-neutron "
             "openstack-neutron-ml2 "
@@ -358,8 +358,8 @@ def network_deploy():
     runCheck(msg, "sysctl -p")
 
     installPackagesNetwork()
-    
-    # configuration 
+  
+    # configuration
 
     configure_the_Networking_common_components()
 
@@ -375,15 +375,15 @@ def network_deploy():
 
     # finalize installation
 
-    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini 
-    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
+    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini
+    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini.
     # If this symbolic link does not exist, create it
     if 'plugin.ini' not in run('ls /etc/neutron'):
         msg = "Create symbolic link to ml2 conf file"
         runCheck(msg, 'ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini')
 
-    # Due to a packaging bug, the Open vSwitch agent initialization script explicitly looks for 
-    # the Open vSwitch plug-in configuration file rather than a symbolic link /etc/neutron/plugin.ini pointing to the ML2 
+    # Due to a packaging bug, the Open vSwitch agent initialization script explicitly looks for
+    # the Open vSwitch plug-in configuration file rather than a symbolic link /etc/neutron/plugin.ini pointing to the ML2
     # plug-in configuration file. Run the following commands to resolve this issue:
     run("cp /usr/lib/systemd/system/neutron-openvswitch-agent.service " + \
             "/usr/lib/systemd/system/neutron-openvswitch-agent.service.orig")
@@ -403,16 +403,16 @@ def network_deploy():
 # COMPUTE
 
 def configure_ML2_plug_in_compute():
-    
+  
     # most of the configuration is the same as the controller
     configure_ML2_plugin_general()
 
-    # configure the external flat provider network 
+    # configure the external flat provider network
     set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
     local_ip = env_config.nicDictionary['compute1']['tnlIPADDR']
     set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
 
-    # enable GRE tunnels 
+    # enable GRE tunnels
     set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
 @roles('compute')
@@ -426,7 +426,7 @@ def installPackagesCompute():
 
 @roles('compute')
 def compute_deploy():
-    
+  
     # edit sysctl.conf
 
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.all.rp_filter','0')
@@ -452,15 +452,15 @@ def compute_deploy():
 
     # finalize installation
 
-    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini 
-    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini. 
+    # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini
+    # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini.
     # If this symbolic link does not exist, create it
     if 'plugin.ini' not in run('ls /etc/neutron'):
         msg = 'Create a symbolic link to Open vSwitch\'s conf file'
         runCheck(msg, 'ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini')
 
-    # Due to a packaging bug, the Open vSwitch agent initialization script explicitly looks for 
-    # the Open vSwitch plug-in configuration file rather than a symbolic link /etc/neutron/plugin.ini pointing to the ML2 
+    # Due to a packaging bug, the Open vSwitch agent initialization script explicitly looks for
+    # the Open vSwitch plug-in configuration file rather than a symbolic link /etc/neutron/plugin.ini pointing to the ML2
     # plug-in configuration file. Run the following commands to resolve this issue:
     msg = 'Chenge Open vSwitch to look for a symbolic link to to the ML2 conf file'
     run("cp /usr/lib/systemd/system/neutron-openvswitch-agent.service " + \
@@ -482,7 +482,7 @@ def compute_deploy():
 
 @roles('controller')
 def createExtNet():
-    
+  
     with prefix(env_config.admin_openrc):
 
         if 'ext-net' in run('neutron net-list'):
@@ -534,7 +534,7 @@ def createDemoNet():
             print msg
         else:
             msg = 'create initial demo tenant network on network node'
-            runCheck(msg, 'neutron net-create demo-net --dns-nameservers %s' % dnsServer)
+            runCheck(msg, 'neutron net-create demo-net')
 
         msg = 'Restart Neutron service'
         runCheck(msg, 'systemctl restart neutron-server.service')
@@ -562,7 +562,7 @@ def createDemoSubnet():
 
 @roles('controller')
 def createDemoRouter():
-    
+
     with prefix(env_config.demo_openrc):
         if 'demo-router' in run('neutron router-list'):
             msg = 'Demo-router already created'
@@ -585,7 +585,7 @@ def createDemoRouter():
 
 @roles('controller')
 def createInitialNetwork():
-    # Creates a sample network for testing 
+    # Creates a sample network for testing
 
     execute(createExtNet)
     execute(createExtSubnet)
@@ -612,7 +612,7 @@ def saveConfigController(status):
 @roles('network')
 def saveConfigNetwork(status):
     "Save locally the config files that exist in the network node"
-    
+   
     saveConfigFile(sysctl_conf,status)
     saveConfigFile(neutron_conf,status)
     saveConfigFile(ml2_conf_file,status)
