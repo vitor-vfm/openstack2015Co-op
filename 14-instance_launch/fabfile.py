@@ -16,16 +16,43 @@ env.roledefs = env_config.roledefs
 
 ################################## Deployment ########################################
 
+def key_exists():
+    # checks for existence of /root/.ssh/id_rsa
+    ls_utput = run("ls /root/.ssh")
+    if "id_rsa" in ls_utput:
+        return True
+    else:
+        return False
 
 def generate_key(keyName):
-    # http://unix.stackexchange.com/questions/69314/automated-ssh-keygen-without-passphrase-how
+    if key_exists() == False:
+        runCheck("generate keygen", "ssh-keygen")
+
+    if runCheck("check for nova keypair","nova keypair-list | awk '/%s/'" % keyName) == "":
+        runCheck("Add keypair", "nova keypair-add --pub-key ~/.ssh/id_rsa.pub %s" % keyName)
+        
     
-#    run("ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa.pub -q -N '' ")
-    runCheck("Generate keys", "ssh-keygen")
-    
-    runCheck("Add keypair", "nova keypair-add --pub-key ~/.ssh/id_rsa.pub %s" % keyName)
+def image_active(image):
+    with prefix(env_config.admin_openrc):
+        imageStatus = runCheck("check if %s exists" % image, "glance image-list | awk '/" + image + "/ {print $12}'")
+        
+        if imageStatus == "active":
+            return True
+        else:
+            return False
+            
+def delete_image(image_to_delete):
+    # delete image given image name
+    # assumes only one image with name
+    # image_to_delete exists
+    # otherwise, functions needs image id
+    with prefix(env_config.admin_openrc):
+        runCheck("delete %s" % image,"glance delete %s" % image_to_delete)
 
 def create_image(url, imageName, imageFile, diskFormat):
+    if image_active(imageName):
+        return
+    
     msg = 'Retrieve instance image'
     run("mkdir -p /tmp/images")
     with settings(warn_only=True):
