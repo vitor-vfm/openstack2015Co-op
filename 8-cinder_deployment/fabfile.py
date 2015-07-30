@@ -227,9 +227,9 @@ def restart_cinder():
 
 ############################## NFS ############################################
 
-#@roles('storage')
-#def install_nfs_on_storage():
-#    runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
+@roles('storage')
+def install_nfs_on_storage():
+    runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
 
 @roles('storage')
 def make_nfs_directories():
@@ -299,7 +299,7 @@ def deploy():
     #execute(restart_cinder)
 
     # customize storage node for nfs
-    execute(install_nfs)
+    execute(install_nfs_on_storage
     execute(make_nfs_directories)
     execute(export_and_start_nfs)
     
