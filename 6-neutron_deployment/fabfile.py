@@ -286,7 +286,7 @@ def configure_ML2_plug_in_network():
     # configure the external flat provider network
     set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
     set_parameter(ml2_conf_file,'ovs','bridge_mappings','external:br-ex')
-    local_ip = env_config.nicDictionary['network']['tnlIPADDR']
+    local_ip = env_config.nicDictionary[env.host]['tnlIPADDR']
     set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
 
     # enable GRE tunnels
@@ -360,7 +360,7 @@ def configure_Open_vSwitch_service():
         msg = 'Create bridge br-ex'
         runCheck(msg, "ovs-vsctl add-br br-ex")
 
-        interface_name = env_config.nicDictionary['network']['extDEVICE']
+        interface_name = env_config.nicDictionary[env.host]['extDEVICE']
         msg = 'Add port to br-ex'
         runCheck(msg, "ovs-vsctl --log-file=/home/uadm/ovslog add-port br-ex '{}'".format(interface_name))
     else:
@@ -444,7 +444,7 @@ def configure_ML2_plug_in_compute():
 
     # configure the external flat provider network 
     set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
-    local_ip = env_config.nicDictionary['compute1']['tnlIPADDR']
+    local_ip = env_config.nicDictionary[env.host]['tnlIPADDR']
     set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
 
     # enable GRE tunnels
