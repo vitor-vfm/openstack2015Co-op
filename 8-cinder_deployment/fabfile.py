@@ -278,11 +278,11 @@ def enable_and_start_nfs_services_on_controller():
     
     # enable them all
     for nfs_service in services_for_nfs:
-        runCheck("enable services", "systemctl enable " + nfs_service)
+        run("systemctl enable " + nfs_service, warn_only=True)
     
     # start them all
     for nfs_service in services_for_nfs:
-        runCheck("enable services", "systemctl start " + nfs_service)
+        run("systemctl start " + nfs_service, warn_only=True)
 
 
 ########################### Deployment ########################################
