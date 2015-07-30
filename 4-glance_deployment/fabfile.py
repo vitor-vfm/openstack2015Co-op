@@ -198,10 +198,10 @@ def install_packages():
    
 ################################ NFS ##########################################
 
-@roles('storage')
-def setup_glance_api_conf_file_for_nfs():
-    set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', 
-            '/etc/cinder/shares.conf')
+# @roles('storage')
+# def setup_glance_api_conf_file_for_nfs():
+#     set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', 
+#             '/etc/cinder/shares.conf')
 
 ############################## Deployment #####################################
 
@@ -219,8 +219,8 @@ def deploy():
     #execute(setup_GlusterFS_Glance)
     #execute(start_glance_services)
 
-    # Customize glance to nfs
-    execute(setup_glance_api_conf_file_for_nfs)
+#     # Customize glance to nfs
+#     execute(setup_glance_api_conf_file_for_nfs)
 
 ################################# TDD #########################################
 
