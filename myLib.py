@@ -21,13 +21,41 @@ logging.basicConfig(level=logging.WARNING,
                     filemode='a'
                     )
 
-def grep(pattern,stream):
+def backupConfFile(confFile, backupSuffix):
+    backupFile = confFile + backupSuffix
+    exists = run('[ -e %s ]' % backupFile, warn_only=True).return_code == 0
+    if exists:
+        print blue('Backup file already exists and will not be rewritten')
+    else:
+        msg = 'Make backup file'
+        runCheck(msg, 'cp %s %s' % (confFile, backupFile))
+
+def restoreBackups(fils, suffix):
     """
-    takes a string and a pattern
-    and returns all the lines in the string
-    that contain the pattern
+    Restore files to old versions
+
+    Inputs: 
+      fils -  a list of filepaths. Could also be just one string
+      suffix - backup file suffix, e.g., '.bak5'
     """
-    return [l for l in stream.splitlines() if pattern in l]
+
+    # The function accepts a string or a list of strings
+    if type(fils) == str:
+        fils = [fils]
+
+    for fil in fils:
+
+        backup = fil + suffix
+
+        command = "if [ -e %s ]; then " % backup
+        command += "rm %s; " % fil
+        command += "mv %s %s; " % (backup, fil)
+        command += "else echo No backup file; "
+        command += "fi"
+
+        msg = 'Restore backup for ' + fil
+        runCheck(msg, command)
+
 
 def saveConfigFile(filepath,status):
     """
