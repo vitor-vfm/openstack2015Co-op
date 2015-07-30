@@ -18,8 +18,8 @@ env.roledefs = env_config.roledefs
 
 def key_exists():
     # checks for existence of /root/.ssh/id_rsa
-    ls_utput = run("ls /root/.ssh")
-    if "id_rsa" in ls_utput:
+    ls_output = run("ls /root/.ssh")
+    if "id_rsa" in ls_output:
         return True
     else:
         return False
@@ -49,10 +49,7 @@ def delete_image(image_to_delete):
     with prefix(env_config.admin_openrc):
         runCheck("delete %s" % image,"glance delete %s" % image_to_delete)
 
-def create_image(url, imageName, imageFile, diskFormat):
-    if image_active(imageName):
-        return
-    
+def get_iso(url, imageFile):
     msg = 'Retrieve instance image'
     run("mkdir -p /tmp/images")
     with settings(warn_only=True):
@@ -62,6 +59,14 @@ def create_image(url, imageName, imageFile, diskFormat):
             print(blue("Waiting for image file to finish downloading"))
             while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
                 pass    
+
+
+def create_image(url, imageName, imageFile, diskFormat):
+    # requires image to be in /tmp/images
+
+    if image_active(imageName):
+        return
+    
     msg = 'Create glance image'
     runCheck(msg, "glance image-create --progress " + \
             "--name %s " % imageName + \
@@ -87,7 +92,16 @@ def create_image(url, imageName, imageFile, diskFormat):
         print(red("Couldn't install image"))
         return 'FAIL'
 
+def volume_exists(volume_name):
+    if runCheck("checking volume", "cinder list | awk '/%s/'" % volume_name) == "":
+        return False
+    else:
+        return True
+        
+
 def create_volume(volumeSize, volumeName):
+    if volume_exists(volumeName):
+        return
     runCheck('Create a %s GB volume' % volumeSize,
             'cinder create --display-name %s %s' % (volumeName, volumeSize))
  
@@ -176,12 +190,14 @@ def check_if_volume_attached(instanceName, volumeName):
 
 @roles('controller')
 def deploy_cirros():
-    #with prefix(env_config.admin_openrc):
-        #create_image(
-        #    'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
-        #    'cirros-test0',
-        #    'cirros-0.3.3-x86_64-disk.img',
-        #    'qcow2')
+    with prefix(env_config.admin_openrc):
+        get_iso('http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+                'cirros-0.3.3-x86_64-disk.img')
+        create_image(
+           'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+           'cirros-test0',
+           'cirros-0.3.3-x86_64-disk.img',
+           'qcow2')
     with prefix(env_config.demo_openrc):
         generate_key('demo-key')
         #create_bootable_volume('cirros-test0', '10', 'cirros-volume0')
@@ -193,49 +209,70 @@ def deploy_cirros():
 
 @roles('controller')
 def deploy_windows7():
+    # preconfigured .qcow2 must be present in /tmp/images
+    # with name matching the one used below
     with prefix(env_config.admin_openrc):
-        #generate_key('demo-key')
         create_image(
             'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
             'windows7-test0',
             'win7.qcow2',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_bootable_volume('windows7-test0', '75', 'windows7-volume0')
-        boot_from_volume('large', 'windows7-volume0', 'demo-key', 'windows7-instance0')
+        generate_key('demo-key')
+        create_bootable_volume('windows7-test0', '50', 'windows7-volume0')
+        boot_from_volume('medium', 'windows7-volume0', 'demo-key', 'windows7-instance0')
         give_floating_ip('windows7-instance0')
-        #attach_volume('windows7-volume0', 'windows7-instance0')
-        #check_if_volume_attached('windows7-instance0', 'windows7-volume0')
+ 
+@roles('controller')
+def deploy_windows8():
+    # preconfigured .qcow2 must be present in /tmp/images
+    # with name matching the one used below
+    with prefix(env_config.admin_openrc):
+        create_image(
+            'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
+            'windows8-test0',
+            'win8.qcow2',
+            'qcow2')
+    with prefix(env_config.demo_openrc):
+        generate_key('demo-key')
+        create_bootable_volume('windows8-test0', '50', 'windows8-volume0')
+        boot_from_volume('medium', 'windows8-volume0', 'demo-key', 'windows8-instance0')
+        give_floating_ip('windows8-instance0')
+ 
         
 @roles('controller')
 def deploy_ubuntu():
     with prefix(env_config.admin_openrc):
-        #generate_key('demo-key')
+        get_iso('http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
+                'ubuntu-14.04.2-desktop-amd64.iso')
         create_image(
             'http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
             'ubuntu-test0',
             'ubuntu-14.04.2-desktop-amd64.iso',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_bootable_volume('ubuntu-test0', '50', 'ubuntu-volume0')
-        boot_from_volume('large', 'ubuntu-volume0', 'demo-key', 'ubuntu-instance0')
+        generate_key('demo-key')
+        create_bootable_volume('ubuntu-test0', '10', 'ubuntu-volume0')
+        boot_from_volume('medium', 'ubuntu-volume0', 'demo-key', 'ubuntu-instance0')
         give_floating_ip('ubuntu-instance0')
         #attach_volume('ubuntu-volume0', 'ubuntu-instance0')
         #check_if_volume_attached('ubuntu-instance0', 'ubuntu-volume0')
 
 @roles('controller')
 def deploy_centos_start():
-    #with prefix(env_config.admin_openrc):
-        #create_image(
-        #    'http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
-        #    'centos-7-x86_64_minimal_iso',
-        #    'CentOS-7-x86_64-Minimal-1503-01.iso',
-        #    'iso')
+    with prefix(env_config.admin_openrc):
+        get_iso('http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
+                'CentOS-7-x86_64-Minimal-1503-01.iso')
+        create_image(
+           'http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
+           'centos-7-x86_64_minimal_iso',
+           'CentOS-7-x86_64-Minimal-1503-01.iso',
+           'iso')
     with prefix(env_config.demo_openrc):
         generate_key('demo-key')
-        #create_volume('10', 'centos-7-minimal')
+        create_volume('10', 'centos-7-minimal')
         boot_from_image('centos-7-minimal', 
-                        'small', 
+                        'medium', 
                         'centos-7-x86_64_minimal_iso', 
                         'demo-key', 
                         'centos-instance0')
@@ -246,7 +283,7 @@ def deploy_centos_end():
     with prefix(env_config.demo_openrc):
         runCheck('Get rid of old instance', 'nova delete centos-instance0')
         runCheck('Make volume bootable', 'cinder set-bootable centos-7-minimal true')
-        boot_from_volume('small', 'centos-7-minimal', 'demo-key', 'centos-volume-instance')
+        boot_from_volume('medium', 'centos-7-minimal', 'demo-key', 'centos-volume-instance')
 
 def deploy():
     execute(adjust_security)
