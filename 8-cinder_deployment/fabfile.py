@@ -227,9 +227,9 @@ def restart_cinder():
 
 ############################## NFS ############################################
 
-@roles(storage)
-def install_nfs():
-    runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
+#@roles('storage')
+#def install_nfs_on_storage():
+#    runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
 
 @roles('storage')
 def make_nfs_directories():
@@ -250,7 +250,7 @@ def export_and_start_nfs():
 
 @roles('controller')
 def change_shares_file_for_nfs():
-    runCheck('Make shares.conf file', 'echo "storage1:/%s" > /etc/cinder/shares.conf' % nfs_share)
+    runCheck('Make shares.conf file', "echo 'storage1:/%s' > /etc/cinder/shares.conf" % nfs_share)
     runCheck('Change permissions for shares.conf file', 'chown root:cinder /etc/cinder/shares.conf')
     runCheck('Make shares.conf file readable to members of the cinder group',
                 'chmod 0640 /etc/cinder/shares.conf')
@@ -259,6 +259,29 @@ def change_shares_file_for_nfs():
 def change_cinder_file_for_nfs():
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
+
+@roles('controller')
+def install_nfs_on_controller():
+    # ref: http://www.unixmen.com/setting-nfs-server-client-centos-7/
+    # may need to do this on both controller & storage
+    runCheck("Install NFS", "yum install nfs-utils nfs-utils-lib -y")
+
+@roles('controller')
+def enable_and_start_nfs_services_on_controller():
+    # ref: http://www.unixmen.com/setting-nfs-server-client-centos-7/
+    # may need to do this on both controller & storage
+    services_for_nfs = ["rpcbind", "nfs-server", "nfs-lock", "nfs-idmap"]
+
+    # order maybe important... dont refactor into one loop
+    # unless you know what your doing
+    
+    # enable them all
+    for nfs_service in services_for_nfs:
+        run("systemctl enable " + nfs_service, warn_only=True)
+    
+    # start them all
+    for nfs_service in services_for_nfs:
+        run("systemctl start " + nfs_service, warn_only=True)
 
 ########################### Deployment ########################################
 
@@ -281,6 +304,8 @@ def deploy():
     execute(export_and_start_nfs)
     
     # customize cinder for nfs
+    execute(install_nfs_on_controller)
+    execute(enable_and_start_nfs_services_on_controller)
     execute(change_shares_file_for_nfs)
     execute(change_cinder_file_for_nfs)
     execute(restart_cinder)
@@ -316,9 +341,9 @@ def tdd():
 
             if status == 'available':
                 print align_y('demo-volume1 is available')
+                runCheck('Delete test volume', 'cinder delete demo-volume1')
             else:
                 print align_n('Problem with demo-volume1:')
                 checkLog(timestamp)
+                runCheck('Delete test volume', 'cinder delete demo-volume1')
                 sys.exit(1)
-
-        runCheck('Delete test volume', 'cinder delete demo-volume1')

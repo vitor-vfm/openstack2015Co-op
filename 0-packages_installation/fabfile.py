@@ -121,9 +121,9 @@ def install_packages():
 
 
     # Install Crudini and wget
-    print('installing crudini wget openstack-utils')
-    run("yum -y install crudini wget openstack-utils")
-    for item in ['crudini','wget']:
+    print('installing crudini wget openstack-utils tcpdump nmon iptraf')
+    run("yum -y install crudini wget openstack-utils tcpdump nmon iptraf")
+    for item in ['crudini','wget','tcpdump','nmon','iptraf']:
         var1=run('rpm -qa |grep %s ' %item)
         print blue(item +" is version "+ var1)
         logging.info(item +" is version "+ var1)
