@@ -228,7 +228,7 @@ def restart_cinder():
 ############################## NFS ############################################
 
 @roles('storage')
-def install_nfs():
+def install_nfs_on_storage():
     runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
 
 @roles('storage')
@@ -260,6 +260,31 @@ def change_cinder_file_for_nfs():
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
 
+
+@roles('controller')
+def install_nfs_on_controller():
+    # ref: http://www.unixmen.com/setting-nfs-server-client-centos-7/
+    # may need to do this on both controller & storage
+    runCheck("Install NFS", "yum install nfs-utils nfs-utils-lib -y")
+
+@roles('controller')
+def enable_and_start_nfs_services_on_controller():
+    # ref: http://www.unixmen.com/setting-nfs-server-client-centos-7/
+    # may need to do this on both controller & storage
+    services_for_nfs = ["rpcbind", "nfs-server", "nfs-lock", "nfs-idmap"]
+
+    # order maybe important... dont refactor into one loop
+    # unless you know what your doing
+    
+    # enable them all
+    for nfs_service in services_for_nfs:
+        runCheck("enable services", "systemctl enable " + nfs_service)
+    
+    # start them all
+    for nfs_service in services_for_nfs:
+        runCheck("enable services", "systemctl start " + nfs_service)
+
+
 ########################### Deployment ########################################
 
 def deploy():
@@ -281,6 +306,8 @@ def deploy():
     execute(export_and_start_nfs)
     
     # customize cinder for nfs
+    execute(install_nfs_on_controller)
+    execute(enable_and_start_nfs_services_on_controller)
     execute(change_shares_file_for_nfs)
     execute(change_cinder_file_for_nfs)
     execute(restart_cinder)
