@@ -292,6 +292,8 @@ def configure_ML2_plug_in_network():
     # enable GRE tunnels
     set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
+def configure_Layer3_agent():
+
     # make a backup
     backupConfFile(l3_agent_file, backupSuffix)
 
@@ -302,6 +304,9 @@ def configure_ML2_plug_in_network():
     set_parameter(l3_agent_file,"DEFAULT","verbose","True")
 
 def configure_DHCP_agent():
+
+    # make a backup
+    backupConfFile(dhcp_agent_file, backupSuffix)
 
     set_parameter(dhcp_agent_file,"DEFAULT","interface_driver","neutron.agent.linux.interface.OVSInterfaceDriver")
     set_parameter(dhcp_agent_file,"DEFAULT","dhcp_driver","neutron.agent.linux.dhcp.Dnsmasq")
