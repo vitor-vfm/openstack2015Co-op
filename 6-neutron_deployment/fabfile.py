@@ -12,12 +12,15 @@ sys.path.append('..')
 import env_config
 from myLib import runCheck, createDatabaseScript, set_parameter
 from myLib import align_y, align_n, keystone_check, database_check, saveConfigFile
+from myLib import backupConfFile, restoreBackups
 
 
 ############################ Config ########################################
 
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
+
+backupSuffix = '.bak6'
 
 # define host config file locations
 neutron_conf = '/etc/neutron/neutron.conf'
@@ -27,6 +30,17 @@ l3_agent_file = '/etc/neutron/l3_agent.ini'
 dhcp_agent_file = '/etc/neutron/dhcp_agent.ini'
 metadata_agent_file = '/etc/neutron/metadata_agent.ini'
 sysctl_conf = '/etc/sysctl.conf'
+
+confFiles = [
+        neutron_conf,
+        ml2_conf_file,
+        nova_conf,
+        l3_agent_file,
+        dhcp_agent_file,
+        metadata_agent_file,
+        sysctl_conf,
+        ]
+
 
 # get database script
 database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
@@ -89,7 +103,7 @@ def configure_networking_server_component():
     # configure neutron.conf with crudini
 
     # make a backup
-    run('cp {} {}.back12'.format(neutron_conf,neutron_conf))
+    backupConfFile(neutron_conf, backupSuffix)
 
     # configure database access
     parameter = 'mysql://neutron:{}@controller/neutron'.format(passwd['NEUTRON_DBPASS'])
@@ -141,6 +155,9 @@ def configure_ML2_plugin_general():
     # networking framework for instances. However, the controller node does not need the OVS
     # components because it does not handle instance network traffic.
 
+    # make a backup
+    backupConfFile(ml2_conf_file, backupSuffix)
+
 
     set_parameter(ml2_conf_file,'ml2','type_drivers','flat,gre')
     set_parameter(ml2_conf_file,'ml2','tenant_network_types','gre')
@@ -162,6 +179,9 @@ def restart_nova_controller():
 
 
 def configure_nova_to_use_neutron():
+
+    # make a backup
+    backupConfFile(nova_conf, backupSuffix)
 
     set_parameter(nova_conf,'DEFAULT','network_api_class','nova.network.neutronv2.api.API')
     set_parameter(nova_conf,'DEFAULT','security_group_api','neutron')
@@ -232,7 +252,7 @@ def controller_deploy():
 def configure_the_Networking_common_components():
 
     # make a backup
-    run('cp {} {}.back12'.format(neutron_conf,neutron_conf))
+    backupConfFile(neutron_conf, backupSuffix)
 
     # configure RabbitMQ access
     set_parameter(neutron_conf,'DEFAULT','rpc_backend','rabbit')
@@ -272,7 +292,8 @@ def configure_ML2_plug_in_network():
     # enable GRE tunnels
     set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
-def configure_Layer3_agent():
+    # make a backup
+    backupConfFile(l3_agent_file, backupSuffix)
 
     set_parameter(l3_agent_file,"DEFAULT","interface_driver","neutron.agent.linux.interface.OVSInterfaceDriver")
     set_parameter(l3_agent_file,"DEFAULT","use_namespaces","True")
@@ -293,6 +314,9 @@ def configure_metadata_proxy_on_controller():
     # to configure the metadata agent, some changes need to be made
     # on the controller node
 
+    # make a backup
+    backupConfFile(nova_conf, backupSuffix)
+
     set_parameter(nova_conf,'neutron','service_metadata_proxy','True')
     set_parameter(nova_conf,'neutron','metadata_proxy_shared_secret',passwd['METADATA_SECRET'])
 
@@ -301,6 +325,9 @@ def configure_metadata_proxy_on_controller():
 
 
 def configure_metadata_agent():
+
+    # make a backup
+    backupConfFile(metadata_agent_file, backupSuffix)
 
     set_parameter(metadata_agent_file,'DEFAULT','auth_url','http://controller:5000/v2.0')
     set_parameter(metadata_agent_file,'DEFAULT','auth_region','regionOne')
@@ -349,6 +376,9 @@ def installPackagesNetwork():
 def network_deploy():
 
     # edit sysctl.conf
+
+    # make a backup
+    backupConfFile(sysctl_conf, backupSuffix)
 
     set_parameter(sysctl_conf,"''",'net.ipv4.ip_forward','1')
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.all.rp_filter','0')
@@ -403,11 +433,11 @@ def network_deploy():
 # COMPUTE
 
 def configure_ML2_plug_in_compute():
-  
+    
     # most of the configuration is the same as the controller
     configure_ML2_plugin_general()
 
-    # configure the external flat provider network
+    # configure the external flat provider network 
     set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
     local_ip = env_config.nicDictionary['compute1']['tnlIPADDR']
     set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
@@ -428,6 +458,9 @@ def installPackagesCompute():
 def compute_deploy():
   
     # edit sysctl.conf
+
+    # make a backup
+    backupConfFile(sysctl_conf, backupSuffix)
 
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.all.rp_filter','0')
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.default.rp_filter','0')
@@ -599,6 +632,12 @@ def deploy():
     execute(compute_deploy)
     execute(createInitialNetwork)
 
+##################################### Undeploy #######################################
+
+@roles('controller','network','compute')
+def undeploy():
+    restoreBackups(confFiles, backupSuffix)
+
 ######################################## TDD #########################################
 
 @roles('controller')
@@ -742,12 +781,12 @@ def createInitialNetworkTDD():
 @roles('controller')
 def tdd():
 
-    res = database_check('nova')
+    res = database_check('neutron')
     if res == 'FAIL':
         execute(saveConfigController,'bad')
         sys.exit(1)
 
-    res = keystone_check('nova')
+    res = keystone_check('neutron')
     if res == 'FAIL':
         execute(saveConfigController,'bad')
         sys.exit(1)
