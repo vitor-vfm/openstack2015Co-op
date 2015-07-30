@@ -231,7 +231,7 @@ def restart_cinder():
 def install_nfs():
     runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
 
-@roles(storage)
+@roles('storage')
 def make_nfs_directories():
     runCheck("Make nfs cinder directory", "mkdir /home/cinder")
     runCheck("Make nfs swift directory", "mkdir /home/swift")
@@ -241,24 +241,24 @@ def make_nfs_directories():
     
     runCheck("Change cinder NFS file permissions", "chown -R 65534:65534 /home/cinder/")
     
-@roles(storage)
+@roles('storage')
 def export_and_start_nfs():
     runCheck("Export the file system", "exportfs -a")
     
     runCheck("Start rpcbind", "service rpcbind start && chkconfig rpcbind on")
     runCheck("Start NFS", "service rpcbind start; service nfs start")
 
-@roles('storage')
+@roles('controller')
 def change_shares_file_for_nfs():
     runCheck('Make shares.conf file', 'echo "storage1:/%s" > /etc/cinder/shares.conf' % nfs_share)
     runCheck('Change permissions for shares.conf file', 'chown root:cinder /etc/cinder/shares.conf')
     runCheck('Make shares.conf file readable to members of the cinder group',
-                'chmod 0640 /etc/cinder/nfsshares')
+                'chmod 0640 /etc/cinder/shares.conf')
     
-@roles('storage')
+@roles('controller')
 def change_cinder_file_for_nfs():
-    set_parameter('/etc/cinder/shares.conf', 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
-    set_parameter('/etc/cinder/shares.conf', 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
+    set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
 
 ########################### Deployment ########################################
 

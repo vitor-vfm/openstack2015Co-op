@@ -60,14 +60,18 @@ def create_image(url, imageName, imageFile, diskFormat):
         print(red("Couldn't install image"))
         return 'FAIL'
 
-def create_volume(imageName, volumeSize, volumeName):
+def create_volume(volumeSize, volumeName):
+    runCheck('Create a %s GB volume' % volumeSize,
+            'cinder create --display-name %s %s' % (volumeName, volumeSize))
+ 
+def create_bootable_volume(imageName, volumeSize, volumeName):
     imageID = run("glance image-list | grep '%s' | awk '{print $2}'" % imageName)
     runCheck('Create a %s GB volume' % volumeSize,
             'cinder create --display-name %s --image_id %s %s' % (
                 volumeName, imageID, volumeSize))
    
 #def boot_vm(flavorSize, imageName, keyName, instanceName):
-def boot_vm(flavorSize, volumeName, keyName, instanceName):
+def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
     
     if volumeID != '':
@@ -85,11 +89,32 @@ def boot_vm(flavorSize, volumeName, keyName, instanceName):
     with settings(warn_only=True):
         while run("nova list | grep %s | grep ACTIVE" % instanceName, quiet=True) == '':
             if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
-                print(red("Major problem: instance can't be made"))
-                # Is there a way to stop it here?
-                return
+                sys.exit("Major problem: instance can't be made")
     print(green("Instance built!"))
         
+#def boot_vm(flavorSize, imageName, keyName, instanceName):
+def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
+    volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
+    
+    if volumeID != '':
+        with settings(warn_only=True):
+            print(blue("Waiting for volume to finish building"))
+            while run("cinder list | grep %s | grep available" % volumeName, quiet=True) == '':
+                pass
+ 
+    netid = run("neutron net-list | awk '/demo-net/ {print $2}'")
+    run("nova boot --flavor m1.%s --image %s " % (flavorSize, imageName) + \
+    "--nic net-id=%s " % netid + \
+    "--block-device source=volume,id=%s,dest=volume,bus=virtio" % volumeID + \
+    "--security-group default --key-name %s %s" % (keyName, instanceName))
+    print(blue("Waiting for instance to finish building"))
+    with settings(warn_only=True):
+        while run("nova list | grep %s | grep ACTIVE" % instanceName, quiet=True) == '':
+            if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
+                sys.exit("Major problem: instance can't be made")
+    print(green("Instance built!"))
+ 
+
 @roles('controller')
 def adjust_security():
     with settings(warn_only=True):
@@ -131,9 +156,9 @@ def deploy_cirros():
         #    'cirros-0.3.3-x86_64-disk.img',
         #    'qcow2')
     with prefix(env_config.demo_openrc):
-        generate_key('demo-key')
-        #create_volume('cirros-test0', '10', 'cirros-volume0')
-        boot_vm('small', 'cirros-volume0', 'demo-key', 'demo-instance0')
+        generate_key('demo-key')--block-device source=volume,id=103f7d3d-f453-45ea-9798-84f25e4cf17a,dest=volume,bus=virtio
+        #create_bootable_volume('cirros-test0', '10', 'cirros-volume0')
+        boot_from_volume('small', 'cirros-volume0', 'demo-key', 'demo-instance0')
         give_floating_ip('demo-instance0')
         #attach_volume('cirros-volume0', 'demo-instance0')
         #check_if_volume_attached('demo-instance0', 'cirros-volume0')
@@ -149,8 +174,8 @@ def deploy_windows7():
             'win7.qcow2',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_volume('windows7-test0', '75', 'windows7-volume0')
-        boot_vm('large', 'windows7-volume0', 'demo-key', 'windows7-instance0')
+        create_bootable_volume('windows7-test0', '75', 'windows7-volume0')
+        boot_from_volume('large', 'windows7-volume0', 'demo-key', 'windows7-instance0')
         give_floating_ip('windows7-instance0')
         #attach_volume('windows7-volume0', 'windows7-instance0')
         #check_if_volume_attached('windows7-instance0', 'windows7-volume0')
@@ -165,12 +190,36 @@ def deploy_ubuntu():
             'ubuntu-14.04.2-desktop-amd64.iso',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_volume('ubuntu-test0', '50', 'ubuntu-volume0')
-        boot_vm('large', 'ubuntu-volume0', 'demo-key', 'ubuntu-instance0')
+        create_bootable_volume('ubuntu-test0', '50', 'ubuntu-volume0')
+        boot_from_volume('large', 'ubuntu-volume0', 'demo-key', 'ubuntu-instance0')
         give_floating_ip('ubuntu-instance0')
         #attach_volume('ubuntu-volume0', 'ubuntu-instance0')
         #check_if_volume_attached('ubuntu-instance0', 'ubuntu-volume0')
 
+@roles('controller')
+def deploy_centos_start():
+    with prefix(env_config.admin_openrc):
+        #generate_key('demo-key')
+        create_image(
+            'http://mirrors.163.com/centos/7.0.1406/isos/x86_64/CentOS-7.0-1406-x86_64-Minimal.iso',
+            'centos-7-x86_64_minimal_iso',
+            'CentOS-7.0-1406-x86_64-Minimal.iso',
+            'iso')
+    with prefix(env_config.demo_openrc):
+        create_volume('10', 'centos-7-minimal')
+        boot_from_image('centos-7-minimal', 
+                        'small', 
+                        'centos-7-x86_64_minimal_iso', 
+                        'demo-key', 
+                        'centos-instance0')
+        give_floating_ip('centos-instance0')
+    
+@roles('controller')
+def deploy_centos_end():
+    with prefix(env_config.demo_openrc):
+        runCheck('Get rid of old instance', 'nova delete centos-instance0')
+        runCheck('Make volume bootable', 'cinder set-bootable centos-7-minimal true')
+        boot_from_volume('small', 'centos-7-minimal', 'demo-key', 'centos-volume-instance')
 
 def deploy():
     execute(adjust_security)
