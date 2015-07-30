@@ -149,7 +149,7 @@ def deploy_windows7():
             'win7.qcow2',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_volume('windows7-test0', '75', 'windows7-volume0')
+        create_volume('windows7-test0', '50', 'windows7-volume0')
         boot_vm('large', 'windows7-volume0', 'demo-key', 'windows7-instance0')
         give_floating_ip('windows7-instance0')
         #attach_volume('windows7-volume0', 'windows7-instance0')
@@ -165,7 +165,7 @@ def deploy_ubuntu():
             'ubuntu-14.04.2-desktop-amd64.iso',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_volume('ubuntu-test0', '50', 'ubuntu-volume0')
+        create_volume('ubuntu-test0', '10', 'ubuntu-volume0')
         boot_vm('large', 'ubuntu-volume0', 'demo-key', 'ubuntu-instance0')
         give_floating_ip('ubuntu-instance0')
         #attach_volume('ubuntu-volume0', 'ubuntu-instance0')
