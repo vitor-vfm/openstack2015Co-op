@@ -267,10 +267,10 @@ def imageCreationTDD():
     # check the hosts and see if the image file
     # was distributed among all of them
 
-    results = execute(glusterTDD,imageID).values()
-    for r in results:
-        if r == 'FAIL':
-            result = 'FAIL'
+    #results = execute(glusterTDD,imageID).values()
+    #for r in results:
+    #    if r == 'FAIL':
+    #        result = 'FAIL'
 
     msg = 'Clear local files'
     runCheck(msg, "rm -r /tmp/images")
