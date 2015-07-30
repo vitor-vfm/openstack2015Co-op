@@ -260,7 +260,6 @@ def change_cinder_file_for_nfs():
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'nfs_shares_config', '/etc/cinder/shares.conf')
     set_parameter(etc_cinder_config_file, 'DEFAULT', 'volume_driver', 'cinder.volume.drivers.nfs.NfsDriver')
 
-
 @roles('controller')
 def install_nfs_on_controller():
     # ref: http://www.unixmen.com/setting-nfs-server-client-centos-7/
@@ -284,7 +283,6 @@ def enable_and_start_nfs_services_on_controller():
     for nfs_service in services_for_nfs:
         run("systemctl start " + nfs_service, warn_only=True)
 
-
 ########################### Deployment ########################################
 
 def deploy():
@@ -301,7 +299,7 @@ def deploy():
     #execute(restart_cinder)
 
     # customize storage node for nfs
-    execute(install_nfs)
+    execute(install_nfs_on_storage)
     execute(make_nfs_directories)
     execute(export_and_start_nfs)
     
