@@ -105,7 +105,7 @@ def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
     netid = run("neutron net-list | awk '/demo-net/ {print $2}'")
     run("nova boot --flavor m1.%s --image %s " % (flavorSize, imageName) + \
     "--nic net-id=%s " % netid + \
-    "--block-device source=volume,id=%s,dest=volume,bus=virtio" % volumeID + \
+    "--block-device source=volume,id=%s,dest=volume,bus=virtio " % volumeID + \
     "--security-group default --key-name %s %s" % (keyName, instanceName))
     print(blue("Waiting for instance to finish building"))
     with settings(warn_only=True):
@@ -156,7 +156,7 @@ def deploy_cirros():
         #    'cirros-0.3.3-x86_64-disk.img',
         #    'qcow2')
     with prefix(env_config.demo_openrc):
-        generate_key('demo-key')--block-device source=volume,id=103f7d3d-f453-45ea-9798-84f25e4cf17a,dest=volume,bus=virtio
+        generate_key('demo-key')
         #create_bootable_volume('cirros-test0', '10', 'cirros-volume0')
         boot_from_volume('small', 'cirros-volume0', 'demo-key', 'demo-instance0')
         give_floating_ip('demo-instance0')
@@ -198,15 +198,15 @@ def deploy_ubuntu():
 
 @roles('controller')
 def deploy_centos_start():
-    with prefix(env_config.admin_openrc):
-        #generate_key('demo-key')
-        create_image(
-            'http://mirrors.163.com/centos/7.0.1406/isos/x86_64/CentOS-7.0-1406-x86_64-Minimal.iso',
-            'centos-7-x86_64_minimal_iso',
-            'CentOS-7.0-1406-x86_64-Minimal.iso',
-            'iso')
+    #with prefix(env_config.admin_openrc):
+        #create_image(
+        #    'http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
+        #    'centos-7-x86_64_minimal_iso',
+        #    'CentOS-7-x86_64-Minimal-1503-01.iso',
+        #    'iso')
     with prefix(env_config.demo_openrc):
-        create_volume('10', 'centos-7-minimal')
+        generate_key('demo-key')
+        #create_volume('10', 'centos-7-minimal')
         boot_from_image('centos-7-minimal', 
                         'small', 
                         'centos-7-x86_64_minimal_iso', 
