@@ -61,6 +61,14 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
                      'storage' : [],
                      'controller' : ['root@controller']}
 
+    # dict mapping VLAN tags to CIDRs
+    vlans = {
+            208: '129.128.208.0/24',
+            209: '129.128.209.0/24',
+            6: '142.244.63.0/24',
+            2131: '129.128.213.0/24',
+            }
+
     roles = roledefs.keys()
     hosts = sum(roledefs.values(), [])
 
@@ -331,6 +339,14 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     roles = roledefs.keys()
     hosts = sum(roledefs.values(), [])
+
+    # dict mapping VLAN tags to CIDRs
+    vlans = {
+            208: '129.128.208.0/24',
+            209: '129.128.209.0/24',
+            6: '142.244.63.0/24',
+            2131: '129.128.213.0/24',
+            }
 
     # ntp
     ntpServers = ['time1.srv.ualberta.ca',
