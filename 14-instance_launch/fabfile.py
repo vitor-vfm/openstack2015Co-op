@@ -20,6 +20,7 @@ def key_exists():
     # checks for existence of /root/.ssh/id_rsa
     ls_output = run("ls /root/.ssh")
     if "id_rsa" in ls_output:
+        print(blue("keygen already exists"))
         return True
     else:
         return False
@@ -37,6 +38,7 @@ def image_active(image):
         imageStatus = runCheck("check if %s exists" % image, "glance image-list | awk '/" + image + "/ {print $12}'")
         
         if imageStatus == "active":
+            print(blue(image + " already active"))
             return True
         else:
             return False
@@ -96,6 +98,7 @@ def volume_exists(volume_name):
     if runCheck("checking volume", "cinder list | awk '/%s/'" % volume_name) == "":
         return False
     else:
+        print(blue(volume_name + " already exists"))
         return True
         
 
@@ -106,13 +109,25 @@ def create_volume(volumeSize, volumeName):
             'cinder create --display-name %s %s' % (volumeName, volumeSize))
  
 def create_bootable_volume(imageName, volumeSize, volumeName):
+    if volume_exists(volumeName):
+        return
     imageID = run("glance image-list | grep '%s' | awk '{print $2}'" % imageName)
     runCheck('Create a %s GB volume' % volumeSize,
             'cinder create --display-name %s --image_id %s %s' % (
                 volumeName, imageID, volumeSize))
+
+def already_booted(instanceName):
+    if runCheck("check if already booted"," nova list | awk '/%s/'" % instanceName) == "":
+        return False
+    else:
+        print(blue("already booted"))
+        return True
    
 #def boot_vm(flavorSize, imageName, keyName, instanceName):
 def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
+    if already_booted(instanceName):
+        return
+
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
     
     if volumeID != '':
@@ -135,6 +150,9 @@ def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
         
 #def boot_vm(flavorSize, imageName, keyName, instanceName):
 def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
+    if already_booted(instanceName):
+        return
+
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
     
     if volumeID != '':
@@ -163,6 +181,9 @@ def adjust_security():
         runCheck("Edit TCP security rules", "nova secgroup-add-rule default tcp 22 22 0.0.0.0/0")
 
 def give_floating_ip(instanceName):
+    if "," in runCheck("check if instance has floating ip", " nova list | awk '/%s/ {print $12}' " % instanceName):
+        print(blue("floating up for %s already exists" % instanceName))
+        return
 
     runCheck("Assign floating ip", "nova floating-ip-associate %s " % instanceName + \
             "$(neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}')")
@@ -231,12 +252,12 @@ def deploy_windows8():
         create_image(
             'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
             'windows8-test0',
-            'win8.qcow2',
+            'w8.qcow2',
             'qcow2')
     with prefix(env_config.demo_openrc):
         generate_key('demo-key')
         create_bootable_volume('windows8-test0', '50', 'windows8-volume0')
-        boot_from_volume('medium', 'windows8-volume0', 'demo-key', 'windows8-instance0')
+        boot_from_volume('large', 'windows8-volume0', 'demo-key', 'windows8-instance0')
         give_floating_ip('windows8-instance0')
  
         
