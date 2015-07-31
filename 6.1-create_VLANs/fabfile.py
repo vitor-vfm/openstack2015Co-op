@@ -55,20 +55,34 @@ def removePort(port):
     else:
         print 'No port named ' + port
 
-############################# VxLAN setup ################################
+############################# Setup ################################
 
 @roles('network')
 def makeBridges():
     "Create virtual bridges and ports to enable VLAN tagging between the VMs"
     # Reference: http://www.opencloudblog.com/?p=614 
 
+    # This script reverts the effects of the function
+    # Run it in the host if stuff breaks
+    script = 'revert_vlan'
+    local('scp %s root@network:/root/%s' % (script, script))
+    run('chmod +x %s' % script)
+
+    # TODO: fix the following paragraph
+    # Connecting br-int and the management interface breaks all connectivity
+
+    # # connect br-int and the management interface
+    # mgtInterface = env_config.nicDictionary[env.host]['mgtDEVICE']
+    # msg = 'Add a port from br-int to the management interface'
+    # runCheck(msg, 'ovs-vsctl add-port br-int ' + mgtInterface)
+
+    # create a bridge for vlan traffic
     msg = 'Create br-vlan bridge'
     runCheck(msg, 'ovs-vsctl add-br br-vlan')
 
-    # connect br-int and the management interface
-    mgtInterface = env_config.nicDictionary[env.host]['mgtDEVICE']
-    msg = 'Add a port from br-int to the management interface'
-    runCheck(msg, 'ovs-vsctl add-port br-int ' + mgtInterface)
+    # Remove the connection between br-int and br-ex
+    for port in ['phy-br-ex', 'int-br-ex']:
+        removePort(port)
 
     # connect br-ex and br-vlan
     msg = 'Create a patch port from br-ex to br-vlan'
@@ -136,8 +150,8 @@ def setMl2Conf():
     set_parameter(confFile, 'ml2', 'type_drivers', 'gre,local,vlan,flat')
     set_parameter(confFile, 'ml2',  'mechanism_drivers', 'openvswitch')
      
-    firstTag, lastTag = sorted(vlans)[0], sorted(vlans)[-1]
-    networkVlanRanges = 'external:' + firstTag + ':' + lastTag
+    # sort the vlan tags to get the smallest and the largest
+    networkVlanRanges = 'external:%d:%d' % (sorted(vlans)[0], sorted(vlans)[-1])
     set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', networkVlanRanges)
        
     # Crudini doesn't work with the * character
@@ -214,6 +228,7 @@ def setOVSConf():
 
     set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-vlan')
     set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
+    networkVlanRanges = 'external:%d:%d' % (sorted(vlans)[0], sorted(vlans)[-1])
     set_parameter(confFile, 'ovs', 'network_vlan_ranges', networkVlanRanges)
         
 @roles('network', 'compute')
@@ -222,7 +237,7 @@ def setConfs():
     execute(setMl2Conf)
     execute(setL3Conf)
     execute(setDHCPConf)
-    # execute(setOVSCPConf)
+    execute(setOVSConf)
 
 @roles('network', 'compute')
 def restartOVS():
@@ -258,6 +273,12 @@ def createTenant():
 @roles('controller')
 def createNets():
     "Create Neutron networks for each VLAN"
+
+    # TODO: still getting that same error in neutron-server.log:
+    # "2015-07-31 15:45:07.964 27497 INFO neutron.api.v2.resource 
+    #    [req-0088af38-0172-4f1d-baee-66f16b9b1484 None] 
+    #    create failed (client error): Invalid input for operation: 
+    #    network_type value vlan not supported."
 
     with prefix(credentials):
         for tag in vlans:
@@ -337,17 +358,6 @@ def deploy():
 
 # These functions restore the network to its original state (before this script was deployed)
 
-@roles('network', 'compute')
-def deleteNewBridges():
-    print 'Deleting ports'
-    for port in ['int-to-vlan','ex-to-vlan','int-to-mg']:
-        removePort(port)
-
-    for br in ['br-vlan']:
-        if ('Bridge ' + br) in run('ovs-vsctl show', quiet=True):
-            msg = 'Delete bridge ' + br
-            runCheck(msg, 'ovs-vsctl del-br ' + br)
-
 @roles('controller')
 def removeResources():
 
@@ -376,7 +386,6 @@ def restoreOriginalConfFiles():
 
 @roles('controller')
 def undeploy():
-    # execute(deleteNewBridges)
     execute(removeResources)
     execute(restoreOriginalConfFiles)
 
