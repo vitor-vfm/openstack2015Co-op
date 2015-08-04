@@ -178,6 +178,7 @@ def security_rules_set_on_demo():
     with prefix(env_config.demo_openrc):
         output = runCheck("check for icmp and tcp rule","nova secgroup-list-rules default")
         if all(rule in output for rule in ['tcp', 'icmp']):
+            print(blue("rules for icmp and tcp already set"))
             return True
         else:
             return False
@@ -193,7 +194,7 @@ def adjust_security():
 
 def give_floating_ip(instanceName):
     if "," in runCheck("check if instance has floating ip", " nova list | awk '/%s/ {print $12}' " % instanceName):
-        print(blue("floating up for %s already exists" % instanceName))
+        print(blue("floating ip for %s already exists" % instanceName))
         return
 
     runCheck("Assign floating ip", "nova floating-ip-associate %s " % instanceName + \
@@ -318,6 +319,7 @@ def boot_instance(url):
         give_floating_ip(instance_name)
     
         
+@roles('controller')
 def deploy_centos_start():
     with prefix(env_config.admin_openrc):
         get_iso('http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
