@@ -18,8 +18,9 @@ env.roledefs = env_config.roledefs
 
 def key_exists():
     # checks for existence of /root/.ssh/id_rsa
-    ls_utput = run("ls /root/.ssh")
-    if "id_rsa" in ls_utput:
+    ls_output = run("ls /root/.ssh")
+    if "id_rsa" in ls_output:
+        print(blue("keygen already exists"))
         return True
     else:
         return False
@@ -37,6 +38,7 @@ def image_active(image):
         imageStatus = runCheck("check if %s exists" % image, "glance image-list | awk '/" + image + "/ {print $12}'")
         
         if imageStatus == "active":
+            print(blue(image + " already active"))
             return True
         else:
             return False
@@ -49,10 +51,7 @@ def delete_image(image_to_delete):
     with prefix(env_config.admin_openrc):
         runCheck("delete %s" % image,"glance delete %s" % image_to_delete)
 
-def create_image(url, imageName, imageFile, diskFormat):
-    if image_active(imageName):
-        return
-    
+def get_iso(url, imageFile):
     msg = 'Retrieve instance image'
     run("mkdir -p /tmp/images")
     with settings(warn_only=True):
@@ -63,7 +62,14 @@ def create_image(url, imageName, imageFile, diskFormat):
             while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
                 if run("nova image-list | grep %s | grep -i ERROR" % imageName, quiet=True) != '':
                     sys.exit("Major problem: image can't be downloaded")
- 
+
+
+def create_image(imageName, imageFile, diskFormat):
+    # requires image to be in /tmp/images
+
+    if image_active(imageName):
+        return
+    
     msg = 'Create glance image'
     runCheck(msg, "glance image-create --progress " + \
             "--name %s " % imageName + \
@@ -89,18 +95,40 @@ def create_image(url, imageName, imageFile, diskFormat):
         print(red("Couldn't install image"))
         return 'FAIL'
 
+def volume_exists(volume_name):
+    if runCheck("checking volume", "cinder list | awk '/%s/'" % volume_name) == "":
+        return False
+    else:
+        print(blue(volume_name + " already exists"))
+        return True
+        
+
 def create_volume(volumeSize, volumeName):
+    if volume_exists(volumeName):
+        return
     runCheck('Create a %s GB volume' % volumeSize,
             'cinder create --display-name %s %s' % (volumeName, volumeSize))
  
 def create_bootable_volume(imageName, volumeSize, volumeName):
+    if volume_exists(volumeName):
+        return
     imageID = run("glance image-list | grep '%s' | awk '{print $2}'" % imageName)
     runCheck('Create a %s GB volume' % volumeSize,
             'cinder create --display-name %s --image_id %s %s' % (
                 volumeName, imageID, volumeSize))
+
+def already_booted(instanceName):
+    if runCheck("check if already booted"," nova list | awk '/%s/'" % instanceName) == "":
+        return False
+    else:
+        print(blue("already booted"))
+        return True
    
 #def boot_vm(flavorSize, imageName, keyName, instanceName):
 def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
+    if already_booted(instanceName):
+        return
+
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
     
     if volumeID != '':
@@ -124,6 +152,9 @@ def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
         
 #def boot_vm(flavorSize, imageName, keyName, instanceName):
 def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
+    if already_booted(instanceName):
+        return
+
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
     
     if volumeID != '':
@@ -146,15 +177,30 @@ def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
             if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
                 sys.exit("Major problem: instance can't be made")
     print(green("Instance built!"))
- 
+
+@roles('controller')
+def security_rules_set_on_demo():
+    with prefix(env_config.demo_openrc):
+        output = runCheck("check for icmp and tcp rule","nova secgroup-list-rules default")
+        if all(rule in output for rule in ['tcp', 'icmp']):
+            print(blue("rules for icmp and tcp already set"))
+            return True
+        else:
+            return False
 
 @roles('controller')
 def adjust_security():
-    with settings(warn_only=True):
-        runCheck("Edit ICMP security rules", "nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0")
-        runCheck("Edit TCP security rules", "nova secgroup-add-rule default tcp 22 22 0.0.0.0/0")
+    with prefix(env_config.demo_openrc):
+        if security_rules_set_on_demo:
+            return
+        else:
+            runCheck("Edit ICMP security rules", "nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0")
+            runCheck("Edit TCP security rules", "nova secgroup-add-rule default tcp 22 22 0.0.0.0/0")
 
 def give_floating_ip(instanceName):
+    if "," in runCheck("check if instance has floating ip", " nova list | awk '/%s/ {print $12}' " % instanceName):
+        print(blue("floating ip for %s already exists" % instanceName))
+        return
 
     runCheck("Assign floating ip", "nova floating-ip-associate %s " % instanceName + \
             "$(neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}')")
@@ -187,11 +233,12 @@ def check_if_volume_attached(instanceName, volumeName):
 @roles('controller')
 def deploy_cirros():
     with prefix(env_config.admin_openrc):
+        get_iso('http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+                'cirros-0.3.3-x86_64-disk.img')
         create_image(
-            'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
-            'cirros-test0',
-            'cirros-0.3.3-x86_64-disk.img',
-            'qcow2')
+           'cirros-test0',
+           'cirros-0.3.3-x86_64-disk.img',
+           'qcow2')
     with prefix(env_config.demo_openrc):
         generate_key('demo-key')
         create_bootable_volume('cirros-test0', '10', 'cirros-volume0')
@@ -203,26 +250,26 @@ def deploy_cirros():
 
 @roles('controller')
 def deploy_windows7():
+    # preconfigured .qcow2 must be present in /tmp/images
+    # with name matching the one used below
     with prefix(env_config.admin_openrc):
-        #generate_key('demo-key')
         create_image(
-            'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
             'windows7-test0',
             'win7.qcow2',
             'qcow2')
     with prefix(env_config.demo_openrc):
+        generate_key('demo-key')
         create_bootable_volume('windows7-test0', '50', 'windows7-volume0')
-        boot_from_volume('large', 'windows7-volume0', 'demo-key', 'windows7-instance0')
+        boot_from_volume('medium', 'windows7-volume0', 'demo-key', 'windows7-instance0')
         give_floating_ip('windows7-instance0')
-        #attach_volume('windows7-volume0', 'windows7-instance0')
-        #check_if_volume_attached('windows7-instance0', 'windows7-volume0')
-        
+      
 @roles('controller')
 def deploy_ubuntu_start():
     with prefix(env_config.admin_openrc):
+        get_iso('http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
+                'ubuntu-14.04.2-desktop-amd64.iso')
         create_image(
-            'http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
-            'ubuntu-image0',
+            'ubuntu-test0',
             'ubuntu-14.04.2-desktop-amd64.iso',
             'qcow2')
     with prefix(env_config.demo_openrc):
@@ -244,20 +291,66 @@ def deploy_ubuntu_end():
         runCheck('Make volume bootable', 'cinder set-bootable ubuntu-volume0 true')
         boot_from_volume('small', 'ubuntu-volume0', 'demo-key', 'ubuntu-volume-instance')
    
+def boot_instance(url):
+    # function purpose:
+    # 1.) gets preconfigured qcow2 file from url location
+    #
+    # 2.) creates an image from that downloaded file
+    #
+    # 3.) creates a bootable volume from image 
+    #
+    # 4.) generates key, boots from bootable volume 
+    # and attaches floating ip
+    
+    instance_suffix = runCheck('get instance name suffix','echo "$(date +%H%M%S)"')
+    image_location = url
+    image_filename = image_location.split('/')[-1]
+    image_name = image_filename.split('.')[0] 
+    image_format = image_filename.split('.')[-1]
+    instance_name = image_name + 'Instance'
+    volume_name =  image_name + 'Volume'
+    key_name = 'demo-key'
+
+
+    # add unique suffixes
+    image_name += instance_suffix
+    instance_name += instance_suffix
+    volume_name += instance_suffix
+
+    if "w" in image_name: # to allocate larger size for windows instances
+        disk_size = '50'
+        flavor = 'large'
+    else:
+        disk_size = '10'
+        flavor = 'medium'
+        
+
+    with prefix(env_config.admin_openrc):        
+        get_iso(image_location, image_filename)
+        create_image(
+            image_name,
+            image_filename,
+            image_format)
+    with prefix(env_config.demo_openrc):
+        generate_key(key_name)
+        create_bootable_volume(image_name, disk_size, volume_name)
+        boot_from_volume(flavor, volume_name, key_name, instance_name)
+        give_floating_ip(instance_name)
 
 @roles('controller')
 def deploy_centos_start():
-    #with prefix(env_config.admin_openrc):
-        #create_image(
-        #    'http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
-        #    'centos-7-x86_64_minimal_iso',
-        #    'CentOS-7-x86_64-Minimal-1503-01.iso',
-        #    'iso')
+    with prefix(env_config.admin_openrc):
+        get_iso('http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
+                'CentOS-7-x86_64-Minimal-1503-01.iso')
+        create_image(
+           'centos-7-x86_64_minimal_iso',
+           'CentOS-7-x86_64-Minimal-1503-01.iso',
+           'iso')
     with prefix(env_config.demo_openrc):
         generate_key('demo-key')
-        #create_volume('10', 'centos-7-minimal')
+        create_volume('10', 'centos-7-minimal')
         boot_from_image('centos-7-minimal', 
-                        'small', 
+                        'medium', 
                         'centos-7-x86_64_minimal_iso', 
                         'demo-key', 
                         'centos-instance0')
@@ -268,12 +361,16 @@ def deploy_centos_end():
     with prefix(env_config.demo_openrc):
         runCheck('Get rid of old instance', 'nova delete centos-instance0')
         runCheck('Make volume bootable', 'cinder set-bootable centos-7-minimal true')
-        boot_from_volume('small', 'centos-7-minimal', 'demo-key', 'centos-volume-instance')
+        boot_from_volume('medium', 'centos-7-minimal', 'demo-key', 'centos-volume-instance')
 
 def deploy():
-    execute(adjust_security)
-    execute(deploy_cirros)
+    centos7Minimal_location = 'http://129.128.208.164/images/centos7Minimal.qcow2'
+    windows8_location = 'http://129.128.208.164/images/w8.qcow2'
 
+    execute(adjust_security)
+
+    execute(boot_instance, centos7Minimal_location)
+    execute(boot_instance, windows8_location)
 
 def destroy_stuff(imageName, volumeName, instanceName):
     with prefix(env_config.admin_openrc):
