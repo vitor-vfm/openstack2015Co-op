@@ -287,6 +287,53 @@ def deploy_ubuntu():
         #check_if_volume_attached('ubuntu-instance0', 'ubuntu-volume0')
 
 @roles('controller')
+def boot_instance(url):
+    # function purpose:
+    # 1.) gets preconfigured qcow2 file from url location
+    #
+    # 2.) creates an image from that downloaded file
+    #
+    # 3.) creates a bootable volume from image 
+    #
+    # 4.) generates key, boots from bootable volume 
+    # and attaches floating ip
+    
+    instance_suffix = runCheck('get instance name suffix','echo "$(date +%H%M%S)"')
+    image_location = url
+    image_filename = image_location.split('/')[-1]
+    image_name = image_filename.split('.')[0] 
+    image_format = image_filename.split('.')[-1]
+    instance_name = image_name + 'Instance'
+    volume_name =  image_name + 'Volume'
+    key_name = 'demo-key'
+
+
+    # add unique suffixes
+    image_name += instance_suffix
+    instance_name += instance_suffix
+    volume_name += instance_suffix
+
+    if "w" in image_name: # to allocate larger size for windows instances
+        disk_size = '50'
+        flavor = 'large'
+    else:
+        disk_size = '10'
+        flavor = 'medium'
+        
+
+    with prefix(env_config.admin_openrc):        
+        get_iso(image_location, image_filename)
+        create_image(
+            image_name,
+            image_filename,
+            image_format)
+    with prefix(env_config.demo_openrc):
+        generate_key(key_name)
+        create_bootable_volume(image_name, disk_size, volume_name)
+        boot_from_volume(flavor, volume_name, key_name, instance_name)
+        give_floating_ip(instance_name)
+    
+        
 def deploy_centos_start():
     with prefix(env_config.admin_openrc):
         get_iso('http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
