@@ -44,7 +44,7 @@ passwd = env_config.passwd
 
 cinderGlusterDir = "/mnt/gluster/cinder"
 
-nfs_share = "/home/cinder"
+nfs_share = env_config.nfs_share
 
 ################### General functions ######################################
 
