@@ -101,7 +101,7 @@ def makeBridges():
     runCheck(msg, 'ovs-vsctl add-port br-vlan vlan-to-int '
             '-- set Interface vlan-to-int type=patch options:peer=int-to-vlan')
 
-@roles('network', 'compute')
+@roles('network','compute')
 def setNeutronConf():
     # Reference: http://www.opencloudblog.com/?p=630
 
