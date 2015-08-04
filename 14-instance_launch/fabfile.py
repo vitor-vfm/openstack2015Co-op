@@ -344,9 +344,13 @@ def deploy_centos_end():
         boot_from_volume('medium', 'centos-7-minimal', 'demo-key', 'centos-volume-instance')
 
 def deploy():
-    execute(adjust_security)
-    execute(deploy_cirros)
+    centosMinimal_location = 'http://129.128.208.164/images/centos7Minimal.qcow2'
+    windows8_location = 'http://129.128.208.164/images/w8.qcow2'
 
+    execute(adjust_security)
+
+    execute(boot_instance, centosMinimal_location)
+    execute(boot_instance, windows8_location)
 
 def destroy_stuff(imageName, volumeName, instanceName):
     with prefix(env_config.admin_openrc):
