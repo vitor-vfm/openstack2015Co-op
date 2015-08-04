@@ -1,0 +1,9 @@
+#! /bin/bash
+
+# Reverts the effects of makeBridges
+
+ovs-vsctl del-br br-vlan
+ovs-vsctl del-port ex-to-vlan
+ovs-vsctl del-port int-to-vlan
+ovs-vsctl del-port eno1
+for s in neutron-openvswitch-agent.service openvswitch-nonetwork.service openvswitch.service; do systemctl restart $s; done

@@ -17,119 +17,94 @@ from myLib import align_y, align_n, keystone_check, database_check, saveConfigFi
 env.roledefs = env_config.roledefs
 passwd = env_config.passwd
 
-neutron_conf = '/etc/neutron/neutron.conf'
-ml2_conf_file = '/etc/neutron/plugins/ml2/ml2_conf.ini'
-l3_agent_file = '/etc/neutron/l3_agent.ini'
-dhcp_agent_file = '/etc/neutron/dhcp_agent.ini'
-ovs_conf_file = '/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini'
+# DNS server for the subnets that will be created
+dns = '129.128.208.13'
 
-confFiles = [neutron_conf, ml2_conf_file, l3_agent_file, dhcp_agent_file, ovs_conf_file]
+# filepaths of the various configuration files that will be edited
+configs = {
+'neutron' : '/etc/neutron/neutron.conf',
+'ml2' : '/etc/neutron/plugins/ml2/ml2_conf.ini',
+'l3' : '/etc/neutron/l3_agent.ini',
+'dhcp' : '/etc/neutron/dhcp_agent.ini',
+'ovs' : '/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini',
+}
+
+# suffix for the backup files
 backupSuffix = '.bak6.1'
 
+# vlan specifications {tag:cidr}
 vlans = env_config.vlans
-
 
 # name for the test tenant that is used in this script
 tenant = 'test-vlan'
 
 # use the test tenant in the credentials
-credentials = env_config.admin_openrc.replace('OS_TENANT_NAME=admin','OS_TENANT_NAME=%s' % tenant)
-# credentials = env_config.admin_openrc
+credentials = env_config.admin_openrc.replace('OS_TENANT_NAME=admin','OS_TENANT_NAME=' + tenant)
 
-vniRanges = '65537:69999'
-networkVlanRanges = 'external:6:2131' 
+# networkVlanRanges = 'external:6:2131' 
 
 ############################# General ####################################
 
 def removePort(port):
+    "Given a port name, remove it using the OVS CLI"
+
+    # Check if the port exists
     if ('Port ' + port) in run('ovs-vsctl show ', quiet=True):
         msg = 'Remove port ' + port
         runCheck(msg, 'ovs-vsctl del-port ' + port)
     else:
         print 'No port named ' + port
 
-############################# VxLAN setup ################################
+############################# Setup ################################
 
-@roles('network', 'compute')
-def VxLAN_basicSetup():
-    "Create and set up two bridges for the VxLAN"
+@roles('network')
+def makeBridges():
+    "Create virtual bridges and ports to enable VLAN tagging between the VMs"
     # Reference: http://www.opencloudblog.com/?p=614 
 
-    msg = 'Create br-uplink bridge'
-    runCheck(msg, 'ovs-vsctl add-br br-uplink')
+    # This script reverts the effects of the function
+    # Run it in the host if stuff breaks
+    script = 'revert_vlan'
+    local('scp %s root@network:/root/%s' % (script, script))
+    run('chmod +x %s' % script)
 
+    # TODO: fix the following paragraph
+    # Connecting br-int and the management interface breaks all connectivity
+
+    # # connect br-int and the management interface
+    # mgtInterface = env_config.nicDictionary[env.host]['mgtDEVICE']
+    # msg = 'Add a port from br-int to the management interface'
+    # runCheck(msg, 'ovs-vsctl add-port br-int ' + mgtInterface)
+
+    # create a bridge for vlan traffic
     msg = 'Create br-vlan bridge'
     runCheck(msg, 'ovs-vsctl add-br br-vlan')
 
-    physicalInterface = env_config.nicDictionary[env.host]['tnlDEVICE']
+    # Remove the connection between br-int and br-ex
+    for port in ['phy-br-ex', 'int-br-ex']:
+        removePort(port)
 
-    msg = 'Add the physical interface as the uplink'
-    runCheck(msg, 'ip link set dev %s up' % physicalInterface)
+    # connect br-ex and br-vlan
+    msg = 'Create a patch port from br-ex to br-vlan'
+    runCheck(msg, 'ovs-vsctl add-port br-ex ex-to-vlan '
+            '-- set Interface ex-to-vlan type=patch options:peer=vlan-to-ex')
+    msg = 'Create a patch port from br-vlan to br-ex'
+    runCheck(msg, 'ovs-vsctl add-port br-vlan vlan-to-ex '
+            '-- set Interface vlan-to-ex type=patch options:peer=ex-to-vlan')
 
-    # Increase MTU so make room for the VXLAN headers
-    # How to set up switch?
-    msg = 'Increase MTU on the uplink'
-    runCheck(msg, 'ip link set dev %s mtu 1600' % physicalInterface)
-
-    msg = 'Add a port from br-uplink to the physical interface'
-    trunk = ",".join([str(tag) for tag in vlans.keys()])
-    runCheck(msg, 'ovs-vsctl add-port br-uplink %s ' % physicalInterface + \
-            '-- set port %s vlan_mode=trunk trunk=%s' % (physicalInterface, trunk))
-
-    # Remove patch ports created by the flat network setup
-
-    if 'network' in env.host:
-        removePort('int-br-ex')
-        removePort('phy-br-ex')
-
-    removePort('patch-tun')
-    removePort('patch-int')
-
-    msg = 'Create a patch port from br-uplink to br-vlan'
-    runCheck(msg, 'ovs-vsctl add-port br-uplink patch-to-vlan '
-            '-- set Interface patch-to-vlan type=patch options:peer=patch-to-uplink')
-
-    msg = 'Create a patch port from br-vlan to br-uplink'
-    runCheck(msg, 'ovs-vsctl add-port br-vlan patch-to-uplink '
-            '-- set Interface patch-to-uplink type=patch options:peer=patch-to-vlan')
-
-    # We also need a patch port between br-vlan and br-int
-    # opencloudblog says that it's created by Openstack, but it isn't
-
+    # connect br-int and br-vlan
     msg = 'Create a patch port from br-int to br-vlan'
     runCheck(msg, 'ovs-vsctl add-port br-int int-to-vlan '
             '-- set Interface int-to-vlan type=patch options:peer=vlan-to-int')
-
-    msg = 'Create a patch port from br-vlan to br-uplink'
+    msg = 'Create a patch port from br-vlan to br-int'
     runCheck(msg, 'ovs-vsctl add-port br-vlan vlan-to-int '
             '-- set Interface vlan-to-int type=patch options:peer=int-to-vlan')
 
-    # connect br-ex and br-vlan
-
-    if 'network' in env.host:
-
-        msg = 'Create a patch port from br-ex to br-vlan'
-        runCheck(msg, 'ovs-vsctl add-port br-ex ex-to-vlan '
-                '-- set Interface ex-to-vlan type=patch options:peer=vlan-to-ex')
-
-        msg = 'Create a patch port from br-vlan to br-ex'
-        runCheck(msg, 'ovs-vsctl add-port br-vlan vlan-to-ex '
-                '-- set Interface vlan-to-ex type=patch options:peer=ex-to-vlan')
-
-    # Remove GRE ports from br-tun
-    # Irreversible; don't do this unless you're certain
-
-    # portsInBrTun = run('ovs-vsctl list-ports br-tun').splitlines()
-    # grePorts = [p for p in portsInBrTun if 'gre' in p]
-    # for port in grePorts:
-    #     msg = 'Remove port ' + port
-    #     runCheck(msg, 'ovs-vsctl del-port ' + port)
-
 @roles('network', 'compute')
-def VxLAN_setNeutronConf():
+def setNeutronConf():
     # Reference: http://www.opencloudblog.com/?p=630
 
-    confFile = neutron_conf
+    confFile = configs['neutron']
     
     backupConfFile(confFile, backupSuffix)
 
@@ -159,57 +134,45 @@ def VxLAN_setNeutronConf():
     set_parameter(confFile, section, 'dont_fragment', 'True')
     set_parameter(confFile, section, 'arp_responder', 'False')
 
-    # newLines = ['service_provider = VPN:openswan:neutron.services.vpn.service_drivers.ipsec.IPsecVPNDriver:default', 
-    newLines = ['service_provider = FIREWALL:Iptables:neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver:default']
-
-    for nl in newLines:
-        run("sed -i \"/\[service_providers\]/a %s\" %s" % (nl, confFile))
-
+    # Crudini doesn't work when a variable name is setup more than once, as is service_provider,
+    # so for this one we use sed
+    newLine = ['service_provider = FIREWALL:Iptables:neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver:default']
+    run("sed -i \"/\[service_providers\]/a %s\" %s" % (newLine, confFile))
 
 @roles('network', 'compute')
-def VxLAN_setMl2Conf():
+def setMl2Conf():
     # Reference: http://www.opencloudblog.com/?p=630
 
-    confFile = ml2_conf_file
+    confFile = configs['ml2']
     
     backupConfFile(confFile, backupSuffix)
 
-    set_parameter(confFile, 'ml2', 'type_drivers', 'vxlan,local,vlan,flat')
-    # set_parameter(confFile, 'ml2', 'tenant_network_types', 'vxlan')
-    set_parameter(confFile, 'ml2', 'tenant_network_types', 'vxlan,vlan')
+    set_parameter(confFile, 'ml2', 'type_drivers', 'gre,local,vlan,flat')
     set_parameter(confFile, 'ml2',  'mechanism_drivers', 'openvswitch')
      
-    set_parameter(confFile, 'ml2_type_vxlan', 'vni_ranges', vniRanges)
-      
+    # sort the vlan tags to get the smallest and the largest
+    networkVlanRanges = 'external:%d:%d' % (sorted(vlans)[0], sorted(vlans)[-1])
     set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', networkVlanRanges)
        
-    run("sed -i '/\[ml2_type_flat\]/a flat_networks\ =\ *' %s" % confFile)
+    # Crudini doesn't work with the * character
+    run("sed -i 's/flat_networks = external/flat_networks = */' %s" % confFile)
         
     set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-vlan')
-    set_parameter(confFile, 'ovs', 'tunnel_type', 'vxlan')
-    set_parameter(confFile, 'ovs', 'tunnel_bridge' , 'br-tun')
     set_parameter(confFile, 'ovs', 'integration_bridge' , 'br-int')
-    set_parameter(confFile, 'ovs', 'tunnel_id_ranges' , vniRanges)
-    set_parameter(confFile, 'ovs', 'enable_tunneling' , 'True')
-    set_parameter(confFile, 'ovs', 'tenant_network_type' , 'vxlan')
-    # set_parameter(confFile, 'ovs', 'tenant_network_type' , 'vlan')
+    # TODO: determine whether this should be vlan, gre, or both:
+    # tenant_network_type = type of network a tenant can create
+    set_parameter(confFile, 'ovs', 'tenant_network_type' , 'gre,vlan')
     set_parameter(confFile, 'ovs', 'local_ip' , 
             env_config.nicDictionary[env.host]['tnlIPADDR'])
          
-    set_parameter(confFile, 'agent', 'tunnel_types' , 'vxlan')
     set_parameter(confFile, 'agent', 'l2_population' , 'False')
 
-    # msg = 'delete gre tunnel ranges'
-    # runCheck(msg, 'crudini --del %s ml2_type_gre tunnel_id_ranges' % confFile)
-
-
 @roles('network', 'compute')
-def VxLAN_setL3Conf():
+def setL3Conf():
     # Reference: http://www.opencloudblog.com/?p=630
 
-    confFile = l3_agent_file
+    confFile = configs['l3']
     backupConfFile(confFile, backupSuffix)
-
 
     # very important - set the two following entries to an empty string
     # do not leave the default values
@@ -239,46 +202,42 @@ def VxLAN_setL3Conf():
     set_parameter(confFile, 'DEFAULT', 'debug', 'True')
 
 @roles('network', 'compute')
-def VxLAN_setDHCPConf():
+def setDHCPConf():
     # Reference: http://www.opencloudblog.com/?p=630
 
-    confFile = dhcp_agent_file
+    confFile = configs['dhcp']
     backupConfFile(confFile, backupSuffix)
 
     set_parameter(confFile, 'DEFAULT', 'dhcp_delete_namespaces', 'True')
     set_parameter(confFile, 'DEFAULT', 'enable_metadata_network', 'False')
     set_parameter(confFile, 'DEFAULT', 'enable_isolated_metadata', 'True')
     set_parameter(confFile, 'DEFAULT', 'use_namespaces', 'True')
-    set_parameter(confFile, 'DEFAULT', 'dhcp_driver', 'neutron.agent.linux.dhcp.Dnsmasq')
     set_parameter(confFile, 'DEFAULT', 'ovs_use_veth', 'False')
-    set_parameter(confFile, 'DEFAULT', 'interface_driver', 
-            'neutron.agent.linux.interface.OVSInterfaceDriver')
     set_parameter(confFile, 'DEFAULT', 'dhcp_agent_manager', 
             'neutron.agent.dhcp_agent.DhcpAgentWithStateReport')
 
 @roles('network', 'compute')
-def VxLAN_setOVSConf():
+def setOVSConf():
     "Set ovs_neutron_plugin.ini"
 
     # This isn't specified in the source (opencloudblog), but the file exists
     # and it seems like it should also be setup
 
-    confFile = ovs_conf_file
+    confFile = configs['ovs']
     backupConfFile(confFile, backupSuffix)
 
-    # set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-vlan')
-    # set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
-    # set_parameter(confFile, 'ovs', 'network_vlan_ranges', networkVlanRanges)
-        
-
-    set_parameter(confFile, 'ovs', 'tenant_network_types', 'vlan,vxlan')
+    set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-vlan')
+    set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
+    networkVlanRanges = 'external:%d:%d' % (sorted(vlans)[0], sorted(vlans)[-1])
     set_parameter(confFile, 'ovs', 'network_vlan_ranges', networkVlanRanges)
-    set_parameter(confFile, 'ovs', 'tenant_network_type', 'vxlan')
-    # set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
-    set_parameter(confFile, 'ovs', 'enable_tunneling' , 'True')
-    set_parameter(confFile, 'ovs', 'tunnel_type', 'vxlan')
-    set_parameter(confFile, 'ovs', 'tunnel_id_ranges' , vniRanges)
-    set_parameter(confFile, 'agent', 'tunnel_types' , 'vxlan')
+        
+@roles('network', 'compute')
+def setConfs():
+    execute(setNeutronConf)
+    execute(setMl2Conf)
+    execute(setL3Conf)
+    execute(setDHCPConf)
+    execute(setOVSConf)
 
 @roles('network', 'compute')
 def restartOVS():
@@ -286,28 +245,15 @@ def restartOVS():
     runCheck(msg, 'systemctl restart openvswitch.service')
 
 @roles('controller')
-def VxLAN_deploy():
-
-    execute(VxLAN_basicSetup)
-    execute(VxLAN_setNeutronConf)
-    execute(VxLAN_setMl2Conf)
-    execute(VxLAN_setL3Conf)
-    # metadata agent is already set up correctly
-    execute(VxLAN_setDHCPConf)
-    execute(VxLAN_setOVSConf)
-
-    # The reference (opencloudblog) mentions a certain 'nova-metadata.conf', but this file 
-    # doesn't seem to exist in our installation. Maybe a legacy networking thing?
-
+def restartNeutronServer():
     msg = 'Restart neutron server'
     runCheck(msg, 'systemctl restart neutron-server.service')
 
-    execute(restartOVS)
 
-################################### InitialVlans ####################################
+################################### Vlans ####################################
 
 @roles('controller')
-def VLAN_createTenant():
+def createTenant():
     "Create a tenant to test VLANs"
 
     with prefix(env_config.admin_openrc): 
@@ -325,42 +271,43 @@ def VLAN_createTenant():
                     tenant)
     
 @roles('controller')
-def VLAN_createNets():
+def createNets():
     "Create Neutron networks for each VLAN"
 
-    with prefix(credentials):
+    # TODO: still getting that same error in neutron-server.log:
+    # "2015-07-31 15:45:07.964 27497 INFO neutron.api.v2.resource 
+    #    [req-0088af38-0172-4f1d-baee-66f16b9b1484 None] 
+    #    create failed (client error): Invalid input for operation: 
+    #    network_type value vlan not supported."
 
-        for tag in vlans.keys():
+    with prefix(credentials):
+        for tag in vlans:
             netName = 'vlan' + str(tag)
             msg = 'Create net ' + netName
             runCheck(msg, 'neutron net-create %s ' % netName + \
-                    # '--router:external True '
+                    '--router:external True '
                     '--provider:physical_network external '
                     '--provider:network_type vlan '
-                    # '--provider:network_type flat '
-                    '--provider:segmentation_id %s ' % tag
+                    '--provider:segmentation_id %d ' % tag
                     )
 
 @roles('controller')
-def VLAN_createSubnets():
+def createSubnets():
     "Create Neutron subnets for each VLAN"
 
     with prefix(credentials):
-        netName = 'ext-net'
-
-        for tag in vlans.keys():
-            # netName = 'vlan' + str(tag)
+        for tag, cidr in vlans.items():
+            netName = 'vlan' + str(tag)
             subnetName = 'vlansub' + str(tag)
-            cidr = vlans[tag]
             msg = 'Create subnet ' + subnetName
-            runCheck(msg, 'neutron subnet-create %s --name %s --dns-nameserver 129.128.208.13 %s' % 
-                    (netName, subnetName, cidr))
+            runCheck(msg, 'neutron subnet-create %s --name %s --dns-nameserver %s %s' % 
+                    (netName, subnetName, dns, cidr))
 
 @roles('controller')
-def VLAN_createTestInstances():
+def createTestInstances():
     # Assumes cirros-test has been created
 
-    instancesPerVLAN = 1
+    instancesPerVLAN = 2
 
     # Version with only one external network
 
@@ -380,10 +327,10 @@ def VLAN_createTestInstances():
     with prefix(credentials):
         # save net-list locally
         run('neutron net-list >net-list')
-        for tag in vlans.keys():
-            for number in range(instancesPerVLAN):
+        for tag in vlans:
+            for instNbr in range(instancesPerVLAN):
                 netName = 'vlan' + str(tag)
-                instName = 'testvlan-%d-%d' % (tag, number)
+                instName = 'testvlan-%d-%d' % (tag, instNbr)
                 netid = run("cat net-list | awk '/%s/ {print $2}'" % netName)
                 msg = 'Create instance ' + instName
                 runCheck(msg, 
@@ -396,38 +343,27 @@ def VLAN_createTestInstances():
                         )
 
 @roles('controller')
-def VLAN_deploy():
-
-    execute(VLAN_createTenant)
-    execute(VLAN_createNets)
-    execute(VLAN_createSubnets)
-    execute(VLAN_createTestInstances)
+def createVLANs():
+    execute(createTenant)
+    execute(createNets)
+    execute(createSubnets)
+    execute(createTestInstances)
 
 #################################### Deployment ######################################
 
 def deploy():
-    # execute(VxLAN_deploy)
-    # execute(VLAN_deploy)
     pass
 
 #################################### Undeployment ######################################
 
-@roles('network', 'compute')
-def deleteBridges():
-    print 'Deleting ports'
-    for port in ['int-to-vlan','ex-to-vlan','vlan-to-ex']:
-        removePort(port)
-
-    for br in ['br-uplink','br-vlan']:
-        if ('Bridge ' + br) in run('ovs-vsctl show', quiet=True):
-            msg = 'Delete bridge ' + br
-            runCheck(msg, 'ovs-vsctl del-br ' + br)
+# These functions restore the network to its original state (before this script was deployed)
 
 @roles('controller')
-def removeAllInstances():
+def removeResources():
 
     with prefix(credentials):
 
+        # This bash command grabs all IDs from an openstack table and deletes each one
         deletionCommand = "for id in $(%s | tail -n +4 | head -n -1 | awk '{print $2}'); do " + \
                 "%s $id; " + \
                 "done"
@@ -446,20 +382,22 @@ def removeAllInstances():
 
 @roles('network','compute')
 def restoreOriginalConfFiles():
-    restoreBackups(confFiles, backupSuffix)
+    restoreBackups(configs.values(), backupSuffix)
 
 @roles('controller')
 def undeploy():
-    execute(deleteBridges)
-    execute(removeAllInstances)
+    execute(removeResources)
     execute(restoreOriginalConfFiles)
 
 ####################################### TDD ##########################################
 
 @roles('controller')
 def test():
-    execute(VxLAN_deploy)
-    execute(VLAN_deploy)
+    execute(makeBridges)
+    execute(setConfs)
+    execute(restartNeutronServer)
+    execute(restartOVS)
+    execute(createVLANs)
     pass
 
 def tdd():
