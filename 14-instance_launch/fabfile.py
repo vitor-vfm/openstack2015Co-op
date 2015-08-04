@@ -63,7 +63,7 @@ def get_iso(url, imageFile):
                 pass    
 
 
-def create_image(url, imageName, imageFile, diskFormat):
+def create_image(imageName, imageFile, diskFormat):
     # requires image to be in /tmp/images
 
     if image_active(imageName):
@@ -226,7 +226,6 @@ def deploy_cirros():
         get_iso('http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
                 'cirros-0.3.3-x86_64-disk.img')
         create_image(
-           'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
            'cirros-test0',
            'cirros-0.3.3-x86_64-disk.img',
            'qcow2')
@@ -245,7 +244,6 @@ def deploy_windows7():
     # with name matching the one used below
     with prefix(env_config.admin_openrc):
         create_image(
-            'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
             'windows7-test0',
             'win7.qcow2',
             'qcow2')
@@ -261,7 +259,6 @@ def deploy_windows8():
     # with name matching the one used below
     with prefix(env_config.admin_openrc):
         create_image(
-            'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
             'windows8-test0',
             'w8.qcow2',
             'qcow2')
@@ -278,7 +275,6 @@ def deploy_ubuntu():
         get_iso('http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
                 'ubuntu-14.04.2-desktop-amd64.iso')
         create_image(
-            'http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
             'ubuntu-test0',
             'ubuntu-14.04.2-desktop-amd64.iso',
             'qcow2')
@@ -296,7 +292,6 @@ def deploy_centos_start():
         get_iso('http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
                 'CentOS-7-x86_64-Minimal-1503-01.iso')
         create_image(
-           'http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
            'centos-7-x86_64_minimal_iso',
            'CentOS-7-x86_64-Minimal-1503-01.iso',
            'iso')
