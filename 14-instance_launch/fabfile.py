@@ -252,23 +252,7 @@ def deploy_windows7():
         create_bootable_volume('windows7-test0', '50', 'windows7-volume0')
         boot_from_volume('medium', 'windows7-volume0', 'demo-key', 'windows7-instance0')
         give_floating_ip('windows7-instance0')
- 
-@roles('controller')
-def deploy_windows8():
-    # preconfigured .qcow2 must be present in /tmp/images
-    # with name matching the one used below
-    with prefix(env_config.admin_openrc):
-        create_image(
-            'windows8-test0',
-            'w8.qcow2',
-            'qcow2')
-    with prefix(env_config.demo_openrc):
-        generate_key('demo-key')
-        create_bootable_volume('windows8-test0', '50', 'windows8-volume0')
-        boot_from_volume('large', 'windows8-volume0', 'demo-key', 'windows8-instance0')
-        give_floating_ip('windows8-instance0')
- 
-        
+      
 @roles('controller')
 def deploy_ubuntu():
     with prefix(env_config.admin_openrc):
