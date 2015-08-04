@@ -176,15 +176,15 @@ def check_if_volume_attached(instanceName, volumeName):
 
 @roles('controller')
 def deploy_cirros():
-    #with prefix(env_config.admin_openrc):
-        #create_image(
-        #    'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
-        #    'cirros-test0',
-        #    'cirros-0.3.3-x86_64-disk.img',
-        #    'qcow2')
+    with prefix(env_config.admin_openrc):
+        create_image(
+            'http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+            'cirros-test0',
+            'cirros-0.3.3-x86_64-disk.img',
+            'qcow2')
     with prefix(env_config.demo_openrc):
         generate_key('demo-key')
-        #create_bootable_volume('cirros-test0', '10', 'cirros-volume0')
+        create_bootable_volume('cirros-test0', '10', 'cirros-volume0')
         boot_from_volume('small', 'cirros-volume0', 'demo-key', 'demo-instance0')
         give_floating_ip('demo-instance0')
         #attach_volume('cirros-volume0', 'demo-instance0')
@@ -208,20 +208,32 @@ def deploy_windows7():
         #check_if_volume_attached('windows7-instance0', 'windows7-volume0')
         
 @roles('controller')
-def deploy_ubuntu():
+def deploy_ubuntu_start():
     with prefix(env_config.admin_openrc):
-        #generate_key('demo-key')
         create_image(
             'http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
-            'ubuntu-test0',
+            'ubuntu-image0',
             'ubuntu-14.04.2-desktop-amd64.iso',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_bootable_volume('ubuntu-test0', '50', 'ubuntu-volume0')
-        boot_from_volume('large', 'ubuntu-volume0', 'demo-key', 'ubuntu-instance0')
+        generate_key('demo-key')
+        create_volume('50', 'ubuntu-volume0')
+        boot_from_image('ubuntu-volume0', 
+                        'medium', 
+                        'ubuntu-image0', 
+                        'demo-key', 
+                        'ubuntu-instance0')
         give_floating_ip('ubuntu-instance0')
         #attach_volume('ubuntu-volume0', 'ubuntu-instance0')
         #check_if_volume_attached('ubuntu-instance0', 'ubuntu-volume0')
+
+@roles('controller')
+def deploy_ubuntu_end():
+     with prefix(env_config.demo_openrc):
+        runCheck('Get rid of old instance', 'nova delete ubuntu-instance0')
+        runCheck('Make volume bootable', 'cinder set-bootable ubuntu-volume0 true')
+        boot_from_volume('small', 'ubuntu-volume0', 'demo-key', 'ubuntu-volume-instance')
+   
 
 @roles('controller')
 def deploy_centos_start():

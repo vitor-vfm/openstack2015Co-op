@@ -45,7 +45,7 @@ confFiles = [
 # get database script
 database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
 
-dnsServer = '129.128.208.13'
+dnsServer = ['129.128.208.13', '129.128.5.233']
 
 ######################### Deployment ########################################
 
@@ -582,6 +582,7 @@ def createDemoSubnet():
 
     gateway = env_config.demo_subnet['gateway']
     cidr = env_config.demo_subnet['cidr']
+    dns = string.join(['--dns-nameserver ' + ip for ip in dnsServer])
 
     with prefix(env_config.demo_openrc):
         if 'demo-subnet' in run('neutron subnet-list'):
@@ -592,6 +593,7 @@ def createDemoSubnet():
             runCheck(msg,
                     'neutron subnet-create demo-net '
                     '--name demo-subnet '
+                    '%s' % dns+\
                     '--gateway {} {}'.format(gateway,cidr)
                     )
 
