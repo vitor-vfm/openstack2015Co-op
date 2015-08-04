@@ -172,13 +172,24 @@ def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
             if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
                 sys.exit("Major problem: instance can't be made")
     print(green("Instance built!"))
- 
+
+@roles('controller')
+def security_rules_set_on_demo():
+    with prefix(env_config.demo_openrc):
+        output = runCheck("check for icmp and tcp rule","nova secgroup-list-rules default")
+        if all(rule in output for rule in ['tcp', 'icmp']):
+            return True
+        else:
+            return False
 
 @roles('controller')
 def adjust_security():
-    with settings(warn_only=True):
-        runCheck("Edit ICMP security rules", "nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0")
-        runCheck("Edit TCP security rules", "nova secgroup-add-rule default tcp 22 22 0.0.0.0/0")
+    with prefix(env_config.demo_openrc):
+        if security_rules_set_on_demo:
+            return
+        else:
+            runCheck("Edit ICMP security rules", "nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0")
+            runCheck("Edit TCP security rules", "nova secgroup-add-rule default tcp 22 22 0.0.0.0/0")
 
 def give_floating_ip(instanceName):
     if "," in runCheck("check if instance has floating ip", " nova list | awk '/%s/ {print $12}' " % instanceName):
