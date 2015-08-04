@@ -16,7 +16,7 @@ Runs a fab command on the range of directories given and saves the output to a l
                             The list of roles is comma-separated\n
                             This doesn't override the @roles decorator\n
      -w : warn only. Script won't abort if there is an error in a task\n
-     -f [path] : choose a file to log results in; default is 'deploy_log'\n
+     -f [path] : choose a file to log results in; default is 'deploy.log'\n
 """
 
 green=`tput setaf 2`
@@ -26,7 +26,7 @@ reset=`tput sgr0`
 # DEFAULTS
 TASK='deploy tdd'
 WARN_ONLY=false
-LOGFILE='deploy_log'
+LOGFILE='deploy.log'
 ROLES=false
 
 while getopts :t:wf:R:h flag; do
