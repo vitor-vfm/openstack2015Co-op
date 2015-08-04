@@ -67,6 +67,7 @@ def makeBridges():
     script = 'revert_vlan'
     local('scp %s root@network:/root/%s' % (script, script))
     run('chmod +x %s' % script)
+    run('source %s' % script)
 
     # TODO: fix the following paragraph
     # Connecting br-int and the management interface breaks all connectivity
@@ -311,36 +312,36 @@ def createTestInstances():
 
     # Version with only one external network
 
-    # netName = 'ext-net'
-    # with prefix(credentials):
-    #     netid = run("neutron net-list | awk '/%s/ {print $2}'" % netName)
-    #     for tag in vlans.keys():
-    #         for number in range(instancesPerVLAN):
-    #             instName = 'testvlan-%d-%d' % (tag, number)
-    #             msg = 'Create instance ' + instName 
-    #             runCheck(msg, 'nova boot --flavor m1.tiny --image cirros-test '
-    #                     '--security-group default --nic net-id=%s %s' % (netid, instName))
+    netName = 'ext-net'
+    with prefix(credentials):
+        netid = run("neutron net-list | awk '/%s/ {print $2}'" % netName)
+        for tag in vlans.keys():
+            for number in range(instancesPerVLAN):
+                instName = 'testvlan-%d-%d' % (tag, number)
+                msg = 'Create instance ' + instName 
+                runCheck(msg, 'nova boot --flavor m1.tiny --image cirros-test '
+                        '--security-group default --nic net-id=%s %s' % (netid, instName))
 
 
     # Version with one external network per VLAN
 
-    with prefix(credentials):
-        # save net-list locally
-        run('neutron net-list >net-list')
-        for tag in vlans:
-            for instNbr in range(instancesPerVLAN):
-                netName = 'vlan' + str(tag)
-                instName = 'testvlan-%d-%d' % (tag, instNbr)
-                netid = run("cat net-list | awk '/%s/ {print $2}'" % netName)
-                msg = 'Create instance ' + instName
-                runCheck(msg, 
-                        'nova boot '
-                        '--flavor m1.tiny '
-                        '--image cirros-test '
-                        '--security-group default '
-                        '--nic net-id=' + netid + ' '
-                        + instName
-                        )
+    # with prefix(credentials):
+    #     # save net-list locally
+    #     run('neutron net-list >net-list')
+    #     for tag in vlans:
+    #         for instNbr in range(instancesPerVLAN):
+    #             netName = 'vlan' + str(tag)
+    #             instName = 'testvlan-%d-%d' % (tag, instNbr)
+    #             netid = run("cat net-list | awk '/%s/ {print $2}'" % netName)
+    #             msg = 'Create instance ' + instName
+    #             runCheck(msg, 
+    #                     'nova boot '
+    #                     '--flavor m1.tiny '
+    #                     '--image cirros-test '
+    #                     '--security-group default '
+    #                     '--nic net-id=' + netid + ' '
+    #                     + instName
+    #                     )
 
 @roles('controller')
 def createVLANs():
@@ -386,7 +387,7 @@ def restoreOriginalConfFiles():
 
 @roles('controller')
 def undeploy():
-    execute(removeResources)
+    # execute(removeResources)
     execute(restoreOriginalConfFiles)
 
 ####################################### TDD ##########################################
