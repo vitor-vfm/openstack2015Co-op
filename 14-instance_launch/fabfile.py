@@ -61,7 +61,9 @@ def create_image(url, imageName, imageFile, diskFormat):
 
             print(blue("Waiting for image file to finish downloading"))
             while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
-                pass    
+                if run("nova image-list | grep %s | grep -i ERROR" % imageName, quiet=True) != '':
+                    sys.exit("Major problem: image can't be downloaded")
+ 
     msg = 'Create glance image'
     runCheck(msg, "glance image-create --progress " + \
             "--name %s " % imageName + \
@@ -105,7 +107,8 @@ def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
         with settings(warn_only=True):
             print(blue("Waiting for volume to finish building"))
             while run("cinder list | grep %s | grep available" % volumeName, quiet=True) == '':
-                pass
+                if run("cinder list | grep %s | grep error" % volumeName, quiet=True) != '':
+                    sys.exit("Major problem: volume can't be made")
  
     netid = run("neutron net-list | awk '/demo-net/ {print $2}'")
     #run("nova boot --flavor m1.%s --image %s " % (flavorSize, imageName) + \
@@ -127,7 +130,10 @@ def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
         with settings(warn_only=True):
             print(blue("Waiting for volume to finish building"))
             while run("cinder list | grep %s | grep available" % volumeName, quiet=True) == '':
-                pass
+                if run("cinder list | grep %s | grep error" % volumeName, quiet=True) != '':
+                    sys.exit("Major problem: volume can't be made")
+ 
+
  
     netid = run("neutron net-list | awk '/demo-net/ {print $2}'")
     run("nova boot --flavor m1.%s --image %s " % (flavorSize, imageName) + \
@@ -159,10 +165,14 @@ def attach_volume(volumeName, instanceName):
     if volumeID != '':
         with settings(warn_only=True):
             while run("nova list | grep %s | grep ACTIVE" % instanceName, quiet=True) == '':
-                pass
+                if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
+                    sys.exit("Major problem: instance can't be made")
+ 
             print(blue("Waiting for volume to finish building"))
             while run("cinder list | grep %s | grep available" % volumeName, quiet=True) == '':
-                pass
+                if run("cinder list | grep %s | grep error" % volumeName, quiet=True) != '':
+                    sys.exit("Major problem: volume can't be made")
+
     runCheck("Attach volume to instance", "nova volume-attach %s %s auto" % (
                 instanceName, volumeID))
     time.sleep(5)
@@ -201,7 +211,7 @@ def deploy_windows7():
             'win7.qcow2',
             'qcow2')
     with prefix(env_config.demo_openrc):
-        create_bootable_volume('windows7-test0', '75', 'windows7-volume0')
+        create_bootable_volume('windows7-test0', '50', 'windows7-volume0')
         boot_from_volume('large', 'windows7-volume0', 'demo-key', 'windows7-instance0')
         give_floating_ip('windows7-instance0')
         #attach_volume('windows7-volume0', 'windows7-instance0')
