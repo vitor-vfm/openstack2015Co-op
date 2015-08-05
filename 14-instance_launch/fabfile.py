@@ -291,6 +291,7 @@ def deploy_ubuntu_end():
         runCheck('Make volume bootable', 'cinder set-bootable ubuntu-volume0 true')
         boot_from_volume('small', 'ubuntu-volume0', 'demo-key', 'ubuntu-volume-instance')
    
+@roles('controller')
 def boot_instance(url):
     # function purpose:
     # 1.) gets preconfigured qcow2 file from url location
