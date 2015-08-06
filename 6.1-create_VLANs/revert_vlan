@@ -2,8 +2,17 @@
 
 # Reverts the effects of makeBridges
 
+# Delete new bridges and ports
 ovs-vsctl del-br br-vlan
 ovs-vsctl del-port ex-to-vlan
 ovs-vsctl del-port int-to-vlan
 ovs-vsctl del-port eno1
-for s in neutron-openvswitch-agent.service openvswitch-nonetwork.service openvswitch.service; do systemctl restart $s; done
+
+# Reconnect br-int and br-ex
+ovs-vsctl add-port br-ex phy-br-ex -- set Interface phy-br-ex type=patch options:peer=int-br-ex
+ovs-vsctl add-port br-int int-br-ex -- set Interface int-br-ex type=patch options:peer=phy-br-ex
+
+# Restart services
+for s in neutron-openvswitch-agent.service openvswitch-nonetwork.service openvswitch.service; do
+    systemctl restart $s; 
+done
