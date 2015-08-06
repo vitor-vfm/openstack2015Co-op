@@ -55,7 +55,7 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
     roledefs = { 'compute' : ['root@compute1',
                                   'root@compute2',
                                   'root@compute3',
-#                                  'root@compute4',
+                                  'root@compute4',
                                   ],
                      'network' : ['root@network'],
                      'storage' : [],

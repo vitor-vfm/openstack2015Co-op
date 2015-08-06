@@ -41,10 +41,6 @@ confFiles = [
         sysctl_conf,
         ]
 
-
-# get database script
-database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
-
 dnsServer = ['129.128.208.13', '129.128.5.233']
 
 ######################### Deployment ########################################
@@ -52,8 +48,7 @@ dnsServer = ['129.128.208.13', '129.128.5.233']
 # CONTROLLER
 
 def create_neutron_database():
-
-    # send the commands to mysql client
+    database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
     msg = "Create MySQL database for neutron"
     runCheck(msg, '''echo "{}" | mysql -u root -p{}'''.format(
         database_script, env_config.passwd['ROOT_SECRET']))
@@ -159,6 +154,7 @@ def configure_ML2_plugin_general():
     backupConfFile(ml2_conf_file, backupSuffix)
 
 
+    # set_parameter(ml2_conf_file,'ml2','type_drivers','flat,gre')
     set_parameter(ml2_conf_file,'ml2','type_drivers','flat,gre')
     set_parameter(ml2_conf_file,'ml2','tenant_network_types','gre')
     set_parameter(ml2_conf_file,'ml2','mechanism_drivers','openvswitch')
@@ -175,8 +171,6 @@ def restart_nova_controller():
     msg = "Restart Nova services"
     runCheck(msg, 'systemctl restart openstack-nova-api.service openstack-nova-scheduler.service' + \
               ' openstack-nova-conductor.service')
-
-
 
 def configure_nova_to_use_neutron():
 
@@ -593,7 +587,7 @@ def createDemoSubnet():
             runCheck(msg,
                     'neutron subnet-create demo-net '
                     '--name demo-subnet '
-                    '%s' % dns+\
+                    '%s ' % dns+\
                     '--gateway {} {}'.format(gateway,cidr)
                     )
 
