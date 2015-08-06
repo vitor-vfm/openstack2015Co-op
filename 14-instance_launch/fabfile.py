@@ -379,6 +379,7 @@ def deploy():
 
     execute(boot_instance, centos7Minimal_location)
     execute(boot_instance, windows8_location)
+    execute(boot_instance, 'http://129.128.208.164/images/windows7.qcow2')
 
 def destroy_stuff(imageName, volumeName, instanceName):
     with prefix(env_config.admin_openrc):
