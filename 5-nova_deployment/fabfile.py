@@ -119,6 +119,15 @@ def setup_nova_config_files_on_controller():
     if 'ipmi5' not in check_output('echo $HOSTNAME',shell=True):
         # set this parameter if we are not in production mode
         set_parameter(etc_nova_config_file, 'libvirt', 'cpu_mode', 'host-passthrough')    
+
+    if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
+        # set this parameter if we are not in production mode
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_listen','192.168.1.11')    
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_host', '0.0.0.0')    
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_port', '6080')    
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_base_url', 'http://129.128.208.164:6080/vnc_auto.html')    
+
+
         
 @roles('controller')
 def populate_database_on_controller():
