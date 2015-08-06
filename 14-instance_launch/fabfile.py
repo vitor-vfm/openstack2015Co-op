@@ -239,7 +239,7 @@ def deploy_cirros():
         get_iso('http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
                 'cirros-0.3.3-x86_64-disk.img')
         create_image(
-           'cirros-test0',
+           'cirros-image0',
            'cirros-0.3.3-x86_64-disk.img',
            'qcow2')
     with prefix(env_config.demo_openrc):
