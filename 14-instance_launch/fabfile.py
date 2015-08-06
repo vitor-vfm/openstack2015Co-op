@@ -256,7 +256,7 @@ def deploy_windows7():
     # preconfigured .qcow2 must be present in /tmp/images
     # with name matching the one used below
     with prefix(env_config.admin_openrc):
-        get_iso('http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
+        get_iso('http://129.128.208.164/images/windows7.qcow2',
                 'windows7.qcow2')
         create_image(
             'windows7-image0',
