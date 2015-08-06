@@ -594,7 +594,7 @@ def createDemoSubnet():
                     'neutron subnet-create demo-net '
                     '--name demo-subnet '
                     '%s' % dns+\
-                    '--gateway {} {}'.format(gateway,cidr)
+                    ' --gateway {} {}'.format(gateway,cidr)
                     )
 
         msg = 'Restart Neutron service'
