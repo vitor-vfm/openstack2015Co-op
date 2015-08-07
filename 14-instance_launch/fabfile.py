@@ -239,7 +239,7 @@ def deploy_cirros():
         get_iso('http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
                 'cirros-0.3.3-x86_64-disk.img')
         create_image(
-           'cirros-test0',
+           'cirros-image0',
            'cirros-0.3.3-x86_64-disk.img',
            'qcow2')
     with prefix(env_config.demo_openrc):
@@ -256,8 +256,9 @@ def deploy_windows7():
     # preconfigured .qcow2 must be present in /tmp/images
     # with name matching the one used below
     with prefix(env_config.admin_openrc):
+        get_iso('http://129.128.208.164/images/windows7.qcow2',
+                'windows7.qcow2')
         create_image(
-            'http://129.128.208.21/public/Microsoft%20Windows/en_windows_7_enterprise_sp1_x86.ISO',
             'windows7-image0',
             'windows7.qcow2',
             'qcow2')
@@ -374,12 +375,13 @@ def deploy_centos_end():
 def deploy():
     centos7Minimal_location = 'http://129.128.208.164/images/centos7Minimal.qcow2'
     windows8_location = 'http://129.128.208.164/images/w8.qcow2'
+    windows7_location = 'http://129.128.208.164/images/windows7.qcow2'
 
     execute(adjust_security)
 
     execute(boot_instance, centos7Minimal_location)
     execute(boot_instance, windows8_location)
-    execute(boot_instance, 'http://129.128.208.164/images/windows7.qcow2')
+    execute(boot_instance, windows7_location)
 
 def destroy_stuff(imageName, volumeName, instanceName):
     with prefix(env_config.admin_openrc):
