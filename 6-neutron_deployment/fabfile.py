@@ -605,7 +605,7 @@ def createDemoSubnet():
                     'neutron subnet-create demo-net '
                     '--name demo-subnet '
                     + ''.join(['--dns-nameserver %s ' % ip for ip in dnsServer]) +
-                    '--gateway %s ' % env_config.demo_subnet['gateway']
+                    '--gateway %s ' % env_config.demo_subnet['gateway'] + \
                     '%s ' % env_config.demo_subnet['cidr']
                     )
 
@@ -649,9 +649,24 @@ def deploy():
 
 ##################################### Undeploy #######################################
 
+@roles('network')
+def removeBridges():
+    delete = ['br-ex']
+    for br in delete:
+        if br in run("ovs-vsctl list-br"):
+            msg = 'Delete bridge ' + br
+            runCheck(msg, "ovs-vsctl del-br " + br)
+        else:
+            print blue('No bridge called ' + br)
+
 @roles('controller','network','compute')
-def undeploy():
+def restoreConfs():
     restoreBackups(confFiles, backupSuffix)
+
+@roles('controller')
+def undeploy():
+    execute(restoreConfs)
+    execute(removeBridges)
 
 ######################################## TDD #########################################
 
