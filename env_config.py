@@ -509,10 +509,10 @@ pid-file=/var/run/mariadb/mariadb.pid
     # Specifications for the initial networks
 
     ext_subnet = {
-            'start' : '192.168.1.100',
-            'end' : '192.168.1.150',
-            'gateway' : '192.168.1.1',
-            'cidr' : '192.168.1.0/24',
+            'start' : '192.168.100.100',
+            'end' : '192.168.100.150',
+            'gateway' : '192.168.100.1',
+            'cidr' : '192.168.100.0/24',
             }
 
     demo_subnet = {
