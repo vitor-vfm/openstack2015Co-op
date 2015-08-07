@@ -293,9 +293,25 @@ def configure_Layer3_agent():
     backupConfFile(l3_agent_file, backupSuffix)
 
     set_parameter(l3_agent_file,"DEFAULT","interface_driver","neutron.agent.linux.interface.OVSInterfaceDriver")
-    set_parameter(l3_agent_file,"DEFAULT","use_namespaces","True")
+
+    # set_parameter(l3_agent_file,"DEFAULT","use_namespaces","True")
+    # This change is related to overlapping IP. This is what the sample
+    # l3 conf file says:
+    # Allow overlapping IP (Must have kernel build with CONFIG_NET_NS=y and
+    # iproute2 package that supports namespaces).
+    # use_namespaces = True
+
     set_parameter(l3_agent_file,"DEFAULT","external_network_bridge","br-ex")
-    set_parameter(l3_agent_file,"DEFAULT","router_delete_namespaces","True")
+
+    # set_parameter(l3_agent_file,"DEFAULT","router_delete_namespaces","True")
+    #
+    # router_delete_namespaces, which is false by default, can be set to True if
+    # namespaces can be deleted cleanly on the host running the L3 agent.
+    # Do not enable this until you understand the problem with the Linux iproute
+    # utility mentioned in https://bugs.launchpad.net/neutron/+bug/1052535 and
+    # you are sure that your version of iproute does not suffer from the problem.
+    # If True, namespaces will be deleted when a router is destroyed.
+    
     set_parameter(l3_agent_file,"DEFAULT","verbose","True")
 
 def configure_DHCP_agent():
@@ -303,10 +319,22 @@ def configure_DHCP_agent():
     # make a backup
     backupConfFile(dhcp_agent_file, backupSuffix)
 
-    set_parameter(dhcp_agent_file,"DEFAULT","interface_driver","neutron.agent.linux.interface.OVSInterfaceDriver")
-    set_parameter(dhcp_agent_file,"DEFAULT","dhcp_driver","neutron.agent.linux.dhcp.Dnsmasq")
+    set_parameter(dhcp_agent_file,"DEFAULT","interface_driver",
+            "neutron.agent.linux.interface.OVSInterfaceDriver")
+    set_parameter(dhcp_agent_file,"DEFAULT","dhcp_driver",
+            "neutron.agent.linux.dhcp.Dnsmasq")
     set_parameter(dhcp_agent_file,"DEFAULT","use_namespaces","True")
-    set_parameter(dhcp_agent_file,"DEFAULT","dhcp_delete_namespaces","True")
+
+    # set_parameter(dhcp_agent_file,"DEFAULT","dhcp_delete_namespaces","True")
+    # 
+    # dhcp_delete_namespaces, which is false by default, can be set to True if
+    # namespaces can be deleted cleanly on the host running the dhcp agent.
+    # Do not enable this until you understand the problem with the Linux iproute
+    # utility mentioned in https://bugs.launchpad.net/neutron/+bug/1052535 and
+    # you are sure that your version of iproute does not suffer from the problem.
+    # If True, namespaces will be deleted when a dhcp server is disabled.
+    # dhcp_delete_namespaces = False
+     
     set_parameter(dhcp_agent_file,"DEFAULT","verbose","True")
 
 @roles('controller')
@@ -318,7 +346,8 @@ def configure_metadata_proxy_on_controller():
     backupConfFile(nova_conf, backupSuffix)
 
     set_parameter(nova_conf,'neutron','service_metadata_proxy','True')
-    set_parameter(nova_conf,'neutron','metadata_proxy_shared_secret',passwd['METADATA_SECRET'])
+    set_parameter(nova_conf,'neutron','metadata_proxy_shared_secret',
+            passwd['METADATA_SECRET'])
 
     msg = "Restart Nova service"
     runCheck(msg, "systemctl restart openstack-nova-api.service")
@@ -335,7 +364,8 @@ def configure_metadata_agent():
     set_parameter(metadata_agent_file,'DEFAULT','admin_user','neutron')
     set_parameter(metadata_agent_file,'DEFAULT','nova_metadata_ip','controller')
     set_parameter(metadata_agent_file,'DEFAULT','admin_password',passwd['NEUTRON_PASS'])
-    set_parameter(metadata_agent_file,'DEFAULT','metadata_proxy_shared_secret',passwd['METADATA_SECRET'])
+    set_parameter(metadata_agent_file,'DEFAULT','metadata_proxy_shared_secret',
+            passwd['METADATA_SECRET'])
     set_parameter(metadata_agent_file,'DEFAULT','verbose','True')
 
     execute(configure_metadata_proxy_on_controller)
@@ -347,30 +377,25 @@ def configure_Open_vSwitch_service():
     msg = 'Start OpenvSwitch service'
     runCheck(msg, "systemctl start openvswitch.service")
 
-    # for testing
-    # run("ovs-vsctl del-br br-ex")
-
     # add br-ex bridge
     if 'br-ex' not in run("ovs-vsctl list-br"):
         msg = 'Create bridge br-ex'
         runCheck(msg, "ovs-vsctl add-br br-ex")
 
-        interface_name = env_config.nicDictionary[env.host]['extDEVICE']
         msg = 'Add port to br-ex'
-        runCheck(msg, "ovs-vsctl --log-file=/home/uadm/ovslog add-port br-ex '{}'".format(interface_name))
+        runCheck(msg, "ovs-vsctl add-port br-ex " + \
+                env_config.nicDictionary[env.host]['extDEVICE'])
     else:
         print blue('br-ex already created. Do nothing')
 
 @roles('network')
 def installPackagesNetwork():
-
     msg = "Install Neutron packages on network"
     runCheck(msg,
             "yum -y install "
             "openstack-neutron "
             "openstack-neutron-ml2 "
-            "openstack-neutron-openvswitch",
-            )
+            "openstack-neutron-openvswitch")
 
 @roles('network')
 def network_deploy():
@@ -437,13 +462,15 @@ def configure_ML2_plug_in_compute():
     # most of the configuration is the same as the controller
     configure_ML2_plugin_general()
 
-    # configure the external flat provider network 
-    set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
-    local_ip = env_config.nicDictionary[env.host]['tnlIPADDR']
-    set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
+    # TODO: the sample ml2_conf file doesn't have "ovs" or "agent" sections. 
+    # The following commands are creating them.
+    # Is this a difference between Juno and Kilo?
 
-    # enable GRE tunnels
-    set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
+    # I'm commenting out this setup and leaving this configuration to 6.1
+    # set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
+    # set_parameter(ml2_conf_file,'ovs','local_ip',
+    #         env_config.nicDictionary[env.host]['tnlIPADDR'])
+    # set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
 @roles('compute')
 def installPackagesCompute():
@@ -517,7 +544,6 @@ def compute_deploy():
 def createExtNet():
   
     with prefix(env_config.admin_openrc):
-
         if 'ext-net' in run('neutron net-list'):
             msg = 'Ext-net already created'
             print msg
@@ -536,11 +562,6 @@ def createExtNet():
 @roles('controller')
 def createExtSubnet():
 
-    start = env_config.ext_subnet['start']
-    end = env_config.ext_subnet['end']
-    gateway = env_config.ext_subnet['gateway']
-    cidr = env_config.ext_subnet['cidr']
-
     with prefix(env_config.admin_openrc):
         if 'ext-subnet' in run('neutron subnet-list'):
             msg = 'ext-subnet already created'
@@ -550,9 +571,11 @@ def createExtSubnet():
             runCheck(msg,
                     'neutron subnet-create ext-net '
                     '--name ext-subnet '
-                    '--allocation-pool start={},end={} '.format(start,end)+\
+                    '--allocation-pool start=%s,end=%s ' % 
+                    (env_config.ext_subnet['start'], env_config.ext_subnet['end']) + \
                     '--disable-dhcp '
-                    '--gateway {} {}'.format(gateway,cidr)
+                    # '--gateway %s ' % env_config.ext_subnet['gateway'] + \
+                    '%s ' % env_config.ext_subnet['cidr']
                     )
 
         msg = 'Restart Neutron service'
@@ -560,13 +583,11 @@ def createExtSubnet():
 
 @roles('controller')
 def createDemoNet():
-
     with prefix(env_config.demo_openrc):
         if 'demo-net' in run('neutron net-list'):
-            msg = 'Demo-net already created'
-            print msg
+            print blue('Demo-net already created')
         else:
-            msg = 'create initial demo tenant network on network node'
+            msg = 'Create initial demo tenant network on network node'
             runCheck(msg, 'neutron net-create demo-net')
 
         msg = 'Restart Neutron service'
@@ -574,11 +595,6 @@ def createDemoNet():
 
 @roles('controller')
 def createDemoSubnet():
-
-    gateway = env_config.demo_subnet['gateway']
-    cidr = env_config.demo_subnet['cidr']
-    dns = string.join(['--dns-nameserver ' + ip for ip in dnsServer])
-
     with prefix(env_config.demo_openrc):
         if 'demo-subnet' in run('neutron subnet-list'):
             msg = 'Demo-subnet already created'
@@ -588,8 +604,9 @@ def createDemoSubnet():
             runCheck(msg,
                     'neutron subnet-create demo-net '
                     '--name demo-subnet '
-                    '%s ' % dns+\
-                    '--gateway {} {}'.format(gateway,cidr)
+                    + ''.join(['--dns-nameserver %s ' % ip for ip in dnsServer]) +
+                    '--gateway %s ' % env_config.demo_subnet['gateway']
+                    '%s ' % env_config.demo_subnet['cidr']
                     )
 
         msg = 'Restart Neutron service'
@@ -597,21 +614,18 @@ def createDemoSubnet():
 
 @roles('controller')
 def createDemoRouter():
-
     with prefix(env_config.demo_openrc):
         if 'demo-router' in run('neutron router-list'):
-            msg = 'Demo-router already created'
-            print msg
+            print blue('Demo-router already created')
         else:
             msg = 'create the demo router'
             runCheck(msg,'neutron router-create demo-router')
 
             msg = 'attach the demo router to the demo subnet'
-            runCheck(msg,
-                    'neutron router-interface-add demo-router demo-subnet')
+            runCheck(msg, 'neutron router-interface-add demo-router demo-subnet')
 
-            msg = 'attach the router to the external network '
-            'by setting it as the gateway'
+            # attach the router to the external network by setting it as the gateway
+            msg = 'Set router as gateway'
             runCheck(msg,'neutron router-gateway-set demo-router ext-net')
 
         msg = 'Restart Neutron service'
@@ -621,7 +635,6 @@ def createDemoRouter():
 @roles('controller')
 def createInitialNetwork():
     # Creates a sample network for testing
-
     execute(createExtNet)
     execute(createExtSubnet)
     execute(createDemoNet)
@@ -645,7 +658,6 @@ def undeploy():
 @roles('controller')
 def saveConfigController(status):
     "Save locally the config files that exist in the controller node"
-
     saveConfigFile(neutron_conf,status)
     saveConfigFile(ml2_conf_file,status)
     saveConfigFile(nova_conf,status)
@@ -653,7 +665,6 @@ def saveConfigController(status):
 @roles('network')
 def saveConfigNetwork(status):
     "Save locally the config files that exist in the network node"
-   
     saveConfigFile(sysctl_conf,status)
     saveConfigFile(neutron_conf,status)
     saveConfigFile(ml2_conf_file,status)
@@ -664,7 +675,6 @@ def saveConfigNetwork(status):
 @roles('compute')
 def saveConfigCompute(status):
     "Save locally the config files that exist in the compute nodes"
-
     saveConfigFile(sysctl_conf,status)
     saveConfigFile(neutron_conf,status)
     saveConfigFile(nova_conf,status)
@@ -701,6 +711,7 @@ def controllerTDD():
         if extension not in extList:
             print align_n('Extension %s is not in the list' % extension)
             allInList = False
+
     if allInList:
         print align_y('All extensions in list')
     else:
@@ -774,22 +785,13 @@ def computeTDD():
 
 @roles('network', 'controller', 'compute')
 def createInitialNetworkTDD():
-
-    floatingIPStart = env_config.ext_subnet['start']
-
-    msg = "Ping the tenant router gateway from {}".format(env.host)
-    runCheck(msg, "ping -c 1 {}".format(floatingIPStart))
+    msg = "Ping the tenant router gateway from " + env.host
+    runCheck(msg, "ping -c 1 " + env_config.ext_subnet['start'])
 
 @roles('controller')
 def tdd():
 
-    res = database_check('neutron')
-    if res == 'FAIL':
-        execute(saveConfigController,'bad')
-        sys.exit(1)
-
-    res = keystone_check('neutron')
-    if res == 'FAIL':
+    if database_check('neutron') == 'FAIL' or keystone_check('neutron') == 'FAIL':
         execute(saveConfigController,'bad')
         sys.exit(1)
 
