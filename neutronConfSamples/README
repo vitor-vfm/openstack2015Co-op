@@ -1,2 +1,4 @@
 This directory contains sample configuration files
 Reference: http://docs.openstack.org/juno/config-reference/content/section_neutron.conf.html
+
+The ML2 smaple config file was taken from the OpenStack Github
