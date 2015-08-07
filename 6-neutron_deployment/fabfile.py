@@ -122,7 +122,9 @@ def configure_networking_server_component():
 
     set_parameter(neutron_conf,'DEFAULT','core_plugin','ml2')
     set_parameter(neutron_conf,'DEFAULT','service_plugins','router')
-    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
+    # This should be set to False (the default) in new distros such as CentOS 7
+    # set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
+    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','False')
 
     # set Neutron to notify Nova of of topology changes
     # get service tenant id
@@ -191,7 +193,6 @@ def configure_nova_to_use_neutron():
 
 @roles('controller')
 def installPackagesController():
-
     msg = "Install Neutron packages on controller"
     runCheck(msg,
             'yum -y install '
@@ -199,8 +200,6 @@ def installPackagesController():
             'openstack-neutron-ml2 '
             'python-neutronclient '
             'which')
-
-
 
 @roles('controller')
 def controller_deploy():
@@ -266,7 +265,9 @@ def configure_the_Networking_common_components():
 
     set_parameter(neutron_conf,'DEFAULT','core_plugin','ml2')
     set_parameter(neutron_conf,'DEFAULT','service_plugins','router')
-    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
+    # This should be set to False (the default) in new distros such as CentOS 7
+    # set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
+    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','False')
     set_parameter(neutron_conf,'DEFAULT','verbose','True')
 
 def configure_ML2_plug_in_network():

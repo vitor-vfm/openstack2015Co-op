@@ -69,13 +69,8 @@ def makeBridges():
     run('chmod +x %s' % script)
     run('source %s' % script)
 
-    # TODO: fix the following paragraph
     # Connecting br-int and the management interface breaks all connectivity
-
-    # # connect br-int and the management interface
-    # mgtInterface = env_config.nicDictionary[env.host]['mgtDEVICE']
-    # msg = 'Add a port from br-int to the management interface'
-    # runCheck(msg, 'ovs-vsctl add-port br-int ' + mgtInterface)
+    # so we don't do it
 
     # create a bridge for vlan traffic
     msg = 'Create br-vlan bridge'
@@ -148,7 +143,7 @@ def setMl2Conf():
     
     backupConfFile(confFile, backupSuffix)
 
-    set_parameter(confFile, 'ml2', 'type_drivers', 'gre,local,vlan,flat')
+    set_parameter(confFile, 'ml2', 'type_drivers', 'gre,vlan,flat')
     set_parameter(confFile, 'ml2',  'mechanism_drivers', 'openvswitch')
      
     # sort the vlan tags to get the smallest and the largest
@@ -162,7 +157,9 @@ def setMl2Conf():
     set_parameter(confFile, 'ovs', 'integration_bridge' , 'br-int')
     # TODO: determine whether this should be vlan, gre, or both:
     # tenant_network_type = type of network a tenant can create
-    set_parameter(confFile, 'ovs', 'tenant_network_type' , 'gre,vlan')
+    # set_parameter(confFile, 'ovs', 'tenant_network_type' , 'vlan')
+    # set_parameter(confFile, 'ovs', 'tenant_network_type' , 'gre,vlan')
+    set_parameter(confFile, 'ovs', 'tenant_network_types' , 'gre,vlan')
     set_parameter(confFile, 'ovs', 'local_ip' , 
             env_config.nicDictionary[env.host]['tnlIPADDR'])
          
@@ -252,6 +249,46 @@ def restartNeutronServer():
 
 
 ################################### Vlans ####################################
+
+### Following server-world's instructions 
+# http://www.server-world.info/en/note?os=CentOS_7&p=openstack_kilo&f=16
+
+
+@roles('controller')
+def createRouter():
+    "Create a virtual router for the VLANs"
+    router = 'router01'
+    if router in run('neutron router-list'):
+        print blue('Router %s already created' % router)
+    else:
+        msg = 'Create virtual router'
+        runCheck(msg, 'neutron router-create ' + router)
+
+@roles('controller')
+def createIntNet():
+    "Create internal network and associate it with the router"
+    net = 'int-net'
+    if net in run('neutron net-list'):
+        print blue('Net %s already created' % net)
+    else:
+        msg = 'Create internal net'
+        runCheck(msg, 'neutron net-create ' + net)
+
+    subnet = 'int-subnet'
+    if subnet in run('neutron net-list'):
+        print blue('Subnet %s already created' % subnet)
+    else:
+        msg = 'Create a subnet on the internal net'
+        runCheck(msg, 
+                'neutron subnet-create '
+                '--name %s ' % subnet + \
+                '--dns-nameserver 129.128.208.13 '
+                '%s ' % net + \
+                '192.168.100.0/24 '
+                )
+
+
+
 
 @roles('controller')
 def createTenant():
