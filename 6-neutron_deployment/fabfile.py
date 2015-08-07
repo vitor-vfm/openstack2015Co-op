@@ -47,12 +47,14 @@ dnsServer = ['129.128.208.13', '129.128.5.233']
 
 # CONTROLLER
 
+@roles('controller')
 def create_neutron_database():
     database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
     msg = "Create MySQL database for neutron"
     runCheck(msg, '''echo "{}" | mysql -u root -p{}'''.format(
         database_script, env_config.passwd['ROOT_SECRET']))
 
+@roles('controller')
 def setup_keystone_controller():
     """
     Set up Keystone credentials for Neutron
@@ -94,6 +96,7 @@ def setup_keystone_controller():
         else:
             print blue('\t\t9696 is already an endpoint. Do nothing')
 
+@roles('controller')
 def configure_networking_server_component():
     # configure neutron.conf with crudini
 
@@ -168,12 +171,14 @@ def configure_ML2_plugin_general():
     set_parameter(ml2_conf_file,'securitygroup','firewall_driver',\
             'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver')
 
+@roles('controller')
 def restart_nova_controller():
     # Restart nova
     msg = "Restart Nova services"
     runCheck(msg, 'systemctl restart openstack-nova-api.service openstack-nova-scheduler.service' + \
               ' openstack-nova-conductor.service')
 
+@roles('controller')
 def configure_nova_to_use_neutron():
 
     # make a backup
@@ -204,19 +209,15 @@ def installPackagesController():
 @roles('controller')
 def controller_deploy():
 
-    create_neutron_database()
-
-    setup_keystone_controller()
-
-    installPackagesController()
-  
-    configure_networking_server_component()
+    execute(create_neutron_database)
+    execute(setup_keystone_controller)
+    execute(installPackagesController)
+    execute(configure_networking_server_component)
 
     configure_ML2_plugin_general()
 
-    configure_nova_to_use_neutron()
-
-    restart_nova_controller()
+    execute(configure_nova_to_use_neutron)
+    execute(restart_nova_controller)
 
     # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini
     # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini.
@@ -574,7 +575,7 @@ def createExtSubnet():
                     '--allocation-pool start=%s,end=%s ' % 
                     (env_config.ext_subnet['start'], env_config.ext_subnet['end']) + \
                     '--disable-dhcp '
-                    # '--gateway %s ' % env_config.ext_subnet['gateway'] + \
+                    '--gateway %s ' % env_config.ext_subnet['gateway'] + \
                     '%s ' % env_config.ext_subnet['cidr']
                     )
 
