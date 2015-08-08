@@ -271,6 +271,7 @@ def deploy_windows7():
 @roles('controller')
 def deploy_ubuntu_start():
     with prefix(env_config.admin_openrc):
+#        get_iso('http://129.128.208.164/images/ubuntu-14.04.3-desktop-amd64.iso',
         get_iso('http://releases.ubuntu.com/14.04.2/ubuntu-14.04.2-desktop-amd64.iso',
                 'ubuntu-14.04.2-desktop-amd64.iso')
         create_image(
