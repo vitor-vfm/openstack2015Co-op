@@ -323,9 +323,9 @@ def boot_instance(url):
 
 
     # add unique suffixes
-    image_name += instance_suffix
+    # image_name += instance_suffix
     instance_name += instance_suffix
-    volume_name += instance_suffix
+    # volume_name += instance_suffix
 
     if "w" in image_name: # to allocate larger size for windows instances
         disk_size = '50'
