@@ -1,3 +1,7 @@
+
+### Following server-world's instructions 
+# http://www.server-world.info/en/note?os=CentOS_7&p=openstack_kilo&f=16
+
 from __future__ import with_statement
 from fabric.api import *
 from fabric.colors import green, red, blue
@@ -96,146 +100,28 @@ def makeBridges():
     runCheck(msg, 'ovs-vsctl add-port br-vlan vlan-to-int '
             '-- set Interface vlan-to-int type=patch options:peer=int-to-vlan')
 
-@roles('network','compute')
-def setNeutronConf():
-    # Reference: http://www.opencloudblog.com/?p=630
+# File configuration ############################################################
 
-    confFile = configs['neutron']
-    
-    backupConfFile(confFile, backupSuffix)
-
-    section = 'DEFAULT'
-    set_parameter(confFile, section, 'max_l3_agents_per_router', '2')
-    set_parameter(confFile, section, 'l3_ha', 'False')
-    set_parameter(confFile, section, 'allow_automatic_l3agent_failover', 'True')
-    set_parameter(confFile, section, 'allow_overlapping_ips', 'True')
-    set_parameter(confFile, section, 'core_plugin', 'ml2')
-    set_parameter(confFile, section, 'service_plugins', 'router')
-    # set_parameter(confFile, section, 'service_plugins', 'router,firewall,lbaas,vpnaas,metering')
-    set_parameter(confFile, section, 'force_gateway_on_subnet', 'True')
-    set_parameter(confFile, section, 'dhcp_options_enabled', 'False')
-    set_parameter(confFile, section, 'dhcp_agents_per_network', '1')
-    set_parameter(confFile, section, 'router_distributed', 'False')
-    set_parameter(confFile, section, 'router_delete_namespaces', 'True')
-    set_parameter(confFile, section, 'check_child_processes', 'True')
-
-    section = 'securitygroup'
-    set_parameter(confFile, section, 'firewall_driver', 
-            'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver')
-    set_parameter(confFile, section, 'enable_ipset', 'True')
-    set_parameter(confFile, section, 'enable_security_group', 'True')
-
-    section = 'agent'
-    set_parameter(confFile, section, 'enable_distributed_routing', 'False')
-    set_parameter(confFile, section, 'dont_fragment', 'True')
-    set_parameter(confFile, section, 'arp_responder', 'False')
-
-    # Crudini doesn't work when a variable name is setup more than once, as is service_provider,
-    # so for this one we use sed
-    newLine = ['service_provider = FIREWALL:Iptables:neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver:default']
-    run("sed -i \"/\[service_providers\]/a %s\" %s" % (newLine, confFile))
-
-@roles('network', 'compute')
-def setMl2Conf():
-    # Reference: http://www.opencloudblog.com/?p=630
-
+@roles('controller','network','compute')
+def setML2Conf():
     confFile = configs['ml2']
-    
     backupConfFile(confFile, backupSuffix)
+    set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', 'physnet1:1000:2999')
+    set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
+    set_parameter(confFile, 'ovs', 'bridge_mappings', 'physnet1:br-ex')
 
-    set_parameter(confFile, 'ml2', 'type_drivers', 'gre,vlan,flat')
-    set_parameter(confFile, 'ml2',  'mechanism_drivers', 'openvswitch')
-     
-    # sort the vlan tags to get the smallest and the largest
-    networkVlanRanges = 'external:%d:%d' % (sorted(vlans)[0], sorted(vlans)[-1])
-    set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', networkVlanRanges)
-       
-    # Crudini doesn't work with the * character
-    run("sed -i 's/flat_networks = external/flat_networks = */' %s" % confFile)
-        
-    set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-vlan')
-    set_parameter(confFile, 'ovs', 'integration_bridge' , 'br-int')
-    # TODO: determine whether this should be vlan, gre, or both:
-    # tenant_network_type = type of network a tenant can create
-    # set_parameter(confFile, 'ovs', 'tenant_network_type' , 'vlan')
-    # set_parameter(confFile, 'ovs', 'tenant_network_type' , 'gre,vlan')
-    set_parameter(confFile, 'ovs', 'tenant_network_types' , 'gre,vlan')
-    set_parameter(confFile, 'ovs', 'local_ip' , 
-            env_config.nicDictionary[env.host]['tnlIPADDR'])
-         
-    set_parameter(confFile, 'agent', 'l2_population' , 'False')
-
-@roles('network', 'compute')
+@roles('network')
 def setL3Conf():
-    # Reference: http://www.opencloudblog.com/?p=630
-
     confFile = configs['l3']
     backupConfFile(confFile, backupSuffix)
-
-    # very important - set the two following entries to an empty string
-    # do not leave the default values
-    set_parameter(confFile, 'DEFAULT', 'gateway_external_network_id', '')
-    set_parameter(confFile, 'DEFAULT', 'external_network_bridge', '')
-
-    # we use the legacy mode - HA and DVR are broken in Juno and should 
-    # not used in production environments
-    set_parameter(confFile, 'DEFAULT', 'agent_mode', 'legacy')
-    
-    # nova metadata is deployed only on the network node(s) and listens on 127.0.0.1 node
-    set_parameter(confFile, 'DEFAULT', 'metadata_port', '8775')
-    set_parameter(confFile, 'DEFAULT', 'metadata_ip', '127.0.0.1')
-    set_parameter(confFile, 'DEFAULT', 'enable_metadata_proxy', 'True')
-    
-    set_parameter(confFile, 'DEFAULT', 'handle_internal_only_routers', 'True')
-    set_parameter(confFile, 'DEFAULT', 'router_delete_namespaces', 'True')
-    
-    # veths should be avoided
-    set_parameter(confFile, 'DEFAULT', 'ovs_use_veth', 'False')
-    
-    set_parameter(confFile, 'DEFAULT', 'interface_driver', 
-            'neutron.agent.linux.interface.OVSInterfaceDriver')
-    set_parameter(confFile, 'DEFAULT', 'use_namespaces', 'True')
-
-    # for testing
-    set_parameter(confFile, 'DEFAULT', 'debug', 'True')
-
-@roles('network', 'compute')
-def setDHCPConf():
-    # Reference: http://www.opencloudblog.com/?p=630
-
-    confFile = configs['dhcp']
-    backupConfFile(confFile, backupSuffix)
-
-    set_parameter(confFile, 'DEFAULT', 'dhcp_delete_namespaces', 'True')
-    set_parameter(confFile, 'DEFAULT', 'enable_metadata_network', 'False')
-    set_parameter(confFile, 'DEFAULT', 'enable_isolated_metadata', 'True')
-    set_parameter(confFile, 'DEFAULT', 'use_namespaces', 'True')
-    set_parameter(confFile, 'DEFAULT', 'ovs_use_veth', 'False')
-    set_parameter(confFile, 'DEFAULT', 'dhcp_agent_manager', 
-            'neutron.agent.dhcp_agent.DhcpAgentWithStateReport')
-
-@roles('network', 'compute')
-def setOVSConf():
-    "Set ovs_neutron_plugin.ini"
-
-    # This isn't specified in the source (opencloudblog), but the file exists
-    # and it seems like it should also be setup
-
-    confFile = configs['ovs']
-    backupConfFile(confFile, backupSuffix)
-
-    set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-vlan')
-    set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
-    networkVlanRanges = 'external:%d:%d' % (sorted(vlans)[0], sorted(vlans)[-1])
-    set_parameter(confFile, 'ovs', 'network_vlan_ranges', networkVlanRanges)
-        
+    set_parameter(confFile, 'DEFAULT', 'external_network_bridge', 'br-ex')
+       
 @roles('network', 'compute')
 def setConfs():
-    execute(setNeutronConf)
-    execute(setMl2Conf)
+    execute(setML2Conf)
     execute(setL3Conf)
-    execute(setDHCPConf)
-    execute(setOVSConf)
+
+# Restart services ############################################################
 
 @roles('network', 'compute')
 def restartOVS():
@@ -247,17 +133,14 @@ def restartNeutronServer():
     msg = 'Restart neutron server'
     runCheck(msg, 'systemctl restart neutron-server.service')
 
-
-################################### Vlans ####################################
-
-### Following server-world's instructions 
-# http://www.server-world.info/en/note?os=CentOS_7&p=openstack_kilo&f=16
-
+# Create router and networks ##################################################
 
 @roles('controller')
-def createRouter():
-    "Create a virtual router for the VLANs"
-    router = 'router01'
+def createRouter(router):
+    """
+    Create a virtual router for the VLANs
+    """
+
     if router in run('neutron router-list'):
         print blue('Router %s already created' % router)
     else:
@@ -265,81 +148,82 @@ def createRouter():
         runCheck(msg, 'neutron router-create ' + router)
 
 @roles('controller')
-def createIntNet():
-    "Create internal network and associate it with the router"
-    net = 'int-net'
-    if net in run('neutron net-list'):
-        print blue('Net %s already created' % net)
-    else:
-        msg = 'Create internal net'
-        runCheck(msg, 'neutron net-create ' + net)
+def createIntNets(netNameBase, subnetNameBase, router):
+    """
+    Create internal networks, one for each VLAN, and associate them with the router
+    """
+    routerID = run("neutron router-list | awk '/%s/ {print $2}'" % router)
 
-    subnet = 'int-subnet'
-    if subnet in run('neutron net-list'):
-        print blue('Subnet %s already created' % subnet)
+    # save net-list locally to avoid querying the server multiple times
+    run('neutron net-list >net-list')
+
+    for tag, cidr in vlans.items():
+
+        netName = netNameBase + '.' + str(tag)
+        if netName in run('cat net-list'):
+            print blue('Net %s already created' % netName)
+        else:
+            msg = 'Create internal net ' + netName
+            runCheck(msg, 'neutron net-create ' + netName)
+
+        subnetName = subnetNameBase + '.' + str(tag)
+        if subnetName in run('neutron subnet-list'):
+            print blue('Subnet %s already created' % subnetName)
+        else:
+            msg = 'Create a subnet on the internal net ' + netName
+            runCheck(msg, 
+                    'neutron subnet-create '
+                    '--name %s ' % subnetName + \
+                    '--dns-nameserver 129.128.208.13 '
+                    '%s ' % netName + \
+                    '%s ' % cidr)
+
+        msg = 'Add interface on router to subnet ' + subnetName
+        subnetID = run("neutron subnet-list | awk '/%s/ {print $2}'" % subnetName)
+        runCheck(msg, "neutron router-interface-add %s %s" % (routerID, subnetID))
+
+    run('rm net-list')
+    run('neutron net-list')
+
+@roles('controller')
+def createExternalNet(netName, subnetCIDR, router):
+    """
+    Create an external network and associate it with the router
+    """
+ 
+    if netName in run('neutron net-list'):
+        print blue('Net %s already created' % netName)
+        return
     else:
-        msg = 'Create a subnet on the internal net'
+        msg = 'Create external net'
+        runCheck(msg, 
+                'neutron net-create %s ' % netName + \
+                '--router:external=True '
+                '--provider:network_type vlan')
+
+        msg = 'Create a subnet on the external net'
         runCheck(msg, 
                 'neutron subnet-create '
-                '--name %s ' % subnet + \
+                # TODO: The guide uses the default gateway as DNS. Is that right?
+                # '--dns-nameserver 10.0.0.1 '
                 '--dns-nameserver 129.128.208.13 '
-                '%s ' % net + \
-                '192.168.100.0/24 '
-                )
+                '%s ' % netName + \
+                '%s ' % subnetCIDR)
 
-
-
+    msg = 'Set gateway for the router as the external network'
+    routerID = run("neutron router-list | awk '/%s/ {print $2}'" % router)
+    extnetID = run("neutron net-list | awk '/%s/ {print $2}'" % netName)
+    runCheck(msg, "neutron router-gateway-set %s %s" % (routerID, extnetID))
 
 @roles('controller')
-def createTenant():
-    "Create a tenant to test VLANs"
-
+def createRouterAndNetworks():
     with prefix(env_config.admin_openrc): 
+        router = 'vlan-router'
+        execute(createRouter, router)
+        execute(createIntNets, 'vlan-net', 'vlan-subnet', router)
+        execute(createExternalNet, 'vlan-ext-net', '10.0.0.0/24', router)
 
-        tenantList = run('keystone tenant-list')
-        if tenant in tenantList:
-            print blue("Tenant already created. Nothing done")
-        else:
-            msg = 'Create tenant ' + tenant
-            runCheck(msg, 'keystone tenant-create --name %s --description "VLAN testing"' %
-                    tenant)
-
-            msg = 'Give the admin user the role of admin in the test tenant'
-            runCheck(msg, 'keystone user-role-add --user admin --tenant %s --role admin' %
-                    tenant)
-    
-@roles('controller')
-def createNets():
-    "Create Neutron networks for each VLAN"
-
-    # TODO: still getting that same error in neutron-server.log:
-    # "2015-07-31 15:45:07.964 27497 INFO neutron.api.v2.resource 
-    #    [req-0088af38-0172-4f1d-baee-66f16b9b1484 None] 
-    #    create failed (client error): Invalid input for operation: 
-    #    network_type value vlan not supported."
-
-    with prefix(credentials):
-        for tag in vlans:
-            netName = 'vlan' + str(tag)
-            msg = 'Create net ' + netName
-            runCheck(msg, 'neutron net-create %s ' % netName + \
-                    '--router:external True '
-                    '--provider:physical_network external '
-                    '--provider:network_type vlan '
-                    '--provider:segmentation_id %d ' % tag
-                    )
-
-@roles('controller')
-def createSubnets():
-    "Create Neutron subnets for each VLAN"
-
-    with prefix(credentials):
-        for tag, cidr in vlans.items():
-            netName = 'vlan' + str(tag)
-            subnetName = 'vlansub' + str(tag)
-            msg = 'Create subnet ' + subnetName
-            runCheck(msg, 'neutron subnet-create %s --name %s --dns-nameserver %s %s' % 
-                    (netName, subnetName, dns, cidr))
+# Test instances ##############################################################
 
 @roles('controller')
 def createTestInstances():
@@ -380,63 +264,31 @@ def createTestInstances():
     #                     + instName
     #                     )
 
-@roles('controller')
-def createVLANs():
-    execute(createTenant)
-    execute(createNets)
-    execute(createSubnets)
-    execute(createTestInstances)
-
 #################################### Deployment ######################################
 
 def deploy():
     pass
 
-#################################### Undeployment ######################################
-
-# These functions restore the network to its original state (before this script was deployed)
-
-@roles('controller')
-def removeResources():
-
-    with prefix(credentials):
-
-        # This bash command grabs all IDs from an openstack table and deletes each one
-        deletionCommand = "for id in $(%s | tail -n +4 | head -n -1 | awk '{print $2}'); do " + \
-                "%s $id; " + \
-                "done"
-
-        msg = 'Remove all instances'
-        runCheck(msg, deletionCommand % ('nova list', 'nova delete'))
-
-        msg = 'Remove all subnets'
-        runCheck(msg, deletionCommand % ('neutron subnet-list ', 'neutron subnet-delete'))
-
-        msg = 'Remove all nets'
-        runCheck(msg, deletionCommand % ('neutron net-list ', 'neutron net-delete'))
-
-        msg = 'Remove all routers'
-        runCheck(msg, deletionCommand % ('neutron router-list ', 'neutron router-delete'))
-
-@roles('network','compute')
-def restoreOriginalConfFiles():
-    restoreBackups(configs.values(), backupSuffix)
-
-@roles('controller')
-def undeploy():
-    # execute(removeResources)
-    execute(restoreOriginalConfFiles)
-
-####################################### TDD ##########################################
-
 @roles('controller')
 def test():
-    execute(makeBridges)
     execute(setConfs)
     execute(restartNeutronServer)
     execute(restartOVS)
-    execute(createVLANs)
-    pass
+    execute(createRouterAndNetworks)
+
+#################################### Undeployment ######################################
+
+@roles('network','compute')
+def restoreOriginalConfFiles():
+    # restoreBackups(configs.values(), backupSuffix)
+    restoreBackups(configs['ml2'], backupSuffix)
+    restoreBackups(configs['l3'], backupSuffix)
+
+@roles('controller')
+def undeploy():
+    execute(restoreOriginalConfFiles)
+
+####################################### TDD ##########################################
 
 def tdd():
     pass
