@@ -115,7 +115,7 @@ def configure_networking_server_component():
     # configure Identity service access
 
     set_parameter(neutron_conf,'DEFAULT','auth_strategy','keystone')
-    set_parameter(neutron_conf,'keystone_authtoken','auth_uri','http://controller:5000/v2,0')
+    set_parameter(neutron_conf,'keystone_authtoken','auth_uri','http://controller:5000/v2.0')
     set_parameter(neutron_conf,'keystone_authtoken','identity_uri','http://controller:35357')
     set_parameter(neutron_conf,'keystone_authtoken','admin_tenant_name','service')
     set_parameter(neutron_conf,'keystone_authtoken','admin_user','neutron')
@@ -125,9 +125,7 @@ def configure_networking_server_component():
 
     set_parameter(neutron_conf,'DEFAULT','core_plugin','ml2')
     set_parameter(neutron_conf,'DEFAULT','service_plugins','router')
-    # This should be set to False (the default) in new distros such as CentOS 7
-    # set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
-    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','False')
+    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
 
     # set Neutron to notify Nova of of topology changes
     # get service tenant id
@@ -160,7 +158,7 @@ def configure_ML2_plugin_general():
 
 
     # set_parameter(ml2_conf_file,'ml2','type_drivers','flat,gre')
-    set_parameter(ml2_conf_file,'ml2','type_drivers','flat,gre')
+    set_parameter(ml2_conf_file,'ml2','type_drivers','flat,gre,vlan')
     set_parameter(ml2_conf_file,'ml2','tenant_network_types','gre')
     set_parameter(ml2_conf_file,'ml2','mechanism_drivers','openvswitch')
 
@@ -266,9 +264,7 @@ def configure_the_Networking_common_components():
 
     set_parameter(neutron_conf,'DEFAULT','core_plugin','ml2')
     set_parameter(neutron_conf,'DEFAULT','service_plugins','router')
-    # This should be set to False (the default) in new distros such as CentOS 7
-    # set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
-    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','False')
+    set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
     set_parameter(neutron_conf,'DEFAULT','verbose','True')
 
 def configure_ML2_plug_in_network():
@@ -294,25 +290,9 @@ def configure_Layer3_agent():
     backupConfFile(l3_agent_file, backupSuffix)
 
     set_parameter(l3_agent_file,"DEFAULT","interface_driver","neutron.agent.linux.interface.OVSInterfaceDriver")
-
-    # set_parameter(l3_agent_file,"DEFAULT","use_namespaces","True")
-    # This change is related to overlapping IP. This is what the sample
-    # l3 conf file says:
-    # Allow overlapping IP (Must have kernel build with CONFIG_NET_NS=y and
-    # iproute2 package that supports namespaces).
-    # use_namespaces = True
-
+    set_parameter(l3_agent_file,"DEFAULT","use_namespaces","True")
     set_parameter(l3_agent_file,"DEFAULT","external_network_bridge","br-ex")
-
-    # set_parameter(l3_agent_file,"DEFAULT","router_delete_namespaces","True")
-    #
-    # router_delete_namespaces, which is false by default, can be set to True if
-    # namespaces can be deleted cleanly on the host running the L3 agent.
-    # Do not enable this until you understand the problem with the Linux iproute
-    # utility mentioned in https://bugs.launchpad.net/neutron/+bug/1052535 and
-    # you are sure that your version of iproute does not suffer from the problem.
-    # If True, namespaces will be deleted when a router is destroyed.
-    
+    set_parameter(l3_agent_file,"DEFAULT","router_delete_namespaces","True")
     set_parameter(l3_agent_file,"DEFAULT","verbose","True")
 
 def configure_DHCP_agent():
@@ -325,17 +305,7 @@ def configure_DHCP_agent():
     set_parameter(dhcp_agent_file,"DEFAULT","dhcp_driver",
             "neutron.agent.linux.dhcp.Dnsmasq")
     set_parameter(dhcp_agent_file,"DEFAULT","use_namespaces","True")
-
-    # set_parameter(dhcp_agent_file,"DEFAULT","dhcp_delete_namespaces","True")
-    # 
-    # dhcp_delete_namespaces, which is false by default, can be set to True if
-    # namespaces can be deleted cleanly on the host running the dhcp agent.
-    # Do not enable this until you understand the problem with the Linux iproute
-    # utility mentioned in https://bugs.launchpad.net/neutron/+bug/1052535 and
-    # you are sure that your version of iproute does not suffer from the problem.
-    # If True, namespaces will be deleted when a dhcp server is disabled.
-    # dhcp_delete_namespaces = False
-     
+    set_parameter(dhcp_agent_file,"DEFAULT","dhcp_delete_namespaces","True")
     set_parameter(dhcp_agent_file,"DEFAULT","verbose","True")
 
 @roles('controller')
@@ -396,7 +366,8 @@ def installPackagesNetwork():
             "yum -y install "
             "openstack-neutron "
             "openstack-neutron-ml2 "
-            "openstack-neutron-openvswitch")
+            "openstack-neutron-openvswitch",
+            )
 
 @roles('network')
 def network_deploy():
@@ -463,15 +434,13 @@ def configure_ML2_plug_in_compute():
     # most of the configuration is the same as the controller
     configure_ML2_plugin_general()
 
-    # TODO: the sample ml2_conf file doesn't have "ovs" or "agent" sections. 
-    # The following commands are creating them.
-    # Is this a difference between Juno and Kilo?
+    # configure the external flat provider network 
+    set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
+    local_ip = env_config.nicDictionary[env.host]['tnlIPADDR']
+    set_parameter(ml2_conf_file,'ovs','local_ip',local_ip)
 
-    # I'm commenting out this setup and leaving this configuration to 6.1
-    # set_parameter(ml2_conf_file,'ovs','enable_tunneling','True')
-    # set_parameter(ml2_conf_file,'ovs','local_ip',
-    #         env_config.nicDictionary[env.host]['tnlIPADDR'])
-    # set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
+    # enable GRE tunnels
+    set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
 @roles('compute')
 def installPackagesCompute():
