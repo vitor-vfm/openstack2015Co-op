@@ -236,7 +236,7 @@ def create_image_from_volume(volumeName, volumeImageName):
 @roles('controller')
 def deploy_cirros():
     with prefix(env_config.admin_openrc):
-        get_iso('http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img',
+        get_iso('http://129.128.208.164/images/cirros-0.3.3-x86_64-disk.img',
                 'cirros-0.3.3-x86_64-disk.img')
         create_image(
            'cirros-image0',
@@ -349,7 +349,7 @@ def boot_instance(url):
 @roles('controller')
 def deploy_centos_start():
     with prefix(env_config.admin_openrc):
-        get_iso('http://centos.mirror.netelligent.ca/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso',
+        get_iso('http://129.128.208.164/images/CentOS-7-x86_64-Minimal-1503-01.iso',
                 'CentOS-7-x86_64-Minimal-1503-01.iso') 
         create_image(
             'centos-7-image',
