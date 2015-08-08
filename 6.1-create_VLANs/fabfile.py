@@ -1,6 +1,6 @@
 
 ### Following server-world's instructions 
-# http://www.server-world.info/en/note?os=CentOS_7&p=openstack_kilo&f=16
+# http://www.server-world.info/en/note?os=CentOS_7&p=openstack_juno&f=15
 
 from __future__ import with_statement
 from fabric.api import *
