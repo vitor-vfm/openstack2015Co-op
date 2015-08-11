@@ -136,6 +136,15 @@ def runCheck(msg, command, quiet=False, warn_only=False):
     """
     Runs a fabric command and reports
     results, logging them if necessary
+
+    Parameters:
+
+    quiet = When set to true, the output of the fabric "run" 
+            command will not be displayed in the screen. 
+            runCheck's error messages will still be displayed
+
+    warn_only : When set to False, runCheck will exit the program
+                if the "run" command returns a non-zero exit code.
     """
 
     time = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
