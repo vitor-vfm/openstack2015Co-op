@@ -233,13 +233,13 @@ def install_nfs_on_storage():
 
 @roles('storage')
 def make_nfs_directories():
-    runCheck("Make nfs cinder directory", "mkdir /home/cinder")
+    runCheck("Make nfs cinder directory", "mkdir %s" % nfs_share)
     runCheck("Make nfs swift directory", "mkdir /home/swift")
 
-    runCheck("Setup exports file", "echo '/home/cinder 192.168.1.0/24(rw,sync)'>/etc/exports")
+    runCheck("Setup exports file", "echo '%s 192.168.1.0/24(rw,sync)'>/etc/exports" % nfs_share)
     runCheck("Continue setting up exports file", "echo '/home/swift 192.168.1.0/24(rw,sync)'>>/etc/exports")
     
-    runCheck("Change cinder NFS file permissions", "chown -R 65534:65534 /home/cinder/")
+    runCheck("Change cinder NFS file permissions", "chown -R 65534:65534 %s/" nfs_share)
     
 @roles('storage')
 def export_and_start_nfs():
