@@ -374,15 +374,35 @@ def deploy_centos_end():
         boot_from_volume('small', 'centos-7-volume', 'demo-key', 'centos-volume-instance')
 
 def deploy():
-    centos7Minimal_location = 'http://129.128.208.164/images/centos7Minimal.qcow2'
     windows8_location = 'http://129.128.208.164/images/w8.qcow2'
+    centos7Minimal_location = 'http://129.128.208.164/images/centos7Minimal.qcow2'
     windows7_location = 'http://129.128.208.164/images/windows7.qcow2'
 
     execute(adjust_security)
 
-    execute(boot_instance, centos7Minimal_location)
     execute(boot_instance, windows8_location)
+    execute(boot_instance, centos7Minimal_location)
     execute(boot_instance, windows7_location)
+
+def launchCentos7():	
+    execute(adjust_security)
+    centos7Minimal_location = 'http://129.128.208.164/images/centos7Minimal.qcow2'
+    execute(boot_instance, centos7Minimal_location)
+
+def launchWindows8():
+    execute(adjust_security)
+    windows8_location = 'http://129.128.208.164/images/w8.qcow2'
+    execute(boot_instance, windows8_location)
+
+def launchWindows7():
+    execute(adjust_security)
+    windows7_location = 'http://129.128.208.164/images/windows7.qcow2'
+    execute(boot_instance, windows7_location)
+
+def launchCirros():
+    execute(adjust_security)
+    cirros_location = 'http://129.128.208.164/images/cirros-0.3.3-x86_64-disk.img'
+    execute(boot_instance, cirros_location)
 
 def destroy_stuff(imageName, volumeName, instanceName):
     with prefix(env_config.admin_openrc):
