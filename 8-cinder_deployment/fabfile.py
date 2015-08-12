@@ -244,13 +244,28 @@ def export_and_start_nfs():
     
     runCheck("Start rpcbind", "service rpcbind start && chkconfig rpcbind on")
     runCheck("Start NFS", "service rpcbind start; service nfs start")
+    
+    # Check to make sure services started
+    if run("systemctl status nfs-config.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS config service", "systemctl start nfs-config.service")
+    if run("systemctl status nfs-idmapd.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS idmapd service", "systemctl start nfs-idmapd.service")
+    if run("systemctl status nfs-mountd.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS mountd service", "systemctl start nfs-mountd.service")
+    if run("systemctl status nfs-server.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS server service", "systemctl start nfs-server.service")
+    if run("systemctl is-enabled nfs-server.service | grep 'enabled'", warn_only=True).return_code != 0:
+        runCheck("Enabling NFS server service", "systemctl enable nfs-server.service")
 
 @roles('storage')
 def customize_storage_for_nfs():
     # Check if it has already been deployed
-    if run("systemctl status nfs-server | grep 'Active: active'").return_code == 0:
-        print blue('NFS already deployed in %s. Nothing done' % env.host)
-        return
+    if run("systemctl start nfs-config.service", warn_only=True).return_code == 0:
+        if run("systemctl start nfs-idmapd.service", warn_only=True).return_code == 0:
+            if run("systemctl start nfs-mountd.service", warn_only=True).return_code == 0:
+                if run("systemctl start nfs-server.service", warn_only=True).return_code == 0:
+                    print blue('NFS already deployed in %s. Nothing done' % env.host)
+                    return
 
     install_nfs_on_storage()
     make_nfs_directories()
