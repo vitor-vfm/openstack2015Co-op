@@ -523,8 +523,8 @@ def createExtNet():
                     'neutron net-create ext-net '
                     '--router:external True '
                     '--provider:physical_network external '
-                    '--provider:network_type flat'
-                    )
+                    '--provider:network_type flat')
+                    # '--provider:network_type vlan')
 
         msg = 'Restart Neutron service'
         runCheck(msg, 'systemctl restart neutron-server.service')
@@ -545,8 +545,7 @@ def createExtSubnet():
                     (env_config.ext_subnet['start'], env_config.ext_subnet['end']) + \
                     '--disable-dhcp '
                     '--gateway %s ' % env_config.ext_subnet['gateway'] + \
-                    '%s ' % env_config.ext_subnet['cidr']
-                    )
+                    '%s ' % env_config.ext_subnet['cidr'])
 
         msg = 'Restart Neutron service'
         runCheck(msg, 'systemctl restart neutron-server.service')
@@ -576,8 +575,7 @@ def createDemoSubnet():
                     '--name demo-subnet '
                     + ''.join(['--dns-nameserver %s ' % ip for ip in dnsServer]) +
                     '--gateway %s ' % env_config.demo_subnet['gateway'] + \
-                    '%s ' % env_config.demo_subnet['cidr']
-                    )
+                    '%s ' % env_config.demo_subnet['cidr'])
 
         msg = 'Restart Neutron service'
         runCheck(msg, 'systemctl restart neutron-server.service')
