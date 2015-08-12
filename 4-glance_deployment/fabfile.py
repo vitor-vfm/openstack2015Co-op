@@ -112,8 +112,14 @@ def setup_glance_config_files():
     set_parameter(glance_api_config_file, 'glance_store', 'default_store', 'file')
 
     # this line sets up the default filesystem. This will be overwritten by the Gluster setup
+    # set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', \
+    #         '/var/lib/glance/images/')
+    run('mkdir -p /home/glance/images')
+    run('chown glance:glance /home/glance')
+    run('chown glance:glance /home/glance/images')
     set_parameter(glance_api_config_file, 'glance_store', 'filesystem_store_datadir', \
-            '/var/lib/glance/images/')
+            '/home/glance/images/')
+
 
     set_parameter(glance_api_config_file, 'DEFAULT', 'notification_driver', 'noop')
 
