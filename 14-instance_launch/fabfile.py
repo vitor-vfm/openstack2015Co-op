@@ -8,11 +8,12 @@ import time
 import sys
 sys.path.append('..')
 import env_config
-from myLib import runCheck
+import myLib
 
 ###################################### Config ########################################
 
 env.roledefs = env_config.roledefs
+runCheck = myLib.runCheck
 
 ################################## Deployment ########################################
 
@@ -57,11 +58,8 @@ def get_iso(url, imageFile):
     with settings(warn_only=True):
         if run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
             runCheck(msg, "wget -P /tmp/images " + url)
-
-            print(blue("Waiting for image file to finish downloading"))
-            while run("ls /tmp/images | grep %s" % imageFile, quiet=True) == '':
-                if run("nova image-list | grep %s | grep -i ERROR" % imageName, quiet=True) != '':
-                    sys.exit("Major problem: image can't be downloaded")
+            runCheck("Check to see if file is in its folder", 
+                        "ls /tmp/images | grep %s" % imageFile)
 
 
 def create_image(imageName, imageFile, diskFormat):
@@ -123,6 +121,27 @@ def already_booted(instanceName):
     else:
         print(blue("already booted"))
         return True
+
+def wait_to_finish(elementType, listCommand, elementName, finishWord):
+    print(blue("Waiting for %s to finish" % elementType))
+    with settings(warn_only=True):
+        msg = 'Create %s' % elementType
+        finishCheck = run("%s | grep %s | grep -i %s" % (listCommand, elementName, finishWord), quiet=True) 
+        while finishCheck == '':
+            finishCheck = run("%s | grep %s | grep -i %s" % (listCommand, elementName, finishWord), quiet=True) 
+            time = run('date +"%Y-%m-%d %H:%M:%S"',quiet=True)
+            errorCheck = run("%s | grep %s | grep -i ERROR" % (listCommand, elementName), quiet=True) 
+            if errorCheck != '':
+                myLib.printMessage('oops',msg)
+                errormsg = 'Failure on: ' + msg
+                logging.error(errormsg)
+                logging.error(errorCheck)
+                myLib.checkLog(time)
+                sys.exit("%s couldn't finish. Check logs above" % elementType)
+        myLib.printMessage('good',msg)
+        logging.info('Success on: ' + msg)
+        logging.debug(finishCheck)
+    print(green("%s done!" % elementType))
    
 #def boot_vm(flavorSize, imageName, keyName, instanceName):
 def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
@@ -132,24 +151,15 @@ def boot_from_volume(flavorSize, volumeName, keyName, instanceName):
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
     
     if volumeID != '':
-        with settings(warn_only=True):
-            print(blue("Waiting for volume to finish building"))
-            while run("cinder list | grep %s | grep available" % volumeName, quiet=True) == '':
-                if run("cinder list | grep %s | grep error" % volumeName, quiet=True) != '':
-                    sys.exit("Major problem: volume can't be made")
+        wait_to_finish('volume', 'cinder list', volumeName, 'available')
  
     netid = run("neutron net-list | awk '/demo-net/ {print $2}'")
     #run("nova boot --flavor m1.%s --image %s " % (flavorSize, imageName) + \
     run("nova boot --flavor m1.%s --boot-volume %s " % (flavorSize, volumeID) + \
     "--nic net-id=%s " % netid + \
     "--security-group default --key-name %s %s" % (keyName, instanceName))
-    print(blue("Waiting for instance to finish building"))
-    with settings(warn_only=True):
-        while run("nova list | grep %s | grep ACTIVE" % instanceName, quiet=True) == '':
-            if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
-                sys.exit("Major problem: instance can't be made")
-    print(green("Instance built!"))
-        
+    wait_to_finish('instance', 'nova list', instanceName, 'active')
+       
 #def boot_vm(flavorSize, imageName, keyName, instanceName):
 def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
     if already_booted(instanceName):
@@ -158,25 +168,14 @@ def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
     
     if volumeID != '':
-        with settings(warn_only=True):
-            print(blue("Waiting for volume to finish building"))
-            while run("cinder list | grep %s | grep available" % volumeName, quiet=True) == '':
-                if run("cinder list | grep %s | grep error" % volumeName, quiet=True) != '':
-                    sys.exit("Major problem: volume can't be made")
- 
-
+        wait_to_finish('volume', 'cinder list', volumeName, 'available')
  
     netid = run("neutron net-list | awk '/demo-net/ {print $2}'")
     run("nova boot --flavor m1.%s --image %s " % (flavorSize, imageName) + \
     "--nic net-id=%s " % netid + \
     "--block-device source=volume,id=%s,dest=volume,bus=virtio " % volumeID + \
     "--security-group default --key-name %s %s" % (keyName, instanceName))
-    print(blue("Waiting for instance to finish building"))
-    with settings(warn_only=True):
-        while run("nova list | grep %s | grep ACTIVE" % instanceName, quiet=True) == '':
-            if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
-                sys.exit("Major problem: instance can't be made")
-    print(green("Instance built!"))
+    wait_to_finish('instance', 'nova list', instanceName, 'active')
 
 @roles('controller')
 def security_rules_set_on_demo():
@@ -206,18 +205,11 @@ def give_floating_ip(instanceName):
             "$(neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}')")
 
 def attach_volume(volumeName, instanceName):
+    wait_to_finish('instance', 'nova list', instanceName, 'active')
     volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
-    print(blue('Waiting for instance to finish building'))
+    #print(blue('Waiting for instance to finish building'))
     if volumeID != '':
-        with settings(warn_only=True):
-            while run("nova list | grep %s | grep ACTIVE" % instanceName, quiet=True) == '':
-                if run("nova list | grep %s | grep ERROR" % instanceName, quiet=True) != '':
-                    sys.exit("Major problem: instance can't be made")
- 
-            print(blue("Waiting for volume to finish building"))
-            while run("cinder list | grep %s | grep available" % volumeName, quiet=True) == '':
-                if run("cinder list | grep %s | grep error" % volumeName, quiet=True) != '':
-                    sys.exit("Major problem: volume can't be made")
+        wait_to_finish('volume', 'cinder list', volumeName, 'available')
 
     runCheck("Attach volume to instance", "nova volume-attach %s %s auto" % (
                 instanceName, volumeID))
