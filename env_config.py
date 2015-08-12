@@ -49,6 +49,7 @@ lslogs = ['/var/log/nova/nova-manage.log',
 / ___/| | | (_) | (_| | |_| | (__| |_| | (_) | | | |
 \/    |_|  \___/ \__,_|\__,_|\___|\__|_|\___/|_| |_|
 '''
+# PRODUCTION
 
 if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
     # PRODUCTION
@@ -329,21 +330,12 @@ pid-file=/var/run/mariadb/mariadb.pid
            """
 
     # for the env dictionary
-    addNode = False
     roledefs = { 
             'controller' : ['root@controller'],
             'compute' : ['root@compute1', 'root@compute2'],
             'network' : ['root@network'],
             'storage' : ['root@storage1'],
             }
-
-    #addNode = False
-    #roledefs = { 'compute' : ['root@compute1'],
-    #             'network' : [],
-                 # 'storage' : ['root@storage1'],
-    #             'storage' : [],
-    #             'controller' : []}
-
 
     roles = roledefs.keys()
     hosts = sum(roledefs.values(), [])
@@ -543,11 +535,6 @@ pid-file=/var/run/mariadb/mariadb.pid
      ######     ##     #######  ##     ## ##     ##  ######   ######## 
 
     ###########################################################################
-
-    partition = {   'size_reduction_of_home' : '350G',
-                    'partition_size' : '350G',
-                    'stripe_number' : 1,
-                    }
 
     nfs_share="/home/cinder"
 
