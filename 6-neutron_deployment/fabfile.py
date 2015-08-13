@@ -29,7 +29,8 @@ nova_conf = '/etc/nova/nova.conf'
 l3_agent_file = '/etc/neutron/l3_agent.ini'
 dhcp_agent_file = '/etc/neutron/dhcp_agent.ini'
 metadata_agent_file = '/etc/neutron/metadata_agent.ini'
-sysctl_conf = '/etc/sysctl.conf'
+#sysctl_conf = '/etc/sysctl.conf'
+sysctl_conf = '/usr/lib/sysctl.d/50-default.conf'
 
 confFiles = [
         neutron_conf,
@@ -382,7 +383,7 @@ def network_deploy():
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.default.rp_filter','0')
 
     msg = "Implement changes on sysctl"
-    runCheck(msg, "sysctl -p")
+    runCheck(msg, "sysctl --system")
 
     installPackagesNetwork()
   
