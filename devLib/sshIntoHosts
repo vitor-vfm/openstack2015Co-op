@@ -9,5 +9,6 @@ fi
 
 for host in $hosts; do
     sed -i "/$host/ d" ~/.ssh/known_hosts
+    echo Deleted the key for $host
 done
 

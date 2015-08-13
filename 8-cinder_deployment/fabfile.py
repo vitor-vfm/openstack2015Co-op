@@ -227,11 +227,9 @@ def restart_cinder():
 
 ############################## NFS ############################################
 
-@roles('storage')
 def install_nfs_on_storage():
     runCheck("Install NFS", "yum install nfs-utils rpcbind -y")
 
-@roles('storage')
 def make_nfs_directories():
     runCheck("Make nfs cinder directory", "mkdir %s" % nfs_share)
     runCheck("Make nfs swift directory", "mkdir /home/swift")
@@ -239,14 +237,39 @@ def make_nfs_directories():
     runCheck("Setup exports file", "echo '%s 192.168.1.0/24(rw,sync)'>/etc/exports" % nfs_share)
     runCheck("Continue setting up exports file", "echo '/home/swift 192.168.1.0/24(rw,sync)'>>/etc/exports")
     
-    runCheck("Change cinder NFS file permissions", "chown -R 65534:65534 %s/" nfs_share)
+    runCheck("Change cinder NFS file permissions", "chown -R 65534:65534 %s/" % nfs_share)
     
-@roles('storage')
 def export_and_start_nfs():
     runCheck("Export the file system", "exportfs -a")
     
     runCheck("Start rpcbind", "service rpcbind start && chkconfig rpcbind on")
     runCheck("Start NFS", "service rpcbind start; service nfs start")
+    
+    # Check to make sure services started
+    if run("systemctl status nfs-config.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS config service", "systemctl start nfs-config.service")
+    if run("systemctl status nfs-idmapd.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS idmapd service", "systemctl start nfs-idmapd.service")
+    if run("systemctl status nfs-mountd.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS mountd service", "systemctl start nfs-mountd.service")
+    if run("systemctl status nfs-server.service | grep 'Active: active'", warn_only=True).return_code != 0:
+        runCheck("Starting NFS server service", "systemctl start nfs-server.service")
+    if run("systemctl is-enabled nfs-server.service | grep 'enabled'", warn_only=True).return_code != 0:
+        runCheck("Enabling NFS server service", "systemctl enable nfs-server.service")
+
+@roles('storage')
+def customize_storage_for_nfs():
+    # Check if it has already been deployed
+    if run("systemctl start nfs-config.service", warn_only=True).return_code == 0:
+        if run("systemctl start nfs-idmapd.service", warn_only=True).return_code == 0:
+            if run("systemctl start nfs-mountd.service", warn_only=True).return_code == 0:
+                if run("systemctl start nfs-server.service", warn_only=True).return_code == 0:
+                    print blue('NFS already deployed in %s. Nothing done' % env.host)
+                    return
+
+    install_nfs_on_storage()
+    make_nfs_directories()
+    export_and_start_nfs()
 
 @roles('controller')
 def change_shares_file_for_nfs():
@@ -299,9 +322,7 @@ def deploy():
     #execute(restart_cinder)
 
     # customize storage node for nfs
-    execute(install_nfs_on_storage)
-    execute(make_nfs_directories)
-    execute(export_and_start_nfs)
+    execute(customize_storage_for_nfs)
     
     # customize cinder for nfs
     execute(install_nfs_on_controller)
