@@ -313,6 +313,8 @@ def boot_instance(url):
     volume_name =  image_name + 'Volume'
     key_name = 'demo-key'
 
+    if "qcow2" not in image_format:
+	image_format = "iso"
 
     # add unique suffixes
     # image_name += instance_suffix
