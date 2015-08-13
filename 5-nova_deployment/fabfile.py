@@ -94,8 +94,7 @@ def setup_nova_config_files_on_controller():
     RABBIT_PASS = passwd['RABBIT_PASS']
     CONTROLLER_MANAGEMENT_IP = env_config.nicDictionary['controller']['mgtIPADDR']
 
-    set_parameter(etc_nova_config_file, 'database', 'connection', \
-            'mysql://nova:{}@controller/nova'.format(NOVA_DBPASS))
+    set_parameter(etc_nova_config_file, 'database', 'connection', 'mysql://nova:{}@controller/nova'.format(NOVA_DBPASS))
 
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rpc_backend', 'rabbit')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'rabbit_host', 'controller')
@@ -110,8 +109,6 @@ def setup_nova_config_files_on_controller():
     set_parameter(etc_nova_config_file, 'keystone_authtoken', 'admin_password', NOVA_PASS)   
 
     set_parameter(etc_nova_config_file, 'DEFAULT', 'my_ip', CONTROLLER_MANAGEMENT_IP)
-    set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_listen', CONTROLLER_MANAGEMENT_IP)
-    set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_proxyclient_address', CONTROLLER_MANAGEMENT_IP)
 
     set_parameter(etc_nova_config_file, 'glance', 'host', 'controller')
     set_parameter(etc_nova_config_file, 'DEFAULT', 'verbose', 'True')
@@ -123,7 +120,10 @@ def setup_nova_config_files_on_controller():
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_host', '0.0.0.0')    
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_port', '6080')    
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_base_url', 'http://129.128.208.164:6080/vnc_auto.html')    
-
+    else:
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_listen', CONTROLLER_MANAGEMENT_IP)
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_proxyclient_address', CONTROLLER_MANAGEMENT_IP)
+        
 
         
 @roles('controller')
@@ -209,6 +209,11 @@ def setup_nova_config_files_on_compute():
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_host', '0.0.0.0')    
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_port', '6080')    
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_base_url', 'http://129.128.208.164:6080/vnc_auto.html')    
+    else:
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_listen', CONTROLLER_MANAGEMENT_IP)
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_proxyclient_address', CONTROLLER_MANAGEMENT_IP)
+        
+
     hardware_accel_check()
 
 
@@ -250,6 +255,10 @@ def setup_nova_conf_file():
     set_parameter(etc_nova_config_file, 'glance', 'libvirt_type', 'qemu') 
     set_parameter(etc_nova_config_file, 'DEFAULT', 'instances_path',  
             novaGlusterDir)
+
+@roles('controller', 'compute') 
+def fixme():
+
 
 ################################## Deployment ########################################
 
