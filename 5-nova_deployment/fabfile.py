@@ -210,8 +210,8 @@ def setup_nova_config_files_on_compute():
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_port', '6080')    
         set_parameter(etc_nova_config_file, 'DEFAULT', 'novncproxy_base_url', 'http://129.128.208.164:6080/vnc_auto.html')    
     else:
-        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_listen', CONTROLLER_MANAGEMENT_IP)
-        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_proxyclient_address', CONTROLLER_MANAGEMENT_IP)
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_listen', MANAGEMENT_IP)
+        set_parameter(etc_nova_config_file, 'DEFAULT', 'vncserver_proxyclient_address', MANAGEMENT_IP)
         
 
     hardware_accel_check()
@@ -258,6 +258,7 @@ def setup_nova_conf_file():
 
 @roles('controller', 'compute') 
 def fixme():
+    pass
 
 
 ################################## Deployment ########################################
