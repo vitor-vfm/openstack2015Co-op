@@ -30,7 +30,7 @@ l3_agent_file = '/etc/neutron/l3_agent.ini'
 dhcp_agent_file = '/etc/neutron/dhcp_agent.ini'
 metadata_agent_file = '/etc/neutron/metadata_agent.ini'
 #sysctl_conf = '/etc/sysctl.conf'
-sysctl_conf = '/usr/lib/sysctl.d/50-default.conf'
+sysctl_conf = '/usr/lib/sysctl.d/50-default.conf' # for more info visit: https://www.digitalocean.com/community/questions/how-to-enable-ip-masquerading-forwarding-on-centos-7
 
 confFiles = [
         neutron_conf,
@@ -383,7 +383,7 @@ def network_deploy():
     set_parameter(sysctl_conf,"''",'net.ipv4.conf.default.rp_filter','0')
 
     msg = "Implement changes on sysctl"
-    runCheck(msg, "sysctl --system")
+    runCheck(msg, "sysctl --system")  # for more info visit: http://www.commandlinefu.com/commands/view/11891/reload-all-sysctl-variables-without-reboot
 
     installPackagesNetwork()
   
