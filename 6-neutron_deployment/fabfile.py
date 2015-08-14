@@ -443,6 +443,7 @@ def configure_ML2_plug_in_compute():
     # enable GRE tunnels
     set_parameter(ml2_conf_file,'agent','tunnel_types','gre')
 
+@parallel
 @roles('compute')
 def installPackagesCompute():
 
@@ -452,6 +453,7 @@ def installPackagesCompute():
             "openstack-neutron-openvswitch",
             )
 
+@parallel
 @roles('compute')
 def compute_deploy():
   
@@ -628,6 +630,7 @@ def removeBridges():
         else:
             print blue('No bridge called ' + br)
 
+@parallel
 @roles('controller','network','compute')
 def restoreConfs():
     restoreBackups(confFiles, backupSuffix)
@@ -656,6 +659,7 @@ def saveConfigNetwork(status):
     saveConfigFile(dhcp_agent_file,status)
     saveConfigFile(metadata_agent_file,status)
 
+@parallel
 @roles('compute')
 def saveConfigCompute(status):
     "Save locally the config files that exist in the compute nodes"
@@ -767,6 +771,7 @@ def computeTDD():
         execute(saveConfigCompute,'bad')
         sys.exit(1)
 
+@parallel
 @roles('network', 'controller', 'compute')
 def createInitialNetworkTDD():
     msg = "Ping the tenant router gateway from " + env.host
