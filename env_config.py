@@ -334,7 +334,8 @@ pid-file=/var/run/mariadb/mariadb.pid
             'controller' : ['root@controller'],
             'compute' : ['root@compute1', 'root@compute2'],
             'network' : ['root@network'],
-            'storage' : ['root@storage1'],
+            # 'storage' : ['root@storage1'],
+            'storage' : [],
             }
 
     roles = roledefs.keys()
