@@ -526,7 +526,8 @@ def createExtNet():
                     'neutron net-create ext-net '
                     '--router:external True '
                     '--provider:physical_network external '
-                    '--provider:network_type flat')
+                    '--provider:network_type flat '
+                    '--shared')
                     # '--provider:network_type vlan')
 
         msg = 'Restart Neutron service'
