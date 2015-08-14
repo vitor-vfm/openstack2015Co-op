@@ -256,8 +256,8 @@ def setup_nova_conf_file():
     set_parameter(etc_nova_config_file, 'DEFAULT', 'instances_path',  
             novaGlusterDir)
 
-@roles('controller', 'compute') 
-def fixme():
+#@roles('controller', 'compute') 
+#def fixme():
 
 
 ################################## Deployment ########################################
