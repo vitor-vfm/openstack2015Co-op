@@ -66,7 +66,7 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
     vlans = {
             208: '129.128.208.0/24',
             209: '129.128.209.0/24',
-            6: '142.244.63.0/24',
+            # 6: '142.244.63.0/24',
             2131: '129.128.213.0/24',
             }
 
@@ -262,15 +262,15 @@ pid-file=/var/run/mariadb/mariadb.pid
     # Specifications for the initial networks
 
     ext_subnet = {
-            'start' : '192.168.1.100',
-            'end' : '192.168.1.150',
-            'gateway' : '192.168.1.1',
-            'cidr' : '192.168.1.0/24',
+            'start' : '142.244.62.230',
+            'end' : '142.244.62.249',
+            'gateway' : '142.244.62.1',
+            'cidr' : '142.244.62.0/24',
             }
 
     demo_subnet = {
             'gateway' : '10.0.0.1', 
-            'cidr' : '10.0.0.0/8', 
+            'cidr' : '10.0.0.0/24', 
             }
 
     '''
@@ -344,7 +344,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     vlans = {
             208: '129.128.208.0/24',
             209: '129.128.209.0/24',
-            6: '142.244.63.0/24',
+            # 6: '142.244.63.0/24',
             2131: '129.128.213.0/24',
             }
 
@@ -501,25 +501,24 @@ pid-file=/var/run/mariadb/mariadb.pid
     # Specifications for the initial networks
 
     # TODO: fix floating IPs
-    # changing this to 100 broke connectivity
-    # Revert?
-    # ext_subnet = {
-    #         'start' : '192.168.100.100',
-    #         'end' : '192.168.100.150',
-    #         'gateway' : '192.168.100.1',
-    #         'cidr' : '192.168.100.0/24',
-    #         }
 
     ext_subnet = {
-            'start' : '192.168.1.100',
-            'end' : '192.168.1.150',
-            'gateway' : '192.168.1.1',
-            'cidr' : '192.168.1.0/24',
+            'start' : '142.244.62.230',
+            'end' : '142.244.62.249',
+            'gateway' : '142.244.62.1',
+            'cidr' : '142.244.62.0/24',
             }
+
+    # ext_subnet = {
+    #         'start' : '192.168.1.100',
+    #         'end' : '192.168.1.150',
+    #         'gateway' : '192.168.1.1',
+    #         'cidr' : '192.168.1.0/24',
+    #         }
 
     demo_subnet = {
             'gateway' : '10.0.0.1', 
-            'cidr' : '10.0.0.0/8', 
+            'cidr' : '10.0.0.0/24', 
             }
 
 
