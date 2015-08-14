@@ -262,7 +262,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     # Specifications for the initial networks
 
     ext_subnet = {
-            'start' : '142.244.62.230',
+            'start' : '142.244.62.240',
             'end' : '142.244.62.249',
             'gateway' : '142.244.62.1',
             'cidr' : '142.244.62.0/24',
@@ -504,7 +504,7 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ext_subnet = {
             'start' : '142.244.62.230',
-            'end' : '142.244.62.249',
+            'end' : '142.244.62.239',
             'gateway' : '142.244.62.1',
             'cidr' : '142.244.62.0/24',
             }
