@@ -771,11 +771,22 @@ def computeTDD():
         execute(saveConfigCompute,'bad')
         sys.exit(1)
 
-@parallel
-@roles('network', 'controller', 'compute')
+@roles('network')
 def createInitialNetworkTDD():
+
+    msg = 'Get namespaces'
+    netspaces = runCheck(msg, 'ip netns list').splitlines()
+
+    if len(netspaces) > 1:
+        print align_n('There should be only one namespace (qrouter). Namespaces:')
+        print netspaces
+        # exit with error
+        execute(saveConfigCompute,'bad')
+        sys.exit(1)
+
     msg = "Ping the tenant router gateway from " + env.host
-    runCheck(msg, "ping -c 1 " + env_config.ext_subnet['start'])
+    runCheck(msg, "ip netns exec %s ping -c 1 %s" % 
+            (netspaces[0], env_config.ext_subnet['start']))
 
 @roles('controller')
 def tdd():
