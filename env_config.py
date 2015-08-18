@@ -217,7 +217,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     # dict mapping VLAN tags to their virtual interfaces 
     # in the network node
     virtualInterfaces = { 
-            tag:(nicDictionary['network']['extDEVICE'] + '.' + tag)
+            tag:(nicDictionary['network']['extDEVICE'] + '.' + str(tag))
             for tag in vlans
             }
 
@@ -464,7 +464,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     # dict mapping VLAN tags to their virtual interfaces 
     # in the network node
     virtualInterfaces = { 
-            tag:(nicDictionary['network']['extDEVICE'] + '.' + tag)
+            tag:(nicDictionary['network']['extDEVICE'] + '.' + str(tag))
             for tag in vlans
             }
 
