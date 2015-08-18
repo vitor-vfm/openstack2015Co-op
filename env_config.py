@@ -213,6 +213,14 @@ pid-file=/var/run/mariadb/mariadb.pid
                          },
 
             }
+
+    # dict mapping VLAN tags to their virtual interfaces 
+    # in the network node
+    virtualInterfaces = { 
+            tag:(nicDictionary['network']['extDEVICE'] + '.' + tag)
+            for tag in vlans
+            }
+
     """
      _____                        _                   
     |___ /     /\ /\___ _   _ ___| |_ ___  _ __   ___ 
@@ -452,6 +460,14 @@ pid-file=/var/run/mariadb/mariadb.pid
                          },
 
             }
+
+    # dict mapping VLAN tags to their virtual interfaces 
+    # in the network node
+    virtualInterfaces = { 
+            tag:(nicDictionary['network']['extDEVICE'] + '.' + tag)
+            for tag in vlans
+            }
+
 
     # admin-openrc and demo-openrc
     
