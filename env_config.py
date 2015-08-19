@@ -70,6 +70,12 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
             2131: '129.128.213.0/26',
             }
 
+    allocationPools = {
+            208: ['start=129.128.208.170,end=129.128.208.175'],
+            209: ['start=129.128.209.171,end=129.128.209.176'],
+            2131: ['start=129.128.213.10,end=129.128.213.38'],
+            }
+
     roles = roledefs.keys()
     hosts = sum(roledefs.values(), [])
 
@@ -355,6 +361,12 @@ pid-file=/var/run/mariadb/mariadb.pid
             209: '129.128.209.0/24',
             # 6: '142.244.63.0/24',
             2131: '129.128.213.0/26',
+            }
+
+    allocationPools = {
+            208: 'start=129.128.208.170,end=129.128.208.175',
+            209: 'start=129.128.209.171,end=129.128.209.176',
+            2131: 'start=129.128.213.10,end=129.128.213.38',
             }
 
     # ntp
