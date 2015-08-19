@@ -200,9 +200,21 @@ def give_floating_ip(instanceName):
     if "," in runCheck("check if instance has floating ip", " nova list | awk '/%s/ {print $12}' " % instanceName):
         print(blue("floating ip for %s already exists" % instanceName))
         return
-
+    
+    floating_ip = ""
+    if  "Conflict" in runCheck("check if more floating ips can be created", "neutron floatingip-create ext-net"):
+        print(blue("floating ip cant be allocated"))
+        if runCheck("check for free unallocated floating ips","nova floating-ip-list | awk '/ - / {print $2}'") == "":
+            print(blue("no free unallocated ips either, Exiting"))
+            return
+        else:
+            floating_ip = runCheck("check for free unallocated floating ips","nova floating-ip-list | awk '/ - / {print $2}' | head -1")
+    
+    else:
+        floating_ip = runCheck("create floating ip"," neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}'")
+    
     runCheck("Assign floating ip", "nova floating-ip-associate %s " % instanceName + \
-            "$(neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}')")
+            " %s" %floating_ip)
 
 def attach_volume(volumeName, instanceName):
     wait_to_finish('instance', 'nova list', instanceName, 'active')
