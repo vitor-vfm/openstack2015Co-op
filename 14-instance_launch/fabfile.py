@@ -202,9 +202,9 @@ def give_floating_ip(instanceName):
         return
     
     floating_ip = ""
-    if  "Conflict" in runCheck("check if more floating ips can be created", "neutron floatingip-create ext-net"):
+    if  "Conflict" in run("neutron floatingip-create ext-net"):
         print(blue("floating ip cant be allocated"))
-        if runCheck("check for free unallocated floating ips","nova floating-ip-list | awk '/ - / {print $2}'") == "":
+        if run("nova floating-ip-list | awk '/ - / {print $2}'") == "":
             print(blue("no free unallocated ips either, Exiting"))
             return
         else:
