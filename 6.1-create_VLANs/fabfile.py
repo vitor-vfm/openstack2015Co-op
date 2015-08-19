@@ -1,7 +1,4 @@
-
-### Following server-world's instructions 
-# http://www.server-world.info/en/note?os=CentOS_7&p=openstack_juno&f=15
-
+# Using a virtual interface to implement each vlan
 from __future__ import with_statement
 from fabric.api import *
 from fabric.colors import green, red, blue
@@ -38,199 +35,146 @@ backupSuffix = '.bak6.1'
 
 # vlan specifications {tag:cidr}
 vlans = env_config.vlans
+bridge = {tag:('br-vlan-%d' % tag) for tag in vlans}
 
-# name for the test tenant that is used in this script
-tenant = 'test-vlan'
-
-# use the test tenant in the credentials
-credentials = env_config.admin_openrc.replace('OS_TENANT_NAME=admin','OS_TENANT_NAME=' + tenant)
-
-# networkVlanRanges = 'external:6:2131' 
+virtualInterfaces = env_config.virtualInterfaces
 
 ############################# General ####################################
 
 def removePort(port):
     "Given a port name, remove it using the OVS CLI"
-
-    # Check if the port exists
-    if ('Port ' + port) in run('ovs-vsctl show ', quiet=True):
-        msg = 'Remove port ' + port
-        runCheck(msg, 'ovs-vsctl del-port ' + port)
-    else:
-        print 'No port named ' + port
-
-############################# Setup ################################
+    msg = 'Remove port ' + port
+    runCheck(msg, 'ovs-vsctl del-port ' + port)
 
 @roles('network')
-def makeBridges():
-    "Create virtual bridges and ports to enable VLAN tagging between the VMs"
-    # Reference: http://www.opencloudblog.com/?p=614 
-
-    # This script reverts the effects of the function
-    # Run it in the host if stuff breaks
-    script = 'revert_vlan'
-    local('scp %s root@network:/root/%s' % (script, script))
-    run('chmod +x %s' % script)
-    run('source %s' % script)
-
-    # Connecting br-int and the management interface breaks all connectivity
-    # so we don't do it
-
-    # create a bridge for vlan traffic
-    msg = 'Create br-vlan bridge'
-    runCheck(msg, 'ovs-vsctl add-br br-vlan')
-
-    # Remove the connection between br-int and br-ex
-    for port in ['phy-br-ex', 'int-br-ex']:
-        removePort(port)
-
-    # connect br-ex and br-vlan
-    msg = 'Create a patch port from br-ex to br-vlan'
-    runCheck(msg, 'ovs-vsctl add-port br-ex ex-to-vlan '
-            '-- set Interface ex-to-vlan type=patch options:peer=vlan-to-ex')
-    msg = 'Create a patch port from br-vlan to br-ex'
-    runCheck(msg, 'ovs-vsctl add-port br-vlan vlan-to-ex '
-            '-- set Interface vlan-to-ex type=patch options:peer=ex-to-vlan')
-
-    # connect br-int and br-vlan
-    msg = 'Create a patch port from br-int to br-vlan'
-    runCheck(msg, 'ovs-vsctl add-port br-int int-to-vlan '
-            '-- set Interface int-to-vlan type=patch options:peer=vlan-to-int')
-    msg = 'Create a patch port from br-vlan to br-int'
-    runCheck(msg, 'ovs-vsctl add-port br-vlan vlan-to-int '
-            '-- set Interface vlan-to-int type=patch options:peer=int-to-vlan')
+def removeBridge(br):
+    if br in run("ovs-vsctl list-br"):
+        msg = 'Delete bridge ' + br
+        runCheck(msg, "ovs-vsctl del-br " + br)
+    else:
+        print blue('No bridge called ' + br)
 
 # File configuration ############################################################
 
+@parallel
 @roles('controller','network','compute')
 def setML2Conf():
     confFile = configs['ml2']
     backupConfFile(confFile, backupSuffix)
-    set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', 'physnet1:1000:2999')
-    set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
-    set_parameter(confFile, 'ovs', 'bridge_mappings', 'physnet1:br-ex')
+
+    physnets = ','.join(['physnet%d' % tag for tag in vlans])
+    set_parameter(confFile, 'ml2_type_flat', 'flat_networks', 'external,' + physnets)
+    # set vlan ranges
+    # network_vlan_ranges will be set to, e.g.,
+    # physnet208,physnet209,physnet2131:208:2131
+    # physnets = ','.join(['physnet%d' % tag for tag in vlans])
+    # set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', 
+    #         '%s:%s:%s' % (physnets, min(vlans), max(vlans)))
+    
+    # set_parameter(confFile, 'ovs', 'tenant_network_type', 'gre')
+
+@parallel
+@roles('network','compute')
+def setOVSConf():
+    confFile = configs['ovs']
+    backupConfFile(confFile, backupSuffix)
+
+    # set bridge mappings
+    mappings = ','.join(['physnet%d:%s' % (tag, bridge[tag]) 
+        for tag in vlans])
+    set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-ex,' + mappings) 
+
+    set_parameter(confFile, 'ovs', 'enable_tunneling', 'True') 
+    set_parameter(confFile, 'ovs', 'integration_bridge', 'br-int') 
+    set_parameter(confFile, 'ovs', 'tunnel_bridge', 'br-tun') 
 
 @roles('network')
 def setL3Conf():
     confFile = configs['l3']
     backupConfFile(confFile, backupSuffix)
-    set_parameter(confFile, 'DEFAULT', 'external_network_bridge', 'br-ex')
-       
+
+    # When external_network_bridge is set, each L3 agent can be associated
+    # with no more than one external network. This value should be set to the UUID
+    # of that external network. To allow L3 agent support multiple external
+    # networks, both the external_network_bridge and gateway_external_network_id
+    # must be left empty.
+
+    set_parameter(confFile, 'DEFAULT', 'external_network_bridge', "''")
+    set_parameter(confFile, 'DEFAULT', 'gateway_external_network_id', "''")
+
 @roles('network', 'compute')
 def setConfs():
-    execute(setML2Conf)
+    # execute(setML2Conf)
     execute(setL3Conf)
+    execute(setOVSConf)
+
+# Bridge creation  ############################################################
+
+@roles('network')
+def makeBridge(tag):
+    """
+    Given a VLAN tag, create its corresponding bridge
+    """
+    br= bridge[tag]
+    if br in run('ovs-vsctl list-br'):
+        print blue('Bridge %s already created' % br)
+        return
+    msg = 'Create bridge %s ' % br
+    runCheck(msg, "ovs-vsctl add-br %s" % br)
+
+@roles('network')
+def connectBridgeAndInterface(tag):
+    """
+    Given a VLAN tag, connect the corresponding bridge and virtual interface
+    """
+    br = bridge[tag]
+    interface = virtualInterfaces[tag]
+    msg = 'Connect %s and %s' % (br, interface)
+    runCheck(msg, "ovs-vsctl add-port  %s %s" % (br, interface))
+
+@roles('network')
+def connectBridgeAndBrInt(tag):
+    """
+    Given a VLAN tag, connect the corresponding bridge to the integration bridge
+    """
+    br = bridge[tag]
+    msg = 'Create a patch port from br-int to %s' % br
+    runCheck(msg, 'ovs-vsctl add-port br-int int-to-%s ' % br + \
+            '-- set Interface int-to-%s type=patch options:peer=%s-to-int' % (br,br))
+    msg = 'Create a patch port from %s to br-int' % br
+    runCheck(msg, 'ovs-vsctl add-port %s %s-to-int ' % (br,br) + \
+            '-- set Interface %s-to-int type=patch options:peer=int-to-%s' % (br,br))
+
+@roles('network')
+def setBridges():
+    """
+    Create and connect the OVS bridges for each VLAN
+    """
+    with prefix(env_config.admin_openrc):
+        for tag in vlans:
+            execute(makeBridge,tag)
+            execute(connectBridgeAndInterface,tag)
+            execute(connectBridgeAndBrInt,tag)
 
 # Restart services ############################################################
 
-@roles('network', 'compute')
-def restartOVS():
-    msg = 'Restart OpenvSwitch agent'
-    runCheck(msg, 'systemctl restart openvswitch.service')
+@parallel
+@roles('controller','network', 'compute')
+def restartServices():
+    msg = 'Restart services'
+    runCheck(msg, 'openstack-service restart neutron')
 
-@roles('controller')
-def restartNeutronServer():
-    msg = 'Restart neutron server'
-    runCheck(msg, 'systemctl restart neutron-server.service')
+# @roles('network', 'compute')
+# def restartOVS():
+#     msg = 'Restart OpenvSwitch agent'
+#     runCheck(msg, 'systemctl restart openvswitch.service')
+
+# @roles('controller')
+# def restartNeutronServer():
+#     msg = 'Restart neutron server'
+#     runCheck(msg, 'systemctl restart neutron-server.service')
 
 # Create router and networks ##################################################
-
-# @roles('controller')
-# def createRouter(router):
-#     """
-#     Create a virtual router for the VLANs
-#     """
-
-#     if router in run('neutron router-list'):
-#         print blue('Router %s already created' % router)
-#     else:
-#         msg = 'Create virtual router'
-#         runCheck(msg, 'neutron router-create ' + router)
-
-# @roles('controller')
-# def createIntNets(netNameBase, subnetNameBase, router):
-#     """
-#     Create internal networks, one for each VLAN, and associate them with the router
-#     """
-#     routerID = run("neutron router-list | awk '/%s/ {print $2}'" % router)
-
-#     # save net-list locally to avoid querying the server multiple times
-#     run('neutron net-list >net-list')
-
-#     for tag, cidr in vlans.items():
-
-#         netName = netNameBase + '.' + str(tag)
-#         if netName in run('cat net-list'):
-#             print blue('Net %s already created' % netName)
-#         else:
-#             msg = 'Create internal net ' + netName
-#             runCheck(msg, 'neutron net-create ' + netName)
-
-#         subnetName = subnetNameBase + '.' + str(tag)
-#         if subnetName in run('neutron subnet-list'):
-#             print blue('Subnet %s already created' % subnetName)
-#         else:
-#             msg = 'Create a subnet on the internal net ' + netName
-#             runCheck(msg, 
-#                     'neutron subnet-create '
-#                     '--name %s ' % subnetName + \
-#                     '--dns-nameserver 129.128.208.13 '
-#                     '%s ' % netName + \
-#                     '%s ' % cidr)
-
-#         msg = 'Add interface on router to subnet ' + subnetName
-#         subnetID = run("neutron subnet-list | awk '/%s/ {print $2}'" % subnetName)
-#         runCheck(msg, "neutron router-interface-add %s %s" % (routerID, subnetID))
-
-#     run('rm net-list')
-#     run('neutron net-list')
-
-# @roles('controller')
-# def createExternalNet(netName, subnetCIDR, router):
-#     """
-#     Create an external network and associate it with the router
-#     """
- 
-#     if netName in run('neutron net-list'):
-#         print blue('Net %s already created' % netName)
-#         return
-#     else:
-#         msg = 'Create external net'
-#         runCheck(msg, 
-#                 'neutron net-create %s ' % netName + \
-#                 '--router:external=True '
-#                 '--provider:network_type vlan')
-
-#         msg = 'Create a subnet on the external net'
-#         runCheck(msg, 
-#                 'neutron subnet-create '
-#                 '--name vlan-ext-subnet '
-#                 # TODO(Vitor): The guide uses the default gateway as DNS. Is that right?
-#                 # '--dns-nameserver 10.0.0.1 '
-#                 # '--dns-nameserver 129.128.208.13 '
-#                 '%s ' % netName + \
-#                 '%s ' % subnetCIDR)
-
-#     msg = 'Set gateway for the router as the external network'
-#     routerID = run("neutron router-list | awk '/%s/ {print $2}'" % router)
-#     extnetID = run("neutron net-list | awk '/%s/ {print $2}'" % netName)
-#     runCheck(msg, "neutron router-gateway-set %s %s" % (routerID, extnetID))
-
-#     # TEST (Vitor)
-#     # msg = 'Connect external network and demo-router'
-#     # runCheck(msg, "neutron router-interface-add demo-router vlan-ext-subnet")
-
-# @roles('controller')
-# def createRouterAndNetworks():
-#     with prefix(env_config.admin_openrc): 
-#         router = 'vlan-router'
-#         execute(createRouter, router)
-#         execute(createIntNets, 'vlan-net', 'vlan-subnet', router)
-#         # execute(createExternalNet, 'vlan-ext-net', '10.0.0.0/24', router)
-
-#         # TEST (Vitor)
-#         msg = 'Connect external network and vlan-router'
-#         runCheck(msg, "neutron router-interface-add vlan-router ext-net")
 
 @roles('controller')
 def createNeutronNetwork(netName, subnetName, tag, cidr):
@@ -240,28 +184,29 @@ def createNeutronNetwork(netName, subnetName, tag, cidr):
         return
 
     msg = 'Create net ' + netName
-    runCheck(msg, 'neutron net-create %s --provider:segmentation_id %d' % 
-            (netName, tag))
+    runCheck(msg, 'neutron net-create %s ' % netName + \
+            '--router:external True '
+            '--provider:network_type flat '
+            '--provider:physical_network physnet%d ' % tag)
 
     msg = 'Create a subnet on net ' + netName
     runCheck(msg, 
-            'neutron subnet-create --name %s %s %s'  % 
+            'neutron subnet-create --name %s %s %s --disable-dhcp '  % 
             (subnetName, netName, cidr))
 
+# @roles('controller')
+# def createRouter(routerName, subnetName):
 
-@roles('controller')
-def createRouter(routerName, subnetName):
+#     if routerName in run('neutron router-list'):
+#         print blue('Router %s already created' % routerName)
+#         return
 
-    if routerName in run('neutron router-list'):
-        print blue('Router %s already created' % routerName)
-        return
+#     msg = 'Create virtual router for subnet ' + subnetName
+#     runCheck(msg, 'neutron router-create ' + routerName)
 
-    msg = 'Create virtual router for subnet ' + subnetName
-    runCheck(msg, 'neutron router-create ' + routerName)
-
-    msg = 'Connect vlan and router'
-    # vlanID = run("neutron subnet-list | awk '/%d/ {print $2}'" % tag)
-    runCheck(msg, "neutron router-interface-add %s %s" % (routerName, subnetName))
+#     msg = 'Connect vlan and router'
+#     # vlanID = run("neutron subnet-list | awk '/%d/ {print $2}'" % tag)
+#     runCheck(msg, "neutron router-interface-add %s %s" % (routerName, subnetName))
 
 @roles('controller')
 def createNetworks():
@@ -280,39 +225,69 @@ def createNetworks():
         for tag, cidr in vlans.items():
             netName = 'vlan-net-' + str(tag)
             subnetName = 'vlan-subnet-' + str(tag)
-            routerName = 'vlan-router-' + str(tag)
             execute(createNeutronNetwork, netName, subnetName, tag, cidr)
-            execute(createRouter, routerName, subnetName)
+            # routerName = 'vlan-router-' + str(tag)
+            # execute(createRouter, routerName, subnetName)
 
 #################################### Deployment ######################################
 
 def deploy():
-    pass
-
-@roles('controller')
-def test():
     execute(setConfs)
-    execute(restartNeutronServer)
-    execute(restartOVS)
-    # execute(createRouterAndNetworks)
+    execute(setBridges)
+    execute(restartServices)
     execute(createNetworks)
 
 #################################### Undeployment ######################################
 
 @roles('network','compute')
 def restoreOriginalConfFiles():
-    # restoreBackups(configs.values(), backupSuffix)
     restoreBackups(configs['ml2'], backupSuffix)
     restoreBackups(configs['l3'], backupSuffix)
 
-@roles('controller')
+@roles('network')
 def undeploy():
     execute(restoreOriginalConfFiles)
-    # execute(restartNeutronServer)
-    # execute(restartOVS)
-    local('cd ../devLib && ./service.sh -s 6 -a restart')
+    for br in bridge.values():
+        execute(removeBridge, br)
+
+    # remove ports that were added
+    listPorts = run('ovs-vsctl list-ports br-int').splitlines()
+    for port in [p for p in listPorts if 'vlan' in p]: 
+        execute(removePort, port)
+
+    # restart all services
+    execute(restartServices)
 
 ####################################### TDD ##########################################
 
-def tdd():
+@roles('network')
+def test():
     pass
+
+@roles('network')
+def tdd():
+    """
+    Create some test instances
+    """
+    with prefix(env_config.admin_openrc): 
+        for tag in vlans:
+            netid = run("neutron net-list | grep vlan | awk '/%d/ {print $2}'" % tag)
+            if not netid:
+                print align_n("No vlan network found for tag %d" % tag)
+                sys.exit(1)
+
+            instanceName = 'test-vlan-%d' % tag
+            msg = 'Launch instance for vlan %d' % tag
+            runCheck(msg, 
+                    "nova boot "
+                    "--flavor m1.tiny "
+                    "--image cirros-test "
+                    "--nic net-id=%s "
+                    "--security-group default "
+                    " %s"
+                    % (netid, instanceName))
+
+        # restart all services
+        # execute(restartServices)
+        time.sleep(20)
+        run('nova list')
