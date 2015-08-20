@@ -148,6 +148,7 @@ def configure_networking_server_component():
 
     # turn on verbose logging
     set_parameter(neutron_conf,'DEFAULT','verbose','True')
+    set_parameter(neutron_conf,'DEFAULT','debug','True')
 
 def configure_ML2_plugin_general():
     # The ML2 plug-in uses the Open vSwitch (OVS) mechanism (agent) to build the virtual
@@ -216,7 +217,6 @@ def controller_deploy():
     configure_ML2_plugin_general()
 
     execute(configure_nova_to_use_neutron)
-    execute(restart_nova_controller)
 
     # The Networking service initialization scripts expect a symbolic link /etc/neutron/plugin.ini
     # pointing to the ML2 plug-in configuration file, /etc/neutron/plugins/ml2/ml2_conf.ini.
@@ -239,6 +239,7 @@ def controller_deploy():
     msg = "Enable Neutron service"
     runCheck(msg, 'systemctl start neutron-server.service')
   
+    execute(restart_nova_controller)
 
 # NETWORK
 
@@ -267,6 +268,7 @@ def configure_the_Networking_common_components():
     set_parameter(neutron_conf,'DEFAULT','service_plugins','router')
     set_parameter(neutron_conf,'DEFAULT','allow_overlapping_ips','True')
     set_parameter(neutron_conf,'DEFAULT','verbose','True')
+    set_parameter(neutron_conf,'DEFAULT','debug','True')
 
 def configure_ML2_plug_in_network():
   
@@ -295,6 +297,7 @@ def configure_Layer3_agent():
     set_parameter(l3_agent_file,"DEFAULT","external_network_bridge","br-ex")
     set_parameter(l3_agent_file,"DEFAULT","router_delete_namespaces","True")
     set_parameter(l3_agent_file,"DEFAULT","verbose","True")
+    set_parameter(l3_agent_file,"DEFAULT","debug","True")
 
 def configure_DHCP_agent():
 
@@ -308,6 +311,7 @@ def configure_DHCP_agent():
     set_parameter(dhcp_agent_file,"DEFAULT","use_namespaces","True")
     set_parameter(dhcp_agent_file,"DEFAULT","dhcp_delete_namespaces","True")
     set_parameter(dhcp_agent_file,"DEFAULT","verbose","True")
+    set_parameter(dhcp_agent_file,"DEFAULT","debug","True")
 
 @roles('controller')
 def configure_metadata_proxy_on_controller():
@@ -339,6 +343,7 @@ def configure_metadata_agent():
     set_parameter(metadata_agent_file,'DEFAULT','metadata_proxy_shared_secret',
             passwd['METADATA_SECRET'])
     set_parameter(metadata_agent_file,'DEFAULT','verbose','True')
+    set_parameter(metadata_agent_file,'DEFAULT','debug','True')
 
     execute(configure_metadata_proxy_on_controller)
 
@@ -636,9 +641,44 @@ def restoreConfs():
     restoreBackups(confFiles, backupSuffix)
 
 @roles('controller')
+def restoreDB():
+    """
+    Delete the database and repopulate it
+    """
+
+    database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
+    msg = "Recreate MySQL database for neutron"
+    runCheck(msg, '''echo "{}" | mysql -u root -p{}'''.format(
+        database_script, env_config.passwd['ROOT_SECRET']))
+
+    msg = "Populate the database for neutron"
+    runCheck(msg, 'su -s /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf ' + \
+              '--config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade juno" neutron')
+
+@parallel
+@roles('controller','network', 'compute')
+def restartServices():
+    msg = 'Restart services in ' + env.host
+    runCheck(msg, 'openstack-service restart neutron')
+
+@parallel
+@roles('controller','network', 'compute')
+def stopServices():
+    msg = 'Stop services in ' + env.host
+    runCheck(msg, 'openstack-service stop neutron')
+
+@roles('controller')
 def undeploy():
     execute(restoreConfs)
     execute(removeBridges)
+
+    # stop all services
+    execute(stopServices)
+
+    execute(restoreDB)
+
+    # restart all services
+    execute(restartServices)
 
 ######################################## TDD #########################################
 
