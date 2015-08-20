@@ -9,7 +9,7 @@ import time
 import sys
 sys.path.append('..')
 import env_config
-from myLib import runCheck, set_parameter, checkLog, restoreBackups, backupConfFile
+from myLib import runCheck, set_parameter, checkLog, restoreBackups, backupConfFile, createDatabaseScript
 from myLib import align_y, align_n, keystone_check, database_check, saveConfigFile
 
 
@@ -54,39 +54,19 @@ def removeBridge(br):
     else:
         print blue('No bridge called ' + br)
 
+@parallel
+@roles('controller','network', 'compute')
+def restartServices():
+    msg = 'Restart services in ' + env.host
+    runCheck(msg, 'openstack-service restart neutron')
+
+@parallel
+@roles('controller','network', 'compute')
+def stopServices():
+    msg = 'Stop services in ' + env.host
+    runCheck(msg, 'openstack-service stop neutron')
+
 # File configuration ############################################################
-
-@parallel
-@roles('controller','network','compute')
-def setML2Conf():
-    confFile = configs['ml2']
-    backupConfFile(confFile, backupSuffix)
-
-    physnets = ','.join(['physnet%d' % tag for tag in vlans])
-    set_parameter(confFile, 'ml2_type_flat', 'flat_networks', 'external,' + physnets)
-    # set vlan ranges
-    # network_vlan_ranges will be set to, e.g.,
-    # physnet208,physnet209,physnet2131:208:2131
-    # physnets = ','.join(['physnet%d' % tag for tag in vlans])
-    # set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', 
-    #         '%s:%s:%s' % (physnets, min(vlans), max(vlans)))
-    
-    # set_parameter(confFile, 'ovs', 'tenant_network_type', 'gre')
-
-@parallel
-@roles('network','compute')
-def setOVSConf():
-    confFile = configs['ovs']
-    backupConfFile(confFile, backupSuffix)
-
-    # set bridge mappings
-    mappings = ','.join(['physnet%d:%s' % (tag, bridge[tag]) 
-        for tag in vlans])
-    set_parameter(confFile, 'ovs', 'bridge_mappings', 'external:br-ex,' + mappings) 
-
-    set_parameter(confFile, 'ovs', 'enable_tunneling', 'True') 
-    set_parameter(confFile, 'ovs', 'integration_bridge', 'br-int') 
-    set_parameter(confFile, 'ovs', 'tunnel_bridge', 'br-tun') 
 
 @roles('network')
 def setL3Conf():
@@ -102,11 +82,62 @@ def setL3Conf():
     set_parameter(confFile, 'DEFAULT', 'external_network_bridge', "''")
     set_parameter(confFile, 'DEFAULT', 'gateway_external_network_id', "''")
 
-@roles('network', 'compute')
+# @parallel
+@roles('network')
+def setML2Conf():
+    confFile = configs['ml2']
+    backupConfFile(confFile, backupSuffix)
+
+    set_parameter(confFile, 'ml2', 'type_drivers', 'local,flat,gre,vxlan')
+
+    # physnets = ','.join(['physnet%d' % tag for tag in vlans])
+    # set_parameter(confFile, 'ml2_type_flat', 'flat_networks', 'external,' + physnets)
+    run("sed -i '/flat_networks = external/d' %s" % confFile)
+    run("sed -i '/\[ml2_type_flat\]/a flat_networks = *' %s" % confFile)
+    # set vlan ranges
+    # network_vlan_ranges will be set to, e.g.,
+    # physnet208,physnet209,physnet2131:208:2131
+    # physnets = ','.join(['physnet%d' % tag for tag in vlans])
+    # set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', 
+    #         '%s:%s:%s' % (physnets, min(vlans), max(vlans)))
+    
+    # set_parameter(confFile, 'ovs', 'tenant_network_type', 'gre')
+
+    # set bridge mappings
+    mappings = 'external:br-ex,' + ','.join(
+            ['physnet%d:%s' % (tag, bridge[tag]) for tag in vlans])
+    set_parameter(confFile, 'ovs', 'bridge_mappings', mappings) 
+
+    physnets = ','.join(['physnet' + str(tag) for tag in vlans])
+    set_parameter(confFile, 'ovs', 'network_vlan_ranges', physnets) 
+
+# @parallel
+@roles('network')
+def setOVSConf():
+    confFile = configs['ovs']
+    backupConfFile(confFile, backupSuffix)
+
+    # set bridge mappings
+    mappings = 'external:br-ex,' + ','.join(
+            ['physnet%d:%s' % (tag, bridge[tag]) for tag in vlans])
+    set_parameter(confFile, 'ovs', 'bridge_mappings', mappings) 
+
+    physnets = ','.join(['physnet' + str(tag) for tag in vlans])
+    set_parameter(confFile, 'ovs', 'network_vlan_ranges', physnets) 
+
+#     set_parameter(confFile, 'ovs', 'enable_tunneling', 'True') 
+#     run('grep enable_tunneling %s' % confFile)
+#     set_parameter(confFile, 'ovs', 'integration_bridge', 'br-int') 
+#     run('grep integration_bridge %s' % confFile)
+#     set_parameter(confFile, 'ovs', 'tunnel_bridge', 'br-tun') 
+#     run('grep tunnel_bridge %s' % confFile)
+
+@roles('controller')
 def setConfs():
-    # execute(setML2Conf)
     execute(setL3Conf)
+    execute(setML2Conf)
     execute(setOVSConf)
+    execute(restartServices)
 
 # Bridge creation  ############################################################
 
@@ -156,24 +187,6 @@ def setBridges():
             execute(connectBridgeAndInterface,tag)
             execute(connectBridgeAndBrInt,tag)
 
-# Restart services ############################################################
-
-@parallel
-@roles('controller','network', 'compute')
-def restartServices():
-    msg = 'Restart services'
-    runCheck(msg, 'openstack-service restart neutron')
-
-# @roles('network', 'compute')
-# def restartOVS():
-#     msg = 'Restart OpenvSwitch agent'
-#     runCheck(msg, 'systemctl restart openvswitch.service')
-
-# @roles('controller')
-# def restartNeutronServer():
-#     msg = 'Restart neutron server'
-#     runCheck(msg, 'systemctl restart neutron-server.service')
-
 # Create router and networks ##################################################
 
 @roles('controller')
@@ -190,9 +203,11 @@ def createNeutronNetwork(netName, subnetName, tag, cidr):
             '--provider:physical_network physnet%d ' % tag)
 
     msg = 'Create a subnet on net ' + netName
-    runCheck(msg, 
-            'neutron subnet-create --name %s %s %s --disable-dhcp '  % 
-            (subnetName, netName, cidr))
+    runCheck(msg, 'neutron subnet-create '
+            '--name %s ' % subnetName + \
+            '--disable-dhcp '
+            '--allocation-pool %s ' % env_config.allocationPools[tag] + \
+            '%s %s '  % (netName, cidr))
 
 # @roles('controller')
 # def createRouter(routerName, subnetName):
@@ -217,11 +232,6 @@ def createNetworks():
     """
     with prefix(env_config.admin_openrc): 
 
-        # # save lists locally to avoid querying the database multiple times
-        # run('neutron net-list >net-list')
-        # run('neutron router-list >router-list')
-        # run('neutron subnet-list >subnet-list')
-
         for tag, cidr in vlans.items():
             netName = 'vlan-net-' + str(tag)
             subnetName = 'vlan-subnet-' + str(tag)
@@ -232,8 +242,8 @@ def createNetworks():
 #################################### Deployment ######################################
 
 def deploy():
-    execute(setConfs)
     execute(setBridges)
+    execute(setConfs)
     execute(restartServices)
     execute(createNetworks)
 
@@ -241,8 +251,23 @@ def deploy():
 
 @roles('network','compute')
 def restoreOriginalConfFiles():
-    restoreBackups(configs['ml2'], backupSuffix)
-    restoreBackups(configs['l3'], backupSuffix)
+    for confFile in configs.values():
+        restoreBackups(confFile, backupSuffix)
+
+@roles('controller')
+def restoreDB():
+    """
+    Delete the database and repopulate it
+    """
+
+    database_script = createDatabaseScript('neutron',passwd['NEUTRON_DBPASS'])
+    msg = "Recreate MySQL database for neutron"
+    runCheck(msg, '''echo "{}" | mysql -u root -p{}'''.format(
+        database_script, env_config.passwd['ROOT_SECRET']))
+
+    msg = "Populate the database for neutron"
+    runCheck(msg, 'su -s /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf ' + \
+              '--config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade juno" neutron')
 
 @roles('network')
 def undeploy():
@@ -254,6 +279,11 @@ def undeploy():
     listPorts = run('ovs-vsctl list-ports br-int').splitlines()
     for port in [p for p in listPorts if 'vlan' in p]: 
         execute(removePort, port)
+
+#     # stop all services
+#     execute(stopServices)
+
+#     execute(restoreDB)
 
     # restart all services
     execute(restartServices)

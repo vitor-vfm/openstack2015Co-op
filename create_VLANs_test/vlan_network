@@ -1,0 +1,44 @@
+#! /bin/bash
+
+source ./admin_openrc.sh
+
+tenant=$(keystone tenant-list | awk '/service/ {print $2}')
+
+neutron router-create router01
+
+neutron net-create --tenant-id $tenant public01 \
+    --provider:network_type flat \
+    --provider:physical_network physnet1 \
+    --router:external True
+
+neutron subnet-create --tenant-id $tenant --name public01_subnet01 \
+		--allocation-pool start=142.244.62.230,end=142.244.62.239 \
+		--gateway 142.244.62.1 public01 142.244.62.0/24 --disable-dhcp
+
+neutron router-gateway-set router01 public01
+
+tenant=$(keystone tenant-list|awk '/demo/ {print $2}')
+neutron net-create --tenant-id $tenant net208 \
+    --provider:network_type vlan \
+    --provider:physical_network physnet2 \
+    --provider:segmentation_id 208
+
+neutron subnet-create --tenant-id $tenant --name net208_subnet01 net208 129.128.208.0/24
+neutron router-interface-add router01 net208_subnet01
+
+neutron net-create --tenant-id $tenant net209 \
+    --provider:network_type vlan \
+    --provider:physical_network physnet2 \
+    --provider:segmentation_id 209
+
+neutron subnet-create --tenant-id $tenant --name net209_subnet01 net209 129.128.209.0/24
+neutron router-interface-add router01 net209_subnet01
+
+neutron net-create --tenant-id $tenant net2131 \
+    --provider:network_type vlan \
+    --provider:physical_network physnet2 \
+    --provider:segmentation_id 2131
+
+neutron subnet-create --tenant-id $tenant --name net2131_subnet01 net2131 129.128.213.0/24
+neutron router-interface-add router01 net2131_subnet01
+
