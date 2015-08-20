@@ -197,18 +197,19 @@ def adjust_security():
             runCheck("Edit TCP security rules", "nova secgroup-add-rule default tcp 22 22 0.0.0.0/0")
 
 def give_floating_ip(instanceName):
+    # check if instance already has a floating ip
     if "," in runCheck("check if instance has floating ip", " nova list | awk '/%s/ {print $12}' " % instanceName):
         print(blue("floating ip for %s already exists" % instanceName))
         return
     
     floating_ip = ""
-    if  "Conflict" in run("neutron floatingip-create ext-net"):
+    if  "Conflict" in runCheck("check if we can create floating ips","neutron floatingip-create ext-net", warn_only=True):
         print(blue("floating ip cant be allocated"))
-        if run("nova floating-ip-list | awk '/ - / {print $2}'") == "":
+        if runCheck("check if there are some created, but unallocated floating ips", "nova floating-ip-list | awk '/ - / {print $2}'", warn_only=True) == "":
             print(blue("no free unallocated ips either, Exiting"))
             return
         else:
-            floating_ip = runCheck("check for free unallocated floating ips","nova floating-ip-list | awk '/ - / {print $2}' | head -1")
+            floating_ip = runCheck("get a free unallocated floating ip","nova floating-ip-list | awk '/ - / {print $2}' | head -1")
     
     else:
         floating_ip = runCheck("create floating ip"," neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}'")
