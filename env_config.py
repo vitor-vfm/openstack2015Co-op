@@ -67,7 +67,13 @@ if 'ipmi5' in check_output('echo $HOSTNAME',shell=True):
             208: '129.128.208.0/24',
             209: '129.128.209.0/24',
             # 6: '142.244.63.0/24',
-            2131: '129.128.213.0/24',
+            2131: '129.128.213.0/26',
+            }
+
+    allocationPools = {
+            208: ['start=129.128.208.170,end=129.128.208.175'],
+            209: ['start=129.128.209.171,end=129.128.209.176'],
+            2131: ['start=129.128.213.10,end=129.128.213.38'],
             }
 
     roles = roledefs.keys()
@@ -213,6 +219,14 @@ pid-file=/var/run/mariadb/mariadb.pid
                          },
 
             }
+
+    # dict mapping VLAN tags to their virtual interfaces 
+    # in the network node
+    virtualInterfaces = { 
+            tag:(nicDictionary['network']['extDEVICE'] + '.' + str(tag))
+            for tag in vlans
+            }
+
     """
      _____                        _                   
     |___ /     /\ /\___ _   _ ___| |_ ___  _ __   ___ 
@@ -262,7 +276,7 @@ pid-file=/var/run/mariadb/mariadb.pid
     # Specifications for the initial networks
 
     ext_subnet = {
-            'start' : '142.244.62.230',
+            'start' : '142.244.62.240',
             'end' : '142.244.62.249',
             'gateway' : '142.244.62.1',
             'cidr' : '142.244.62.0/24',
@@ -334,7 +348,8 @@ pid-file=/var/run/mariadb/mariadb.pid
             'controller' : ['root@controller'],
             'compute' : ['root@compute1', 'root@compute2'],
             'network' : ['root@network'],
-            'storage' : ['root@storage1'],
+            # 'storage' : ['root@storage1'],
+            'storage' : [],
             }
 
     roles = roledefs.keys()
@@ -345,7 +360,13 @@ pid-file=/var/run/mariadb/mariadb.pid
             208: '129.128.208.0/24',
             209: '129.128.209.0/24',
             # 6: '142.244.63.0/24',
-            2131: '129.128.213.0/24',
+            2131: '129.128.213.0/26',
+            }
+
+    allocationPools = {
+            208: 'start=129.128.208.170,end=129.128.208.175',
+            209: 'start=129.128.209.171,end=129.128.209.176',
+            2131: 'start=129.128.213.10,end=129.128.213.38',
             }
 
     # ntp
@@ -452,6 +473,14 @@ pid-file=/var/run/mariadb/mariadb.pid
 
             }
 
+    # dict mapping VLAN tags to their virtual interfaces 
+    # in the network node
+    virtualInterfaces = { 
+            tag:(nicDictionary['network']['extDEVICE'] + '.' + str(tag))
+            for tag in vlans
+            }
+
+
     # admin-openrc and demo-openrc
     
     # These scripts set up credentials for the keystone users
@@ -504,7 +533,7 @@ pid-file=/var/run/mariadb/mariadb.pid
 
     ext_subnet = {
             'start' : '142.244.62.230',
-            'end' : '142.244.62.249',
+            'end' : '142.244.62.239',
             'gateway' : '142.244.62.1',
             'cidr' : '142.244.62.0/24',
             }

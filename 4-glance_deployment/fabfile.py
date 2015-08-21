@@ -327,6 +327,8 @@ def tdd1():
 
 @roles('controller')
 def tdd():
+
+    tdd1()
     # save results of the tdds in a list
     results = list()
 
@@ -351,4 +353,3 @@ def tdd():
     saveConfigFile(confFile, status)
     confFile = "/etc/glance/glance-registry.conf"
     saveConfigFile(confFile, status)
-

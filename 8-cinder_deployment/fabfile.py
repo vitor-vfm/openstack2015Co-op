@@ -322,7 +322,7 @@ def deploy():
     #execute(restart_cinder)
 
     # customize storage node for nfs
-    execute(customize_storage_for_nfs)
+    #execute(customize_storage_for_nfs)
     
     # customize cinder for nfs
     execute(install_nfs_on_controller)

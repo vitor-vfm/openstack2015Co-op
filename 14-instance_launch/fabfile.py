@@ -197,12 +197,25 @@ def adjust_security():
             runCheck("Edit TCP security rules", "nova secgroup-add-rule default tcp 22 22 0.0.0.0/0")
 
 def give_floating_ip(instanceName):
+    # check if instance already has a floating ip
     if "," in runCheck("check if instance has floating ip", " nova list | awk '/%s/ {print $12}' " % instanceName):
         print(blue("floating ip for %s already exists" % instanceName))
         return
-
+    
+    floating_ip = ""
+    if  "Conflict" in run("neutron floatingip-create ext-net", warn_only=True):
+        print(blue("floating ip cant be allocated"))
+        if run("nova floating-ip-list | awk '/ - / {print $2}'", warn_only=True) == "":
+            print(blue("no free unallocated ips either, Exiting"))
+            return
+        else:
+            floating_ip = run("nova floating-ip-list | awk '/ - / {print $2}' | head -1")
+    
+    else:
+        floating_ip = run(" neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}'")
+    
     runCheck("Assign floating ip", "nova floating-ip-associate %s " % instanceName + \
-            "$(neutron floatingip-create ext-net | awk '/floating_ip_address/ {print $4}')")
+            " %s" %floating_ip)
 
 def attach_volume(volumeName, instanceName):
     wait_to_finish('instance', 'nova list', instanceName, 'active')
@@ -313,7 +326,11 @@ def boot_instance(url):
     volume_name =  image_name + 'Volume'
     key_name = 'demo-key'
 
-    if "qcow2" not in image_format:
+    # this is ensure that when we create the 
+    # glance image, we only use qcow2 or
+    # iso as the format option.
+    # (.img is not a valid glance image format.)      
+    if "qcow2" not in image_format: 
 	image_format = "iso"
 
     # add unique suffixes

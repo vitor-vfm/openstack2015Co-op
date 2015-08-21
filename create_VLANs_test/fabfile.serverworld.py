@@ -102,13 +102,24 @@ def makeBridges():
 
 # File configuration ############################################################
 
+@parallel
 @roles('controller','network','compute')
 def setML2Conf():
     confFile = configs['ml2']
     backupConfFile(confFile, backupSuffix)
-    set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', 'physnet1:1000:2999')
-    set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
-    set_parameter(confFile, 'ovs', 'bridge_mappings', 'physnet1:br-ex')
+    set_parameter(confFile, 'ml2_type_vlan', 'network_vlan_ranges', 'physnet1:208:2131')
+    set_parameter(confFile, 'ovs', 'tenant_network_type', 'gre')
+    # set_parameter(confFile, 'ovs', 'tenant_network_type', 'vlan')
+    # set_parameter(confFile, 'ovs', 'bridge_mappings', 'physnet1:br-ex')
+    # TODO: add name of virtual bridge
+    set_parameter(confFile, 'ovs', 'bridge_mappings', 'physnet1:')
+
+    # from this site: https://developer.rackspace.com/blog/neutron-networking-vlan-provider-networks/
+    set_parameter(confFile, 'ovs', 'integration_bridge', 'br-int')
+    set_parameter(confFile, 'ovs', 'enable_tunneling', 'True')
+    set_parameter(confFile, 'ovs', 'tunnel_bridge', 'br-tun')
+    set_parameter(confFile, 'ovs', 'tunnel_id_ranges', '1:1000')
+    set_parameter(confFile, 'ovs', 'network_vlan_ranges', 'physnet1:208:2131')
 
 @roles('network')
 def setL3Conf():
@@ -116,6 +127,7 @@ def setL3Conf():
     backupConfFile(confFile, backupSuffix)
     set_parameter(confFile, 'DEFAULT', 'external_network_bridge', 'br-ex')
        
+@parallel
 @roles('network', 'compute')
 def setConfs():
     execute(setML2Conf)
@@ -240,8 +252,12 @@ def createNeutronNetwork(netName, subnetName, tag, cidr):
         return
 
     msg = 'Create net ' + netName
-    runCheck(msg, 'neutron net-create %s --provider:segmentation_id %d' % 
-            (netName, tag))
+    runCheck(msg, 'neutron net-create %s ' % netName + \
+            # '--router:external True '
+            # '--disable-dhcp '
+            '--provider:network_type vlan '
+            # '--provider:physical_network physnet1 '
+            '--provider:segmentation_id %d ' % tag)
 
     msg = 'Create a subnet on net ' + netName
     runCheck(msg, 
@@ -287,15 +303,77 @@ def createNetworks():
 #################################### Deployment ######################################
 
 def deploy():
-    pass
-
-@roles('controller')
-def test():
+    print blue('Not yet. Fix everything marked "TODO" first')
+    return
     execute(setConfs)
     execute(restartNeutronServer)
     execute(restartOVS)
-    # execute(createRouterAndNetworks)
     execute(createNetworks)
+    pass
+
+#################################### Test Instances ######################################
+
+@roles('controller')
+def boot_from_image(volumeName, flavorSize, imageName, keyName, instanceName):
+    if already_booted(instanceName):
+        return
+
+    # volumeID = run("nova volume-list | grep '%s' | awk '{print $2}'" % volumeName)
+    
+    # if volumeID != '':
+    #     wait_to_finish('volume', 'cinder list', volumeName, 'available')
+ 
+    # netid = run("neutron net-list | awk '/demo-net/ {print $2}'")
+    run("nova boot --flavor m1.%s --image %s " % (flavorSize, imageName) + \
+    "--nic net-id=%s " % netid + \
+    # "--block-device source=volume,id=%s,dest=volume,bus=virtio " % volumeID + \
+    # "--security-group default --key-name %s %s" % (keyName, instanceName))
+    "--security-group default ")
+    wait_to_finish('instance', 'nova list', instanceName, 'active')
+
+@roles('controller')
+def bootTestInstances():
+    for tag in vlans:
+        msg = 'Creating test instance for vlan %d' % tag
+        netid = run("neutron net-list | grep vlan | grep %d | cut -f2")
+        print netid
+        run("nova boot --flavor m1.tiny --image cirros-test "
+        "--nic net-id=%s " % netid + \
+        # "--block-device source=volume,id=%s,dest=volume,bus=virtio " % volumeID + \
+        # "--security-group default --key-name %s %s" % (keyName, instanceName))
+        "--security-group default ")
+
+    
+
+
+# @roles('controller')
+@roles('network')
+def test():
+    with prefix(env_config.admin_openrc): 
+        for tag in vlans:
+            try:
+                netid = run("neutron net-list | grep vlan | awk '/%d/ {print $2}'" % tag)
+            except:
+                print align_n("No vlan network found for tag %d" % tag)
+                raise ValueError
+
+            instanceName = 'test-vlan-%d' % tag
+            msg = 'Launch instance for vlan %d' % tag
+            try:
+                runCheck(msg, 
+                        "nova boot "
+                        "--flavor m1.tiny "
+                        "--image cirros-test "
+                        "--nic net-id=%s "
+                        "--security-group default "
+                        " %s"
+                        % (netid, instanceName))
+            except:
+                run('source neutron_log')
+
+        time.sleep(15)
+        run('nova list')
+
 
 #################################### Undeployment ######################################
 
