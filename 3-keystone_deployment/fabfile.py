@@ -122,7 +122,7 @@ def createUsersRolesAndTenants(admin_token):
 
         msg = "Create 'demo' user"
         runCheck(msg, "keystone user-create --name demo --tenant demo " +\
-                "--pass {} --email {}".format('34demo43', env_config.keystone_emails['DEMO_EMAIL'])) 
+                "--pass {} --email {}".format( env_config.keystone_emails['DEMO_PASS'], env_config.keystone_emails['DEMO_EMAIL'])) 
 
 
 
